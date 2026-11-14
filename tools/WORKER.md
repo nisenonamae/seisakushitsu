@@ -11,6 +11,13 @@
 - `roadmap/apps/seisakushitsu/data.json` を読み、`jobs` の中で `status` が `"待ち"` で `deleted` でないものを、`createdAt` の古い順に最大 5 件取る
 - **1件もなければ、すぐに「仕事なし」とだけ報告して終わる**（何も書き込まない）
 
+## 1.5 進み具合を知らせる（必ず）
+作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
+- 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
+- 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
+- `total` の目安：gather は 4（見せ方→中身→資料→仕上げ）、script は 4（材料を読む→型紙→台本→仕上げ）、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
+
 ## 2. 仕事の種類ごとのやり方
 JSON の中身はすべて ID でつながっている：`jobs[].projId` → `projects[].id`、`jobs[].matId` → `materials[].id`、`projects[].candId` → `candidates[].id`、`projects[].refs` → `ideas[].id`、`projects[].mats` → `materials[].id`、`projects[].recs[].path` → データのリポジトリの中の録画ファイル。
 
