@@ -62,6 +62,7 @@ for k,b in enumerate(seq,1):
     base=None
     if not (vpath and os.path.exists(vpath)): vpath=None
     if vpath and vpath.endswith('.png'): base=Image.open(vpath).convert('RGB').resize((W,H))
+    clipdur=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',vpath],capture_output=True,text=True).stdout or 10) if vpath and vpath.endswith('.mp4') else 10
     elif not vpath: base=card(b,k,n)
     bstart=t0
     for j,s in enumerate(sents):
@@ -72,7 +73,7 @@ for k,b in enumerate(seq,1):
             fr=f'{tmp}/f{k:03d}_{j:02d}.png';im=base.copy().convert('RGBA');im.alpha_composite(Image.open(ov));im.convert('RGB').save(fr)
             subprocess.run(['ffmpeg','-y','-loglevel','error','-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{dur:.3f}','-c:v','libx264','-preset','veryfast','-tune','stillimage','-pix_fmt','yuv420p','-r',str(FPS),seg],check=True)
         else:
-            subprocess.run(['ffmpeg','-y','-loglevel','error','-stream_loop','-1','-i',vpath,'-i',ov,'-filter_complex',f'[0:v]scale={W}:{H},fps={FPS}[v];[v][1:v]overlay=0:0','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True)
+            off=(t0-bstart)%max(0.1,clipdur);subprocess.run(['ffmpeg','-y','-loglevel','error','-stream_loop','-1','-ss',f'{off:.3f}','-i',vpath,'-i',ov,'-filter_complex',f'[0:v]scale={W}:{H},fps={FPS}[v];[v][1:v]overlay=0:0','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True)
         segs.append(seg);t0+=dur
     tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(bstart,2),'end':round(t0,2),'visual':vis or ''})
 open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in segs));open(f'{tmp}/a.txt','w').write(''.join(f"file '{x}'\n" for x in auds))
