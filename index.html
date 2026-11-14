@@ -477,7 +477,8 @@ ${rel.length||srcs.length?`<details ${rel.length?'open':''}><summary>見せ方�
 <details><summary>中身の参考になる動画（${rel.filter(r=>r.kind==='中身').length}本）</summary><p class="lead" style="margin:2px 0">文字起こしを貼ると、要約して台本の材料にします。</p>${relHTML('中身')}</details>
 <details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map(s=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div></div>`).join('')}</details>`
 :`<p class="lead">${syncOn()?'まだ集めていません。':'同期を設定すると、Claude が自動で集めます。'}</p>`}
-${syncOn()?`<div class="row"><button class="b" data-job="gather">${rel.length?'もっと集めてもらう':'参考と資料を集めてもらう'}</button></div>${jobLine(p,'gather')}`:''}</div>`;
+${syncOn()?`<label>集める量</label><select id="gAmt">${Object.entries(GAMT).map(([k,v])=>`<option value="${k}" ${k===(LS.get('g_amt','ふつう'))?'selected':''}>${k}（見せ方${v[0]}本・中身${v[1]}本・資料${v[2]}件）</option>`).join('')}</select>
+<div class="row"><button class="b" data-job="gather">${rel.length?'もっと集めてもらう':'参考と資料を集めてもらう'}</button></div>${jobLine(p,'gather')}`:''}</div>`;
 const body=[
 gatherHTML+`<div class="how"><b>やること</b><ol>
 <li>上の「Claude が集めた参考」か、自分で見つけた動画を開き、ひらめき帳に「作り方の工夫」として、何分何秒のどこがいいかを書く</li>
@@ -520,8 +521,11 @@ const mats=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.
 return `地図で「なぜ」を解く YouTube チャンネルの動画を、完全 AI 版で一本作ってほしい。\n\n題材：${candQ(p)}\n${c.angle?'切り口：'+c.angle+'\n':''}長さ：10分ほど\n\n参考にしたい見せ方（このあと録画を送ります）：\n${refs.map((i,k)=>`${k+1}. ${i.video||'（動画）'}${i.sec?'（'+toClock(i.sec)+'）':''}\n   ${i.memo}${i.where&&i.where!=='全体'?'（効く場所：'+i.where+'）':''}`).join('\n')||'（なし）'}\n\n中身の資料（動画の要約・文字起こし）：\n${mats.map(m=>`■ ${m.title||m.url||'資料'}\n${m.summary||m.text.slice(0,4000)}`).join('\n\n')||'（なし）'}\n\n進め方：\n1. 送る録画をコマに分けて見て、画面の切り替わる間隔・地図の動き・字幕・色の使い方を型紙にまとめる\n2. 台本を書いて見せる\n3. OK が出たら、声・地図アニメーション・字幕まで入れて、最後まで書き出した動画にする`}
 function fixText(p){return `さっきの動画の直しです。\n${(p.fixes||[]).filter(f=>f.text).map(f=>`・${f.sec?f.sec+' ':''}${f.text}`).join('\n')}\n直した版を書き出してください。`}
 const md=ms=>{const d=new Date(ms);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`};
+const GAMT={'少なめ':[3,2,3],'ふつう':[6,4,7],'多め':[10,8,12],'たくさん':[15,12,20]};
+function nextRun(from){const d=new Date(from||Date.now());for(let i=0;i<48;i++){const c=new Date(d);c.setMinutes(17,0,0);c.setHours(d.getHours()+i);if(c>d&&c.getHours()>=7&&c.getHours()<=23)return c}return null}
+const hm=d=>`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
-if(!j)return'';return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}</p>`}
+if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}</p>`}
 function queueJob(o){const j={id:uid('j'),status:'待ち',createdAt:now(),updatedAt:now(),...o};D.jobs.push(j);save();return j}
 async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());return bytesToB64(buf)}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
@@ -530,14 +534,15 @@ $('makeTop').addEventListener('click',e=>{
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
 const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
-const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;if(syncOn())queueJob({type:'gather',projId:p.id});save();renderMake();window.scrollTo(0,0)});
+const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;if(syncOn()){const v=GAMT[LS.get('g_amt','ふつう')]||GAMT['ふつう'];queueJob({type:'gather',projId:p.id,counts:{style:v[0],content:v[1],sources:v[2]}})}save();renderMake();window.scrollTo(0,0)});
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;
 if(el.closest('.sh')){el.closest('.step').classList.toggle('open');return}
 if(el.matches('[data-next]')){p.step=(p.step||0)+1;touchP(p);renderMake();window.scrollTo(0,0);return}
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
 if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
-queueJob({type,projId:p.id,notes:type==='script_fix'?p.scriptNotes:''});renderMake();return}
+const extra={};if(type==='gather'){const a=$('gAmt')?$('gAmt').value:'ふつう';LS.set('g_amt',a);const v=GAMT[a];extra.counts={style:v[0],content:v[1],sources:v[2]}}
+queueJob({type,projId:p.id,notes:type==='script_fix'?p.scriptNotes:'',...extra});renderMake();return}
 if(el.matches('[data-madd]')){const text=$('mText').value.trim();if(!text){$('mMsg').textContent='文字起こしを貼ってください';return}
 const m={id:uid('m'),title:$('mTitle').value.trim(),url:urlOf($('mTitle').value),text,size:$('mSize').value,status:syncOn()?'要約待ち':'',summary:'',projId:p.id,updatedAt:now()};D.materials.push(m);
 p.mats=p.mats||[];p.mats.push(m.id);if(syncOn())queueJob({type:'summary',matId:m.id,projId:p.id});touchP(p);renderMake();return}

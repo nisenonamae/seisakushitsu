@@ -24,6 +24,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 
 ### gather（参考集め）
 制作を始めたときに自動で入る。題材（candidates の q・angle・links）について、次の3つを集めて projects に書く。
+**数は `jobs[].counts`（style＝見せ方、content＝中身、sources＝資料）に従う。** counts がなければ下の数。
 1. **見せ方の参考** `related[]`（kind: "見せ方"）を 5〜8 本：同じか近い題材を、地図・アニメーション・シミュレーションで見せて伸びた動画。日本語・英語・中国語で YouTube を検索する（`tools/yt_common.py` の `search()` が使える。英語は `search(q,'en','US')`）。再生が多く、作りの質が高そうなもの（題名・チャンネル・サムネイルで判断。サムネイルは `https://i.ytimg.com/vi/<id>/hqdefault.jpg` で取れるので見てよい）
 2. **中身の参考** `related[]`（kind: "中身"）を 3〜6 本：題材の中身を詳しく扱っている動画（言語は問わない）
 3. **調べた資料** `sources[]` を 5〜10 件：公的機関・学術・百科事典など、事実を確かめられるウェブの資料。WebSearch と WebFetch で探す。`note` に、台本に使えそうな事実を自分の言葉で1〜2文（数字は出どころの通りに）
