@@ -151,12 +151,16 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
 <details><summary>▶ 制作（一本の動画を作る）</summary>
 <p>「作る」にした題材が並びます。「これを作る」を押すと、5つの手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
-<li><b>参考を集める</b>：真似たい場面を録画して、ひらめき帳のメモに印を付ける</li>
-<li><b>Claude に頼む</b>：ボタンで依頼文がコピーされ Claude が開く。貼って、録画をドラッグする</li>
-<li><b>台本を確かめる</b>：届いた台本の直しを書いて送る</li>
+<li><b>参考と資料を集める</b>：真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
+<li><b>台本づくりを頼む</b>：ボタンを押すだけ。Claude が型紙と台本を作り、アプリに届けて手順3に進める</li>
+<li><b>台本を確かめる</b>：届いた台本を読み、直しを書いて「直しを頼む」</li>
 <li><b>動画を確かめる</b>：1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて送る</li>
 <li><b>残して終わる</b>：次からも同じにしたい直しに印 → 工夫の棚に入る</li></ol>
 <p>やめたいときは「この制作をやめる」、まだ始めていない題材は「制作から外す」で候補にもどせます。終わった手順は、押せば開いて「ここからやり直す」もできます。</p></details>
+
+<details open><summary>頼みごと（ほうっておけば片づく）</summary>
+<p>同期を設定していると、「要約を頼む」「台本づくりを頼む」「直しを頼む」「〇個 持ってきてもらう」は、押すだけで頼みごととして記録され、<b>Claude が毎時17分ごろ（7時〜23時）に自動で片づけて</b>、結果をアプリに届けます。チャットに貼る作業は要りません。状況は制作の画面の上の「頼みごとの状況」で見られます。</p>
+<p>同期を設定していないときは、今まで通り依頼文がコピーされて Claude が開く形になります。</p></details>
 
 <details><summary>◎ 候補（題材の一覧）</summary><ul>
 <li><b>自動で選んだ題材</b>：毎朝5時41分に、海外の伸びた動画と日本語の供給を測って、Claude が選んで置きます。「作る」「候補に入れる」「いらない」を押すだけ</li>
@@ -205,9 +209,10 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <li>出てきたキーを、このアプリの<b>設定</b>の「YouTube の API キー」に貼る（各端末で一度ずつ）</li></ol>
 <p>無料で、1日に約30テーマ調べられます。詰まったら画面のスクショを Claude に送ってください。</p></details>
 
-<details><summary>最初の設定③　端末どうしの同期</summary>
-<p>このアプリのリポジトリは公開なので、データは<b>別の private のリポジトリ</b>に置きます。</p><ol>
-<li>Mac の Claude Code に「nisenonamae に private の空のリポジトリ seisakushitsu-data を作って」と頼む</li>
+<details><summary>最初の設定③　同期と自動の頼みごと（いちばん大事）</summary>
+<p>端末どうしの同期と、ボタン一つで Claude に頼める仕組みは、どちらもこの設定で動きます。このアプリのリポジトリは公開なので、データは<b>別の private のリポジトリ</b>に置きます。</p><ol>
+<li>Mac の Claude Code に「nisenonamae に private の空のリポジトリ seisakushitsu-data を作って（README だけ入れて）」と頼む</li>
+<li>Claude の GitHub アプリが使えるリポジトリに seisakushitsu-data を加える（GitHub の Settings → Applications → Claude → Configure。「All repositories」にしてあれば不要）</li>
 <li>GitHub の Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token</li>
 <li>Repository access は「Only select repositories」で <b>seisakushitsu-data</b> だけ選び、Permissions の <b>Contents</b> を「Read and write」にして作る</li>
 <li>このアプリの<b>設定</b>で、持ち主 <code>nisenonamae</code>、リポジトリ名 <code>seisakushitsu-data</code>、ファイル名 <code>data/seisakushitsu.json</code>、トークンを入れて「保存して同期」</li>
@@ -262,30 +267,39 @@ const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'億':n>=1e4?Math.round(n/1e4).toLocaleSt
 /* ---------- データ ---------- */
 let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}
 if(!D)D=JSON.parse(JSON.stringify(SEED));
-['candidates','ideas','kufu','projects'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
+['candidates','ideas','kufu','projects','jobs','materials'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
 function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
 function touch(o){o.updatedAt=now();save()}
 
 /* ---------- 同期（GitHub） ---------- */
 const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','data/seisakushitsu.json')||'data/seisakushitsu.json',t:LS.get('gh_t','')});
-const b64e=s=>btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
-function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
 let pushTimer=null,busy=false;
 function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
 async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
-if(r.status===404)return{data:null,sha:null};if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();return{data:JSON.parse(b64d(j.content)),sha:j.sha}}
+if(r.status===404)return{data:null,sha:null};if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();
+let txt=j.content?b64d(j.content):'';if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}
+return{data:JSON.parse(txt),sha:j.sha}}
+async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});if(g.ok)sha=(await g.json()).sha;
+const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:msg||'録画を追加',content:b64,...(sha?{sha}:{})})});if(!r.ok)throw new Error('GitHub '+r.status);return true}
+const syncOn=()=>{const s=S();return !!(s.o&&s.r&&s.t)};
 async function ghPut(data,sha){const s=S();const body={message:'制作室 '+new Date().toISOString(),content:b64e(JSON.stringify(data))};if(sha)body.sha=sha;
 const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify(body)});
 if(r.status===409||r.status===422)return false;if(!r.ok)throw new Error('GitHub '+r.status);return true}
 async function sync(){const s=S();if(!s.o||!s.r||!s.t){syncLabel('この端末だけに保存中');return}
 if(busy)return;busy=true;syncLabel('同期中…');
 try{for(let i=0;i<3;i++){const {data,sha}=await ghGet();const m=data?merge(data,D):D;const changed=JSON.stringify(m)!==JSON.stringify(D);
-if(changed){D=m;LS.set('ss_data',JSON.stringify(D));renderAll()}
+if(changed){D=m;LS.set('ss_data',JSON.stringify(D));if(typing())pendingRender=true;else renderAll()}
 if(data&&JSON.stringify(merge(data,{}))===JSON.stringify(merge(D,{}))){break}
 if(await ghPut(D,sha))break}
 syncLabel('同期ずみ '+new Date().toLocaleTimeString().slice(0,5),true)}catch(e){syncLabel('同期できません：'+e.message,false)}busy=false}
 function schedulePush(){clearTimeout(pushTimer);pushTimer=setTimeout(sync,1500)}
+let pendingRender=false;const typing=()=>{const a=document.activeElement;return a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&a.type!=='checkbox'&&a.type!=='file'))};
+document.addEventListener('focusout',()=>setTimeout(()=>{if(pendingRender&&!typing()){pendingRender=false;renderAll()}},100));
+setInterval(()=>{if(document.visibilityState==='visible'&&syncOn()&&(D.jobs||[]).some(j=>!j.deleted&&(j.status==='待ち'||j.status==='作業中')))sync()},120000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
 
 /* ---------- タブ（スクロール位置を保つ） ---------- */
@@ -428,23 +442,26 @@ $('exp').onclick=async()=>{const t=JSON.stringify(D,null,1);try{await navigator.
 
 /* ---------- 制作（手順どおりに進めるだけ） ---------- */
 const STEPS=[
-{t:'参考を集める',s:'真似たい場面を録画して、メモを選ぶ'},
-{t:'Claude に頼む',s:'依頼文を貼って、録画を送る'},
-{t:'台本を確かめる',s:'届いた台本を読んで、直しを伝える'},
+{t:'参考と資料を集める',s:'真似たい場面の録画と、中身の資料（文字起こし）'},
+{t:'台本づくりを頼む',s:'ボタン一つで Claude に頼む'},
+{t:'台本を確かめる',s:'届いた台本を読んで、直しを頼む'},
 {t:'動画を確かめる',s:'1.5倍速で見て、直す所を書く'},
 {t:'残して終わる',s:'次からも使う直しを工夫の棚へ'}];
 let curProj=null;
 const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
+function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し'};
+return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.result?'　'+esc(j.result):''}</div>`).join('')}</details>`}
 function renderMake(){ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
-if(!p){$('makeTop').innerHTML=`<p class="big">いま作っている動画はありません。</p>
+if(!p){$('makeTop').innerHTML=jobsPanel()+`<p class="big">いま作っている動画はありません。</p>
 ${makeC.length?`<p class="lead">「作る」にした題材から一つ選ぶと、やることが順番に出てきます。</p>${makeC.map(c=>`<div class="item"><div class="q">${esc(c.q)}</div><div class="row"><button class="b main" data-start="${c.id}">これを作る</button><button class="b" data-unmake="${c.id}">制作から外す</button></div></div>`).join('')}`
 :`<div class="empty">候補の画面で、作りたい題材を「作る」にしてください。</div>`}`;$('makeSteps').innerHTML='';return}
 const s=p.step||0;
-$('makeTop').innerHTML=`<div class="item"><div class="tags">いま作っている動画</div><div class="q">${esc(candQ(p))}</div>
+$('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま作っている動画</div><div class="q">${esc(candQ(p))}</div>
 <div class="big" style="margin-top:8px">次にやること：${s<STEPS.length?esc(STEPS[s].t):'完成'}</div>
 <div class="row"><button class="b" data-quit>この制作をやめる（候補にもどす）</button></div>
 ${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
@@ -456,13 +473,28 @@ const body=[
 <li>録画はデスクトップに「屏幕录制…」の名前で保存される。1本の動画から2〜3か所、10〜30秒ずつで十分</li></ol></div>
 <p class="lead" style="margin:8px 0 2px">この動画で参考にするメモに印を付ける（${(p.refs||[]).length}件選択中）</p>
 ${refs.length?refs.map(i=>`<label class="chk"><input type="checkbox" data-ref="${i.id}" ${(p.refs||[]).includes(i.id)?'checked':''}><span>${i.sec?toClock(i.sec)+'　':''}${esc(i.memo)}<br><span class="lead">${esc((i.video||'').replace(urlOf(i.video),'').trim()||urlOf(i.video)||'')}</span></span></label>`).join(''):'<div class="empty">まだ「作り方の工夫」のメモがありません。ひらめき帳で書くと、ここに出ます。</div>'}
+<h3 style="font-size:15px;margin:14px 0 4px">見せ方の録画</h3>
+${syncOn()?`<p class="lead" style="margin:0 0 4px">録画ファイル（屏幕录制….mov）をここで選ぶと、そのまま Claude に届きます。</p><input type="file" accept="video/*" multiple data-recs>
+${(p.recs||[]).map(r=>`<div class="lead">・${esc(r.name)}</div>`).join('')}<div class="lead" id="recMsg"></div>`:`<p class="lead">同期を設定すると、録画をここから直接届けられます（今は手順2でチャットにドラッグ）。</p>`}
+<h3 style="font-size:15px;margin:14px 0 4px">中身の資料（動画の文字起こし）</h3>
+<div class="how"><b>文字起こしの取り方（Mac・Chromebook）</b><ol><li>YouTube の動画の説明欄を「もっと見る」で開き、下の方の<b>「文字起こしを表示」</b>を押す（中国語表示なら「内容转文字」などの名前）</li><li>右に出た欄の中を全部選んでコピーして、下に貼る</li></ol></div>
+${(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted).map(m=>`<div class="item" style="margin:6px 0"><div class="q" style="font-size:14.5px">${esc(m.title||m.url||'資料')}</div>
+<div class="tags"><span>${esc(m.size)}</span><span>${esc(m.status||'')}</span></div>${m.summary?`<details open><summary>要約</summary><div style="white-space:pre-wrap;font-size:14px">${esc(m.summary)}</div></details>`:''}
+<div class="st">${!syncOn()?`<button data-mcopy="${m.id}">要約の依頼文をコピー</button>`:''}<button data-mdel="${m.id}">消す</button></div></div>`).join('')}
+<label>動画の題名か URL</label><input id="mTitle">
+<label>文字起こし（全部貼る）</label><textarea id="mText" style="min-height:100px"></textarea>
+<label>要約の量</label><select id="mSize"><option>3行で</option><option selected>1分で読める量で</option><option>見出しつきで詳しく</option><option>数字と固有名詞を全部ぬき出して</option></select>
+<div class="row"><button class="b" data-madd>${syncOn()?'資料に入れて要約を頼む':'資料に入れる'}</button><span class="lead" id="mMsg"></span></div>
 <div class="row"><button class="b main" data-next>集め終わった</button></div>`,
-`<div class="how"><b>やること</b><ol><li>下のボタンを押す（依頼文がコピーされて Claude が開く）</li><li>開いたチャットに貼りつける</li><li>デスクトップの録画ファイル（屏幕录制…）を、そのチャットにドラッグして送る</li></ol></div>
+(syncOn()?`<div class="how"><b>やること</b><p style="margin:4px 0">ボタンを押すだけ。Claude が録画・メモ・資料の要約を読み、型紙と台本を作って、手順3に届けます（1時間以内）。</p></div>
+<div class="row"><button class="b main" data-job="script">台本づくりを頼む</button></div>${jobLine(p,'script')}`:`<div class="how"><b>やること</b><ol><li>下のボタンを押す（依頼文がコピーされて Claude が開く）</li><li>開いたチャットに貼りつける</li><li>デスクトップの録画ファイル（屏幕录制…）を、そのチャットにドラッグして送る</li></ol>
+<p class="lead">同期を設定すると、ボタン一つで頼めて、台本もアプリに届くようになります（使い方→最初の設定③）。</p></div>
 <div class="row"><button class="b main" data-copy="order">依頼文をコピーして Claude を開く</button></div>
-<div class="row"><button class="b" data-next>送った</button></div>`,
-`<div class="how"><b>やること</b><ol><li>Claude から届いた台本を読む</li><li>変だと思う所、分かりにくい所、つまらない所を下に書く（なければ空でよい）</li></ol></div>
+<div class="row"><button class="b" data-next>送った</button></div>`),
+`${p.script?`<details open><summary>届いた台本（${p.scriptVer||1}版）</summary><div style="white-space:pre-wrap;font-size:14.5px;line-height:1.8">${esc(p.script)}</div></details>${p.kata?`<details><summary>型紙（読み取った作り方）</summary><div style="white-space:pre-wrap;font-size:14px">${esc(p.kata)}</div></details>`:''}`:(syncOn()?'<div class="empty">台本はまだ届いていません。届くとここに出ます。</div>':'')}
+<div class="how"><b>やること</b><ol><li>届いた台本を読む</li><li>変だと思う所、分かりにくい所、つまらない所を下に書く（なければ空でよい）</li></ol></div>
 <label>台本の直し</label><textarea data-field="scriptNotes" placeholder="例：冒頭の問いが長い／瀬戸内海の所をもっと驚かせたい">${esc(p.scriptNotes||'')}</textarea>
-<div class="row"><button class="b" data-copy="script">直しをコピーして Claude を開く</button><button class="b main" data-next>台本はこれでいい</button></div>`,
+<div class="row">${syncOn()?`<button class="b" data-job="script_fix">直しを頼む</button>`:`<button class="b" data-copy="script">直しをコピーして Claude を開く</button>`}<button class="b main" data-next>台本はこれでいい</button></div>${jobLine(p,'script_fix')}`,
 `<div class="how"><b>やること</b><ol><li>届いた動画を 1.5倍速で見る</li><li>直したい所を、時間と一緒に一行ずつ書く</li><li>直しを送り、直った版がきたらもう一度見る。気が済んだら「完成」</li></ol></div>
 <div id="fixes">${(p.fixes||[]).map((f,k)=>`<div class="fix"><input data-fsec="${k}" value="${esc(f.sec||'')}" placeholder="1:23"><input data-ftxt="${k}" value="${esc(f.text||'')}" placeholder="直したいこと"><button class="b" data-fdel="${k}">×</button></div>`).join('')}</div>
 <div class="row"><button class="b" data-fadd>直しを一行足す</button></div>
@@ -472,8 +504,14 @@ ${[...(p.scriptNotes||'').split('\n').filter(x=>x.trim()).map(x=>({sec:'',text:x
 <div class="row"><button class="b main" data-finish>終わる</button></div>`];
 $('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now open':''}" data-k="${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div></div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('')}
 function orderText(p){const refs=(p.refs||[]).map(id=>D.ideas.find(i=>i.id===id)).filter(Boolean);const c=D.candidates.find(x=>x.id===p.candId)||{};
-return `地図で「なぜ」を解く YouTube チャンネルの動画を、完全 AI 版で一本作ってほしい。\n\n題材：${candQ(p)}\n${c.angle?'切り口：'+c.angle+'\n':''}長さ：10分ほど\n\n参考にしたい見せ方（このあと録画を送ります）：\n${refs.map((i,k)=>`${k+1}. ${i.video||'（動画）'}${i.sec?'（'+toClock(i.sec)+'）':''}\n   ${i.memo}${i.where&&i.where!=='全体'?'（効く場所：'+i.where+'）':''}`).join('\n')||'（なし）'}\n\n進め方：\n1. 送る録画をコマに分けて見て、画面の切り替わる間隔・地図の動き・字幕・色の使い方を型紙にまとめる\n2. 台本を書いて見せる\n3. OK が出たら、声・地図アニメーション・字幕まで入れて、最後まで書き出した動画にする`}
+const mats=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted);
+return `地図で「なぜ」を解く YouTube チャンネルの動画を、完全 AI 版で一本作ってほしい。\n\n題材：${candQ(p)}\n${c.angle?'切り口：'+c.angle+'\n':''}長さ：10分ほど\n\n参考にしたい見せ方（このあと録画を送ります）：\n${refs.map((i,k)=>`${k+1}. ${i.video||'（動画）'}${i.sec?'（'+toClock(i.sec)+'）':''}\n   ${i.memo}${i.where&&i.where!=='全体'?'（効く場所：'+i.where+'）':''}`).join('\n')||'（なし）'}\n\n中身の資料（動画の要約・文字起こし）：\n${mats.map(m=>`■ ${m.title||m.url||'資料'}\n${m.summary||m.text.slice(0,4000)}`).join('\n\n')||'（なし）'}\n\n進め方：\n1. 送る録画をコマに分けて見て、画面の切り替わる間隔・地図の動き・字幕・色の使い方を型紙にまとめる\n2. 台本を書いて見せる\n3. OK が出たら、声・地図アニメーション・字幕まで入れて、最後まで書き出した動画にする`}
 function fixText(p){return `さっきの動画の直しです。\n${(p.fixes||[]).filter(f=>f.text).map(f=>`・${f.sec?f.sec+' ':''}${f.text}`).join('\n')}\n直した版を書き出してください。`}
+const md=ms=>{const d=new Date(ms);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`};
+function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
+if(!j)return'';return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}</p>`}
+function queueJob(o){const j={id:uid('j'),status:'待ち',createdAt:now(),updatedAt:now(),...o};D.jobs.push(j);save();return j}
+async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());return bytesToB64(buf)}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
 function touchP(p){p.updatedAt=now();save()}
 $('makeTop').addEventListener('click',e=>{
@@ -486,6 +524,13 @@ $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;
 if(el.closest('.sh')){el.closest('.step').classList.toggle('open');return}
 if(el.matches('[data-next]')){p.step=(p.step||0)+1;touchP(p);renderMake();window.scrollTo(0,0);return}
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
+if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
+queueJob({type,projId:p.id,notes:type==='script_fix'?p.scriptNotes:''});renderMake();return}
+if(el.matches('[data-madd]')){const text=$('mText').value.trim();if(!text){$('mMsg').textContent='文字起こしを貼ってください';return}
+const m={id:uid('m'),title:$('mTitle').value.trim(),url:urlOf($('mTitle').value),text,size:$('mSize').value,status:syncOn()?'要約待ち':'',summary:'',projId:p.id,updatedAt:now()};D.materials.push(m);
+p.mats=p.mats||[];p.mats.push(m.id);if(syncOn())queueJob({type:'summary',matId:m.id,projId:p.id});touchP(p);renderMake();return}
+if(el.matches('[data-mdel]')){const m=D.materials.find(x=>x.id===el.dataset.mdel);m.deleted=true;m.updatedAt=now();p.mats=(p.mats||[]).filter(x=>x!==m.id);touchP(p);renderMake();return}
+if(el.matches('[data-mcopy]')){const m=D.materials.find(x=>x.id===el.dataset.mcopy);await copyOpen(`次の動画の文字起こしを、${m.size}要約して。自分の言葉で言い換え、数字や固有名詞は「動画内の主張」として残して。\n動画：${m.title||''}\n\n${m.text}`);return}
 if(el.matches('[data-copy]')){const k=el.dataset.copy;await copyOpen(k==='order'?orderText(p):k==='script'?`台本の直しです。\n${p.scriptNotes||''}\n直した台本を見せてください。`:fixText(p));return}
 if(el.matches('[data-fadd]')){p.fixes=p.fixes||[];p.fixes.push({sec:'',text:''});touchP(p);renderMake();const ins=document.querySelectorAll('[data-ftxt]');ins[ins.length-1]?.focus();return}
 if(el.matches('[data-fdel]')){p.fixes.splice(+el.dataset.fdel,1);touchP(p);renderMake();return}
@@ -493,7 +538,10 @@ if(el.matches('[data-finish]')){const all=[...(p.scriptNotes||'').split('\n').fi
 document.querySelectorAll('[data-keep]').forEach(c=>{if(c.checked){const f=all[+c.dataset.keep];D.kufu.unshift({id:uid('k'),name:f.text.slice(0,30),kind:'決まり',body:f.text,where:'全体',src:candQ(p)+'の制作から',status:'採用',effect:'',updatedAt:now()})}});
 p.finished=true;p.step=STEPS.length;const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='作った';c.updatedAt=now()}
 touchP(p);curProj=null;renderAll();window.scrollTo(0,0)}});
-$('makeSteps').addEventListener('change',e=>{const p=projOf();if(!p)return;const el=e.target;
+$('makeSteps').addEventListener('change',async e=>{const p=projOf();if(!p)return;const el=e.target;
+if(el.matches('[data-recs]')){const fs=[...el.files];for(const f of fs){if(f.size>90e6){alert(f.name+' は大きすぎます（90MBまで）。短く録り直してください');continue}
+$('recMsg').textContent=f.name+' を送っています…';try{const path=`refs/${p.id}/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;await ghPutFile(path,await fileToB64(f),'録画を追加');p.recs=p.recs||[];p.recs.push({name:f.name,path});touchP(p);$('recMsg').textContent=f.name+' を送りました'}catch(err){$('recMsg').textContent='送れませんでした：'+err.message}}
+renderMake();return}
 if(el.matches('[data-ref]')){p.refs=p.refs||[];const id=el.dataset.ref;if(el.checked){if(!p.refs.includes(id))p.refs.push(id)}else p.refs=p.refs.filter(x=>x!==id);touchP(p);
 const lead=el.closest('.sb').querySelector('.lead');if(lead)lead.textContent=`この動画で参考にするメモに印を付ける（${p.refs.length}件選択中）`}});
 $('makeSteps').addEventListener('input',e=>{const p=projOf();if(!p)return;const el=e.target;
@@ -519,7 +567,7 @@ const st=b.dataset.atake==='make'?'作る':b.dataset.atake;
 D.candidates.push({id:'auto-'+x.id,q:x.q,pillar:x.pillar||'',entry:'自動',angle:x.angle||'',supply:x.supply||'',demand:x.demand||'',score:x.score||0,links:x.links||[],status:st,like:0,memo:x.cause?'見立て：'+x.cause:'',updatedAt:now()});
 save();renderAll()});
 $('autoN').value=LS.get('auto_n','5');$('autoN').onchange=()=>LS.set('auto_n',$('autoN').value);
-$('autoRun').onclick=()=>{const n=$('autoN').value;copyOpen(`制作室の題材を、追加で ${n} 個選んでほしい。\nGitHub の nisenonamae/seisakushitsu を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、tools/AUTO_PICK.md の手順の「数を指定されたとき」に従って、題材を ${n} 個選び、data/auto.json の items に追加して push して（今ある items は残す。history にあるものは選ばない）。終わったら選んだ題材を点数つきで一行ずつ教えて。`)};
+$('autoRun').onclick=()=>{const n=$('autoN').value;if(syncOn()){queueJob({type:'pick',n:+n});$('autoMeta').textContent=`${n}個の題材探しを頼みました。1時間以内にここに出ます`;return}copyOpen(`制作室の題材を、追加で ${n} 個選んでほしい。\nGitHub の nisenonamae/seisakushitsu を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、tools/AUTO_PICK.md の手順の「数を指定されたとき」に従って、題材を ${n} 個選び、data/auto.json の items に追加して push して（今ある items は残す。history にあるものは選ばない）。終わったら選んだ題材を点数つきで一行ずつ教えて。`)};
 
 function renderAll(){renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
