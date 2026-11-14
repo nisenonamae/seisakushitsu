@@ -9,14 +9,13 @@ for(let i=0;i<1600;i++){const x=rr()*W,y=430+rr()*290;grains.push({x,y,r:4+rr()*
 function prof(x){return 470-70*Math.sin(2*Math.PI*(x-160)/640)}
 window.render=function(t){
   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#141a22');g.fillStyle=bg;g.fillRect(0,0,W,H);
-  const u=ease((t-0.2)/1.0);
+  // 車輪が谷に着地するたびに、谷の粒がぎゅっと寄せられ、色が濃くなる
+  const hits=Math.min(4,Math.floor(t/0.7));const u=clamp(hits/4+ ((t%0.7)<0.2&&t<2.8?0.05:0));
   for(const p of grains){const top=prof(p.x);if(p.y<top)continue;
-    // 谷（x≈640 付近）は粒を寄せて詰める、山（x≈320,960）はすき間を空ける
     const valley=Math.exp(-Math.pow((p.x-640)/150,2)),crest=Math.exp(-Math.pow((p.x-320)/150,2))+Math.exp(-Math.pow((p.x-960)/150,2));
-    const sz=p.r*(1+0.35*valley*u-0.25*crest*u);const al=0.55+0.4*valley*u-0.25*crest*u;
-    g.fillStyle=`rgba(${200+20*valley},${165+10*valley},${110},${al})`;g.beginPath();g.arc(p.x,p.y,sz,0,7);g.fill()}
+    const sq=valley*u;const x=lerp(p.x,640+(p.x-640)*0.75,sq),y=lerp(p.y,top+(p.y-top)*0.7,sq);
+    const sz=p.r*(1-0.15*sq+0.1*crest);g.fillStyle=`rgba(${Math.round(200-60*sq)},${Math.round(165-50*sq)},${Math.round(110-40*sq)},${0.6+0.35*sq-0.2*crest})`;g.beginPath();g.arc(x,y,sz,0,7);g.fill()}
   g.strokeStyle='rgba(255,236,200,.9)';g.lineWidth=4;g.beginPath();for(let x=0;x<=W;x+=4){x?g.lineTo(x,prof(x)):g.moveTo(x,prof(x))}g.stroke();
-  const k1=back((t-0.9)/0.35),k2=back((t-1.5)/0.35);sfxOnce('a',0.9,'pop');sfxOnce('b',1.5,'pop');
-  label(320,330,'山：ふんわり',k1,'#fff',38);label(640,380,'谷：ぎゅっと詰まる',k2,'#ffd36a',38);
-};
-</script></body></html>
+  // 着地する車輪（上から落ちてきて谷を押す）
+  const ph=(t%0.7)/0.7;if(t<2.8){const y=lerp(prof(640)-260,prof(640)-62,Math.min(1,ph/0.45))+(ph>0.45?-Math.sin((ph-0.45)/0.55*Math.PI)*90:0);tire(640,y,60,t*6);if(ph<0.47&&ph>0.4)sfxOnce('h'+hits,t,'thump')}
+};</script></body></html>

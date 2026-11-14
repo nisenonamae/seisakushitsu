@@ -100,11 +100,11 @@ def ruler(s,dur,c,repo):
     for n in range(N):
         t=n/FPS;im=SKY.copy().convert('RGBA');ground(im,top);d=ImageDraw.Draw(im,'RGBA')
         if s.get('mode','one')=='one':
-            a=W/2-lam/2+35;b=a+lam;u=ease((t-0.3)/0.8);yy=base-120;x2=a+(b-a)*u
+            a=40+lam/4+lam*round((W/2-lam/2-40-lam/4)/lam);b=a+lam;u=ease((t-0.3)/0.8);yy=base-110;x2=a+(b-a)*u   # 山のてっぺんからてっぺんまで
             d.line([(a,yy),(x2,yy)],fill=(242,194,48),width=8)
             for x in (a,x2):d.line([(x,yy-24),(x,yy+24)],fill=(242,194,48),width=6)
             if u>0.95:
-                for x in (a,b):d.line([(x,yy+28),(x,top(x)-8)],fill=(255,255,255,120),width=3)
+                for x in (a,b):d.line([(x,yy+26),(x,top(x)-6)],fill=(255,255,255,170),width=3);d.ellipse([x-7,top(x)-7,x+7,top(x)+7],fill=(242,194,48))
                 if 'e' not in done:c.sfx.append([t,'tick']);done.add('e')
             if u>0.9:k=back((t-1.1)/0.35);d.text(((a+b)/2,yy-70),s.get('text','約30cm'),font=font(int(80*max(0.01,k))),fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
         else:

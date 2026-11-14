@@ -27,8 +27,10 @@ def _road(im,y,h,kind,u,x0=420,x1=1180):
         d.rectangle([x0,y-h/2,xe,y+h/2],fill=(70,74,82));d.line([(x0,y-h/2),(xe,y-h/2)],fill=(200,200,200),width=3);d.line([(x0,y+h/2),(xe,y+h/2)],fill=(200,200,200),width=3)
         for x in range(int(x0+20),int(xe)-30,70):d.rectangle([x,y-3,x+36,y+3],fill=(240,240,230))
     else:
-        d.rectangle([x0,y-h/2,xe,y+h/2],fill=SAND)
-        for x in range(int(x0+10),int(xe)-8,26):d.rectangle([x,y-h/2+6,x+9,y+h/2-6],fill=(170,138,94))
+        d.rectangle([x0,y-h/2,xe,y+h/2],fill=SAND)   # 土の道（波は描かない：ただの未舗装の道）
+        rr=random.Random(int(y))
+        for k in range(int((xe-x0)/3)):x=rr.uniform(x0,xe);yy=rr.uniform(y-h/2+4,y+h/2-4);d.ellipse([x-2,yy-2,x+2,yy+2],fill=(160,128,86))
+        d.line([(x0,y-h/2),(xe,y-h/2)],fill=(176,146,100),width=3);d.line([(x0,y+h/2),(xe,y+h/2)],fill=(176,146,100),width=3)
 def roads(s,dur,c,repo):
     mode=s.get('mode','share');N=c.N
     if mode=='share':
@@ -132,7 +134,7 @@ def voices(s,dur,c,repo):
             if n==int(t0*FPS):c.sfx.append([t0,'pop'])
             bx,by=x,H*0.38;r=95*k
             d.ellipse([bx-r,by-r*0.85,bx+r,by+r*0.85],fill=(245,245,240));d.polygon([(bx-14*k,by+r*0.78),(bx+14*k,by+r*0.78),(x,y-170)],fill=(245,245,240))
-            icon(d,it['icon'],bx,by,110*k,col=(50,60,75))
+            icon(d,it['icon'],bx+(24 if it['icon']=='brake' else 0),by,(70 if it['icon']=='brake' else 105)*k,col=(50,60,75))
             if it.get('label'):d.text((bx,by+r*0.85+30),it['label'],font=font(28),fill=WHITE,anchor='mm',stroke_width=3,stroke_fill=(0,0,0))
         c.add(im)
 # ---------- そぎ落とす（車から車輪と砂だけを残す） ----------

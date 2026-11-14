@@ -2,15 +2,20 @@
 <canvas id="c" width="1280" height="720"></canvas>
 <script src="lib.js"></script>
 <script>
-/* 年月がたつ：めくりカレンダーが from 年から to 年まで、だんだん速くめくれる */
+/* 月めくりのカレンダー：from 年 1月 から to 年まで、ページがどんどんめくれて年月が進む */
 window.DEF={from:1963,to:2007};
-window.render=function(t){
-  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#3b4656');bg.addColorStop(1,'#1b222c');g.fillStyle=bg;g.fillRect(0,0,W,H);
-  const u=ease(t/Math.max(0.8,DUR*0.8));const yr=Math.round(lerp(P.from,P.to,u));if(window._y!==yr){window._y=yr;window.SFX.push([t,'tick'])}
-  const x=640,y=380;g.fillStyle='#e5e7eb';g.beginPath();g.roundRect(x-230,y-200,460,400,18);g.fill();g.fillStyle='#c0392b';g.beginPath();g.roundRect(x-230,y-200,460,90,[18,18,0,0]);g.fill();
-  for(const rx of [-120,120]){g.fillStyle='#4b5563';g.beginPath();g.arc(x+rx,y-200,14,0,7);g.fill()}
-  g.fillStyle='#111827';g.font=`900 150px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(String(yr),x,y+50);
-  // めくれる紙
-  for(let i=0;i<6;i++){const f=((t*Math.max(1.5,u*10))+i/6)%1;if(u>=1)break;g.save();g.translate(x+f*380*(i%2?1:-1),y-110-f*300);g.rotate(f*(i%2?1.2:-1.2));g.globalAlpha=0.8*(1-f);g.fillStyle='#f3f4f6';g.fillRect(-90,-60,180,120);g.restore()}
+const DOW=['日','月','火','水','木','金','土'];
+function page(x,y,yr,mo,alpha=1){g.save();g.globalAlpha=alpha;g.fillStyle='#fbfaf6';g.fillRect(x-300,y,600,440);g.fillStyle='#b91c1c';g.fillRect(x-300,y,600,96);
+  g.fillStyle='#fff';g.font=`900 30px ${FONT}`;g.textAlign='left';g.textBaseline='middle';g.fillText(String(yr)+'年',x-270,y+48);g.font=`900 64px ${FONT}`;g.textAlign='right';g.fillText(String(mo)+'月',x+270,y+50);
+  const first=new Date(yr,mo-1,1).getDay(),days=new Date(yr,mo,0).getDate();g.font=`700 22px ${FONT}`;g.textAlign='center';
+  for(let i=0;i<7;i++){g.fillStyle=i===0?'#b91c1c':(i===6?'#1d4ed8':'#374151');g.fillText(DOW[i],x-258+i*86,y+122)}
+  for(let d=1;d<=days;d++){const c=(first+d-1)%7,r=Math.floor((first+d-1)/7);g.fillStyle=c===0?'#b91c1c':(c===6?'#1d4ed8':'#111827');g.font=`700 26px ${FONT}`;g.fillText(String(d),x-258+c*86,y+168+r*50)}g.restore()}
+window.render=function(t){const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#cdb79a');bg.addColorStop(1,'#a88d6c');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  const total=(P.to-P.from)*12;const u=Math.pow(ease(t/Math.max(0.8,DUR*0.85)),1.0);const idx=Math.min(total,Math.floor(u*total));const yr=P.from+Math.floor(idx/12),mo=idx%12+1;
+  const x=640,y=170;g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x-292,y+10,600,440);page(x,y,yr,mo);
+  // めくれていく前のページ（上へ持ち上がりながら消える）
+  if(idx<total){const f=(u*total)%1;const pi=Math.max(0,idx-1);const py=P.from+Math.floor(pi/12),pm=pi%12+1;g.save();g.translate(x,y);g.scale(1,Math.max(0.02,1-f));g.translate(-x,-y);page(x,y,py,pm,1-f*0.6);g.restore()}
+  g.fillStyle='#4b5563';for(let i=0;i<9;i++){g.beginPath();g.arc(x-240+i*60,y-6,9,0,7);g.fill()}
+  if(window._m!==Math.floor(u*total/6)){window._m=Math.floor(u*total/6);if(idx<total)window.SFX.push([t,'tick'])}
 };
 </script></body></html>

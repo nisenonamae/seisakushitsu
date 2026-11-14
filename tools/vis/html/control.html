@@ -2,39 +2,32 @@
 <canvas id="c" width="1280" height="720"></canvas>
 <script src="lib.js"></script>
 <script>
-/* ハンドルとブレーキが効きにくい（真上から見た洗濯板道路）
-   times[1]＝「ブレーキ」と言う瞬間。それまではハンドル、そこからブレーキ */
+/* ハンドルとブレーキが効きにくい（真上から）。上の道＝ふつうの舗装道路（うすい車）、下の道＝洗濯板道路（赤い車）。文字なし。
+   times[1]＝「ブレーキ」の瞬間。それまではハンドル：上の車は曲がるのに、下の車はまっすぐ滑る。そこからはブレーキ：上は早く止まり、下は長く滑ってから止まる */
 window.DEF={};
-function topRoad(off){g.fillStyle='#7f9a5a';g.fillRect(0,0,W,H);g.fillStyle='#cfa86c';g.fillRect(0,250,W,260);
-  for(let x=-((off)%34);x<W;x+=34){g.fillStyle='rgba(120,90,55,.45)';g.fillRect(x,252,14,256)}
-  g.strokeStyle='rgba(255,255,255,.25)';g.lineWidth=3;g.beginPath();g.moveTo(0,250);g.lineTo(W,250);g.moveTo(0,510);g.lineTo(W,510);g.stroke()}
-function carTop(x,y,ang,hop){g.save();g.translate(x,y);g.rotate(ang);
-  for(const [wx,wy,i] of [[-60,-46,0],[-60,46,1],[62,-46,2],[62,46,3]]){const up=hop[i];g.fillStyle=up?'rgba(20,20,20,.35)':'#15171b';g.fillRect(wx-18,wy-9,36,18);if(up){g.strokeStyle='#ffd36a';g.lineWidth=3;g.strokeRect(wx-20,wy-11,40,22)}}
-  g.fillStyle='#d9534f';g.beginPath();g.roundRect(-95,-42,190,84,20);g.fill();g.fillStyle='#bfe0f2';g.beginPath();g.roundRect(18,-34,34,68,8);g.fill();g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect(-40,-36,56,72,10);g.fill();g.restore()}
-function wheelUI(x,y,ang,k){g.save();g.globalAlpha=k;g.fillStyle='rgba(10,14,20,.8)';g.beginPath();g.roundRect(x-120,y-110,240,220,20);g.fill();g.translate(x,y);g.rotate(ang);g.strokeStyle='#e5e7eb';g.lineWidth=16;g.beginPath();g.arc(0,0,70,0,7);g.stroke();g.lineWidth=12;g.beginPath();g.moveTo(-66,0);g.lineTo(66,0);g.moveTo(0,0);g.lineTo(0,66);g.stroke();g.fillStyle='#e5e7eb';g.beginPath();g.arc(0,0,16,0,7);g.fill();g.restore();g.save();g.globalAlpha=k;g.fillStyle='#e5e7eb';g.font=`800 24px ${FONT}`;g.textAlign='center';g.fillText('ハンドル',x,y+98);g.restore()}
-function pedalUI(x,y,press,k){g.save();g.globalAlpha=k;g.fillStyle='rgba(10,14,20,.8)';g.beginPath();g.roundRect(x-120,y-110,240,220,20);g.fill();g.save();g.translate(x+10,y+10);g.rotate(0.35*press);g.fillStyle='#9ca3af';g.fillRect(-40,-60,80,26);g.fillRect(-6,-40,12,80);g.restore();
-  g.fillStyle='#374151';g.beginPath();g.ellipse(x-20+press*10,y-58+press*26,62,24,0.55,0,7);g.fill();g.fillStyle='#e5e7eb';g.font=`800 24px ${FONT}`;g.textAlign='center';g.fillText('ブレーキ',x,y+92);g.restore()}
+const LANE=[230,500];
+function laneDraw(y,kind,off){g.fillStyle=kind==='paved'?'#4b5160':'#cfa86c';g.fillRect(0,y-110,W,220);
+  if(kind==='paved'){g.fillStyle='#e5e7eb';for(let x=-(off%120);x<W;x+=120)g.fillRect(x,y-3,60,6)}else{for(let x=-(off%34);x<W;x+=34){g.fillStyle='rgba(120,90,55,.45)';g.fillRect(x,y-108,14,216)}}}
+function carTop(x,y,ang,col,hop,alpha=1){g.save();g.globalAlpha=alpha;g.translate(x,y);g.rotate(ang);
+  for(const [wx,wy,i] of [[-60,-46,0],[-60,46,1],[62,-46,2],[62,46,3]]){const up=hop&&hop[i];g.save();g.translate(wx,wy);if(i>=2)g.rotate(P._steer||0);g.fillStyle=up?'rgba(20,20,20,.3)':'#15171b';g.fillRect(-18,-9,36,18);g.restore()}
+  g.fillStyle=col;g.beginPath();g.roundRect(-95,-42,190,84,20);g.fill();g.fillStyle='#bfe0f2';g.beginPath();g.roundRect(18,-34,34,68,8);g.fill();g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect(-40,-36,56,72,10);g.fill();g.restore()}
 window.render=function(t){
-  const tb=T(1,DUR*0.45);sfxOnce('r',0,'rattle',DUR);
-  if(t<tb){ // ハンドル
-    const off=t*700;topRoad(off);const steer=ease((t-0.4)/0.6)*0.9;
-    // 曲がりたい道すじ（点線）と、実際の向き
-    g.strokeStyle='rgba(255,255,255,.8)';g.setLineDash([14,12]);g.lineWidth=5;g.beginPath();g.moveTo(560,380);g.quadraticCurveTo(820,380,980,270);g.stroke();g.setLineDash([]);
-    if(t>0.9){g.strokeStyle='rgba(255,211,106,.9)';g.lineWidth=7;g.beginPath();g.moveTo(560,384);g.lineTo(560+ease((t-0.9)/0.5)*420,388);g.stroke()}
-    const hop=[0,1,2,3].map(i=>Math.sin(t*37+i*1.7)>0.1?1:0);const ang=-0.05*steer+0.03*Math.sin(t*23);
-    carTop(470,380+6*Math.sin(t*29),ang,hop);
-    wheelUI(1110,140,-steer*1.4+0.06*Math.sin(t*30),eout(t/0.3));
-    label(780,600,'曲がりたいのに、まっすぐ進む',back((t-0.9)/0.35),'#ffd36a',34);
-  }else{ // ブレーキ
-    const u=t-tb,v0=520,dec=150;const x0=200;const tu=Math.min(u,v0/dec);const xs=x0+v0*tu-0.5*dec*tu*tu;
-    topRoad(0);
-    // 普通の道ならここで止まる（印）
-    const stopN=x0+v0*v0/(2*620);g.fillStyle='rgba(255,255,255,.9)';g.fillRect(stopN,262,8,236);label(stopN,215,'ふつうの道なら ここで止まる',back((u-0.3)/0.35),'#fff',28);
-    // 途切れ途切れのスリップ跡
-    for(let x=x0;x<Math.min(xs,W);x+=34){if(((x/34)|0)%2)continue;g.fillStyle='rgba(30,30,30,.55)';g.fillRect(x,328,20,6);g.fillRect(x,420,20,6)}
-    const hop=[0,1,2,3].map(i=>Math.sin(t*37+i*1.7)>0.1?1:0);if(xs<W+120)carTop(Math.min(xs,W+100),380+5*Math.sin(t*29),0.02*Math.sin(t*19),hop);
-    pedalUI(1110,140,ease(u/0.3),eout(u/0.3));sfxOnce('b',tb,'thump');
-    label(640,600,'ブレーキを踏んでも 止まらない',back((u-0.8)/0.35),'#ffd36a',34);
+  const tb=T(1,DUR*0.45);g.fillStyle='#b9a27a';g.fillRect(0,0,W,H);
+  if(t<tb){const u=clamp(t/tb);const steer=ease((t-0.3)/0.5)*0.45;P._steer=steer;const off=t*500;
+    laneDraw(LANE[0],'paved',off);laneDraw(LANE[1],'washboard',off);sfxOnce('r',0,'rattle',tb);
+    // 上：曲がる
+    const a1=-ease((t-0.4)/0.9)*0.5;carTop(520,LANE[0]-ease((t-0.5)/1.2)*70,a1,'#9aa3ae',null,0.85);
+    // 下：ハンドルを切っても、ほとんど向きが変わらない
+    const hop=[0,1,2,3].map(i=>Math.sin(t*37+i*1.7)>0.1?1:0);carTop(520,LANE[1]+3*Math.sin(t*29),-0.04+0.03*Math.sin(t*23),'#d9534f',hop);
+  }else{const u=t-tb;P._steer=0;
+    laneDraw(LANE[0],'paved',0);laneDraw(LANE[1],'washboard',0);
+    const v0=520;const d1=Math.min(u,v0/700);const x1=180+v0*d1-0.5*700*d1*d1;            // ふつうの道：強いブレーキ
+    const dec=330;const d2=Math.min(u,v0/dec);const x2=180+v0*d2-0.5*dec*d2*d2;            // 洗濯板道路：効きが弱い
+    if(u<v0/dec)sfxOnce('r2',tb,'rattle',v0/dec);
+    for(let x=180;x<x2;x+=34){if(((x/34)|0)%2)continue;g.fillStyle='rgba(30,30,30,.5)';g.fillRect(x,LANE[1]-48,20,6);g.fillRect(x,LANE[1]+42,20,6)}
+    g.fillStyle='rgba(20,20,20,.55)';g.fillRect(180,LANE[0]-48,x1-180,5);g.fillRect(180,LANE[0]+43,x1-180,5);
+    carTop(x1,LANE[0],0,'#9aa3ae',null,0.85);const moving=u<v0/dec;const hop=moving?[0,1,2,3].map(i=>Math.sin(t*37+i*1.7)>0.1?1:0):null;carTop(x2,LANE[1]+(moving?3*Math.sin(t*29):0),0,'#d9534f',hop);
+    if(!moving)sfxOnce('st',tb+v0/dec,'thump');
   }
 };
 </script></body></html>

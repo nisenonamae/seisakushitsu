@@ -15,7 +15,8 @@ FB='/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc';FR='/usr/share/fonts/op
 V='/home/claude/vv'
 ap=argparse.ArgumentParser();ap.add_argument('--data');ap.add_argument('--proj');ap.add_argument('--repo',default='');ap.add_argument('--out')
 ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=float,default=1.1)
-ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない');a=ap.parse_args()
+ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない')
+ap.add_argument('--subfont',type=int,default=1,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
 D=json.load(open(a.data,encoding='utf-8'));P=[p for p in D['projects'] if p['id']==a.proj][0]
 ob=(P.get('outline') or {}).get('blocks',[]);fb=(P.get('flesh') or {}).get('blocks',[])
 oi={b['id']:i for i,b in enumerate(ob)}
@@ -106,12 +107,22 @@ def card(b,k,n):
     for line in wrap(b['screen'] or '（画面の指示なし）',25)[:6]:
         d.text((W/2,y),line,font=ImageFont.truetype(FB,34),fill=(225,232,242),anchor='ma');y+=50
     return im
+_FD='/home/claude/vv/fonts/'
+SUBST={1:(FB,44,'white',3,(0,0,0),(0,0,0,135),False),2:(_FD+'Zen_Maru_Gothic_wght_700.ttf',48,'white',5,(0,0,0),None,False),3:(_FD+'M_PLUS_Rounded_1c_wght_800.ttf',48,'white',6,(20,30,60),None,False),
+ 4:(_FD+'BIZ_UDPGothic_wght_700.ttf',48,'white',1,(0,0,0),None,True),5:(_FD+'Zen_Kaku_Gothic_New_wght_700.ttf',48,(255,224,90),5,(0,0,0),None,False),6:(_FD+'Noto_Serif_JP_wght_700.ttf',46,'white',2,(0,0,0),None,True),
+ 7:(_FD+'RocknRoll_One.ttf',48,'white',7,(0,0,0),None,False),8:(_FD+'Murecho_wght_700.ttf',46,'white',0,(0,0,0),(10,14,20,175),False),9:(_FD+'Kiwi_Maru_wght_500.ttf',48,'white',6,(70,45,20),None,False),10:(_FD+'Dela_Gothic_One.ttf',46,'white',6,(0,0,0),None,False)}
 def sub_overlay(text):
-    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im);f=ImageFont.truetype(FB,40)
+    """字幕：1行。--subfont の番号の見た目で（見本の画像と同じ番号）"""
+    from PIL import ImageFilter
+    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im)
     if not text:return im
-    tw=d.textlength(text,font=f);y=H-78
-    d.rounded_rectangle([W/2-tw/2-22,y-10,W/2+tw/2+22,y+58],12,fill=(0,0,0,135))
-    d.text((W/2,y),text,font=f,fill=(255,255,255),anchor='ma',stroke_width=3,stroke_fill=(0,0,0))
+    fp,size,fill,stroke,sc,box,shadow=SUBST.get(a.subfont,SUBST[1])
+    if not os.path.exists(fp):fp,size,fill,stroke,sc,box,shadow=SUBST[1]
+    f=ImageFont.truetype(fp,size);tw=d.textlength(text,font=f);y=H-86
+    if box:d.rounded_rectangle([W/2-tw/2-22,y-10,W/2+tw/2+22,y+size+14],12,fill=box)
+    if shadow:
+        sh=Image.new('RGBA',(W,H),(0,0,0,0));ImageDraw.Draw(sh).text((W/2+3,y+4),text,font=f,fill=(0,0,0,220),anchor='ma');im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(4)));d=ImageDraw.Draw(im)
+    d.text((W/2,y),text,font=f,fill=fill,anchor='ma',stroke_width=stroke,stroke_fill=sc)
     return im
 
 import numpy as np
@@ -226,6 +237,7 @@ def snd(kind):
     if kind=='pop':m=int(SR*0.09);tt=np.arange(m)/SR;return 0.16*np.sin(2*np.pi*(900-3000*tt)*tt)*np.exp(-tt*40)
     if kind=='thump':m=int(SR*0.25);tt=np.arange(m)/SR;return 0.32*np.sin(2*np.pi*(95-120*tt)*tt)*np.exp(-tt*18)
     if kind=='tick':m=int(SR*0.03);tt=np.arange(m)/SR;return 0.12*np.sin(2*np.pi*2200*tt)*np.exp(-tt*160)
+    if kind=='boing':m=int(SR*0.7);tt=np.arange(m)/SR;f=220+90*np.sin(2*np.pi*7*tt)*np.exp(-tt*3)+120*np.exp(-tt*4);return 0.16*np.sin(2*np.pi*np.cumsum(f)/SR)*np.exp(-tt*4.5)
     if kind=='puff':m=int(SR*0.35);return 0.10*_noise(m,150,1500)*np.exp(-np.linspace(0,6,m))*np.sin(np.linspace(0,np.pi/2,m))
     return np.zeros(1)
 def snd_long(kind,dur,amt=1.0):
@@ -236,6 +248,8 @@ def snd_long(kind,dur,amt=1.0):
             L=int(SR*0.03);seg=r.standard_normal(min(L,m-k))*np.exp(-np.linspace(0,8,min(L,m-k)));y[k:k+len(seg)]+=seg*0.5;k+=int(SR*r.uniform(0.05,0.11))
         low=0.6*np.sin(2*np.pi*55*tt)*(0.5+0.5*np.sign(np.sin(2*np.pi*9*tt)))
         return 0.09*amt*(y+low*0.4)*np.minimum(1,np.minimum(tt/0.15,(dur-tt)/0.2))
+    if kind=='car':  # 遠くを通り過ぎる車（小さく、近づいて遠ざかる）
+        env=np.exp(-((tt-dur/2)/(dur/4))**2);return 0.05*amt*_noise(m,80,1200)*env
     if kind in('engine','motor'):
         f0,f1=(45,110) if kind=='engine' else (180,420);f=f0+(f1-f0)*np.minimum(1,tt/max(0.1,dur*0.7));ph=2*np.pi*np.cumsum(f)/SR
         y=np.sign(np.sin(ph))*0.5+np.sin(2*ph)*0.3+_noise(m,80,900)*0.15

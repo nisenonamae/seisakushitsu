@@ -33,7 +33,6 @@ window.render=function(t){
    window._p=window._p||[];const landT=Math.floor((off)/lam);if(window._lt!==landT){window._lt=landT;window._p.push({x:cx-110,y:520,t0:t});if(m==='dust')window.SFX.push([t,'puff'])}
    for(const p of window._p){const a=t-p.t0;if(a>1.4)continue;const x=p.x-a*P.speed*0.6,rad=8+a*36;g.fillStyle=`rgba(205,130,90,${0.45*(1-a/1.4)})`;g.beginPath();g.ellipse(x,p.y-rad*0.4,rad,rad*0.55,0,0,7);g.fill()}
    car(cx,520-34-hopH*0.5,1,{bob:-hopH*0.3,heads:3,t,wheelAng:off/34,wheelLift:[hopH,hopH*0.6],col:'#e6e2d8'});
-   if(m==='hop'&&t>1.0&&hopH>3){const gx=cx-110,gy=top(gx);g.fillStyle='rgba(255,211,106,.85)';g.fillRect(gx-30,gy-hopH,60,hopH);sfxOnce('h',1.0,'pop')}
    g.restore();
  }
  else if(m==='suspect'||m==='points'){
@@ -52,8 +51,60 @@ window.render=function(t){
      if(t>T(2,1.5)){for(let i=0;i<6;i++){const a=(t*3+i*0.37)%1;g.fillStyle=`rgba(190,150,90,${1-a})`;g.beginPath();g.arc(cx-160-a*90+i*6,520-a*30+a*a*60,3,0,7);g.fill()}}
    }
  }
+ else if(m==='jproad'){
+   // 日本の道：田んぼと山、電柱とガードレール、なめらかな舗装道路を静かに走る
+   const off=t*260;sky('#9cc8ee','#e6f0f5');g.fillStyle='#5f8f5a';g.beginPath();g.moveTo(0,420);for(let x=0;x<=W;x+=20){const X=x+off*0.1;g.lineTo(x,330-60*Math.abs(Math.sin(X/260))-25*Math.sin(X/90))}g.lineTo(W,420);g.fill();
+   g.fillStyle='#86b35e';g.fillRect(0,420,W,110);for(let y=430;y<528;y+=14){g.strokeStyle='rgba(60,110,50,.35)';g.lineWidth=2;g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
+   g.fillStyle='#4b5160';g.fillRect(0,530,W,H-530);g.fillStyle='#f3f4f6';g.fillRect(0,534,W,5);for(let x=-(off%140);x<W;x+=140)g.fillRect(x,620,70,8);
+   // 電柱と電線
+   for(let x=-(off*0.9%420);x<W+420;x+=420){g.fillStyle='#8a8f98';g.fillRect(x,250,12,280);g.fillRect(x-30,262,72,6)}g.strokeStyle='rgba(40,40,40,.6)';g.lineWidth=2;g.beginPath();g.moveTo(0,266);for(let x=0;x<=W;x+=20)g.lineTo(x,266+8*Math.sin(((x+off*0.9)%420)/420*Math.PI));g.stroke();
+   // ガードレール
+   g.fillStyle='#e5e7eb';g.fillRect(0,506,W,10);for(let x=-(off%60);x<W;x+=60)g.fillRect(x,506,6,26);
+   car(640,615-34*1.3,1.3,{heads:0,t,wheelR:44,wheelAng:off/44});sfxOnce('e',0,'car',DUR);
+ }
+ else if(m==='trunk'){
+   // 舗装された幹線道路をなめらかに走る車が、わき道（土の道）へ曲がると、とたんに揺れて土ぼこり
+   const tj=DUR*0.42;const sp=320;const off=t*sp;sky('#a9c8e4','#efdcbc');hills(off,[['#c9a978',430,26,0.15],['#b8925f',462,18,0.35]]);
+   const dirt=t>tj;const k=ease((t-tj)/0.6);
+   const top=x=>530+(dirt?k*wb(x+off,6,60):0);
+   if(!dirt||k<1){g.save();g.globalAlpha=1-k;g.fillStyle='#4b5160';g.fillRect(-20,530,W+40,H-530);g.fillStyle='#f3f4f6';for(let x=-((off)%120);x<W;x+=120)g.fillRect(x,600,60,8);g.restore()}
+   if(dirt){g.save();g.globalAlpha=k;ground(top,-20,W+20,'#c9a46a');g.restore()}
+   const bob=dirt?k*(7*Math.sin(t*36)+4*Math.sin(t*57)):0;const [sx,sy]=shake(t,dirt?k*4:0);g.save();g.translate(sx,sy);
+   car(640,530-34*1.3,1.3,{bob,heads:dirt?4:0,t,wheelR:44,wheelAng:off/44,wheelLift:dirt?[Math.abs(5*Math.sin(t*41)),Math.abs(5*Math.sin(t*37+1))]:[0,0]});g.restore();
+   if(dirt){sfxOnce('r',tj,'rattle',DUR-tj);for(let i=0;i<5;i++){const a=(t*1.6+i/5)%1;g.fillStyle=`rgba(205,170,120,${0.45*(1-a)*k})`;g.beginPath();g.arc(640-200-a*260,525-a*40,12+a*40,0,7);g.fill()}}
+   // 道しるべ（文字なし）：分かれ道の標識
+   const sxp=900-off+tj*sp;if(sxp>-100&&sxp<W+100){g.fillStyle='#6b7280';g.fillRect(sxp,420,8,110);g.fillStyle='#2f7d32';g.beginPath();g.moveTo(sxp-50,400);g.lineTo(sxp+40,400);g.lineTo(sxp+64,420);g.lineTo(sxp+40,440);g.lineTo(sxp-50,440);g.closePath();g.fill()}
+ }
+ else if(m==='strip'){
+   // 車から車体が静かに外れて消え、車輪と砂だけが残る（文字・効果音なし）
+   sky();hills(0);const top=x=>540;ground(top);const tg=DUR*0.25;const u=ease((t-tg)/Math.max(0.6,DUR*0.45));
+   car(640,540-34*1.4,1.4,{heads:0,t,wheelR:48,wheelAng:0,alpha:1-u,shadowY:0});
+   g.save();g.globalAlpha=1-u*0;tire(640-110*1.4,540-48,48,u*2);tire(640+112*1.4,540-48,48,u*2);g.restore();
+   if(u>0.95){const k=eout((t-tg-DUR*0.45)/0.5);g.save();g.globalAlpha=k;for(let i=0;i<40;i++){const r2=R(i+7);g.fillStyle='rgba(150,115,70,.6)';g.beginPath();g.arc(300+r2()*680,548+r2()*20,2+r2()*3,0,7);g.fill()}g.restore()}
+ }
+ else if(m==='speedup'){
+   // 断面を走る車がだんだん速くなる。ある速さを超えたあたりから、車の後ろに少しずつ波が育つ（急に切り替わらない）
+   const vmax=520,v=lerp(120,vmax,ease(t/(DUR*0.85)));window._x=(window._x||0)+v/30;const off=window._x;
+   window._amp=window._amp||{};const vc=230;const grow=Math.max(0,(v-vc)/(vmax-vc));
+   sky('#7fa9d6','#e9d3ad');hills(off,[['#c9a978',430,26,0.15]]);
+   const A=x=>{const X=Math.floor((x+off)/8);return window._amp[X]||0};
+   const cxw=560;for(let x=-20;x<=cxw-100;x+=8){const X=Math.floor((x+off)/8);window._amp[X]=Math.min(12,(window._amp[X]||0)+grow*1.4)}
+   const top=x=>500-(A(x))*Math.sin((x+off)/18);ground(top);
+   for(let i=0;i<6;i++){const y=420+i*12;g.strokeStyle=`rgba(255,255,255,${clamp((v-160)/300)*0.6})`;g.lineWidth=3;g.beginPath();g.moveTo(cxw-260-((t*700+i*90)%200),y);g.lineTo(cxw-200-((t*700+i*90)%200),y);g.stroke()}
+   car(cxw,500-34,1,{bob:3*Math.sin(t*30)*grow,heads:2*grow,t,wheelAng:off/34});sfxOnce('e',0,'engine',DUR);
+ }
+ else if(m==='assemble'){
+   // 必要な三つ：車輪がころがり出て（times[1]）、その下にゆるい砂が流れ込み（times[2]）、速く回ると（times[3]）後ろに波が生まれる。文字なし
+   const t1=T(1,0.2),t2=T(2,1.4),t3=T(3,2.6);sky('#33404f','#171d25');
+   const sand=eout((t-t2)/0.7);g.save();g.beginPath();g.rect(0,520-sand*80,W,200);g.clip();
+   const sp=t>t3?lerp(0,1,ease((t-t3)/0.8)):0;window._o=(window._o||0)+(t>t1?2+sp*14:0);const o=window._o;
+   const amp=x=>sp*Math.max(0,Math.min(1,(640-x)/500))*10*ease((t-t3-0.5)/1.5);const top=x=>440+(1-sand)*80-amp(x)*Math.sin((x+o)/16);ground(top,-20,W+20,'#c9a46a');g.restore();
+   if(t>t2&&t<t2+0.8){for(let i=0;i<30;i++){const r2=R(i);const a=((t-t2)*1.5+r2())%1;g.fillStyle='rgba(210,170,110,.8)';g.beginPath();g.arc(200+r2()*900,380+a*80,3,0,7);g.fill()}sfxOnce('s',t2,'puff')}
+   const wk=eout((t-t1)/0.5);if(wk>0){sfxOnce('w',t1,'thump');const wx=640,wy=(t>t2?440+(1-sand)*80:520)-60;g.globalAlpha=wk;tire(wx,lerp(-80,wy,wk),60,o/60);g.globalAlpha=1;
+     if(sp>0){sfxOnce('m',t3,'motor',DUR-t3);for(let i=0;i<5;i++){const y=wy-40+i*20;g.strokeStyle=`rgba(255,255,255,${0.5*sp})`;g.lineWidth=4;const a=((t*3+i*0.3)%1);g.beginPath();g.moveTo(wx-100-a*200,y);g.lineTo(wx-70-a*200,y);g.stroke()}}}
+ }
  else if(m==='section'){
-   sky('#7fa9d6','#e9d3ad');const off=t*240,top=x=>480+wb(x+off,16,170);
+   sky('#7fa9d6','#e9d3ad');const off=t*240,top=x=>{const X=x+off;return 480-(7*Math.sin(X/37)+5*Math.sin(X/17+1)+4*Math.sin(X/61+2)+2.5*Math.sin(X/9+0.5))};
    // 断面：地面の中の層が見える
    g.beginPath();g.moveTo(-20,H);for(let x=-20;x<=W+20;x+=4)g.lineTo(x,top(x));g.lineTo(W+20,H);g.closePath();g.fillStyle=sandPat();g.fill();
    for(const [y,c] of [[560,'rgba(150,110,70,.35)'],[620,'rgba(120,85,55,.4)'],[680,'rgba(95,65,42,.45)']]){g.fillStyle=c;g.fillRect(0,y,W,H-y)}

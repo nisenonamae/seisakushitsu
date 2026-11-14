@@ -1,10 +1,11 @@
-/* 場面を描く共通の道具。各ページは setup(params,dur) と render(t) を持つ。
+/* 場面を描く共通の道具。効果音の種類：pop・whoosh・thump・tick・puff・boing（ぽよよん）・長さのある rattle・engine・motor・car（走り去る車の音）
+   各ページは setup(params,dur) と render(t) を持つ。
    効果音は SFX.push([秒,'pop'|'whoosh'|'thump'|'tick'|'puff']) か、長さのある音 [秒,'rattle'|'engine'|'motor',長さ] */
 const W=1280,H=720,cv=document.getElementById('c'),g=cv.getContext('2d');
 let P={},DUR=5;window.SFX=[];
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=t=>{t=clamp(t);return t*t*(3-2*t)},eout=t=>{t=clamp(t);return 1-Math.pow(1-t,3)},back=(t,s=1.5)=>{t=clamp(t)-1;return 1+(s+1)*t*t*t+s*t*t};
 const lerp=(a,b,u)=>a+(b-a)*u;
-function R(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return (s-1)/2147483646}}
+function R(seed){let s=(seed*7919+12345)%2147483647||1;const f=()=>{s=(s*16807)%2147483647;return (s-1)/2147483646};f();f();f();return f}
 const FONT='"Noto Sans CJK JP"';
 function T(i,def){return (P.times&&P.times[i]!=null)?P.times[i]:def}   // ats の時刻（i=1 が一つ目の言葉）
 function label(x,y,text,k,col='#fff',size=40){if(k<=0||!text)return;g.save();g.globalAlpha=clamp(k);g.font=`900 ${Math.round(size*back(k))}px ${FONT}`;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(text).width;g.fillStyle='rgba(10,14,20,.82)';g.beginPath();g.roundRect(x-w/2-20,y-size*0.8,w+40,size*1.6,14);g.fill();g.fillStyle=col;g.fillText(text,x,y+2);g.restore()}
@@ -21,8 +22,12 @@ function car(x,y,s=1,o={}){const bob=o.bob||0,col=o.col||'#d9534f',alpha=o.alpha
   g.fillStyle=col;g.beginPath();g.moveTo(-170,-10);g.lineTo(-165,-62);g.quadraticCurveTo(-150,-72,-110,-74);g.lineTo(-70,-122);g.quadraticCurveTo(-60,-130,-40,-130);g.lineTo(60,-130);g.quadraticCurveTo(78,-130,90,-118);g.lineTo(125,-76);g.quadraticCurveTo(165,-72,172,-50);g.lineTo(175,-10);g.closePath();g.fill();
   g.fillStyle='rgba(255,255,255,.12)';g.fillRect(-160,-60,330,8);
   // 窓と人
-  g.fillStyle='#bfe0f2';g.beginPath();g.moveTo(-58,-118);g.lineTo(-5,-118);g.lineTo(-5,-78);g.lineTo(-92,-78);g.closePath();g.fill();g.beginPath();g.moveTo(5,-118);g.lineTo(58,-118);g.quadraticCurveTo(70,-118,78,-110);g.lineTo(108,-78);g.lineTo(5,-78);g.closePath();g.fill();
-  const hd=o.heads||0;for(const [hx,ph] of [[-40,0],[48,1.7]]){const dy=hd*Math.sin(ph+(o.t||0)*31)*1.0;g.fillStyle='#2e3440';g.beginPath();g.arc(hx,-100+dy,15,0,7);g.fill();g.fillRect(hx-17,-86+dy,34,10)}
+  const win=()=>{g.beginPath();g.moveTo(-58,-118);g.lineTo(-5,-118);g.lineTo(-5,-78);g.lineTo(-92,-78);g.closePath();g.moveTo(5,-118);g.lineTo(58,-118);g.quadraticCurveTo(70,-118,78,-110);g.lineTo(108,-78);g.lineTo(5,-78);g.closePath()};
+  g.fillStyle='#bfe0f2';win();g.fill();
+  // 人は窓の中だけに描く（揺れても窓からはみ出さない）
+  g.save();win();g.clip();const hd=Math.min(5,o.heads||0);for(const [hx,ph] of [[-40,0],[48,1.7]]){const dy=hd*Math.sin(ph+(o.t||0)*31);g.fillStyle='#2e3440';g.beginPath();g.arc(hx,-96+dy,14,0,7);g.fill();g.beginPath();g.roundRect(hx-18,-82+dy,36,20,8);g.fill()}g.restore();
+  g.fillStyle='rgba(255,255,255,.25)';g.beginPath();g.moveTo(-50,-116);g.lineTo(-30,-116);g.lineTo(-60,-80);g.lineTo(-80,-80);g.closePath();g.fill();
+  g.strokeStyle='rgba(0,0,0,.25)';g.lineWidth=2;g.beginPath();g.moveTo(0,-125);g.lineTo(0,-12);g.moveTo(-100,-70);g.lineTo(-100,-12);g.stroke();g.fillStyle='rgba(0,0,0,.35)';g.fillRect(-30,-62,18,4);g.fillRect(40,-62,18,4)
   if(o.driverArms){g.strokeStyle='#2e3440';g.lineWidth=6;g.beginPath();g.moveTo(48,-84);g.lineTo(72,-88);g.stroke();g.strokeStyle='#111';g.lineWidth=5;g.beginPath();g.moveTo(74,-98);g.lineTo(70,-78);g.stroke()}
   g.fillStyle='#ffe28a';g.beginPath();g.ellipse(170,-42,6,9,0,0,7);g.fill();g.fillStyle='#b23';g.fillRect(-172,-48,6,14);
   g.restore();
@@ -41,7 +46,7 @@ function speedo(cx,cy,R,v,o={}){const vmax=o.vmax||60,mark=o.mark;g.save();
   const a=ang(v);g.shadowColor='rgba(255,80,40,.8)';g.shadowBlur=R*0.08;g.strokeStyle='#ff5a36';g.lineWidth=R*0.035;g.lineCap='round';g.beginPath();g.moveTo(cx-Math.cos(a)*R*0.12,cy-Math.sin(a)*R*0.12);g.lineTo(cx+Math.cos(a)*R*0.84,cy+Math.sin(a)*R*0.84);g.stroke();g.shadowBlur=0;
   g.fillStyle='#d1d5db';g.beginPath();g.arc(cx,cy,R*0.07,0,7);g.fill();
   if(o.plain){g.restore();return}
-  g.fillStyle='#0b0f14';g.beginPath();g.roundRect(cx-R*0.32,cy+R*0.45,R*0.64,R*0.26,R*0.05);g.fill();g.fillStyle=o.hide?'#ffd36a':'#7dd3fc';g.font=`800 ${Math.round(R*0.18)}px ${FONT}`;g.fillText(o.hide?'？':String(Math.round(v)),cx,cy+R*0.585);
+  g.fillStyle='#0b0f14';g.beginPath();g.roundRect(cx-R*0.32,cy+R*0.45,R*0.64,R*0.26,R*0.05);g.fill();g.fillStyle='#7dd3fc';g.font=`800 ${Math.round(R*0.18)}px ${FONT}`;g.fillText(o.scramble!=null?String(10+Math.floor(Math.abs(Math.sin(o.scramble*37.1)*89))):String(Math.round(v)),cx,cy+R*0.585);if(o.scramble!=null&&Math.floor(o.scramble*12)%1===0){}
   g.restore()}
 function shake(t,amp){return [amp*(Math.sin(t*71)+0.6*Math.sin(t*113)),amp*(Math.sin(t*89+1)+0.5*Math.sin(t*131))]}
 function sfxOnce(key,t,kind,dur){window._done=window._done||{};if(window._done[key])return;window._done[key]=1;window.SFX.push(dur?[t,kind,dur]:[t,kind])}

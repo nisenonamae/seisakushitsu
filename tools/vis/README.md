@@ -29,7 +29,7 @@
 | `voices` | 人が並び、吹き出しに絵（いろいろな説・人の声） | `items`（[{icon, label}]）, `who`（"research"＝白衣） |
 | `strip` | 車から部品が飛んでいき、車輪と砂だけ残る | `text` |
 | `gauge` | 速度計（答えは「？ km/h」で伏せる） | |
-| `html` | ブラウザ（Chrome）で描く場面。**アニメはなるべくこれで作る**。共通の道具は `html/lib.js`（空・丘・砂の地面・タイヤ・人が乗った車・本物っぽい速度計・揺れ・画像の読み込み・効果音）。ふちが滑らかで、影・ぼかし・粒が出せる。**新しい場面はなるべくこれで作る** | `page`（`tools/vis/html/<page>.html`）, ほかは場面ごと。いまあるページ：`turntable`（回転台・lower／updown）・`car`（rattle＝人が乗った車がガタガタ、画面も揺れる／dust＝着地した所だけ土ぼこり／hop＝車輪が浮く／suspect＝光が車から車輪と地面へ／points＝車輪・地面・速さを順に示す／section＝断面を車が進む）・`control`（ハンドルとブレーキが効かない）・`suspension`（車輪と車体をつなぐばね）・`soil`（山はふんわり谷は詰まる）・`mather`（円い溝の実験：intro／hand／build／speed）・`heavy`（重いトラックが消え車輪だけ残る）・`calendar`（年月がたつ）・`globe`（衛星写真の地図に寄る。`img`＝NASA Blue Marble）・`variations`（条件を変えても波）・`road`（timelapse＝ひとりでに波／grader＝削ってもまた戻る）・`magnify`（虫めがねで写真を調べる）・`trunk`（幹線道路だけ舗装）・`meter`（hidden／threshold）・`person`（絵の人物と名札） |
+| `html` | ブラウザ（Chrome）で描く場面。**アニメはなるべくこれで作る**。共通の道具は `html/lib.js`（空・丘・砂の地面・タイヤ・人が乗った車・本物っぽい速度計・揺れ・画像の読み込み・効果音）。ふちが滑らかで、影・ぼかし・粒が出せる。**新しい場面はなるべくこれで作る** | `page`（`tools/vis/html/<page>.html`）, ほかは場面ごと。いまあるページ：`turntable`（回転台・lower／updown）・`car`（rattle＝人が乗った車がガタガタ、画面も揺れる／dust＝着地した所だけ土ぼこり／hop＝車輪が浮く／suspect＝光が車から車輪と地面へ／points＝車輪・地面・速さを順に示す／section＝断面を車が進む）・`control`（ハンドルとブレーキが効かない）・`suspension`（車輪と車体をつなぐばね）・`soil`（山はふんわり谷は詰まる）・`mather`（円い溝の実験：intro／hand／build／speed）・`heavy`（重いトラックが消え車輪だけ残る）・`calendar`（年月がたつ）・`globe`（衛星写真の地図に寄る。`img`＝NASA Blue Marble）・`variations`（条件を変えても波）・`road`（timelapse＝ひとりでに波／grader＝削ってもまた戻る）・`magnify`（虫めがねで写真を調べる）・`trunk`（幹線道路だけ舗装）・`meter`（hidden／threshold）・`person`（絵の人物と名札）・`theories`（よくある説を同じ絵柄で：truck／rain／brake／tread／sort）・`car` の jproad（日本の道）・trunk（幹線道路から土の道へ）・strip（車体が消えて車輪と砂）・speedup（速くなると少しずつ波）・assemble（車輪→砂→速さで波）・`mather` の story（溝→砂→棒→車輪→回す→小さな波→装置→遅い→速い→波、を途切れない1場面で。times に9つの言葉） |
 
 `html` の場面の作り方：`<canvas id="c" width="1280" height="720">` に、`window.setup(params, dur)` と `window.render(t)`（t 秒の絵を描く）を書く。効果音は `window.SFX=[[秒,"thump"],…]`。`params.times` に `ats` の時刻が入る。
 
@@ -59,6 +59,9 @@
 - 集め方：Wikimedia Commons を検索（`list=search`, `srnamespace=6`）。続けて叩くと 429 になるので、間を空けて取る。ライセンスと作者（`extmetadata` の LicenseShortName・Artist）を必ず控え、動画の `credits` に並べる（概要欄に貼る）
 - 実在の有名人の写真は使わない。建物・道具・風景・古い記録写真（パブリックドメイン）は使ってよい
 - 写真が語りと違うもの（別の場所・別の時代）なら、画面にそれと分かる言葉を出すか、使わない
+
+## 字幕
+- `render_draft.py --subfont 番号`（1〜10）で見た目を選ぶ。フォントは `tools/setup_fonts.sh` で入れる（Google Fonts、SIL OFL）
 
 ## 決まり
 - 画面の文字は大事な言葉と数字だけ。同じものを縦に並べない（作り手の直しから）
