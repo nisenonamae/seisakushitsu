@@ -38,7 +38,7 @@ def label(d,text,x=W/2,y=110,size=50):
     f=font(size);tw=d.textlength(text,font=f);d.rounded_rectangle([x-tw/2-26,y-size*0.8,x+tw/2+26,y+size*0.8],14,fill=(0,0,0,150));d.text((x,y),text,font=f,fill=WHITE,anchor='mm')
 
 def photo(s,dur,c,repo):
-    img=load_img(s['src'],repo);N=int(dur*FPS)
+    img=load_img(s['src'],repo);N=c.N
     if s.get('punch'):  # ぐいっと寄るときは、細かい絵（2倍）を一枚だけ渡して、カメラ側で切り出す
         big=cover(img,W*2,H*2);x=(big.width-W*2)//2;y=(big.height-H*2)//2;fit=big.crop((x,y,x+W*2,y+H*2))
         for n in range(N):c.add(fit)
@@ -56,10 +56,15 @@ def photo(s,dur,c,repo):
                 d.line([(x,y-18),(x,y+18)],fill=(255,255,255,int(235*a)),width=5)
             if k>1:d.line([(W*0.30,H*0.36),(W*0.30+(k-1)*W*0.09,H*0.36)],fill=(255,255,255,int(210*a)),width=3)
         if s.get('text') and t>s.get('text_at',1.5): label(d,s['text'])
+        for j,pp in enumerate(s.get('pops',[])):
+            t0=pp.get('at',0.3+j*0.25);k=back((t-t0)/0.3)
+            if n==int(t0*FPS):c.sfx.append([t0,'pop'])
+            if k>0:
+                import parts2;x,y=pp['x']*W,pp['y']*H;r=56*k;d.ellipse([x-r,y-r,x+r,y+r],fill=(20,24,32,210));parts2.icon(d,pp.get('icon','question'),x,y,80*k,col=(242,194,48))
         c.add(im)
 
 def bigtext(s,dur,c,repo):
-    N=int(dur*FPS);flash=s.get('flash')
+    N=c.N;flash=s.get('flash')
     for n in range(N):
         t=n/FPS;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
         if flash=='gauge8' and t>dur-0.7:
@@ -85,7 +90,7 @@ def geo():
     return _GEO
 def map_(s,dur,c,repo):
     """世界地図。highlight の国を塗り、zoom=True ならその国へだんだん寄っていく。labels は国の上に出す文字"""
-    g=geo();hl=s.get('highlight',[]);N=int(dur*FPS);ph=s.get('photo_at',dur*0.6);img=load_img(s['photo'],repo) if s.get('photo') else None
+    g=geo();hl=s.get('highlight',[]);N=c.N;ph=s.get('photo_at',dur*0.6);img=load_img(s['photo'],repo) if s.get('photo') else None
     SC=3;X=lambda lon:(lon+180)/360*W*SC;Y=lambda lat:(90-lat)/180*H*SC
     polys={}
     for f in g['features']:
@@ -110,7 +115,8 @@ def map_(s,dur,c,repo):
         t=n/FPS;u=ease((t-0.3)/max(0.6,min(2.2,dur*0.5)));box=[full[i]+(tgt[i]-full[i])*u for i in range(4)]
         bi=tuple(int(v) for v in box);fr=base.crop(bi).resize((W,H),Image.BILINEAR)
         for i,iso in enumerate(hl):
-            a=ease((t-0.4-i*0.4)/0.5)
+            th=s['times'][i]+0.1 if s.get('times') and i<len(s['times']) else 0.4+i*0.4;a=ease((t-th)/0.5)
+            if n==int(th*FPS):c.sfx.append([th,'tick'])
             if a>0:fr.paste(SAND,(0,0,W,H),hlim[iso].crop(bi).resize((W,H),Image.BILINEAR).point(lambda v,a=a:int(v*a)))
         im=fr.convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
         k=W/(box[2]-box[0]);tr=lambda x,y:((x-box[0])*k,(y-box[1])*k)
@@ -121,17 +127,19 @@ def map_(s,dur,c,repo):
                 x=min(max(x,tw/2+30),W-tw/2-30);y=min(max(y-34,60),H-200)
                 d.text((x,y),txt,font=f,fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
         for j,(lon,lat,txt) in enumerate(s.get('pins',[])):
-            a=back((t-1.0-j*0.3)/0.35)
+            tp=s['times'][j]+0.4 if s.get('times') and j<len(s['times']) else 1.0+j*0.3;a=back((t-tp)/0.35)
+            if n==int(tp*FPS):c.sfx.append([tp,'pop'])
             if a>0:
                 x,y=tr(X(lon),Y(lat));r=16*max(0.05,a);d.ellipse([x-r,y-r,x+r,y+r],fill=RED,outline=WHITE,width=4);d.line([(x,y-r),(x,y-r-30*a)],fill=WHITE,width=4)
-                d.text((x,y-r-58*a),txt,font=font(int(38*max(0.05,a))),fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
+                f_=font(int(38*max(0.05,a)));tw=d.textlength(txt,font=f_);tx=min(max(x,tw/2+20),W-tw/2-20)
+                d.text((tx,y-r-58*a),txt,font=f_,fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
         if img and t>ph:
             q=ease((t-ph)/0.8);p=kenburns(img,(t-ph)/max(0.1,dur-ph),1.0,1.12).convert('RGBA');im=Image.blend(im,p,q);d=ImageDraw.Draw(im,'RGBA')
             if s.get('photo_text') and t>ph+1:label(d,s['photo_text'],y=H*0.5,size=72)
         c.add(im)
 
 def cards(s,dur,c,repo):
-    groups=s['groups'];keep=s.get('keep');N=int(dur*FPS);allc=[x for g in groups for x in g]
+    groups=s['groups'];keep=s.get('keep');N=c.N;allc=[x for g in groups for x in g]
     pos={};rows=len(groups)
     for r,g in enumerate(groups):
         for i,x in enumerate(g):pos[x]=(W*(i+1)/(len(g)+1),H*(0.32+0.28*r) if rows>1 else H*0.45)
@@ -150,7 +158,7 @@ def cards(s,dur,c,repo):
         c.add(im)
 
 def steps(s,dur,c,repo):
-    items=s['items'];N=int(dur*FPS);per=dur/len(items)
+    items=s['items'];N=c.N;per=dur/len(items)
     for n in range(N):
         t=n/FPS;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA');cur=min(len(items)-1,int(t/per))
         if s.get('title'):d.text((W/2,80),s['title'],font=font(44),fill=WHITE,anchor='mm')
@@ -161,7 +169,7 @@ def steps(s,dur,c,repo):
         c.add(im)
 
 def loop(s,dur,c,repo):
-    N=int(dur*FPS);lab=s.get('labels',['揺れ','波を押す','波が育つ'])
+    N=c.N;lab=s.get('labels',['揺れ','波を押す','波が育つ'])
     for n in range(N):
         t=n/FPS;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA');cx,cy,R=W/2,H/2+20,220;turns=t/3.2;w=int(6+4*turns)
         for i in range(3):
@@ -174,7 +182,7 @@ def loop(s,dur,c,repo):
         c.add(im)
 
 def graph(s,dur,c,repo):
-    N=int(dur*FPS);x0,y0,x1,y1=180,600,1150,140
+    N=c.N;x0,y0,x1,y1=180,600,1150,140
     for n in range(N):
         t=n/FPS;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
         d.line([(x0,y0),(x1,y0)],fill=GREY,width=3);d.line([(x0,y0),(x0,y1)],fill=GREY,width=3)
@@ -217,7 +225,7 @@ def _slider(d,x,y,w,v):
     d.rounded_rectangle([x,y-6,p,y+6],6,fill=(150,170,200));d.ellipse([p-18,y-18,p+18,y+18],fill=WHITE)
     d.text((x,y+34),'遅い',font=font(26),fill=(170,180,195),anchor='lm');d.text((x+w,y+34),'速い',font=font(26),fill=(170,180,195),anchor='rm')
 def circle(s,dur,c,repo):
-    mode=s.get('mode','mather');N=int(dur*FPS);ang=0;amp=0;rut=0;spread=0
+    mode=s.get('mode','mather');N=c.N;ang=0;amp=0;rut=0;spread=0
     for n in range(N):
         t=n/FPS;im=Image.new('RGBA',(W,H),BG+(255,));d=ImageDraw.Draw(im,'RGBA')
         if mode in ('hand','slow','fast'):
@@ -227,7 +235,7 @@ def circle(s,dur,c,repo):
             else: amp=min(1,amp+1.0/max(1,N*0.6))
             ang+=0.05+v*0.12;_track(d,450,370,170,300,amp,rut,ang,hand=hand,motor=not hand)
             if not hand:_slider(d,860,470,320,v)
-            d.text((1020,330),{'hand':'手で押して回す','slow':'ゆっくり → 轍だけ','fast':'速くすると → 波'}[mode],font=font(44),fill=WHITE,anchor='mm')
+            if s.get('label',True) is not False:d.text((1020,330),s.get('label') if isinstance(s.get('label'),str) else {'hand':'手で押して回す','slow':'ゆっくり → 轍だけ','fast':'速くすると → 波'}[mode],font=font(44),fill=WHITE,anchor='mm')
         elif mode=='mather':
             hand=t<dur*0.3;v=0.2 if hand else 0.15+0.75*ease((t-dur*0.62)/1.0)
             if abs(t-dur*0.3)<0.5/FPS:amp=0;rut=0
@@ -255,7 +263,7 @@ def circle(s,dur,c,repo):
 # ---------- 道の断面（横から） ----------
 def _prof(x,A,lam=230,env=1.0,phase=0):return A*env*math.sin(2*math.pi*(x-20-phase)/lam)
 def section(s,dur,c,repo):
-    mode=s.get('mode','grow');N=int(dur*FPS);base=470;r=60
+    mode=s.get('mode','grow');N=c.N;base=470;r=60
     for n in range(N):
         t=n/FPS;u=t/dur;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
         if mode=='force':
@@ -346,13 +354,15 @@ def make(spec,dur,out,repo=''):
         import subprocess,tempfile;tmp=tempfile.mkdtemp();L=spec['seq'];parts=[];sfx=[]
         for i,sp in enumerate(L):
             o=f'{tmp}/q{i}.mp4';make(sp,dur/len(L),o,repo);parts.append(o)
-            if os.path.exists(o+'.sfx.json'):sfx+= [i*dur/len(L)+x for x in json.load(open(o+'.sfx.json'))]
-            sfx.append(i*dur/len(L)) if i else None
+            if os.path.exists(o+'.sfx.json'):sfx+= [[i*dur/len(L)+(e if isinstance(e,(int,float)) else e[0]),'whoosh' if isinstance(e,(int,float)) else e[1]] for e in json.load(open(o+'.sfx.json'))]
         open(f'{tmp}/l.txt','w').write(''.join(f"file '{x}'\n" for x in parts))
         subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l.txt','-c','copy',out],check=True)
         if sfx:json.dump(sfx,open(out+'.sfx.json','w'))
         return
-    import parts2
-    c=Clip(out,dur,spec.get('cam','none' if spec['t']=='photo' else 'in'),spec.get('punch'));f={'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
+    import parts2,parts3
+    if spec['t'] in('bigtext',) or (spec['t']=='year' and not spec.get('allow')):raise ValueError('文字だけの画面は禁止（決まりごと）：'+spec['t']+'。絵のある部品を使う')
+    if spec['t']=='clip':parts3.clip_video(spec,dur,out,repo);return
+    if spec['t']=='html':parts3.html_scene(spec,dur,out,repo);return
+    c=Clip(out,dur,spec.get('cam','none' if spec['t']=='photo' else 'in'),spec.get('punch'));f={'roads':parts3.roads,'wave':parts3.wave,'compare':parts3.compare,'timeline':parts3.timeline,'voices':parts3.voices,'strip':parts3.strip,'gauge':parts3.gauge_q,'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
     f(spec,dur,c,repo);c.close()
     if c.sfx:json.dump(c.sfx,open(out+'.sfx.json','w'))

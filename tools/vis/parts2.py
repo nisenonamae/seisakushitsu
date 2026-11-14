@@ -40,6 +40,8 @@ def picto(s,dur,c,repo):
         t=n/FPS;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
         if mode=='one':
             it=items[0];k=back(t/0.35);sz=230*k
+            if n==0:c.sfx.append([0.02,'pop'])
+            if it.get('x') and n==int(0.5*FPS):c.sfx.append([0.5,'thump'])
             d.ellipse([W/2-170*k,H*0.42-170*k,W/2+170*k,H*0.42+170*k],fill=(60,76,98))
             icon(d,it['icon'],W/2,H*0.42,sz)
             a=ease((t-0.15)/0.3);d.text((W/2,H*0.78),it['label'],font=font(64),fill=WHITE+(int(255*a),),anchor='mm')
@@ -84,7 +86,7 @@ def dustcar(s,dur,c,repo):
             d.rounded_rectangle([cx-60,gy-160-bump,cx+80,gy-110-bump],16,fill=(225,228,235),outline=(120,125,135),width=4)
         for wx in ((-70,70) if not close else (0,)):
             r=34*sc;wheel(d,cx+wx*sc,gy-r-(bump if (int(t*9/math.pi)%2==0) else 0),r,-t*12)
-        if s.get('puffs',True) and n%int(FPS*0.45)==0:puffs.append([cx-90*sc,gy-10,t])
+        if s.get('puffs',True) and n%int(FPS*0.45)==0:puffs.append([cx-90*sc,gy-10,t]);c.sfx.append([t,'puff'])
         for p in puffs:
             age=t-p[2];x=p[0]-age*260;rad=30+age*90
             if age<2.2:d.ellipse([x-rad,p[1]-rad*0.8,x+rad,p[1]+rad*0.3],fill=(210,150,100,int(150*(1-age/2.2))))
@@ -92,17 +94,31 @@ def dustcar(s,dur,c,repo):
         c.add(im)
 # ---------- 断面にものさし ----------
 def ruler(s,dur,c,repo):
-    N=c.N;base=470;lam=300
-    top=lambda x:base-26*math.sin(2*math.pi*(x-40)/lam)
+    """mode: "one"（山と山の間にものさし・約30cm）／"equal"（山ごとに目盛りを順に置いて、どこも同じ間隔だと見せる。最後に ？）"""
+    N=c.N;base=470;lam=300 if s.get('mode','one')=='one' else 210
+    top=lambda x:base-26*math.sin(2*math.pi*(x-40)/lam);done=set()
     for n in range(N):
         t=n/FPS;im=SKY.copy().convert('RGBA');ground(im,top);d=ImageDraw.Draw(im,'RGBA')
-        a=W/2-lam/2+35;b=a+lam;u=ease((t-0.3)/0.8);yy=top(a+lam*0.25)-110 if False else base-120
-        x2=a+(b-a)*u
-        d.line([(a,yy),(x2,yy)],fill=(242,194,48),width=8)
-        for x in (a,x2):d.line([(x,yy-24),(x,yy+24)],fill=(242,194,48),width=6)
-        for x in (a,b):
-            if u>0.95:d.line([(x,yy+28),(x,top(x)-8)],fill=(255,255,255,120),width=3)
-        if u>0.9:k=back((t-1.1)/0.35);d.text(((a+b)/2,yy-70),s.get('text','約30cm'),font=font(int(80*max(0.01,k))),fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
+        if s.get('mode','one')=='one':
+            a=W/2-lam/2+35;b=a+lam;u=ease((t-0.3)/0.8);yy=base-120;x2=a+(b-a)*u
+            d.line([(a,yy),(x2,yy)],fill=(242,194,48),width=8)
+            for x in (a,x2):d.line([(x,yy-24),(x,yy+24)],fill=(242,194,48),width=6)
+            if u>0.95:
+                for x in (a,b):d.line([(x,yy+28),(x,top(x)-8)],fill=(255,255,255,120),width=3)
+                if 'e' not in done:c.sfx.append([t,'tick']);done.add('e')
+            if u>0.9:k=back((t-1.1)/0.35);d.text(((a+b)/2,yy-70),s.get('text','約30cm'),font=font(int(80*max(0.01,k))),fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
+        else:
+            crest=[40+lam*(k+0.25) for k in range(6)];yy=base-90
+            for i,x in enumerate(crest):
+                t0=0.3+i*0.32
+                if t<t0:continue
+                if i not in done:c.sfx.append([t0,'tick']);done.add(i)
+                d.line([(x,yy-22),(x,yy+22)],fill=(242,194,48),width=7)
+                if i:d.line([(crest[i-1],yy),(crest[i-1]+(x-crest[i-1])*ease((t-t0+0.2)/0.25),yy)],fill=(242,194,48),width=5)
+            tq=0.3+6*0.32+0.2
+            if t>tq:
+                if 'q' not in done:c.sfx.append([tq,'pop']);done.add('q')
+                k=back((t-tq)/0.35);d.ellipse([W/2-70*k,170-70*k,W/2+70*k,170+70*k],fill=(20,24,32,220));d.text((W/2,170),'？',font=font(int(100*max(.05,k))),fill=(242,194,48),anchor='mm')
         c.add(im)
 # ---------- 年号と時の流れ ----------
 def year(s,dur,c,repo):

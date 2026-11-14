@@ -14,7 +14,8 @@ W,H,FPS=1280,720,30
 FB='/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc';FR='/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
 V='/home/claude/vv'
 ap=argparse.ArgumentParser();ap.add_argument('--data');ap.add_argument('--proj');ap.add_argument('--repo',default='');ap.add_argument('--out')
-ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=float,default=1.1);a=ap.parse_args()
+ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=float,default=1.1)
+ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない');a=ap.parse_args()
 D=json.load(open(a.data,encoding='utf-8'));P=[p for p in D['projects'] if p['id']==a.proj][0]
 ob=(P.get('outline') or {}).get('blocks',[]);fb=(P.get('flesh') or {}).get('blocks',[])
 oi={b['id']:i for i,b in enumerate(ob)}
@@ -112,73 +113,119 @@ def sub_overlay(text):
     d.rounded_rectangle([W/2-tw/2-22,y-10,W/2+tw/2+22,y+58],12,fill=(0,0,0,135))
     d.text((W/2,y),text,font=f,fill=(255,255,255),anchor='ma',stroke_width=3,stroke_fill=(0,0,0))
     return im
-tmp=tempfile.mkdtemp();segs=[];auds=[];tl=[];t0=0.0;n=len(seq);cuts=[];pops=[]
+
+import numpy as np
+SR=24000
+def wav_np(path):
+    with wave.open(path) as w:return np.frombuffer(w.readframes(w.getnframes()),np.int16).astype(np.float32)/32768
+def enc(args,out):subprocess.run(['ffmpeg','-y','-loglevel','error',*args,'-an','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-r',str(FPS),out],check=True)
+def tag_overlay(text):
+    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im);f=ImageFont.truetype(FB,26);tw=d.textlength(text,font=f)
+    d.rounded_rectangle([14,12,14+tw+24,12+44],8,fill=(220,40,40,200));d.text((26,16),text,font=f,fill=(255,255,255));return im
+def char_time(sx,i,ends):
+    """文 sx の i 文字目が話され始める時刻（モーラの数で文の声に合わせる）"""
+    if i<=0 or not ends:return 0.0
+    tot=nmora(sx) or 1;m=int(round(nmora(sx[:i])/tot*len(ends)));return 0.0 if m<=0 else ends[min(len(ends)-1,m-1)]
+tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[]
 for k,b in enumerate(seq,1):
     sents=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
     vis=b.get('visual');vpath=os.path.join(a.repo,vis) if vis and a.repo else None
-    base=None
     if not (vpath and os.path.exists(vpath)): vpath=None
-    if vpath and vpath.endswith('.png'): base=Image.open(vpath).convert('RGB').resize((W,H));vpath=None
-    elif not vpath: base=card(b,k,n)
-    clipdur=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',vpath],capture_output=True,text=True).stdout or 10) if vpath and vpath.endswith('.mp4') else 10
-    bstart=t0
-    # 先に全部の文の声を作る
-    durs=[];pads=[];cts=[]
+    # 1) 声：文ごとに作り、文の間に少し間を置いてつなぐ
+    arrs=[];offs=[];endsL=[];vend=[];t=0.0
     for j,sx in enumerate(sents):
-        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';dur=tts(sx,wp)+(0.25 if j<len(sents)-1 else 0.55);cts.append(chunk_times(sx,LAST['ends']))
-        pad=f'{tmp}/p{k:03d}_{j:02d}.wav';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',wp,'-af',f'apad=whole_dur={dur:.3f}','-ar','24000','-ac','1',pad],check=True);durs.append(dur);pads.append(pad)
-    # カット（shots）：文の並びをまとまりに分け、まとまりごとに部品で画面を作る
-    groups=[]
-    if b.get('shots'):
-        j=0
-        for sh in b['shots']:
-            m=int(sh.get('n',1));groups.append((j,min(len(sents),j+m),sh));j+=m
-            if j>=len(sents):break
-        if j<len(sents):groups.append((j,len(sents),groups[-1][2] if groups else None))
-    else: groups=[(0,len(sents),None)]
-    for gi,(j0,j1,sh) in enumerate(groups):
-        beat=float(sh.get('beat',0)) if sh else 0
-        gdur=sum(durs[j0:j1])+beat;gpath=None
-        if sh:
-            import scenes
-            gpath=f'{tmp}/shot{k:03d}_{gi:02d}.mp4';scenes.make({x:y for x,y in sh.items() if x not in('n','beat')},gdur+0.1,gpath,a.repo);cuts.append(t0)
-            if os.path.exists(gpath+'.sfx.json'):pops.extend(t0+x for x in json.load(open(gpath+'.sfx.json')))
-        elif gi==0 and vpath: cuts.append(t0)
-        g0=t0
-        if beat>0 and gpath:
-            sil=f'{tmp}/b{k:03d}_{gi:02d}.wav';subprocess.run(['ffmpeg','-y','-loglevel','error','-f','lavfi','-i','anullsrc=r=24000:cl=mono','-t',f'{beat:.3f}',sil],check=True);auds.append(sil)
-            seg=f'{tmp}/sb{k:03d}_{gi:02d}.mp4';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',gpath,'-t',f'{beat:.3f}','-vf',f'scale={W}:{H},fps={FPS}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True);segs.append(seg);t0+=beat
-        for j in range(j0,j1):
-            sx=sents[j];dur=durs[j];auds.append(pads[j])
-            seg=f'{tmp}/s{k:03d}_{j:02d}.mp4';ch=cts[j];ovs=[]
-            for ci,(ct,cs_) in enumerate(ch):
-                ov=f'{tmp}/o{k:03d}_{j:02d}_{ci:02d}.png';sub_overlay(ct).save(ov);ce=ch[ci+1][1] if ci+1<len(ch) else dur+1;ovs.append((ov,cs_,ce))
-            src=gpath or vpath
-            if src is None:
-                fr=f'{tmp}/f{k:03d}_{j:02d}.png';base.convert('RGB').save(fr);inp=['-loop','1','-framerate',str(FPS),'-i',fr]
-            else:
-                cd_=gdur+0.1 if gpath else clipdur;off=((t0-g0) if gpath else (t0-bstart))%max(0.1,cd_);inp=['-stream_loop','-1','-ss',f'{off:.3f}','-i',src]
-            fc=f'[0:v]scale={W}:{H},fps={FPS}[v0]';last='v0'
-            for oi,(ov,cs_,ce) in enumerate(ovs):
-                inp+=['-i',ov];fc+=f";[{last}][{oi+1}:v]overlay=0:0:enable='between(t,{cs_:.3f},{ce-0.001:.3f})'[v{oi+1}]";last=f'v{oi+1}'
-            subprocess.run(['ffmpeg','-y','-loglevel','error',*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p','-r',str(FPS),seg],check=True)
-            segs.append(seg);t0+=dur
-    tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(bstart,2),'end':round(t0,2),'visual':vis or ''})
-open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in segs));open(f'{tmp}/a.txt','w').write(''.join(f"file '{x}'\n" for x in auds))
+        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';d0=tts(sx,wp);x=wav_np(wp);gap=0.25 if j<len(sents)-1 else 0.55
+        arrs.append(np.concatenate([x,np.zeros(int(gap*SR),np.float32)]));offs.append(t);endsL.append(LAST['ends']);vend.append(t+d0);t+=len(arrs[-1])/SR
+    A=np.concatenate(arrs)
+    # 2) カットの始まり：shots[].at（語りの中の言葉）が話され始める瞬間。at がなければ n（文の数）で区切る
+    shots=b.get('shots') or []
+    full=''.join(sents);cum=[0];[cum.append(cum[-1]+len(x)) for x in sents]
+    def t_of_char(ci):
+        j=max(jj for jj in range(len(sents)) if cum[jj]<=ci);return offs[j]+char_time(sents[j],ci-cum[j],endsL[j])
+    starts=[];pos=0;sj=0
+    for si,sh in enumerate(shots):
+        if si==0:starts.append(0.0)
+        elif sh.get('at'):
+            ci=full.find(sh['at'],pos)
+            if ci<0:print('見つからない言葉:',k,sh['at'],file=sys.stderr);ci=pos
+            pos=ci;starts.append(t_of_char(ci))
+        else:starts.append(offs[min(sj,len(sents)-1)])
+        sj+=int(sh.get('n',1)) if not sh.get('at') else 0
+        if sh.get('at'):sj=max(jj for jj in range(len(sents)) if cum[jj]<=pos)+1
+    # 3) 間（beat）：カットの頭で語りを止める
+    beats=[(starts[i],float(sh.get('beat',0))) for i,sh in enumerate(shots) if float(sh.get('beat',0))>0]
+    for bt,L in sorted(beats,reverse=True):
+        ix=int(bt*SR);A=np.concatenate([A[:ix],np.zeros(int(L*SR),np.float32),A[ix:]])
+    sh_=lambda t,incl=True:t+sum(L for bt,L in beats if (bt<=t if incl else bt<t))
+    # 長さをコマ（1/30秒）の目に合わせる：声の後ろを少し伸ばし、カットの境目もコマの目に置く（ずれが積もらないように）
+    nf=int(math.ceil(len(A)/SR*FPS));A=np.concatenate([A,np.zeros(int(round(nf/FPS*SR))-len(A),np.float32)]) if int(round(nf/FPS*SR))>len(A) else A[:int(round(nf/FPS*SR))]
+    D=nf/FPS;voice.append(A)
+    vstarts=[round(sh_(st,False)*FPS)/FPS for st in starts]
+    # 4) 字幕：塊ごとに、話し始める時刻から次の塊まで（文の終わりの長い間・カットの間には出さない）
+    subs=[]
+    for j,sx in enumerate(sents):
+        ch=chunk_times(sx,endsL[j])
+        for ci,(ct,rt) in enumerate(ch):
+            st=sh_(offs[j]+rt);en=sh_(offs[j]+ch[ci+1][1]) if ci+1<len(ch) else sh_(vend[j])+0.25
+            for bt,L in beats:
+                b0=sh_(bt,False)
+                if st<b0<en:en=b0
+            subs.append((ct,st,en))
+    # 5) 画面：カットごとに部品で作ってつなぐ
+    clips=[]
+    if shots:
+        import scenes
+        for i,sh in enumerate(shots):
+            d_=round(((vstarts[i+1] if i+1<len(shots) else D)-vstarts[i])*FPS)/FPS
+            if d_<=0.05:continue
+            spec={x:y for x,y in sh.items() if x not in('n','beat','at','ats')}
+            if sh.get('ats'):
+                ps=full.find(sh['at'],0) if sh.get('at') else 0;tms=[float(sh.get('beat',0))]
+                for w_ in sh['ats']:
+                    ci=full.find(w_,max(0,ps))
+                    if ci<0:print('見つからない言葉:',k,w_,file=sys.stderr);tms.append(tms[-1]+1);continue
+                    ps=ci;tms.append(round(sh_(t_of_char(ci))-vstarts[i],3))
+                spec['times']=tms
+            cp=f'{tmp}/c{k:03d}_{i:02d}.mp4';scenes.make(spec,d_,cp,a.repo);clips.append(cp)
+            if os.path.exists(cp+'.sfx.json'):
+                for e in json.load(open(cp+'.sfx.json')):
+                    tt,kd=(e,'whoosh') if isinstance(e,(int,float)) else e;sfx.append((T+vstarts[i]+tt,kd))
+            allshots.append({'tag':f'{k}-{i+1}','block':b['id'],'role':b['role'],'start':round(T+vstarts[i],2),'end':round(T+vstarts[i]+d_,2),'t':sh.get('t') or 'seq','at':sh.get('at','')})
+    else:
+        cp=f'{tmp}/c{k:03d}_00.mp4'
+        if vpath and vpath.endswith('.mp4'):enc(['-stream_loop','-1','-i',vpath,'-t',f'{D:.3f}','-vf',f'scale={W}:{H},fps={FPS}'],cp)
+        else:
+            fr=f'{tmp}/f{k:03d}.png';(Image.open(vpath).convert('RGB').resize((W,H)) if vpath else card(b,k,n)).save(fr)
+            enc(['-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{D:.3f}'],cp)
+        clips.append(cp);allshots.append({'tag':f'{k}-1','block':b['id'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'t':'visual'})
+    open(f'{tmp}/l{k}.txt','w').write(''.join(f"file '{x}'\n" for x in clips))
+    raw=f'{tmp}/raw{k:03d}.mp4';subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l{k}.txt','-c','copy',raw],check=True)
+    # 6) 字幕と場面の番号を重ねる
+    inp=['-i',raw];fc=f'[0:v]scale={W}:{H},fps={FPS},tpad=stop_mode=clone:stop_duration=2[v0]';last='v0';q=1
+    lays=[(sub_overlay(tx),st,en) for tx,st,en in subs]
+    if not a.final:lays+=[(tag_overlay(f'場面 {k}-{i+1}'),vstarts[i],(vstarts[i+1] if i+1<len(vstarts) else D)) for i in range(len(vstarts) or 1)] if shots else [(tag_overlay(f'場面 {k}-1'),0,D)]
+    for li,(im,st,en) in enumerate(lays):
+        pth=f'{tmp}/ov{k:03d}_{li:03d}.png';im.save(pth);inp+=['-i',pth]
+        fc+=f";[{last}][{q}:v]overlay=0:0:enable='between(t,{st:.3f},{max(st,en-0.001):.3f})'[v{q}]";last=f'v{q}';q+=1
+    bv=f'{tmp}/b{k:03d}.mp4';enc([*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{D:.3f}'],bv);bvids.append(bv)
+    tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'visual':vis or ''});T+=D
+open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in bvids))
 subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/v.txt','-c','copy',f'{tmp}/v.mp4'],check=True)
-subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/a.txt','-c:a','pcm_s16le',f'{tmp}/a.wav'],check=True)
-import numpy as np
-SR=24000
-with wave.open(f'{tmp}/a.wav') as wv: voice=np.frombuffer(wv.readframes(wv.getnframes()),np.int16).astype(np.float32)/32768;vsr=wv.getframerate()
-mix=voice.copy();rng=np.random.default_rng(1)
-def whoosh(dur=0.35,amp=0.10):
-    m=int(vsr*dur);x=rng.standard_normal(m);X=np.fft.rfft(x);f=np.fft.rfftfreq(m,1/vsr);X[(f<400)|(f>5000)]=0;y=np.fft.irfft(X,m);return amp*y/np.abs(y).max()*np.sin(np.linspace(0,np.pi,m))**2
-for ct in cuts:
-    i=int(max(0,ct-0.12)*vsr);w_=whoosh();mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
-for ct in pops:  # ぐいっと寄るときは少し強めで短いシュッ
-    i=int(max(0,ct-0.05)*vsr);w_=whoosh(0.25,0.14);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
+# 7) 効果音：部品が「ここで鳴らす」と決めた所だけ（切り替わりのたびには鳴らさない）
+mix=np.concatenate(voice);rng=np.random.default_rng(1)
+def _noise(m,lo,hi):
+    x=rng.standard_normal(m);X=np.fft.rfft(x);f=np.fft.rfftfreq(m,1/SR);X[(f<lo)|(f>hi)]=0;y=np.fft.irfft(X,m);return y/np.abs(y).max()
+def snd(kind):
+    if kind=='whoosh':m=int(SR*0.3);return 0.13*_noise(m,400,5000)*np.sin(np.linspace(0,np.pi,m))**2
+    if kind=='pop':m=int(SR*0.09);tt=np.arange(m)/SR;return 0.16*np.sin(2*np.pi*(900-3000*tt)*tt)*np.exp(-tt*40)
+    if kind=='thump':m=int(SR*0.25);tt=np.arange(m)/SR;return 0.32*np.sin(2*np.pi*(95-120*tt)*tt)*np.exp(-tt*18)
+    if kind=='tick':m=int(SR*0.03);tt=np.arange(m)/SR;return 0.12*np.sin(2*np.pi*2200*tt)*np.exp(-tt*160)
+    if kind=='puff':m=int(SR*0.35);return 0.10*_noise(m,150,1500)*np.exp(-np.linspace(0,6,m))*np.sin(np.linspace(0,np.pi/2,m))
+    return np.zeros(1)
+for tt,kd in sfx:
+    w_=snd(kd);i=int(max(0,tt-(0.08 if kd=='whoosh' else 0))*SR);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
 mix=np.clip(mix,-1,1)
-with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(vsr);wv.writeframes((mix*32767).astype(np.int16).tobytes())
+with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(SR);wv.writeframes((mix*32767).astype(np.int16).tobytes())
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)
-json.dump({'duration':round(t0,2),'voice':a.voice,'speed':a.speed,'blocks':tl},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
-print('ok',round(t0,1),'sec',os.path.getsize(a.out)//1024,'KB')
+json.dump({'duration':round(T,2),'voice':a.voice,'speed':a.speed,'blocks':tl,'shots':allshots},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
+print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB')

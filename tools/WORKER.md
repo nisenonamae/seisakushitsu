@@ -175,17 +175,18 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### video_make（仮の動画づくり）
 声・図解・字幕まで入った下書きの動画を作る。作り手はこれを見て直す所を書く。
 1. `bash tools/setup_voice.sh`（声の用意。初回は数分。GitHub の API は使えないのでリリースの直リンクで落とす）
-2. **全部の段の画面を作る（絵コンテのカードを出さない）**：肉付けの各段に `shots`（文ごとのカード割り。`tools/vis/README.md` の「カット」の決まりに従う。一つの画面は 3〜6 秒、止まった画面を作らない）を書く。写真は 1 分あたり 4 枚以上集めて挟み、写真には `punch`（見どころへぐいっと寄る）を付ける。使った写真のライセンスと作者は `p.video.credits` に並べる。`shots` を書かない段だけ、代わりに `scene`（図解の部品の指定。`tools/vis/README.md` の表から選ぶ）を書く。段の「画面の指示」をいちばんよく見せられる部品と指定を選ぶ。合う部品がなければ `tools/vis/scenes.py` に部品か `mode` を足す（足したら README の表にも書く）。書いたら `python3 tools/make_scenes.py --data <data.json> --proj <projId> --repo <notion-daily の場所>` で全段の画面を作る（作った段には構成の段の `visual` が付く。すでに `visual` がある段は飛ばす。作り直すときは `--force`）。作った画面のうち何枚かをコマで見て、おかしければ直してから次へ
+2. **全部の段の画面を作る（絵コンテのカードを出さない）**：肉付けの各段に `shots`（文ごとのカード割り。`tools/vis/README.md` の「カット」の決まりに従う。一つの画面は 3〜6 秒、止まった画面を作らない）を書く。カットの始まりは `at`（語りの言葉）で決め、語りの順番どおりに画面を出す（語りより先に出さない）。文字だけの画面は作らない。写真は 1 分あたり 4 枚以上集めて挟み、`punch`（ぐいっと寄る）は寄って見たほうが分かる所だけに使う。記録映像（アーカイブ・Mixkit の無料ライセンス）も探して入れる。使った写真のライセンスと作者は `p.video.credits` に並べる。`shots` を書かない段だけ、代わりに `scene`（図解の部品の指定。`tools/vis/README.md` の表から選ぶ）を書く。段の「画面の指示」をいちばんよく見せられる部品と指定を選ぶ。合う部品がなければ `tools/vis/scenes.py` に部品か `mode` を足す（足したら README の表にも書く）。書いたら `python3 tools/make_scenes.py --data <data.json> --proj <projId> --repo <notion-daily の場所>` で全段の画面を作る（作った段には構成の段の `visual` が付く。すでに `visual` がある段は飛ばす。作り直すときは `--force`）。作った画面のうち何枚かをコマで見て、おかしければ直してから次へ
 3. `python3 tools/render_draft.py --data <data.json> --proj <projId> --repo <notion-daily の場所> --out <notion-daily>/roadmap/apps/seisakushitsu/videos/<projId>/draft_v<版>.mp4 --voice <声> --speed <速さ>`
    - 声は `projects[].voice`（なければ 2＝四国めたん ノーマル）、速さは `projects[].speed`（なければ 1.1）
    - 肉付けがあればその語り、なければ構成の text を読む。段に `visual`（作った図解の .mp4 か見本の .png のパス）があればそれを映し、なければ「画面の指示」を書いた絵コンテのカードを出す
 4. できた mp4 が 95MB を超えたら、`-crf` を上げて作り直す（GitHub の1ファイルの上限が100MB）
 5. `projects[].video` に `{"path","ver","duration","blocks"（出力と同じ名前の .json の blocks。段ごとの開始・終了秒）,"voice","at","reply"}` を書き、前の `video` は `projects[].videoHistory` に足す。mp4 と json を commit して push。`projects[].builtAt` を今の時刻、`builtLen` を `projects[].len` にする（「前に作ったあとで変わったこと」の起点になる）
 - 作った画面の mp4 と、`scene` を書いた data.json も commit して push する
+- 動画を置いたら、`render_draft.py` が出す `<出力>.json` の `blocks` と `shots`（場面の番号・始まり・終わり）を `p.video.blocks`・`p.video.shots` に入れる
 - total は 4（声の用意→画面→組み立て→置く）
 
 ### video_fix（動画の直し）
-- `jobs[].fixes` は `[{"sec":"2:10","text":"ここをゆっくり"}]`。`sec` を秒にして、`projects[].video.blocks` から何段目の話かを見つける
+- `jobs[].fixes` は `[{"sec":"2:10","text":"ここをゆっくり"}]`。`sec` は時間（「2:10」）か場面の番号（「3-4」）。時間なら `projects[].video.blocks` から何段目かを、場面の番号なら `projects[].video.shots` の `tag` からそのカットを見つける
 - 直しの中身で、直す所を選ぶ：語りの言い回し・速さ・間 → 肉付けの段（`narr`）／話の順番・ある段が要らない・足りない → 構成（直したら flesh_sync と同じやり方で肉付けも合わせる）／絵・図解 → その段の図解（visual_fix と同じやり方）／声の速さ全体 → `projects[].speed`
 - 作り手がはっきり頼んだ直しなので、`keep` や `edited` の段でもその点は直してよい（直した段の `change` に「動画の直し：〜」）。直す前の版は history に残す
 - 直したら video_make と同じやり方で作り直し（ver を1増やす）、`projects[].fixes` の該当する行に `done: true` と `reply`（どう直したか一文）を書く。`video.reply` に全体の一言

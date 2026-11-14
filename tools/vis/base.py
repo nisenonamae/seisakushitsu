@@ -50,9 +50,9 @@ class Clip:
            z を 1 にすると全体へ戻る。寄った先で丸印（ring）と短い文字（text）を出せる。寄るたびに効果音の時刻を sfx に残す
     anim 秒ぶん描いたら、残りは最後の絵で止めて dur 秒にする（止める間もカメラは動き続ける）"""
     def __init__(s,out,dur,cam='in',punch=None):
-        s.out=out;s.dur=dur;s.cam=cam;s.N=max(1,int(dur*FPS));os.makedirs(os.path.dirname(out) or '.',exist_ok=True)
+        s.out=out;s.dur=dur;s.cam=cam;s.N=max(1,int(round(dur*FPS)));os.makedirs(os.path.dirname(out) or '.',exist_ok=True)
         s.p=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE);s.n=0;s.last=None
-        s.punch=sorted(punch or [],key=lambda q:q['at']);s.sfx=[q['at'] for q in s.punch if q['at']<dur]
+        s.punch=sorted(punch or [],key=lambda q:q['at']);s.sfx=[[q['at'],'whoosh'] for q in s.punch if q['at']<dur and q.get('z',2)>1.01]
     def _view(s,t):
         """今の倍率と中心（0〜1）。ぐいっと 0.28 秒で寄り、少し行き過ぎて戻る。寄ったあとはごくわずかに寄り続ける"""
         z,x,y=1.0,0.5,0.5;cur=None

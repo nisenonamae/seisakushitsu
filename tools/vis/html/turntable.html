@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script>
+/* 2007年の回転台の実験を斜め上から見た場面。
+   mode: "lower"（台が回り、そこへ車輪を下ろす）／"updown"（車輪が砂の高さに合わせて上下に動く）
+   drop: 下ろし始める秒（lower のとき） */
+const W=1280,H=720,g=document.getElementById('c').getContext('2d');
+let P={mode:'lower',drop:1.2},DUR=6;window.SFX=[];
+window.setup=(p,d)=>{P=Object.assign(P,p);DUR=d;if(P.times&&P.times.length>1)P.drop=Math.max(0.3,P.times[1]-0.2);window.SFX=P.mode==='lower'?[[P.drop+0.8,'thump']]:[]};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=t=>{t=clamp(t);return t*t*(3-2*t)},back=(t,s=1.5)=>{t=clamp(t)-1;return 1+(s+1)*t*t*t+s*t*t};
+let seed=3;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const grains=[...Array(1400)].map(()=>({a:rnd()*Math.PI*2,r:0.58+rnd()*0.37,l:rnd()}));
+const CX=600,CY=430,RX=380,RY=118,TH=46;
+function E(a,r){return [CX+RX*r*Math.cos(a),CY+RY*r*Math.sin(a)]}
+function label(x,y,text,k,col='#fff'){if(k<=0)return;g.save();g.globalAlpha=clamp(k);g.font=`900 ${Math.round(40*back(k))}px "Noto Sans CJK JP"`;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(text).width;g.fillStyle='rgba(10,14,20,.8)';g.beginPath();g.roundRect(x-w/2-20,y-32,w+40,64,14);g.fill();g.fillStyle=col;g.fillText(text,x,y+2);g.restore()}
+function arrow(x1,y1,x2,y2,col,w=8){g.strokeStyle=col;g.fillStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const a=Math.atan2(y2-y1,x2-x1);g.beginPath();g.moveTo(x2+Math.cos(a)*14,y2+Math.sin(a)*14);g.lineTo(x2-Math.cos(a-0.6)*20,y2-Math.sin(a-0.6)*20);g.lineTo(x2-Math.cos(a+0.6)*20,y2-Math.sin(a+0.6)*20);g.fill()}
+window.render=function(t){
+  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#151b23');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  // 机
+  g.fillStyle='#3a2f26';g.fillRect(0,560,W,160);
+  // 台の側面と上面
+  g.fillStyle='#6d7682';g.beginPath();g.ellipse(CX,CY+TH,RX,RY,0,0,Math.PI);g.lineTo(CX-RX,CY);g.ellipse(CX,CY,RX,RY,0,Math.PI,0,true);g.closePath();g.fill();
+  g.fillStyle='#8c96a3';g.beginPath();g.ellipse(CX,CY,RX,RY,0,0,7);g.fill();
+  // 砂の輪
+  g.fillStyle='#cfa86c';g.beginPath();g.ellipse(CX,CY,RX*0.96,RY*0.96,0,0,7);g.fill();g.fillStyle='#8c96a3';g.beginPath();g.ellipse(CX,CY,RX*0.56,RY*0.56,0,0,7);g.fill();g.fillStyle='#5b6470';g.beginPath();g.ellipse(CX,CY,22,8,0,0,7);g.fill();
+  const rot=t*2*Math.PI*0.6;
+  for(const p of grains){const [x,y]=E(p.a+rot,p.r);g.fillStyle=p.l<.5?'rgba(140,105,60,.6)':'rgba(245,225,180,.7)';g.fillRect(x,y,2.4,1.6)}
+  // 回る向きの矢印（台の手前に）
+  g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=6;g.beginPath();g.ellipse(CX,CY+TH+30,RX+30,RY+30,0,0.25*Math.PI,0.75*Math.PI);g.stroke();
+  {const [x,y]=[CX+(RX+30)*Math.cos(0.25*Math.PI),CY+TH+30+(RY+30)*Math.sin(0.25*Math.PI)];g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.moveTo(x+18,y-16);g.lineTo(x-8,y-6);g.lineTo(x+10,y+12);g.fill()}
+  // 車輪（台の手前、砂の輪の上）
+  const wx=CX+40,wyS=CY+RY*0.78;let lift=0;
+  if(P.mode==='lower'){lift=170*(1-ease((t-P.drop)/0.8))}else{lift=8+7*Math.sin(t*9)+5*Math.sin(t*23)}
+  const wy=wyS-lift;
+  // 腕（右奥の柱から）
+  g.fillStyle='#4b5563';g.fillRect(1090,180,26,380);g.strokeStyle='#9aa3ae';g.lineWidth=12;g.lineCap='round';g.beginPath();g.moveTo(1103,200);g.lineTo(wx+13,wy-58);g.stroke();
+  g.fillStyle='#e5e7eb';g.beginPath();g.arc(1103,200,12,0,7);g.fill();
+  // 影
+  g.fillStyle=`rgba(0,0,0,${0.35*(1-lift/200)})`;g.beginPath();g.ellipse(wx,wyS+6,46,10,0,0,7);g.fill();
+  // ゴムの車輪（少し斜めから）
+  g.fillStyle='#16181c';g.beginPath();g.ellipse(wx,wy-58,34,60,0,0,7);g.fill();g.fillStyle='#2b2f36';g.beginPath();g.ellipse(wx+11,wy-58,31,57,0,0,7);g.fill();
+  g.fillStyle='#9aa3ae';g.beginPath();g.ellipse(wx+13,wy-58,13,23,0,0,7);g.fill();
+  if(P.mode==='lower'){
+    const k=(t>P.drop-0.2&&t<P.drop+1.4)?back((t-P.drop+0.2)/0.3):0;if(k>0){arrow(wx-80,wy-150,wx-80,wy-60,'rgba(242,194,48,'+clamp(k)+')');label(wx-80,wy-200,'ゴムの車輪を下ろす',k,'#ffd36a')}
+    label(W/2,70,'砂を敷いた円い台が回る（1秒に約0.6回転）',back((t-0.2)/0.35));
+  }else{
+    const k=back((t-0.3)/0.35);arrow(wx-90,wy-70,wx-90,wy-150,'#ffd36a');arrow(wx-90,wy-30,wx-90,wy+50,'#ffd36a');
+    g.strokeStyle='rgba(255,211,106,.9)';g.lineWidth=5;g.beginPath();g.arc(1103,200,30,0,7);g.stroke();
+    label(W/2,70,'車輪は砂の高さに合わせて上下に動ける',k);label(1000,130,'ここで回る',back((t-0.9)/0.35),'#ffd36a');
+  }
+};
+</script></body></html>
