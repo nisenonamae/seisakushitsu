@@ -555,17 +555,18 @@ ${refs.length?refs.map(i=>`<label class="chk"><input type="checkbox" data-ref="$
 ${syncOn()?`<p class="lead" style="margin:0 0 4px">録画ファイル（屏幕录制….mov）をここで選ぶと、そのまま Claude に届きます。</p><input type="file" accept="video/*" multiple data-recs>
 ${(p.recs||[]).map(r=>`<div class="lead">・${esc(r.name)}</div>${footHTML(p,r.footage,'rec',r.path)}`).join('')}<div class="lead" id="recMsg"></div>`:`<p class="lead">同期を設定すると、録画をここから直接届けられます（今は手順2でチャットにドラッグ）。</p>`}
 <h3 style="font-size:15px;margin:14px 0 4px">中身の資料（動画の文字起こし）</h3>
+<p class="lead" style="margin:0 0 4px">英語など外国語の動画の文字起こしも、<b>そのまま貼って大丈夫</b>です。Claude が日本語でまとめ（要点・その動画の流れ・使えそうな事実と数字・構成や語りに活かせそうな所）、構成と肉付けを作るときの材料に使います。使った所には「使った集めもの：文字起こし」と出ます。</p>
 <div class="how"><b>文字起こしの取り方（Mac・Chromebook）</b><ol><li>YouTube の動画の説明欄を「もっと見る」で開き、下の方の<b>「文字起こしを表示」</b>を押す（中国語表示なら「内容转文字」などの名前）</li><li>右に出た欄の中を全部選んでコピーして、下に貼る</li></ol></div>
 ${(()=>{const n=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted).length;return n?`<p style="font-weight:700;margin:8px 0 2px">入れた資料（${n}本）</p>`:''})()}
 ${(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted).map(m=>`<div class="item" style="margin:6px 0"><div class="q" style="font-size:14.5px">${esc(m.title||m.url||'資料')}</div>
-<div class="tags"><span>${esc(m.size)}</span><span>${esc(m.status||'')}</span></div>${m.summary?`<details open><summary>要約</summary><div style="white-space:pre-wrap;font-size:14px">${esc(m.summary)}</div></details>`:''}
+<div class="tags"><span>${esc(m.size)}</span><span>${esc(m.status||'')}</span></div>${usedInMat(p,m.id)}${m.summary?`<details open><summary>日本語のまとめ</summary><div style="white-space:pre-wrap;font-size:14px">${esc(m.summary)}</div></details>`:''}
 <div class="st">${!syncOn()?`<button data-mcopy="${m.id}">要約の依頼文をコピー</button>`:''}<button data-mdel="${m.id}">消す</button></div></div>`).join('')}
 ${(()=>{const n=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted).length;return `<div class="item" style="margin:8px 0;border:2px dashed var(--line)"><div class="q" style="font-size:15px">${n+1}本目の動画を足す</div>
 <p class="lead" style="margin:2px 0 4px"><b>1回に1本ずつ</b>入れます。1本入れると欄が空になるので、次の動画も同じように続けて入れられます。何本でも入れて大丈夫です。</p>`})()}
 <label>動画の題名か URL</label><input id="mTitle" placeholder="例：Why Roads Get Washboards https://www.youtube.com/watch?v=…">
-<label>その動画の文字起こし（全部貼る）</label><textarea id="mText" style="min-height:100px" placeholder="この1本の動画の文字起こしだけを貼る（ほかの動画のものは混ぜない）"></textarea>
-<label>要約の量</label><select id="mSize"><option>3行で</option><option selected>1分で読める量で</option><option>見出しつきで詳しく</option><option>数字と固有名詞を全部ぬき出して</option></select>
-<div class="row"><button class="b" data-madd>${syncOn()?'この1本を資料に入れて要約を頼む':'この1本を資料に入れる'}</button><span class="lead" id="mMsg">${esc(p._mMsg||'')}</span></div></div>
+<label>その動画の文字起こし（全部貼る。英語などのままでよい）</label><textarea id="mText" style="min-height:100px" placeholder="この1本の動画の文字起こしだけを貼る（ほかの動画のものは混ぜない）"></textarea>
+<label>日本語のまとめの詳しさ</label><select id="mSize"><option>3行で</option><option selected>1分で読める量で</option><option>見出しつきで詳しく</option><option>数字と固有名詞を全部ぬき出して</option></select>
+<div class="row"><button class="b" data-madd>${syncOn()?'この1本を資料に入れて、日本語のまとめを頼む':'この1本を資料に入れる'}</button><span class="lead" id="mMsg">${esc(p._mMsg||'')}</span></div></div>
 <div class="row"><button class="b main" data-next>集め終わった</button></div>`,
 outlineStep(p),
 fleshStep(p),
@@ -810,6 +811,8 @@ const UK={source:'資料',asset:'素材',related:'参考動画',material:'文字
 function usesHTML(b){if(b.mark==='追加'&&!b.text&&!b.narr)return'';const u=b.uses||[];
 if(!u.length)return `<div class="uses none">使った集めもの：なし（Claude の組み立てだけ。事実が入っていれば要確認）</div>`;
 return `<div class="uses"><div>使った集めもの：</div>${u.map(x=>`<div>・<span class="uk">${esc(UK[x.type]||x.type)}</span>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`:esc(x.title||'')}${x.what?` → ${esc(x.what)}`:''}</div>`).join('')}</div>`}
+function usedInMat(p,id){const r=[];for(const [k,nm] of [['o','構成'],['f','肉付け']]){const n=blsOf(p,k).map((b,i)=>(b.uses||[]).some(x=>x.type==='material'&&x.id===id)?i+1:0).filter(Boolean);if(n.length)r.push(nm+' '+n.join('・')+'段')}
+return r.length?`<div class="usedin">使っている所：${r.join('　')}</div>`:(blsOf(p,'o').length?`<div class="usedin no">まだどこにも使っていない</div>`:'')}
 function usedIn(p,url){if(!url)return'';const r=[];for(const [k,nm] of [['o','構成'],['f','肉付け']]){const n=blsOf(p,k).map((b,i)=>(b.uses||[]).some(x=>x.url===url)?i+1:0).filter(Boolean);if(n.length)r.push(nm+' '+n.join('・')+'段')}
 return r.length?`<div class="usedin">使っている所：${r.join('　')}</div>`:(blsOf(p,'o').length?`<div class="usedin no">まだどこにも使っていない</div>`:'')}
 function docHTML(p,k){const bl0=blsOf(p,k);const allU=new Set(bl0.flatMap(b=>(b.uses||[]).map(x=>x.url)).filter(Boolean));const pool=[...(p.sources||[]),...(p.related||[]),...(p.assets||[]).filter(a=>a.ok!==false)].map(x=>x.url);const usedN=pool.filter(u=>allU.has(u)).length;const d=docOf(p,k);const bl=blsOf(p,k);const live=bl.filter(b=>b.mark!=='削る');
