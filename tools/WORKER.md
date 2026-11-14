@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make と video_fix は 3、draft_all は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
@@ -172,6 +172,33 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - `status` を「消化済み」に。total は 2
 - 構成・肉付け・図解・サムネを作るときは、決まりごとに加えて、`feeds` の `lessons` のうち `drop` が true でないものを引き出しとして見てよい。使ったら、その段の `uses` に `{"type":"feed","title":餌の題名,"what":学び}` と書く
 
+### video_make（仮の動画づくり）
+声・図解・字幕まで入った下書きの動画を作る。作り手はこれを見て直す所を書く。
+1. `bash tools/setup_voice.sh`（声の用意。初回は数分。GitHub の API は使えないのでリリースの直リンクで落とす）
+2. `python3 tools/render_draft.py --data <data.json> --proj <projId> --repo <notion-daily の場所> --out <notion-daily>/roadmap/apps/seisakushitsu/videos/<projId>/draft_v<版>.mp4 --voice <声> --speed <速さ>`
+   - 声は `projects[].voice`（なければ 2＝四国めたん ノーマル）、速さは `projects[].speed`（なければ 1.1）
+   - 肉付けがあればその語り、なければ構成の text を読む。段に `visual`（作った図解の .mp4 か見本の .png のパス）があればそれを映し、なければ「画面の指示」を書いた絵コンテのカードを出す
+3. できた mp4 が 95MB を超えたら、`-crf` を上げて作り直す（GitHub の1ファイルの上限が100MB）
+4. `projects[].video` に `{"path","ver","duration","blocks"（出力と同じ名前の .json の blocks。段ごとの開始・終了秒）,"voice","at","reply"}` を書き、前の `video` は `projects[].videoHistory` に足す。mp4 と json を commit して push
+- total は 3（声の用意→組み立て→置く）
+
+### video_fix（動画の直し）
+- `jobs[].fixes` は `[{"sec":"2:10","text":"ここをゆっくり"}]`。`sec` を秒にして、`projects[].video.blocks` から何段目の話かを見つける
+- 直しの中身で、直す所を選ぶ：語りの言い回し・速さ・間 → 肉付けの段（`narr`）／話の順番・ある段が要らない・足りない → 構成（直したら flesh_sync と同じやり方で肉付けも合わせる）／絵・図解 → その段の図解（visual_fix と同じやり方）／声の速さ全体 → `projects[].speed`
+- 作り手がはっきり頼んだ直しなので、`keep` や `edited` の段でもその点は直してよい（直した段の `change` に「動画の直し：〜」）。直す前の版は history に残す
+- 直したら video_make と同じやり方で作り直し（ver を1増やす）、`projects[].fixes` の該当する行に `done: true` と `reply`（どう直したか一文）を書く。`video.reply` に全体の一言
+- total は 3（直す→作り直す→置く）
+
+### draft_all（おまかせで一通り作る）
+作り手が「まず一通り作ってみて、あとで直したい」ときの頼み。止まらずに続けて作る。
+- `jobs[].parts`（outline・flesh・visual・title・thumb・video のうち頼まれたもの）を、この順に片づける。`jobs[].mode` が「足りない所だけ」なら、すでにあるものは作り直さずに足りない所だけ（構成があれば構成は飛ばす、肉付けが構成とずれていれば flesh_sync、など）。「全部作り直す」なら、前の版を history に入れてから作り直す
+- 各部分のやり方は、それぞれの手順（outline・flesh・visual_ideas・visual_make・title_ideas・thumb_ideas・video_make）と同じ。決まりごと・`keep`・`edited` は必ず守る
+- visual：案を4〜6個出し（参考動画の実験の再現を含める）、そのうち見せ場になる2〜3個を実際に作り、作った図解は対応する構成の段に `visual`（clip のパス）を付ける。`visuals[]` の `oid` にもその段の id を書く
+- title・thumb：案を出したうえで、Claude がいちばん良いと思うものを仮に `titleId`・`thumbId` にしておき、`result` に「題名とサムネは仮に〇〇にした（変えてよい）」と書く
+- 進み具合：total は「頼まれた部分の数＋1」。部分が一つ終わるごとに push する（作り手は途中の結果から見られる）
+- 1回の作業で終わらないほど重いとき（長い動画など）は、終わった部分まで push して `status` を「待ち」に戻し、`progress.label` に「〇〇まで作りました。続きは次の回」と書く（次の回に続きから）
+- 最後に `result` に、作ったものと、作り手に見てほしい所（要確認の事実、仮に決めたもの）を短く
+
 ### 話し合い（talk）——チャットで作り手と直接話して磨く
 作り手が「Claude と話し合う」を押し、チャットに依頼文を貼ったときの手順。対象（制作の id と、outline か flesh か）は依頼文に書いてある。
 1. 用意（0. と同じ）のあと、対象の制作の構成または肉付けと、付いている印・注文・memo、題材と資料を読む
@@ -194,6 +221,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### visual_make（図解を作る）
 - `jobs[].ids` の案を、それぞれ短い動画（1280×720、30fps、5〜15秒、H.264、1本 15MB 以内）として作る。作り方：Python（numpy・Pillow など）でコマを描き、ffmpeg でつなぐ。地図は Natural Earth・地理院タイルなど ok の素材だけを使い、画面の隅に出典を入れる
 - `roadmap/apps/seisakushitsu/visuals/<projId>/<案のid>_v<版>.mp4` に置き、その visual の `clip` にパス、`ver` に版、`status` を `"できた"` にする。1本できるたびに push する（作り手は届いた順に見られる）
+- 台本の中で使う段が分かれば、visual の `oid` に構成の段の id を書き、その構成の段に `visual`（clip のパス）を付ける（仮の動画でその段にこの図解が映る）
 
 ### visual_fix（図解の直し）
 - `jobs[].visualId` の図解を `jobs[].notes` に従って直し、版を1つ上げた新しいファイルとして置き、`clip`・`ver` を更新し、`status` を `"できた"` にする

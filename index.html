@@ -70,6 +70,7 @@ table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bott
 .item.picked{border:2px solid var(--sea)}
 .fsum{margin:3px 0}.fbadge{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 9px;margin:0 4px 3px 0;border:1px solid var(--line);color:var(--sub)}
 .fbadge.sure{background:var(--good);border-color:var(--good);color:#fff}.fbadge.maybe{border-color:var(--yel);color:var(--ink)}.shot.sure{background:rgba(46,139,87,.08);border-radius:6px;padding:4px 6px}.surerow{font-weight:700}
+.omk{border:2px solid var(--sea)}.omk summary{color:var(--ink);font-size:15px}
 .msg{font-size:13.5px;color:var(--busy)}.ok{color:var(--good)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
@@ -205,8 +206,9 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <li><b>図解を選ぶ</b>：Claude が台本に合う図解の案を見本の画像つきで出すので、気に入ったものだけ選んで作ってもらい、直したい所を書いて直してもらう</li>
 <li><b>題名</b>：Claude が人を惹きつける題名の案を、ねらいつきで出す。「これにする」で選び、「この方向で別案」で枝分かれさせて磨く。直しの一言は「決まりにする」で貯まる</li>
 <li><b>サムネ</b>：決めた題名に合うサムネを、Claude が見本つきで出す。「これにする」で選び、直しを書いて直してもらう。直しは「決まりにする」で貯まる</li>
-<li><b>動画を確かめる</b>：1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて送る</li>
+<li><b>動画を確かめる</b>：仮の動画（声・図解・字幕入りの下書き）を1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて「直しを頼む」。時間からどの段の話かが分かり、Claude がその段を直して作り直す</li>
 <li><b>残して終わる</b>：次からも同じにしたい直しに印 → 工夫の棚に入る</li></ol>
+<p><b>おまかせで一通り作ってもらう</b>：制作の画面の上にあるボタン。構成・肉付け・図解・題名・サムネ・仮の動画を、止まらずに続けて作ってもらえます。まず全体を作ってから、気になる所だけを直したいときに使います。</p>
 <p><b>手順は行き来できます</b>：参考集め・構成・肉付けは、途中で「あ、これもある」となったらいつでも戻って足せます。足した資料や素材は「これを使って直してもらう」で、使ってほしい段を選んで頼むと、Claude が段ごとの変更案を出し、採用したものだけが入ります。構成を変えると、肉付けのずれた段に印が付き、「構成の変化だけ肉付けに反映してもらう」でそこだけ直せます。</p>
 <p>やめたいときは「この制作をやめる」、まだ始めていない題材は「制作から外す」で候補にもどせます。終わった手順は、押せば開いて「ここからやり直す」もできます。</p></details>
 
@@ -513,7 +515,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',draft_all:'おまかせで一通り',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){ensureProj();const p=projOf();
@@ -526,7 +528,7 @@ const s=p.step||0;
 $('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま作っている動画</div><div class="q">${esc(candQ(p))}</div>
 <div class="big" style="margin-top:8px">次にやること：${s<STEPS.length?esc(STEPS[s].t):'完成'}</div>
 <div class="row"><button class="b" data-quit>この制作をやめる（候補にもどす）</button></div>
-${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
+${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`+omakaseHTML(p);
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const rel=p.related||[];const srcs=p.sources||[];const ast=p.assets||[];
 const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${footHTML(p,r.footage,'rel',r.url)}${usedIn(p,r.url)}${useBtn(p,'related',r.url,r.title,'r'+rel.indexOf(r))}
@@ -577,10 +579,7 @@ fleshStep(p),
 visualStep(p),
 titleStep(p),
 thumbStep(p),
-`<div class="how"><b>やること</b><ol><li>届いた動画を 1.5倍速で見る</li><li>直したい所を、時間と一緒に一行ずつ書く</li><li>直しを送り、直った版がきたらもう一度見る。気が済んだら「完成」</li></ol></div>
-<div id="fixes">${(p.fixes||[]).map((f,k)=>`<div class="fix"><input data-fsec="${k}" value="${esc(f.sec||'')}" placeholder="1:23"><input data-ftxt="${k}" value="${esc(f.text||'')}" placeholder="直したいこと"><button class="b" data-fdel="${k}">×</button></div>`).join('')}</div>
-<div class="row"><button class="b" data-fadd>直しを一行足す</button></div>
-<div class="row"><button class="b" data-copy="fix">直しをコピーして Claude を開く</button><button class="b main" data-next>完成</button></div>`,
+videoStep(p),
 `<div class="how"><b>やること</b><p style="margin:4px 0">構成・肉付けの話し合いで決めたことや動画の直しのうち、次の動画でも同じようにしてほしいものに印を付けて、「終わる」を押す。印を付けたものは工夫の棚に「採用」で入る。</p></div>
 ${learnList(p).map((f,k)=>`<label class="chk"><input type="checkbox" data-keep="${k}"><span>${f.sec?esc(f.sec)+'　':''}${esc(f.text)}</span></label>`).join('')||'<div class="empty">直しはありませんでした。</div>'}
 ${p.kata?`<div class="item" style="background:var(--paper);margin-top:8px"><label class="chk" style="border:0"><input type="checkbox" id="keepStyle" checked><span>この動画の編集スタイルを残す（次から選べる）</span></label><label>スタイルの名前</label><input id="styleName" value="${esc(candQ(p).slice(0,20))}の型"></div>`:''}
@@ -655,6 +654,25 @@ ${f.before||f.after?`<div class="ba">${f.before&&/\.png$/.test(f.before)?`<div><
 ${f.status==='できた'?`<div class="st"><button data-vrule="${v.id}:${f.id}" class="${f.rule?'on':''}">${f.rule?'決まりに入れた':'これからの図解でも守る決まりにする'}</button></div>`:''}</div>`).join('')}</details>`:''}
 ${wait?'<p class="lead" style="margin:4px 0">直しを頼んでいます。届くまでお待ちください。</p>':`<label>${stage==='見本'?'デザイン・見せ方の直し（アイデアはそのまま）':'直したいこと'}</label><textarea data-vfix="${v.id}" placeholder="${stage==='見本'?'例：メーターが小さい。道を上からでなく斜めから／色を地図と合わせて':'例：波ができるのをもっとゆっくり／文字を大きく'}"></textarea>
 <div class="row"><button class="b" data-vjob="${stage==='見本'?'visual_redesign':'visual_fix'}" data-vid="${v.id}">${stage==='見本'?'見本を直してもらう':'直しを頼む'}</button></div>`}`}
+const OM=[['outline','構成'],['flesh','肉付け'],['visual','図解（案を出し、見せ場を作る）'],['title','題名'],['thumb','サムネ'],['video','仮の動画（声・図解・字幕）']];
+function secOf(t){t=String(t||'').trim();const m=t.match(/^(\d+):(\d{1,2})$/);return m?+m[1]*60+ +m[2]:(/^\d+(\.\d+)?$/.test(t)?+t:null)}
+function blockAt(p,t){const bl=((p.video||{}).blocks)||[];return bl.find(b=>t>=b.start&&t<b.end)}
+function videoStep(p){const v=p.video;const open=(p.fixes||[]).filter(f=>f.text&&!f.done);
+return `<div class="how"><b>やること</b><ol><li>仮の動画を 1.5倍速で見る（声・図解・字幕まで入った下書き。図解がまだの所は「画面の指示」を書いた絵コンテになる）</li><li>直したい所を、時間と一緒に一行ずつ書く。書いた時間から、どの段の話かが自動で出る</li><li>「直しを頼む」で、Claude がその段の語り・構成・図解を直して動画を作り直す。気が済んだら「完成」</li></ol></div>
+${v&&v.path?`<div class="item"><div class="tags"><span>${v.ver||1}版</span><span>${secTxt(v.duration||0)}</span>${v.at?`<span>${md(v.at)}</span>`:''}</div><video data-gh="${esc(v.path)}" controls playsinline preload="metadata" style="width:100%;border-radius:6px;background:#000;margin-top:6px"></video>${v.reply?`<div class="chg">Claude：${esc(v.reply)}</div>`:''}</div>`:'<div class="empty">仮の動画はまだありません。下のボタンか、上の「おまかせで一通り作ってもらう」で作れます。</div>'}
+${syncOn()?`<div class="row"><button class="b" data-job="video_make">${v&&v.path?'今の構成・肉付け・図解で作り直してもらう':'仮の動画を作ってもらう'}</button></div>${jobLine(p,'video_make')}`:''}
+<h3 style="font-size:15px;margin:12px 0 4px">直したい所</h3>
+<div id="fixes">${(p.fixes||[]).map((f,k)=>{const t=secOf(f.sec);const b=t!=null?blockAt(p,t):null;return `<div class="fix ${f.done?'off':''}"><input data-fsec="${k}" value="${esc(f.sec||'')}" placeholder="1:23"><input data-ftxt="${k}" value="${esc(f.text||'')}" placeholder="直したいこと"><button class="b" data-fdel="${k}">×</button></div>${b?`<div class="lead" style="margin:-2px 0 4px">→ ${esc(b.role||'')}の段</div>`:''}${f.reply?`<div class="chg" style="margin:-2px 0 6px">Claude：${esc(f.reply)}</div>`:''}`}).join('')}</div>
+<div class="row"><button class="b" data-fadd>直しを一行足す</button></div>
+<div class="row">${syncOn()?`<button class="b" data-job="video_fix">直しを頼む（${open.length}件）</button>`:`<button class="b" data-copy="fix">直しをコピーして Claude を開く</button>`}<button class="b main" data-next>完成</button></div>${jobLine(p,'video_fix')}`}
+function omakaseHTML(p){if(!syncOn())return'';let sel={};try{sel=JSON.parse(LS.get('om_sel','{}'))||{}}catch(e){}
+const busy=(D.jobs||[]).some(j=>!j.deleted&&j.projId===p.id&&j.type==='draft_all'&&(j.status==='待ち'||j.status==='作業中'));
+return `<details class="item omk" ${busy?'open':''}><summary><b>おまかせで一通り作ってもらう</b>（作ってから直す）</summary>
+<p class="lead" style="margin:4px 0">手順を一つずつ止まらずに、構成から仮の動画まで Claude が続けて作ります。できたら仮の動画を見て、気になる所だけを各手順や「動画を確かめる」で直せます。前の版は全部残ります。</p>
+<label>動画の長さ</label><select data-plen>${LENS.map(l=>`<option ${l===(p.len||'10分')?'selected':''}>${l}</option>`).join('')}</select>
+<label>作ってもらうもの</label>${OM.map(([k,n])=>`<label class="chk" style="padding:3px 0"><input type="checkbox" data-om="${k}" ${sel[k]===false?'':'checked'}><span>${n}</span></label>`).join('')}
+<label>すでにあるもの</label><select id="omMode"><option value="足りない所だけ">作り直さず、足りない所だけ作る</option><option value="全部作り直す">全部作り直す（前の版は残る）</option></select>
+${busy?'':`<div class="row"><button class="b main" data-omgo>おまかせで作ってもらう</button></div>`}${jobLine(p,'draft_all')}</details>`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
 if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
 function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&!['summary','pick','use_item','footage_check','digest','thumb_fix','title_fix'].includes(o.type));
@@ -669,7 +687,11 @@ save();renderAll()},true);
 async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());return bytesToB64(buf)}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
 function touchP(p){p.updatedAt=now();save()}
+$('makeTop').addEventListener('change',e=>{if(e.target.matches('[data-om]')){let sel={};try{sel=JSON.parse(LS.get('om_sel','{}'))||{}}catch(x){}sel[e.target.dataset.om]=e.target.checked;LS.set('om_sel',JSON.stringify(sel))}
+if(e.target.matches('[data-plen]')){const p=projOf();if(p){p.len=e.target.value;touchP(p)}}});
 $('makeTop').addEventListener('click',e=>{
+if(e.target.matches('[data-omgo]')){const p=projOf();if(!p)return;const parts=[...document.querySelectorAll('[data-om]')].filter(x=>x.checked).map(x=>x.dataset.om);if(!parts.length){alert('作ってもらうものを選んでください');return}
+queueJob({type:'draft_all',projId:p.id,parts,mode:$('omMode').value,len:p.len||'10分',styleMode:p.styleMode||'混ぜる',styleId:(p.styleMode||'混ぜる')==='新しく'?'':(p.styleId||(liveStyles()[0]||{}).id||'')});renderMake();return}
 if(e.target.id==='jobsNow'){copyOpen('制作室の頼みごとを今すぐ片づけて。GitHub の nisenonamae/seisakushitsu と nisenonamae/notion-daily を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、seisakushitsu の tools/WORKER.md の手順どおりに、待ちの頼みごとを全部片づけて push して。進み具合も手順どおり書き込んで。');return}
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
@@ -683,6 +705,7 @@ if(el.matches('[data-next]')){p.step=(p.step||0)+1;touchP(p);renderMake();window
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
 if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
 const extra={};if(type==='gather'){const g=gSel();if(!GK.some(([k])=>g[k].on)){alert('集めたいものに印を付けてください');return}extra.counts={};for(const [k] of GK)extra.counts[k]=g[k].on?g[k].n:0}
+if(type==='video_fix'){const op=(p.fixes||[]).filter(f=>f.text&&!f.done);if(!op.length){alert('直したいことを書いてください');return}extra.fixes=op.map(f=>({sec:f.sec,text:f.text}))}
 if(type==='outline'){extra.styleMode=p.styleMode||'混ぜる';extra.styleId=extra.styleMode==='新しく'?'':(p.styleId||(liveStyles()[0]||{}).id||'');extra.len=p.len||'10分'}
 if(type==='script'){extra.styleMode=p.styleMode||'混ぜる';extra.styleId=extra.styleMode==='新しく'?'':(p.styleId||(liveStyles()[0]||{}).id||'')}
 queueJob({type,projId:p.id,notes:type==='script_fix'?p.scriptNotes:'',...extra});renderMake();return}
