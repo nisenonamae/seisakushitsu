@@ -62,8 +62,8 @@ for k,b in enumerate(seq,1):
     base=None
     if not (vpath and os.path.exists(vpath)): vpath=None
     if vpath and vpath.endswith('.png'): base=Image.open(vpath).convert('RGB').resize((W,H))
-    clipdur=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',vpath],capture_output=True,text=True).stdout or 10) if vpath and vpath.endswith('.mp4') else 10
     elif not vpath: base=card(b,k,n)
+    clipdur=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',vpath],capture_output=True,text=True).stdout or 10) if vpath and vpath.endswith('.mp4') else 10
     bstart=t0
     for j,s in enumerate(sents):
         wp=f'{tmp}/a{k:03d}_{j:02d}.wav';dur=tts(s,wp)+(0.25 if j<len(sents)-1 else 0.55)
