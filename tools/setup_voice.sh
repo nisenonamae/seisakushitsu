@@ -8,6 +8,7 @@ if ! python3 -c "import voicevox_core" 2>/dev/null; then
   curl -sL -o core.whl $G/VOICEVOX/voicevox_core/releases/download/0.17.1/voicevox_core-0.17.1-cp310-abi3-manylinux_2_34_x86_64.whl
   cp core.whl voicevox_core-0.17.1-cp310-abi3-manylinux_2_34_x86_64.whl
   pip install --break-system-packages -q voicevox_core-0.17.1-cp310-abi3-manylinux_2_34_x86_64.whl
+  pip install --break-system-packages -q fugashi unidic-lite   # 字幕を文節で区切るため
 fi
 [ -d ort ] || { curl -sL -O $G/VOICEVOX/onnxruntime-builder/releases/download/voicevox_onnxruntime-1.17.3/voicevox_onnxruntime-linux-x64-1.17.3.tgz; mkdir -p ort; tar xzf voicevox_onnxruntime-linux-x64-1.17.3.tgz -C ort; }
 [ -d dict ] || { curl -sL -O $G/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz; mkdir -p dict; tar xzf open_jtalk_dic_utf_8-1.11.tar.gz -C dict; }
