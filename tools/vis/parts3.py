@@ -51,8 +51,7 @@ def roads(s,dur,c,repo):
             if t>tb:
                 k=back((t-tb)/0.35);d.rounded_rectangle([410,rows[2][1]-50,1190,rows[2][1]+50],14,outline=(242,194,48,255),width=6)
                 if 'b' not in marks:c.sfx.append([tb,'pop']);marks.add('b')
-                f=font(int(46*max(0.2,k)));d.text((800,rows[2][1]+92),s.get('text','約3分の1が未舗装'),font=f,fill=WHITE,anchor='mm',stroke_width=4,stroke_fill=(0,0,0))
-            d.text((210,H*0.5+130),'アメリカ',font=font(36),fill=WHITE+(int(255*a),),anchor='mm')
+                if s.get('text'):f=font(int(46*max(0.2,k)));d.text((800,rows[2][1]+92),s['text'],font=f,fill=WHITE,anchor='mm',stroke_width=4,stroke_fill=(0,0,0))
             c.add(im)
     else:  # trunk：太い舗装道路が一本通り、そこから土の道が枝分かれして広がる
         rr=random.Random(4);br=[]

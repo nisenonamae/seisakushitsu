@@ -94,15 +94,22 @@ window.render=function(t){
    car(cxw,500-34,1,{bob:3*Math.sin(t*30)*grow,heads:2*grow,t,wheelAng:off/34});sfxOnce('e',0,'engine',DUR);
  }
  else if(m==='assemble'){
-   // 必要な三つ：車輪がころがり出て（times[1]）、その下にゆるい砂が流れ込み（times[2]）、速く回ると（times[3]）後ろに波が生まれる。文字なし
+   // 必要な三つ：車輪がころがり出て（times[1]）、上からゆるい砂がさらさらと流れ落ちて山になり、すぐに崩れて平らに広がる（times[2]＝ゆるい地面）、
+   // 速く回ると（times[3]）車輪の後ろに波が生まれる。文字・点々の線なし
    const t1=T(1,0.2),t2=T(2,1.4),t3=T(3,2.6);sky('#33404f','#171d25');
-   const sand=eout((t-t2)/0.7);g.save();g.beginPath();g.rect(0,520-sand*80,W,200);g.clip();
-   const sp=t>t3?lerp(0,1,ease((t-t3)/0.8)):0;window._o=(window._o||0)+(t>t1?2+sp*14:0);const o=window._o;
-   const amp=x=>sp*Math.max(0,Math.min(1,(640-x)/500))*10*ease((t-t3-0.5)/1.5);const top=x=>440+(1-sand)*80-amp(x)*Math.sin((x+o)/16);ground(top,-20,W+20,'#c9a46a');g.restore();
-   if(t>t2){for(let i=0;i<160;i++){const r2=R(i+3);const x=40+r2()*1200,base=(440+(1-sand)*80);const fall=clamp((t-t2-r2()*0.6)/0.5);const y=lerp(base-260-r2()*80,base-4+r2()*10,fall);g.fillStyle=r2()<.5?'#e8cf9c':'#9b7748';g.beginPath();g.arc(x,y,3+r2()*3,0,7);g.fill()}sfxOnce('s',t2,'puff')}
-   if(t>t3){for(let i=0;i<30;i++){const r2=R(i+90);const a=((t-t3)*2.2+r2())%1;g.fillStyle='rgba(225,195,140,.85)';g.beginPath();g.arc(560-a*200+r2()*30,440-60*a+90*a*a*1.2,3+r2()*2,0,7);g.fill()}}
-   const wk=eout((t-t1)/0.5);if(wk>0){sfxOnce('w',t1,'thump');const wx=640,wy=(t>t2?440+(1-sand)*80:520)-60;g.globalAlpha=wk;tire(wx,lerp(-80,wy,wk),60,o/60);g.globalAlpha=1;
-     if(sp>0){sfxOnce('m',t3,'motor',DUR-t3);for(let i=0;i<5;i++){const y=wy-40+i*20;g.strokeStyle=`rgba(255,255,255,${0.5*sp})`;g.lineWidth=4;const a=((t*3+i*0.3)%1);g.beginPath();g.moveTo(wx-100-a*200,y);g.lineTo(wx-70-a*200,y);g.stroke()}}}
+   const pour=clamp((t-t2)/0.7),slump=ease((t-t2-0.5)/0.8);
+   const sp=t>t3?ease((t-t3)/0.8):0;window._o=(window._o||0)+(t>t1?2+sp*14:0);const o=window._o;
+   const ampF=x=>sp*Math.max(0,Math.min(1,(600-x)/480))*12*ease((t-t3-0.4)/1.6);
+   // 砂の形：最初は真ん中にとがった山 → 崩れて横に広がり、平らな層になる
+   const heap=x=>{if(t<t2)return 0;const peak=lerp(150*pour,60,slump),wid=lerp(160,1400,slump);return Math.max(0,peak*(1-Math.abs(x-640)/wid))};
+   const top=x=>590-heap(x)-ampF(x)*Math.sin((x+o)/16);
+   g.fillStyle='#4b4038';g.fillRect(0,590,W,H-590);   // 固い床（砂が来る前）
+   if(t>t2){ground(top,-20,W+20,'#c9a46a',H);
+     if(pour<1){g.fillStyle='#d8b27a';g.fillRect(630,0,20,590-heap(640));for(let i=0;i<40;i++){const r2=R(i+5);const yy=((t*3+r2())%1)*(590-heap(640));g.fillStyle='#ecd3a0';g.beginPath();g.arc(640+(r2()-.5)*22,yy,2.5,0,7);g.fill()}sfxOnce('s',t2,'puff')}
+     // 崩れていく粒（斜面を転がる）
+     if(slump>0&&slump<1){for(let i=0;i<60;i++){const r2=R(i+70);const side=r2()<.5?-1:1;const d=(slump+r2()*0.3)%1*lerp(160,700,slump);const x=640+side*d;g.fillStyle='#ecd3a0';g.beginPath();g.arc(x,top(x)-3,3,0,7);g.fill()}}}
+   const wk=eout((t-t1)/0.5);if(wk>0){sfxOnce('w',t1,'thump');const wx=600,gy=t>t2?top(wx):590;const wy=gy-60;g.globalAlpha=wk;tire(wx,lerp(-80,wy,wk),60,o/60);g.globalAlpha=1;
+     if(sp>0)sfxOnce('m',t3,'motor',DUR-t3,0)}
  }
  else if(m==='section'){
    sky('#7fa9d6','#e9d3ad');const off=t*240,top=x=>{const X=x+off;return 480-(7*Math.sin(X/37)+5*Math.sin(X/17+1)+4*Math.sin(X/61+2)+2.5*Math.sin(X/9+0.5))};

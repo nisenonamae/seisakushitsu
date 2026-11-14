@@ -45,6 +45,8 @@ for k,b in enumerate(live,1):
             src=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'vis','html',sh['page']+'.html'),encoding='utf-8').read()
             if sh['page'] not in('person','calendar') and re.search(r"label\([^)]*'[^']*[ぁ-んァ-ヶ一-龠]",src):W.append((tag,f"ページ {sh['page']} の中で文字を描いている所がある（モードによる。目で確かめる）"))
         prev=sh
+    # 部品が自分で文字を出すもの（指定しなくても出る）
+        if sh.get('t') in('wave','strip') and sh.get('text') is None:W.append((tag,f"{sh['t']} は text を空にしないと決まった文字を出す"))
     # 読み間違えやすい漢字
     for w in ['何なのか','何故','一日','今日は']:
         if w in sents:W.append((f'{k}-語り',f'読み間違えやすい「{w}」はひらがなに'))

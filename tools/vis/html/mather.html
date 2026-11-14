@@ -30,9 +30,10 @@ function wheelAt(a,lift=0,spin=0){const [x,y]=E(a,0.8,lift);const k=RY/RX,r=40,t
   g.strokeStyle='#c7ccd3';g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(CX,CY-46);g.lineTo(x,y-r);g.stroke();
   const ux=-Math.sin(a),uy=Math.cos(a)*k,nx=Math.cos(a)*th,ny=Math.sin(a)*k*th;   // 接線（車輪の向き）と、軸の向き
   const face=(ox,oy,col)=>{g.save();g.setTransform(ux*r,uy*r,0,-r,x+ox,y-r+oy);g.fillStyle=col;g.beginPath();g.arc(0,0,1,0,7);g.restore();g.fill()};
-  // 奥の面 → 側面（ゴム） → 手前の面
-  for(let k=0;k<=12;k++){const q=k/12-0.5;face(nx*q,ny*q,k===12?'#2a2e36':'#16181d')}
-  g.save();g.setTransform(ux*r,uy*r,0,-r,x+nx/2,y-r+ny/2);g.fillStyle='#aab2bd';g.beginPath();g.arc(0,0,0.5,0,7);g.fill();g.strokeStyle='#5b6470';g.lineWidth=0.08;for(let i=0;i<5;i++){const q=spin+i*Math.PI*2/5;g.beginPath();g.moveTo(0,0);g.lineTo(0.45*Math.cos(q),0.45*Math.sin(q));g.stroke()}g.restore();
+  // 見ている人の側の面を最後に描く（台の手前なら外側の面、奥なら内側の面）
+  const sg=Math.sin(a)>=0?1:-1;
+  for(let k=0;k<=12;k++){const q=sg*(k/12-0.5);face(nx*q,ny*q,k===12?'#262a31':'#15171b')}
+  g.save();g.setTransform(ux*r,uy*r,0,-r,x+sg*nx/2,y-r+sg*ny/2);g.fillStyle='#3a3f48';g.beginPath();g.arc(0,0,0.72,0,7);g.fill();g.fillStyle='#7d8590';g.beginPath();g.arc(0,0,0.34,0,7);g.fill();g.strokeStyle='#4b5260';g.lineWidth=0.07;for(let i=0;i<5;i++){const q=spin+i*Math.PI*2/5;g.beginPath();g.moveTo(0,0);g.lineTo(0.32*Math.cos(q),0.32*Math.sin(q));g.stroke()}g.restore();
   return [x,y]}
 function hub(){g.fillStyle='#9aa3ae';g.fillRect(CX-8,CY-50,16,50);g.fillStyle='#d1d5db';g.beginPath();g.ellipse(CX,CY-50,14,6,0,0,7);g.fill()}
 function hand(x,y){g.fillStyle='#e9b796';g.beginPath();g.ellipse(x,y-34,26,18,-0.3,0,7);g.fill();g.fillStyle='#d9a07d';g.fillRect(x-40,y-46,22,18)}
@@ -50,10 +51,10 @@ function storyRender(t){
   if(t<T1+0.6){const k=back((t-0.2)/0.35);if(k>0){g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(CX-RX,CY+RY+80);g.lineTo(CX+RX,CY+RY+80);g.stroke();label(CX,CY+RY+80,'約60cm',k,'#ffd36a',30);sfxOnce('d',0.2,'tick')}}
   if(t>T1)sfxOnce('s',T1,'puff');
   if(t>T1)ripples();
-  if(t>T2)hub();
-  const a=Math.PI*0.35+ang;
+  const a=Math.PI*0.35+ang;const back_=Math.sin(a)<0;   // 奥にいるときは、車輪を先に描いて真ん中の柱の後ろに隠す
+  if(t>T2&&!(back_&&t>=T3))hub();
   if(t>T2&&t<T3){const u=eout((t-T2)/0.5);const [x,y]=E(a,0.8*u);g.strokeStyle='#c7ccd3';g.lineWidth=8;g.beginPath();g.moveTo(CX,CY-46);g.lineTo(x,y-40);g.stroke();sfxOnce('r',T2,'tick')}
-  if(t>=T3){sfxOnce('wl',T3,'pop');wheelAt(a,0,ang*4)}
+  if(t>=T3){sfxOnce('wl',T3,'pop');wheelAt(a,0,ang*4);if(back_)hub()}
   if(t>T6){const k=eout((t-T6)/0.4);g.save();g.globalAlpha=k;g.fillStyle='#374151';g.beginPath();g.roundRect(CX-50,CY-118,100,70,12);g.fill();g.fillStyle='#4b5563';g.fillRect(CX-40,CY-108,80,12);g.restore();sfxOnce('m',T8,'motor',Math.max(1,DUR-T8),0)}
   if(t>T7-0.2){const k=eout((t-T7+0.2)/0.4);speedo(1110,160,115*k,sp*7,{vmax:30,step:10,plain:true,mark:(0.8+3.4*ease((T9-T8)/Math.max(0.8,T9-T8+0.8)))*7})}
 }

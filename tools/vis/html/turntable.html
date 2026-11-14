@@ -14,6 +14,9 @@ const CX=600,CY=430,RX=380,RY=118,TH=46;
 function E(a,r){return [CX+RX*r*Math.cos(a),CY+RY*r*Math.sin(a)]}
 function label(x,y,text,k,col='#fff'){if(k<=0)return;g.save();g.globalAlpha=clamp(k);g.font=`900 ${Math.round(40*back(k))}px "Noto Sans CJK JP"`;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(text).width;g.fillStyle='rgba(10,14,20,.8)';g.beginPath();g.roundRect(x-w/2-20,y-32,w+40,64,14);g.fill();g.fillStyle=col;g.fillText(text,x,y+2);g.restore()}
 function arrow(x1,y1,x2,y2,col,w=8){g.strokeStyle=col;g.fillStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const a=Math.atan2(y2-y1,x2-x1);g.beginPath();g.moveTo(x2+Math.cos(a)*14,y2+Math.sin(a)*14);g.lineTo(x2-Math.cos(a-0.6)*20,y2-Math.sin(a-0.6)*20);g.lineTo(x2-Math.cos(a+0.6)*20,y2-Math.sin(a+0.6)*20);g.fill()}
+const AMP=new Float32Array(90);let lastT=0;
+function ripplesOn(rot){const K=AMP.length;for(let k=0;k<K;k++){const A=AMP[k];if(A<0.02)continue;const a0=2*Math.PI*k/K+rot,a1=2*Math.PI*(k+0.5)/K+rot;
+  for(const [b0,b1,c] of [[a0,a0+(a1-a0)*0.55,`rgba(115,82,45,${0.8*A})`],[a0+(a1-a0)*0.55,a1+0.02,`rgba(255,238,200,${0.65*A})`]]){const p=[E(b0,0.58),E(b0,0.95),E(b1,0.95),E(b1,0.58)];g.fillStyle=c;g.beginPath();g.moveTo(...p[0]);for(const q of p.slice(1))g.lineTo(...q);g.fill()}}}
 window.render=function(t){
   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#151b23');g.fillStyle=bg;g.fillRect(0,0,W,H);
   // 机
@@ -25,12 +28,20 @@ window.render=function(t){
   g.fillStyle='#cfa86c';g.beginPath();g.ellipse(CX,CY,RX*0.96,RY*0.96,0,0,7);g.fill();g.fillStyle='#8c96a3';g.beginPath();g.ellipse(CX,CY,RX*0.56,RY*0.56,0,0,7);g.fill();g.fillStyle='#5b6470';g.beginPath();g.ellipse(CX,CY,22,8,0,0,7);g.fill();
   const rot=t*2*Math.PI*0.6;
   for(const p of grains){const [x,y]=E(p.a+rot,p.r);g.fillStyle=p.l<.5?'rgba(140,105,60,.6)':'rgba(245,225,180,.7)';g.fillRect(x,y,2.4,1.6)}
+  if(P.mode==='grow'){ // 早回しで数十周。1か所に波が生まれ（times[1]）、そこから回る向きへ次々に広がり（times[2]〜[3]）、通り道を埋める
+    const tm=P.times||[0,DUR*0.3,DUR*0.45,DUR*0.8];const tb=tm[1],tsp=tm[2]||tb+1,tf=tm[3]||DUR*0.85;const dt=Math.max(0,t-lastT);lastT=t;
+    const born=Math.floor(AMP.length*0.75);if(t>=tb)AMP[born]=Math.min(1,AMP[born]+dt*1.2);
+    if(t>=tsp){const reach=Math.floor((AMP.length-1)*clamp((t-tsp)/Math.max(0.5,tf-tsp)));for(let i=1;i<=reach;i++){const j=(born-i+AMP.length)%AMP.length;AMP[j]=Math.min(1,AMP[j]+dt*1.5)}}
+    if(Math.abs(t-tb)<0.02&&!window._b){window._b=1;window.SFX.push([t,'pop'])}
+    ripplesOn(rot);
+    const laps=Math.floor(t<tb?30*t/Math.max(0.5,tb):30+12*(t-tb));g.fillStyle='rgba(10,14,20,.85)';g.beginPath();g.roundRect(1010,40,220,96,14);g.fill();g.fillStyle='#7dd3fc';g.font='800 56px "Noto Sans CJK JP"';g.textAlign='center';g.textBaseline='middle';g.fillText(String(laps)+' 周',1120,90);
+  }
   // 回る向きの矢印（台の手前に）
   g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=6;g.beginPath();g.ellipse(CX,CY+TH+30,RX+30,RY+30,0,0.25*Math.PI,0.75*Math.PI);g.stroke();
   {const [x,y]=[CX+(RX+30)*Math.cos(0.25*Math.PI),CY+TH+30+(RY+30)*Math.sin(0.25*Math.PI)];g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.moveTo(x+18,y-16);g.lineTo(x-8,y-6);g.lineTo(x+10,y+12);g.fill()}
   // 車輪（台の手前、砂の輪の上）
   const wx=CX+40,wyS=CY+RY*0.78;let lift=0;
-  if(P.mode==='lower'){lift=170*(1-ease((t-P.drop)/0.8))}else{lift=8+7*Math.sin(t*9)+5*Math.sin(t*23)}
+  if(P.mode==='lower'){lift=170*(1-ease((t-P.drop)/0.8))}else if(P.mode==='grow'){lift=3+3*Math.sin(t*14)}else{lift=8+7*Math.sin(t*9)+5*Math.sin(t*23)}
   const wy=wyS-lift;
   // 腕（右奥の柱から）
   g.fillStyle='#4b5563';g.fillRect(1090,180,26,380);g.strokeStyle='#9aa3ae';g.lineWidth=12;g.lineCap='round';g.beginPath();g.moveTo(1103,200);g.lineTo(wx+13,wy-58);g.stroke();
@@ -42,7 +53,7 @@ window.render=function(t){
   g.fillStyle='#9aa3ae';g.beginPath();g.ellipse(wx+13,wy-58,13,23,0,0,7);g.fill();
   if(P.mode==='lower'){
     const k=(t>P.drop-0.2&&t<P.drop+1.4)?back((t-P.drop+0.2)/0.3):0;if(k>0){arrow(wx-80,wy-170,wx-80,wy-80,'rgba(242,194,48,'+clamp(k)+')')}
-  }else{
+  }else if(P.mode==='updown'){
     const k=back((t-0.3)/0.35);arrow(wx-90,wy-70,wx-90,wy-150,'#ffd36a');arrow(wx-90,wy-30,wx-90,wy+50,'#ffd36a');
     g.strokeStyle='rgba(255,211,106,.9)';g.lineWidth=5;g.beginPath();g.arc(1103,200,30,0,7);g.stroke();
     
