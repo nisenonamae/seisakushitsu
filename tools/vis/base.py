@@ -45,15 +45,41 @@ def back(t,s=1.7):
     t=max(0,min(1,t))-1;return max(0.0,1+(s+1)*t**3+s*t**2)
 class Clip:
     """フレームを ffmpeg に直接流して mp4 にする。
-    cam：カメラの動き（"in"＝ゆっくり寄る／"out"＝引く／"left"・"right"＝横に流れる／"none"）。止まった絵にならないよう、どの場面も少しずつ動かす
+    cam：カメラの動き（"in"＝ほんの少し寄る／"out"＝引く／"left"・"right"＝横に流れる／"none"）
+    punch：見てほしい所へ「ぐいっ」と寄る。[{"at": 秒, "x": 0〜1, "y": 0〜1, "z": 倍率, "ring": true, "text": "…"}]
+           z を 1 にすると全体へ戻る。寄った先で丸印（ring）と短い文字（text）を出せる。寄るたびに効果音の時刻を sfx に残す
     anim 秒ぶん描いたら、残りは最後の絵で止めて dur 秒にする（止める間もカメラは動き続ける）"""
-    def __init__(s,out,dur,cam='in'):
+    def __init__(s,out,dur,cam='in',punch=None):
         s.out=out;s.dur=dur;s.cam=cam;s.N=max(1,int(dur*FPS));os.makedirs(os.path.dirname(out) or '.',exist_ok=True)
-        s.p=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE);s.n=0;s.last=None;s.sfx=[]
+        s.p=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE);s.n=0;s.last=None
+        s.punch=sorted(punch or [],key=lambda q:q['at']);s.sfx=[q['at'] for q in s.punch if q['at']<dur]
+    def _view(s,t):
+        """今の倍率と中心（0〜1）。ぐいっと 0.28 秒で寄り、少し行き過ぎて戻る。寄ったあとはごくわずかに寄り続ける"""
+        z,x,y=1.0,0.5,0.5;cur=None
+        for q in s.punch:
+            if t<q['at']:break
+            k=back((t-q['at'])/0.28,1.2);nz,nx,ny=q.get('z',2.2),q.get('x',0.5),q.get('y',0.5)
+            if nz<=1.01:nx,ny=0.5,0.5
+            z,x,y=z+(nz-z)*k,x+(nx-x)*min(1,k),y+(ny-y)*min(1,k);cur=q if k>=0.999 else cur
+            if k>=0.999:z*=1+0.025*min(1,(t-q['at']-0.28)/2.5)
+        return z,x,y,cur
     def _cam(s,im):
+        t=s.n/FPS
+        if s.punch:
+            z,px,py,cur=s._view(t);w,h=W/z,H/z;cx=min(max(px*W,w/2),W-w/2);cy=min(max(py*H,h/2),H-h/2);k=im.width/W  # 大きい絵が来たら、その細かさのまま切り出す
+            out=im.crop((int((cx-w/2)*k),int((cy-h/2)*k),int((cx+w/2)*k),int((cy+h/2)*k))).resize((W,H),Image.LANCZOS if k>1 else Image.BILINEAR)
+            if cur and (cur.get('ring') or cur.get('text')):
+                out=out.convert('RGBA');d=ImageDraw.Draw(out,'RGBA');sx,sy=(cur['x']*W-(cx-w/2))*z,(cur['y']*H-(cy-h/2))*z;a=back((t-cur['at']-0.2)/0.25)
+                if cur.get('ring'):
+                    r=cur.get('r',0.08)*W*a;d.ellipse([sx-r,sy-r*0.75,sx+r,sy+r*0.75],outline=(242,194,48,255),width=8)
+                if cur.get('text') and a>0:
+                    f=font(int(54*max(0.2,min(1.1,a))));tw=d.textlength(cur['text'],font=f);ty=max(70,min(H-230,sy-cur.get('r',0.08)*W*0.75-60)) if cur.get('ring') else 110;tx=min(max(sx,tw/2+40),W-tw/2-40)
+                    d.rounded_rectangle([tx-tw/2-24,ty-44,tx+tw/2+24,ty+44],16,fill=(0,0,0,170));d.text((tx,ty),cur['text'],font=f,fill=WHITE,anchor='mm')
+                out=out.convert('RGB')
+            return out
         if s.cam=='none':return im
         u=s.n/max(1,s.N-1);e=u*u*(3-2*u)*0.6+u*0.4
-        z={'in':1.0+0.08*e,'out':1.08-0.08*e}.get(s.cam,1.06);dx={'left':-0.03+0.06*e,'right':0.03-0.06*e}.get(s.cam,0)
+        z={'in':1.0+0.04*e,'out':1.04-0.04*e}.get(s.cam,1.03);dx={'left':-0.02+0.04*e,'right':0.02-0.04*e}.get(s.cam,0)
         w,h=W/z,H/z;cx=W/2+dx*W;cy=H/2
         return im.crop((int(cx-w/2),int(cy-h/2),int(cx+w/2),int(cy+h/2))).resize((W,H),Image.BILINEAR)
     def add(s,im):

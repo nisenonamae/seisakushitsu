@@ -175,7 +175,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### video_make（仮の動画づくり）
 声・図解・字幕まで入った下書きの動画を作る。作り手はこれを見て直す所を書く。
 1. `bash tools/setup_voice.sh`（声の用意。初回は数分。GitHub の API は使えないのでリリースの直リンクで落とす）
-2. **全部の段の画面を作る（絵コンテのカードを出さない）**：肉付けの各段に `shots`（文ごとのカード割り。`tools/vis/README.md` の「カット」の決まりに従う。一つの画面は 3〜6 秒、止まった画面を作らない）を書く。`shots` を書かない段だけ、代わりに `scene`（図解の部品の指定。`tools/vis/README.md` の表から選ぶ）を書く。段の「画面の指示」をいちばんよく見せられる部品と指定を選ぶ。合う部品がなければ `tools/vis/scenes.py` に部品か `mode` を足す（足したら README の表にも書く）。書いたら `python3 tools/make_scenes.py --data <data.json> --proj <projId> --repo <notion-daily の場所>` で全段の画面を作る（作った段には構成の段の `visual` が付く。すでに `visual` がある段は飛ばす。作り直すときは `--force`）。作った画面のうち何枚かをコマで見て、おかしければ直してから次へ
+2. **全部の段の画面を作る（絵コンテのカードを出さない）**：肉付けの各段に `shots`（文ごとのカード割り。`tools/vis/README.md` の「カット」の決まりに従う。一つの画面は 3〜6 秒、止まった画面を作らない）を書く。写真は 1 分あたり 4 枚以上集めて挟み、写真には `punch`（見どころへぐいっと寄る）を付ける。使った写真のライセンスと作者は `p.video.credits` に並べる。`shots` を書かない段だけ、代わりに `scene`（図解の部品の指定。`tools/vis/README.md` の表から選ぶ）を書く。段の「画面の指示」をいちばんよく見せられる部品と指定を選ぶ。合う部品がなければ `tools/vis/scenes.py` に部品か `mode` を足す（足したら README の表にも書く）。書いたら `python3 tools/make_scenes.py --data <data.json> --proj <projId> --repo <notion-daily の場所>` で全段の画面を作る（作った段には構成の段の `visual` が付く。すでに `visual` がある段は飛ばす。作り直すときは `--force`）。作った画面のうち何枚かをコマで見て、おかしければ直してから次へ
 3. `python3 tools/render_draft.py --data <data.json> --proj <projId> --repo <notion-daily の場所> --out <notion-daily>/roadmap/apps/seisakushitsu/videos/<projId>/draft_v<版>.mp4 --voice <声> --speed <速さ>`
    - 声は `projects[].voice`（なければ 2＝四国めたん ノーマル）、速さは `projects[].speed`（なければ 1.1）
    - 肉付けがあればその語り、なければ構成の text を読む。段に `visual`（作った図解の .mp4 か見本の .png のパス）があればそれを映し、なければ「画面の指示」を書いた絵コンテのカードを出す

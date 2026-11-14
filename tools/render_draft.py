@@ -58,7 +58,7 @@ def sub_overlay(text):
     d.rectangle([0,y-14,W,H],fill=(0,0,0,120))
     for ln in lines: d.text((W/2,y),ln,font=f,fill=(255,255,255),anchor='ma',stroke_width=3,stroke_fill=(0,0,0));y+=46
     return im
-tmp=tempfile.mkdtemp();segs=[];auds=[];tl=[];t0=0.0;n=len(seq);cuts=[]
+tmp=tempfile.mkdtemp();segs=[];auds=[];tl=[];t0=0.0;n=len(seq);cuts=[];pops=[]
 for k,b in enumerate(seq,1):
     sents=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
     vis=b.get('visual');vpath=os.path.join(a.repo,vis) if vis and a.repo else None
@@ -87,6 +87,7 @@ for k,b in enumerate(seq,1):
         if sh:
             import scenes
             gpath=f'{tmp}/shot{k:03d}_{gi:02d}.mp4';scenes.make({x:y for x,y in sh.items() if x!='n'},gdur+0.1,gpath,a.repo);cuts.append(t0)
+            if os.path.exists(gpath+'.sfx.json'):pops.extend(t0+x for x in json.load(open(gpath+'.sfx.json')))
         elif gi==0 and vpath: cuts.append(t0)
         g0=t0
         for j in range(j0,j1):
@@ -112,6 +113,8 @@ def whoosh(dur=0.35,amp=0.10):
     m=int(vsr*dur);x=rng.standard_normal(m);X=np.fft.rfft(x);f=np.fft.rfftfreq(m,1/vsr);X[(f<400)|(f>5000)]=0;y=np.fft.irfft(X,m);return amp*y/np.abs(y).max()*np.sin(np.linspace(0,np.pi,m))**2
 for ct in cuts:
     i=int(max(0,ct-0.12)*vsr);w_=whoosh();mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
+for ct in pops:  # ぐいっと寄るときは少し強めで短いシュッ
+    i=int(max(0,ct-0.05)*vsr);w_=whoosh(0.25,0.14);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
 mix=np.clip(mix,-1,1)
 with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(vsr);wv.writeframes((mix*32767).astype(np.int16).tobytes())
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)

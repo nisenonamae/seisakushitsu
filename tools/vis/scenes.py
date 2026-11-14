@@ -39,8 +39,12 @@ def label(d,text,x=W/2,y=110,size=50):
 
 def photo(s,dur,c,repo):
     img=load_img(s['src'],repo);N=int(dur*FPS)
+    if s.get('punch'):  # ぐいっと寄るときは、細かい絵（2倍）を一枚だけ渡して、カメラ側で切り出す
+        big=cover(img,W*2,H*2);x=(big.width-W*2)//2;y=(big.height-H*2)//2;fit=big.crop((x,y,x+W*2,y+H*2))
+        for n in range(N):c.add(fit)
+        return
     for n in range(N):
-        u=n/max(1,N-1);im=kenburns(img,u,1.0,s.get('zoom',1.14),s.get('cx',0.5),s.get('cy',0.55)).convert('RGBA')
+        u=n/max(1,N-1);im=(fit if s.get('punch') else kenburns(img,u,1.0,s.get('zoom',1.05),s.get('cx',0.5),s.get('cy',0.55))).convert('RGBA')
         if s.get('fadein'):
             k=ease(n/(FPS*0.8));im=Image.blend(Image.new('RGBA',(W,H),(0,0,0,255)),im,k)
         d=ImageDraw.Draw(im,'RGBA');t=n/FPS
@@ -339,11 +343,16 @@ def section(s,dur,c,repo):
 def make(spec,dur,out,repo=''):
     """spec に seq（部品のリスト）があれば、dur を等分して順につなぐ（長い一文の途中で画面を変えたいとき）"""
     if spec.get('seq'):
-        import subprocess,tempfile;tmp=tempfile.mkdtemp();L=spec['seq'];parts=[]
+        import subprocess,tempfile;tmp=tempfile.mkdtemp();L=spec['seq'];parts=[];sfx=[]
         for i,sp in enumerate(L):
             o=f'{tmp}/q{i}.mp4';make(sp,dur/len(L),o,repo);parts.append(o)
+            if os.path.exists(o+'.sfx.json'):sfx+= [i*dur/len(L)+x for x in json.load(open(o+'.sfx.json'))]
+            sfx.append(i*dur/len(L)) if i else None
         open(f'{tmp}/l.txt','w').write(''.join(f"file '{x}'\n" for x in parts))
-        subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l.txt','-c','copy',out],check=True);return
+        subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l.txt','-c','copy',out],check=True)
+        if sfx:json.dump(sfx,open(out+'.sfx.json','w'))
+        return
     import parts2
-    c=Clip(out,dur,spec.get('cam','in'));f={'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
+    c=Clip(out,dur,spec.get('cam','none' if spec['t']=='photo' else 'in'),spec.get('punch'));f={'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
     f(spec,dur,c,repo);c.close()
+    if c.sfx:json.dump(c.sfx,open(out+'.sfx.json','w'))
