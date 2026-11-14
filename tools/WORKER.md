@@ -150,7 +150,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### visual_redesign（見本の直し：アイデアはそのまま、デザイン・見せ方だけ）
 - `jobs[].visualId` の案（status は「提案」のまま）の見本を、`jobs[].notes` に従って描き直す。**何を見せるか（アイデア）は変えず**、色・大きさ・向き・配置・文字・見せ方だけを直す
 - 新しい見本は `visuals/<projId>/<id>_p<番号>.png`（番号は 2 から順に）に置き、`preview` を新しいパスに、古いパスは `previews`（配列）に残す。`desc` の見せ方の部分も直しに合わせて書き換えてよい
-- `fixlog` の該当（`jobs[].fixId`）に `after` と `status: "できた"` を書く。total は 2
+- `fixlog` の該当（`jobs[].fixId`）に `after` と `status: "できた"`、`reply`（どう直したかを一文）を書く。total は 2
 
 ### 図解の共通の決まり
 - 見本や図解を描いたプログラムは、同じ場所に `<id>.py`（何本かまとめたなら `previews.py` など）として置き、`visuals[].src` にそのパスを書く。直すときは、それを読んで直す（一から描き直さない）
