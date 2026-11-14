@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
@@ -145,6 +145,17 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 
 ### visual_fix（図解の直し）
 - `jobs[].visualId` の図解を `jobs[].notes` に従って直し、版を1つ上げた新しいファイルとして置き、`clip`・`ver` を更新し、`status` を `"できた"` にする
+- `visuals[].fixlog` の中で `id` が `jobs[].fixId` のものに、`after`（新しいファイルのパス）と `status: "できた"` を書く。直しきれなかった所があれば `reply` に一言
+
+### visual_redesign（見本の直し：アイデアはそのまま、デザイン・見せ方だけ）
+- `jobs[].visualId` の案（status は「提案」のまま）の見本を、`jobs[].notes` に従って描き直す。**何を見せるか（アイデア）は変えず**、色・大きさ・向き・配置・文字・見せ方だけを直す
+- 新しい見本は `visuals/<projId>/<id>_p<番号>.png`（番号は 2 から順に）に置き、`preview` を新しいパスに、古いパスは `previews`（配列）に残す。`desc` の見せ方の部分も直しに合わせて書き換えてよい
+- `fixlog` の該当（`jobs[].fixId`）に `after` と `status: "できた"` を書く。total は 2
+
+### 図解の共通の決まり
+- 見本や図解を描いたプログラムは、同じ場所に `<id>.py`（何本かまとめたなら `previews.py` など）として置き、`visuals[].src` にそのパスを書く。直すときは、それを読んで直す（一から描き直さない）
+- 「図解」の決まりごと（rules の scope が「図解」）を必ず読む。`ex`（前後の見本と例の名前）が付いた決まりは、その見本も開いて、どう直したかを見てから守る
+
 
 ### script（台本づくり・古い形。今は outline → flesh を使う）
 1. 題材（candidates の q と angle）、参考メモ（ideas の memo・時間・効く場所）、資料（materials の summary、なければ text）、調べた資料（projects の sources）、集めた参考（projects の related）を読む

@@ -64,6 +64,7 @@ table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bott
 .sync{font-size:13px;color:var(--busy);margin:5px 0 0;padding:4px 7px;border:1px solid var(--busy);border-radius:6px}.syncbox{border-color:var(--busy)}
 .props{border-color:var(--sea)}.prop{border-top:1px solid var(--line);padding:6px 0;font-size:14px}.prop .before{color:var(--sub);text-decoration:line-through}.prop .after{margin-top:2px}
 .useform{margin:6px 0;padding:8px;border:1px solid var(--sea);border-radius:8px;background:var(--row)}
+.fixrec{border-top:1px solid var(--line);padding:6px 0;font-size:14px}.ba{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0}.ba img{width:100%;border-radius:4px;background:var(--line);min-height:30px}
 .msg{font-size:13.5px;color:var(--busy)}.ok{color:var(--good)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
@@ -492,7 +493,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){ensureProj();const p=projOf();
@@ -587,12 +588,18 @@ return `<div class="how"><b>やること</b><ol><li>Claude が台本に合う図
 <label>案の数</label><select id="vN">${[3,5,8,12].map(n=>`<option ${n===5?'selected':''}>${n}</option>`).join('')}</select>
 <label>こういう図解がほしい（任意）</label><input id="vWish" placeholder="例：波が育っていく様子を横から見せたい">
 <div class="row"><button class="b" data-vjob="visual_ideas">${vs.length?'もっと案を出してもらう':'図解の案を出してもらう'}</button></div>${jobLine(p,'visual_ideas')}
-${props.length?`<h3 style="font-size:15px;margin:12px 0 4px">案（${props.length}）　気に入ったものに印</h3>${props.map(v=>`<div class="item" style="margin:6px 0"><label class="chk" style="border:0"><input type="checkbox" data-vchose="${v.id}" ${v.chosen?'checked':''}><span><b>${esc(v.idea)}</b><br>${esc(v.desc||'')}</span></label>${v.note?`<div class="lead" style="margin:2px 0">${esc(v.note)}</div>`:''}${usesHTML(v)}${v.preview?`<img data-gh="${esc(v.preview)}" style="width:100%;border-radius:6px;background:var(--line);min-height:60px">`:''}</div>`).join('')}
-<div class="row"><button class="b main" data-vjob="visual_make">印を付けた案を作ってもらう</button></div>${jobLine(p,'visual_make')}`:''}
+${props.length?`<h3 style="font-size:15px;margin:12px 0 4px">案（${props.length}）　気に入ったものに印</h3>${props.map(v=>`<div class="item" style="margin:6px 0"><label class="chk" style="border:0"><input type="checkbox" data-vchose="${v.id}" ${v.chosen?'checked':''}><span><b>${esc(v.idea)}</b><br>${esc(v.desc||'')}</span></label>${v.note?`<div class="lead" style="margin:2px 0">${esc(v.note)}</div>`:''}${usesHTML(v)}${v.preview?`<img data-gh="${esc(v.preview)}" style="width:100%;border-radius:6px;background:var(--line);min-height:60px">`:''}${vfixHTML(p,v,'見本')}</div>`).join('')}
+${jobLine(p,'visual_redesign')}<div class="row"><button class="b main" data-vjob="visual_make">印を付けた案を作ってもらう</button></div>${jobLine(p,'visual_make')}`:''}
 ${made.length?`<h3 style="font-size:15px;margin:12px 0 4px">作った図解</h3>${made.map(v=>`<div class="item" style="margin:6px 0"><div class="q" style="font-size:15px">${esc(v.idea)}</div>${usesHTML(v)}<div class="tags"><span>${esc(v.status)}</span>${v.ver?`<span>${v.ver}版</span>`:''}</div>
 ${v.clip?`<video data-gh="${esc(v.clip)}" controls playsinline loop style="width:100%;border-radius:6px;background:#000;margin-top:6px"></video>`:v.preview?`<img data-gh="${esc(v.preview)}" style="width:100%;border-radius:6px;margin-top:6px">`:''}
-${v.status==='できた'?`<label>直したいこと</label><textarea data-vfix="${v.id}" placeholder="例：波ができるのをもっとゆっくり／色を地図と合わせて"></textarea><div class="row"><button class="b" data-vjob="visual_fix" data-vid="${v.id}">直しを頼む</button></div>`:''}</div>`).join('')}${jobLine(p,'visual_fix')}`:''}
+${v.status==='できた'||v.status==='直し待ち'?vfixHTML(p,v,'動画'):''}</div>`).join('')}${jobLine(p,'visual_fix')}`:''}
 <div class="row"><button class="b main" data-next>図解はこれでいい</button></div>`}
+function vfixHTML(p,v,stage){const log=(v.fixlog||[]);const wait=v.status==='直し待ち'||log.some(f=>f.status==='待ち');
+return `${log.length?`<details ${log.some(f=>f.status==='待ち')?'open':''}><summary>直しの記録（${log.length}）</summary>${log.map(f=>`<div class="fixrec"><div><span class="mk">${esc(f.stage||'')}</span> ${esc(f.text)}　<span class="lead" style="margin:0">${f.at?md(f.at):''}　${esc(f.status||'')}</span></div>
+${f.before||f.after?`<div class="ba">${f.before&&/\.png$/.test(f.before)?`<div><div class="lead" style="margin:0">前</div><img data-gh="${esc(f.before)}"></div>`:''}${f.after&&/\.png$/.test(f.after)?`<div><div class="lead" style="margin:0">後</div><img data-gh="${esc(f.after)}"></div>`:''}</div>`:''}
+${f.status==='できた'?`<div class="st"><button data-vrule="${v.id}:${f.id}" class="${f.rule?'on':''}">${f.rule?'決まりに入れた':'これからの図解でも守る決まりにする'}</button></div>`:''}</div>`).join('')}</details>`:''}
+${wait?'<p class="lead" style="margin:4px 0">直しを頼んでいます。届くまでお待ちください。</p>':`<label>${stage==='見本'?'デザイン・見せ方の直し（アイデアはそのまま）':'直したいこと'}</label><textarea data-vfix="${v.id}" placeholder="${stage==='見本'?'例：メーターが小さい。道を上からでなく斜めから／色を地図と合わせて':'例：波ができるのをもっとゆっくり／文字を大きく'}"></textarea>
+<div class="row"><button class="b" data-vjob="${stage==='見本'?'visual_redesign':'visual_fix'}" data-vid="${v.id}">${stage==='見本'?'見本を直してもらう':'直しを頼む'}</button></div>`}`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
 if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
 function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&o.type!=='summary'&&o.type!=='pick'&&o.type!=='use_item');
@@ -601,7 +608,7 @@ if(o.type==='visual_make'&&old.length){const j=old[0];j.ids=[...new Set([...(j.i
 for(const x of old){x.deleted=true;x.updatedAt=now()}
 const j={id:uid('j'),status:'待ち',createdAt:now(),updatedAt:now(),...o};D.jobs.push(j);save();return j}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-jcancel]');if(!b)return;e.stopPropagation();const j=D.jobs.find(x=>x.id===b.dataset.jcancel);if(!j||j.status!=='待ち')return;j.deleted=true;j.updatedAt=now();
-const p=D.projects.find(x=>x.id===j.projId);if(p&&p.visuals){if(j.type==='visual_make')p.visuals.forEach(v=>{if((j.ids||[]).includes(v.id)&&v.status==='作成待ち')v.status='提案'});if(j.type==='visual_fix'){const v=p.visuals.find(v=>v.id===j.visualId);if(v&&v.status==='直し待ち')v.status='できた'}p.updatedAt=now()}
+const p=D.projects.find(x=>x.id===j.projId);if(p&&p.visuals){if(j.type==='visual_make')p.visuals.forEach(v=>{if((j.ids||[]).includes(v.id)&&v.status==='作成待ち')v.status='提案'});if(j.type==='visual_fix'||j.type==='visual_redesign'){const v=p.visuals.find(v=>v.id===j.visualId);if(v&&v.status==='直し待ち')v.status='できた';const f=v&&(v.fixlog||[]).find(x=>x.id===j.fixId);if(f)f.status='取り消し'}p.updatedAt=now()}
 save();renderAll()},true);
 async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());return bytesToB64(buf)}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
@@ -636,8 +643,9 @@ if(el.matches('[data-aok]')||el.matches('[data-ang]')){const a=p.assets[+(el.dat
 if(el.matches('[data-vjob]')){const type=el.dataset.vjob;const extra={};
 if(type==='visual_ideas'){extra.n=+($('vN')?$('vN').value:5);extra.wish=($('vWish')?$('vWish').value.trim():'')}
 if(type==='visual_make'){const ch=(p.visuals||[]).filter(v=>v.chosen&&v.status==='提案');if(!ch.length){alert('作ってほしい案に印を付けてください');return}ch.forEach(v=>{v.status='作成待ち'});extra.ids=ch.map(v=>v.id)}
-if(type==='visual_fix'){const v=(p.visuals||[]).find(x=>x.id===el.dataset.vid);const ta=document.querySelector(`[data-vfix="${v.id}"]`);if(!ta||!ta.value.trim()){alert('直したいことを書いてください');return}v.fix=ta.value.trim();v.status='直し待ち';extra.visualId=v.id;extra.notes=v.fix}
+if(type==='visual_fix'||type==='visual_redesign'){const v=(p.visuals||[]).find(x=>x.id===el.dataset.vid);const ta=document.querySelector(`[data-vfix="${v.id}"]`);if(!ta||!ta.value.trim()){alert('直したいことを書いてください');return}v.fix=ta.value.trim();if(type==='visual_fix')v.status='直し待ち';const fx={id:uid('x'),text:v.fix,stage:type==='visual_fix'?'動画':'見本',at:now(),before:type==='visual_fix'?(v.clip||v.preview||''):(v.preview||''),status:'待ち'};v.fixlog=v.fixlog||[];v.fixlog.push(fx);extra.visualId=v.id;extra.notes=v.fix;extra.fixId=fx.id}
 queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return}
+if(el.matches('[data-vrule]')){const [vid,fid]=el.dataset.vrule.split(':');const v=p.visuals.find(x=>x.id===vid);const f=(v.fixlog||[]).find(x=>x.id===fid);if(!f||f.rule)return;const t=prompt('決まりとして残す文（これからの図解で毎回守ります）',f.text);if(!t||!t.trim())return;addRule({scope:'図解',do:t.trim(),from:'図解の直しから',ex:{before:f.before||'',after:f.after||'',idea:v.idea}});f.rule=true;touchP(p);renderAll();return}
 if(el.matches('[data-vchose]')){const v=p.visuals.find(x=>x.id===el.dataset.vchose);v.chosen=!v.chosen;touchP(p);renderMake();return}
 if(el.matches('[data-fadd]')){p.fixes=p.fixes||[];p.fixes.push({sec:'',text:''});touchP(p);renderMake();const ins=document.querySelectorAll('[data-ftxt]');ins[ins.length-1]?.focus();return}
 if(el.matches('[data-fdel]')){p.fixes.splice(+el.dataset.fdel,1);touchP(p);renderMake();return}
@@ -871,7 +879,8 @@ function addRule(o){D.rules=D.rules||[];const r={id:uid('r'),scope:'全部',when
 function renderRules(){if(!$('ruleList'))return;const rs=liveRules();
 $('ruleList').innerHTML=rs.length?rs.map(r=>`<div class="item ${r.active?'':'off'}" data-rule="${r.id}"><div class="tags"><span>${esc(r.scope)}</span><span>${esc(r.from||'')}</span>${r.createdAt>1?`<span>${md(r.createdAt)}</span>`:''}</div>
 <div style="font-size:15px;margin-top:2px">${r.when?`<b>${esc(r.when)}</b> → `:''}${esc(r.do)}</div>
-<div class="st" style="margin-top:4px"><button data-ract class="${r.active?'on':''}">${r.active?'使う':'休み中'}</button><button data-redit>書き換える</button><button data-rdel>消す</button></div></div>`).join(''):'<div class="empty">まだありません。</div>';
+${r.ex&&(r.ex.before||r.ex.after)?`<div class="ba">${/\.png$/.test(r.ex.before||'')?`<div><div class="lead" style="margin:0">前</div><img data-gh="${esc(r.ex.before)}"></div>`:''}${/\.png$/.test(r.ex.after||'')?`<div><div class="lead" style="margin:0">後</div><img data-gh="${esc(r.ex.after)}"></div>`:''}</div>${r.ex.idea?`<div class="lead" style="margin:0">例：${esc(r.ex.idea)}</div>`:''}`:''}
+<div class="st" style="margin-top:4px"><button data-ract class="${r.active?'on':''}">${r.active?'使う':'休み中'}</button><button data-redit>書き換える</button><button data-rdel>消す</button></div></div>`).join(''):'<div class="empty">まだありません。</div>';setTimeout(fillMedia,0);
 if(!$('ruleList').dataset.on){$('ruleList').dataset.on=1;$('ruleList').addEventListener('click',e=>{const it=e.target.closest('[data-rule]');if(!it)return;const r=D.rules.find(x=>x.id===it.dataset.rule);
 if(e.target.matches('[data-ract]')){r.active=!r.active}
 else if(e.target.matches('[data-redit]')){const w=prompt('こういうとき（空でもよい）',r.when||'');if(w===null)return;const d=prompt('こうする',r.do||'');if(!d||!d.trim())return;r.when=w.trim();r.do=d.trim()}
