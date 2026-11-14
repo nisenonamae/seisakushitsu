@@ -34,7 +34,7 @@ def cover(img,w,h):
 def kenburns(img,u,z0=1.0,z1=1.12,cx=0.5,cy=0.5):
     big=cover(img,int(W*z1)+2,int(H*z1)+2);z=z0+(z1-z0)*u;w,h=W*z1/z,H*z1/z
     x=(big.width-w)*cx;y=(big.height-h)*cy;return big.crop((int(x),int(y),int(x+w),int(y+h))).resize((W,H),Image.BILINEAR)
-def label(d,text,x=W/2,y=H-150,size=46):
+def label(d,text,x=W/2,y=110,size=50):
     f=font(size);tw=d.textlength(text,font=f);d.rounded_rectangle([x-tw/2-26,y-size*0.8,x+tw/2+26,y+size*0.8],14,fill=(0,0,0,150));d.text((x,y),text,font=f,fill=WHITE,anchor='mm')
 
 def photo(s,dur,c,repo):
@@ -60,8 +60,8 @@ def bigtext(s,dur,c,repo):
         t=n/FPS;im=SKY.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
         if flash=='gauge8' and t>dur-0.7:
             im=Image.new('RGBA',(W,H),BG+(255,));d=ImageDraw.Draw(im,'RGBA');gauge(d,W/2,H*0.62,230,8.2,big=True);c.add(im);continue
-        k=eout(t/0.5);size=int(s.get('size',120)*(0.7+0.3*k))
-        d.text((W/2,H*0.45),s['text'],font=font(size),fill=WHITE+(int(255*k),),anchor='mm')
+        k=back(t/0.35);size=int(s.get('size',120)*max(0.05,k));a=min(1,max(0,t/0.2))
+        d.text((W/2,H*0.45),s['text'],font=font(size),fill=WHITE+(int(255*a),),anchor='mm',stroke_width=4,stroke_fill=(0,0,0,int(160*a)))
         if s.get('sub') and t>0.8:d.text((W/2,H*0.62),s['sub'],font=font(40),fill=GREY+(int(255*ease((t-0.8)/0.5)),),anchor='mm')
         c.add(im)
 
@@ -80,26 +80,49 @@ def geo():
         _GEO=json.load(open(fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')))
     return _GEO
 def map_(s,dur,c,repo):
+    """世界地図。highlight の国を塗り、zoom=True ならその国へだんだん寄っていく。labels は国の上に出す文字"""
     g=geo();hl=s.get('highlight',[]);N=int(dur*FPS);ph=s.get('photo_at',dur*0.6);img=load_img(s['photo'],repo) if s.get('photo') else None
-    X=lambda lon:(lon+180)/360*W;Y=lambda lat:(90-lat)/180*H*1.0+0
-    base=Image.new('RGB',(W,H),(30,52,78));bd=ImageDraw.Draw(base)
+    SC=3;X=lambda lon:(lon+180)/360*W*SC;Y=lambda lat:(90-lat)/180*H*SC
     polys={}
     for f in g['features']:
         iso=f['properties'].get('ADM0_A3');gm=f['geometry'];rings=[gm['coordinates']] if gm['type']=='Polygon' else gm['coordinates']
-        ps=[[(X(x),Y(y)) for x,y in r[0]] for r in rings];polys[iso]=ps
+        polys[iso]=[[(X(x),Y(y)) for x,y in r[0]] for r in rings]
+    def big(iso):return max(polys[iso],key=len)
+    def bbox(ps):xs=[x for p in ps for x,y in p];ys=[y for p in ps for x,y in p];return min(xs),min(ys),max(xs),max(ys)
+    full=(0,0,W*SC,H*SC)
+    if s.get('zoom') and hl:
+        bx=bbox([big(i) for i in hl if i in polys]);cx,cy=(bx[0]+bx[2])/2,(bx[1]+bx[3])/2;w=max((bx[2]-bx[0])*1.8,(bx[3]-bx[1])*1.8*W/H,W*SC*0.22);h=w*H/W
+        tgt=(cx-w/2,cy-h/2,cx+w/2,cy+h/2)
+    else: tgt=full
+    base=Image.new('RGB',(W*SC,H*SC),(30,52,78));bd=ImageDraw.Draw(base)
+    for iso,ps in polys.items():
         for p in ps: bd.polygon(p,fill=(78,92,108),outline=(52,66,84))
+    hlim={}
+    for iso in hl:
+        m=Image.new('L',(W*SC,H*SC),0);md=ImageDraw.Draw(m)
+        for p in polys.get(iso,[]):md.polygon(p,fill=255)
+        hlim[iso]=m
     for n in range(N):
-        t=n/FPS;im=base.copy().convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
+        t=n/FPS;u=ease((t-0.3)/max(0.6,min(2.2,dur*0.5)));box=[full[i]+(tgt[i]-full[i])*u for i in range(4)]
+        bi=tuple(int(v) for v in box);fr=base.crop(bi).resize((W,H),Image.BILINEAR)
         for i,iso in enumerate(hl):
-            a=ease((t-0.6-i*0.5)/0.6)
-            for p in polys.get(iso,[]):d.polygon(p,fill=SAND+(int(255*a),))
-        for iso,txt in s.get('labels',{}).items():
-            a=ease((t-1.2)/0.6)
+            a=ease((t-0.4-i*0.4)/0.5)
+            if a>0:fr.paste(SAND,(0,0,W,H),hlim[iso].crop(bi).resize((W,H),Image.BILINEAR).point(lambda v,a=a:int(v*a)))
+        im=fr.convert('RGBA');d=ImageDraw.Draw(im,'RGBA')
+        k=W/(box[2]-box[0]);tr=lambda x,y:((x-box[0])*k,(y-box[1])*k)
+        for j,(iso,txt) in enumerate(s.get('labels',{}).items()):
+            a=back((t-0.9-j*0.3)/0.4)
             if a>0 and iso in polys:
-                big=max(polys[iso],key=len);xs=[x for x,y in big];ys=[y for x,y in big]
-                d.text(((min(xs)+max(xs))/2,min(ys)-30),txt,font=font(34),fill=WHITE+(int(255*a),),anchor='mm',stroke_width=4,stroke_fill=(0,0,0,int(200*a)))
+                b=bbox([big(iso)]);x,y=tr((b[0]+b[2])/2,b[1]);f=font(int(40*max(0.05,a)));tw=d.textlength(txt,font=f)
+                x=min(max(x,tw/2+30),W-tw/2-30);y=min(max(y-34,60),H-200)
+                d.text((x,y),txt,font=f,fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
+        for j,(lon,lat,txt) in enumerate(s.get('pins',[])):
+            a=back((t-1.0-j*0.3)/0.35)
+            if a>0:
+                x,y=tr(X(lon),Y(lat));r=16*max(0.05,a);d.ellipse([x-r,y-r,x+r,y+r],fill=RED,outline=WHITE,width=4);d.line([(x,y-r),(x,y-r-30*a)],fill=WHITE,width=4)
+                d.text((x,y-r-58*a),txt,font=font(int(38*max(0.05,a))),fill=WHITE,anchor='mm',stroke_width=5,stroke_fill=(0,0,0))
         if img and t>ph:
-            u=ease((t-ph)/0.8);p=kenburns(img,(t-ph)/max(0.1,dur-ph),1.0,1.12).convert('RGBA');im=Image.blend(im,p,u);d=ImageDraw.Draw(im,'RGBA')
+            q=ease((t-ph)/0.8);p=kenburns(img,(t-ph)/max(0.1,dur-ph),1.0,1.12).convert('RGBA');im=Image.blend(im,p,q);d=ImageDraw.Draw(im,'RGBA')
             if s.get('photo_text') and t>ph+1:label(d,s['photo_text'],y=H*0.5,size=72)
         c.add(im)
 
@@ -193,7 +216,15 @@ def circle(s,dur,c,repo):
     mode=s.get('mode','mather');N=int(dur*FPS);ang=0;amp=0;rut=0;spread=0
     for n in range(N):
         t=n/FPS;im=Image.new('RGBA',(W,H),BG+(255,));d=ImageDraw.Draw(im,'RGBA')
-        if mode=='mather':
+        if mode in ('hand','slow','fast'):
+            hand=mode=='hand';v=0.2 if hand else (0.18 if mode=='slow' else 0.3+0.6*ease(t/1.2))
+            if hand: amp=min(0.35,amp+0.35/max(1,N*0.7))
+            elif mode=='slow': rut=min(1,rut+1.0/max(1,N*0.6))
+            else: amp=min(1,amp+1.0/max(1,N*0.6))
+            ang+=0.05+v*0.12;_track(d,450,370,170,300,amp,rut,ang,hand=hand,motor=not hand)
+            if not hand:_slider(d,860,470,320,v)
+            d.text((1020,330),{'hand':'手で押して回す','slow':'ゆっくり → 轍だけ','fast':'速くすると → 波'}[mode],font=font(44),fill=WHITE,anchor='mm')
+        elif mode=='mather':
             hand=t<dur*0.3;v=0.2 if hand else 0.15+0.75*ease((t-dur*0.62)/1.0)
             if abs(t-dur*0.3)<0.5/FPS:amp=0;rut=0
             if hand: amp=min(0.3,amp+0.003)
@@ -306,5 +337,13 @@ def section(s,dur,c,repo):
                 d.text((W/2,120),'上下に揺れる車が、波を育てる',font=font(40),fill=WHITE,anchor='mm')
         c.add(im)
 def make(spec,dur,out,repo=''):
-    c=Clip(out,dur);f={'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
+    """spec に seq（部品のリスト）があれば、dur を等分して順につなぐ（長い一文の途中で画面を変えたいとき）"""
+    if spec.get('seq'):
+        import subprocess,tempfile;tmp=tempfile.mkdtemp();L=spec['seq'];parts=[]
+        for i,sp in enumerate(L):
+            o=f'{tmp}/q{i}.mp4';make(sp,dur/len(L),o,repo);parts.append(o)
+        open(f'{tmp}/l.txt','w').write(''.join(f"file '{x}'\n" for x in parts))
+        subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l.txt','-c','copy',out],check=True);return
+    import parts2
+    c=Clip(out,dur,spec.get('cam','in'));f={'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
     f(spec,dur,c,repo);c.close()

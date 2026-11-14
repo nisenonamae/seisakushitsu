@@ -7,13 +7,28 @@
 |---|---|---|
 | `photo` | 実物の写真にゆっくり寄る | `src`（Commons のページ URL か、データのリポジトリ内のパス）, `ticks`（true＝等間隔の目盛り／"fadeout"）, `text`, `text_at`, `zoom`, `fadein` |
 | `bigtext` | 問い・大きな一言 | `text`, `sub`, `flash`（"gauge8"＝最後に速度計を一瞬） |
-| `map` | 世界地図で国を塗る → 写真へ | `highlight`（国の ISO3 の並び）, `labels`（{ISO3: 文字}）, `photo`, `photo_at`, `photo_text` |
+| `map` | 世界地図で国を塗る（寄る）→ 写真へ | `highlight`（国の ISO3 の並び）, `zoom`（true＝その国へ寄る）, `labels`（{ISO3: 文字}）, `pins`（[[経度,緯度,文字]]）, `photo`, `photo_at`, `photo_text` |
 | `cards` | 札が並ぶ／落ちて一部だけ残る | `groups`（札の行の並び）, `keep`（残す札）, `keep_at`, `title` |
 | `steps` | 箇条を一つずつ点灯 | `title`, `items` |
 | `loop` | 原因と結果がぐるぐる回る輪 | `labels`（3つ） |
 | `graph` | 2本の費用の線と分かれ目 | （今は舗装／未舗装の形だけ） |
-| `circle` | 真上から見た円い砂の道 | `mode`："mather"（手押し→モーター）／"2007"（回転台・周の数）／"speed"（速度計と道。車の時速8km） |
+| `circle` | 真上から見た円い砂の道 | `mode`："hand"（手で押す）／"slow"（轍だけ）／"fast"（速くすると波）／"mather"（手押し→モーター）／"2007"（回転台・周の数）／"speed"（速度計と道。車の時速8km） |
 | `section` | 横から見た道の断面 | `mode`："force"（力のむら）／"bounce"（跳ねて押す）／"grow"（台数と波の育ち）／"arc"（速さと間隔）／"migrate"（波が進む）／"heavy"（軽い・重い）／"dilemma"（遅い・速い車）／"swap"（米粒・板）／"japan"（土が縮む・揺れる車） |
+
+| `picto` | 絵（ピクト）を一つドンと出す／並べる | `items`（[{icon, label, x}]。x＝true でバツ）, `mode`："one"／"row", `cross`（並べたあと全部にバツ）。icon：truck・rain・brake・tread・spring・layers・grains・question・wheel・ground・speed |
+| `person` | 人物の紹介（シルエット・名前・年） | `name`, `role`, `year`（実在の人の写真は使わない） |
+| `dustcar` | 土ぼこりを上げて走る車（横から） | `text`, `close` |
+| `ruler` | 断面の山と山にものさしを当てる | `text`（"約30cm"） |
+| `year` | 年号をドンと出す／年から年へ進む | `text` か `from`・`to`, `sub` |
+
+どの部品にも `cam`（"in"＝ゆっくり寄る／"out"＝引く／"left"・"right"＝横に流れる）が効く。画面は止まらず、いつも少し動く。
+`seq`（部品の指定の並び）を渡すと、`dur` を等分して順につなぐ（長い一文の途中で画面を変えるとき）。
+
+## カット（shots）— 画面を止めないための一番大事な決まり
+- 肉付けの各段に `shots` を書く：`[{"n": 文の数, ...部品の指定}, ...]`。語りを文で区切り、前から `n` 文ずつに一つの部品を当てる。`render_draft.py` は文ごとの声の長さに合わせてその部品の動画を作る（`scene` よりこちらが優先）
+- 目安：**一つの画面は 3〜6 秒**。一文が 8 秒を超えるなら `seq` で途中で変える。同じ部品が続くときも `cam` を変える
+- 語りの名詞や数字が出たら、その絵や数字をポンと出す（「重いトラック」→ truck のピクト、「1963年」→ year）
+- 切り替わりには小さな効果音（シュッ）が自動で入る
 
 ## 決まり
 - 画面の文字は大事な言葉と数字だけ。同じものを縦に並べない（作り手の直しから）

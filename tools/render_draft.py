@@ -7,7 +7,8 @@
 - <出力>.json に、段ごとの開始・終了の秒数を書く（「2:10 ここを直す」を段に結びつけるため）
 先に bash tools/setup_voice.sh を一度実行しておく。
 """
-import argparse, json, os, re, subprocess, tempfile, wave, math
+import argparse, json, os, re, subprocess, tempfile, wave, math, sys
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'vis'))
 from PIL import Image, ImageDraw, ImageFont
 W,H,FPS=1280,720,30
 FB='/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc';FR='/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
@@ -20,7 +21,7 @@ oi={b['id']:i for i,b in enumerate(ob)}
 if fb:
     live=[b for b in fb if b.get('mark')!='削る' and b.get('oid') in oi and ob[oi[b['oid']]].get('mark')!='削る']
     live.sort(key=lambda b:(oi[b['oid']],fb.index(b)))
-    seq=[{'id':b['id'],'oid':b['oid'],'role':b.get('role',''),'text':b.get('narr',''),'screen':b.get('screen',''),'visual':b.get('visual') or ob[oi[b['oid']]].get('visual')} for b in live]
+    seq=[{'id':b['id'],'oid':b['oid'],'role':b.get('role',''),'text':b.get('narr',''),'screen':b.get('screen',''),'visual':b.get('visual') or ob[oi[b['oid']]].get('visual'),'shots':b.get('shots')} for b in live]
 else:
     seq=[{'id':b['id'],'oid':b['id'],'role':b.get('role',''),'text':b.get('text',''),'screen':b.get('show',''),'visual':b.get('visual')} for b in ob if b.get('mark')!='削る']
 from voicevox_core.blocking import Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile
@@ -57,30 +58,62 @@ def sub_overlay(text):
     d.rectangle([0,y-14,W,H],fill=(0,0,0,120))
     for ln in lines: d.text((W/2,y),ln,font=f,fill=(255,255,255),anchor='ma',stroke_width=3,stroke_fill=(0,0,0));y+=46
     return im
-tmp=tempfile.mkdtemp();segs=[];auds=[];tl=[];t0=0.0;n=len(seq)
+tmp=tempfile.mkdtemp();segs=[];auds=[];tl=[];t0=0.0;n=len(seq);cuts=[]
 for k,b in enumerate(seq,1):
     sents=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
     vis=b.get('visual');vpath=os.path.join(a.repo,vis) if vis and a.repo else None
     base=None
     if not (vpath and os.path.exists(vpath)): vpath=None
-    if vpath and vpath.endswith('.png'): base=Image.open(vpath).convert('RGB').resize((W,H))
+    if vpath and vpath.endswith('.png'): base=Image.open(vpath).convert('RGB').resize((W,H));vpath=None
     elif not vpath: base=card(b,k,n)
     clipdur=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',vpath],capture_output=True,text=True).stdout or 10) if vpath and vpath.endswith('.mp4') else 10
     bstart=t0
-    for j,s in enumerate(sents):
-        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';dur=tts(s,wp)+(0.25 if j<len(sents)-1 else 0.55)
-        pad=f'{tmp}/p{k:03d}_{j:02d}.wav';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',wp,'-af',f'apad=whole_dur={dur:.3f}','-ar','24000','-ac','1',pad],check=True);auds.append(pad)
-        ov=f'{tmp}/o{k:03d}_{j:02d}.png';sub_overlay(s).save(ov);seg=f'{tmp}/s{k:03d}_{j:02d}.mp4'
-        if base is not None:
-            fr=f'{tmp}/f{k:03d}_{j:02d}.png';im=base.copy().convert('RGBA');im.alpha_composite(Image.open(ov));im.convert('RGB').save(fr)
-            subprocess.run(['ffmpeg','-y','-loglevel','error','-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{dur:.3f}','-c:v','libx264','-preset','veryfast','-tune','stillimage','-pix_fmt','yuv420p','-r',str(FPS),seg],check=True)
-        else:
-            off=(t0-bstart)%max(0.1,clipdur);subprocess.run(['ffmpeg','-y','-loglevel','error','-stream_loop','-1','-ss',f'{off:.3f}','-i',vpath,'-i',ov,'-filter_complex',f'[0:v]scale={W}:{H},fps={FPS}[v];[v][1:v]overlay=0:0','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True)
-        segs.append(seg);t0+=dur
+    # 先に全部の文の声を作る
+    durs=[];pads=[]
+    for j,sx in enumerate(sents):
+        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';dur=tts(sx,wp)+(0.25 if j<len(sents)-1 else 0.55)
+        pad=f'{tmp}/p{k:03d}_{j:02d}.wav';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',wp,'-af',f'apad=whole_dur={dur:.3f}','-ar','24000','-ac','1',pad],check=True);durs.append(dur);pads.append(pad)
+    # カット（shots）：文の並びをまとまりに分け、まとまりごとに部品で画面を作る
+    groups=[]
+    if b.get('shots'):
+        j=0
+        for sh in b['shots']:
+            m=int(sh.get('n',1));groups.append((j,min(len(sents),j+m),sh));j+=m
+            if j>=len(sents):break
+        if j<len(sents):groups.append((j,len(sents),groups[-1][2] if groups else None))
+    else: groups=[(0,len(sents),None)]
+    for gi,(j0,j1,sh) in enumerate(groups):
+        gdur=sum(durs[j0:j1]);gpath=None
+        if sh:
+            import scenes
+            gpath=f'{tmp}/shot{k:03d}_{gi:02d}.mp4';scenes.make({x:y for x,y in sh.items() if x!='n'},gdur+0.1,gpath,a.repo);cuts.append(t0)
+        elif gi==0 and vpath: cuts.append(t0)
+        g0=t0
+        for j in range(j0,j1):
+            sx=sents[j];dur=durs[j];auds.append(pads[j])
+            ov=f'{tmp}/o{k:03d}_{j:02d}.png';sub_overlay(sx).save(ov);seg=f'{tmp}/s{k:03d}_{j:02d}.mp4'
+            src=gpath or vpath
+            if src is None:
+                fr=f'{tmp}/f{k:03d}_{j:02d}.png';im=base.copy().convert('RGBA');im.alpha_composite(Image.open(ov));im.convert('RGB').save(fr)
+                subprocess.run(['ffmpeg','-y','-loglevel','error','-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{dur:.3f}','-c:v','libx264','-preset','veryfast','-tune','stillimage','-pix_fmt','yuv420p','-r',str(FPS),seg],check=True)
+            else:
+                cd_=gdur+0.1 if gpath else clipdur;off=((t0-g0) if gpath else (t0-bstart))%max(0.1,cd_)
+                subprocess.run(['ffmpeg','-y','-loglevel','error','-stream_loop','-1','-ss',f'{off:.3f}','-i',src,'-i',ov,'-filter_complex',f'[0:v]scale={W}:{H},fps={FPS}[v];[v][1:v]overlay=0:0','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True)
+            segs.append(seg);t0+=dur
     tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(bstart,2),'end':round(t0,2),'visual':vis or ''})
 open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in segs));open(f'{tmp}/a.txt','w').write(''.join(f"file '{x}'\n" for x in auds))
 subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/v.txt','-c','copy',f'{tmp}/v.mp4'],check=True)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/a.txt','-c:a','pcm_s16le',f'{tmp}/a.wav'],check=True)
-subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/a.wav','-c:v','copy','-c:a','aac','-b:a','96k','-shortest',a.out],check=True)
+import numpy as np
+SR=24000
+with wave.open(f'{tmp}/a.wav') as wv: voice=np.frombuffer(wv.readframes(wv.getnframes()),np.int16).astype(np.float32)/32768;vsr=wv.getframerate()
+mix=voice.copy();rng=np.random.default_rng(1)
+def whoosh(dur=0.35,amp=0.10):
+    m=int(vsr*dur);x=rng.standard_normal(m);X=np.fft.rfft(x);f=np.fft.rfftfreq(m,1/vsr);X[(f<400)|(f>5000)]=0;y=np.fft.irfft(X,m);return amp*y/np.abs(y).max()*np.sin(np.linspace(0,np.pi,m))**2
+for ct in cuts:
+    i=int(max(0,ct-0.12)*vsr);w_=whoosh();mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
+mix=np.clip(mix,-1,1)
+with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(vsr);wv.writeframes((mix*32767).astype(np.int16).tobytes())
+subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)
 json.dump({'duration':round(t0,2),'voice':a.voice,'speed':a.speed,'blocks':tl},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
 print('ok',round(t0,1),'sec',os.path.getsize(a.out)//1024,'KB')

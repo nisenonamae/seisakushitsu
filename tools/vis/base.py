@@ -6,6 +6,7 @@ FB='/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc';FM='/usr/share/fonts/o
 SAND=(214,186,140);SAND_D=(150,118,78);WHITE=(245,245,240);RED=(226,58,48);GREEN=(90,190,130);BLUE=(110,170,230);BG=(34,44,58);GREY=(150,165,180)
 _F={}
 def font(n,b=True):
+    n=max(4,int(n))
     k=(n,b)
     if k not in _F:_F[k]=ImageFont.truetype(FB if b else FM,n)
     return _F[k]
@@ -40,12 +41,25 @@ def card(d,x,y,text,w=None,h=78,col=(52,66,86),fg=WHITE,size=34,alpha=255):
     f=font(size);tw=d.textlength(text,font=f);w=w or tw+56
     d.rounded_rectangle([x-w/2,y-h/2,x+w/2,y+h/2],16,fill=col+(alpha,) if len(col)==3 else col,outline=(120,140,165,alpha),width=3)
     d.text((x,y),text,font=f,fill=fg+(alpha,) if len(fg)==3 else fg,anchor='mm')
+def back(t,s=1.7):
+    t=max(0,min(1,t))-1;return max(0.0,1+(s+1)*t**3+s*t**2)
 class Clip:
-    """フレームを ffmpeg に直接流して mp4 にする。anim 秒ぶん描いたら、残りは最後の絵で止めて dur 秒にする"""
-    def __init__(s,out,dur):
-        s.out=out;s.dur=dur;os.makedirs(os.path.dirname(out) or '.',exist_ok=True)
-        s.p=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE);s.n=0;s.last=None
-    def add(s,im):b=im.convert('RGB').tobytes();s.p.stdin.write(b);s.last=b;s.n+=1
+    """フレームを ffmpeg に直接流して mp4 にする。
+    cam：カメラの動き（"in"＝ゆっくり寄る／"out"＝引く／"left"・"right"＝横に流れる／"none"）。止まった絵にならないよう、どの場面も少しずつ動かす
+    anim 秒ぶん描いたら、残りは最後の絵で止めて dur 秒にする（止める間もカメラは動き続ける）"""
+    def __init__(s,out,dur,cam='in'):
+        s.out=out;s.dur=dur;s.cam=cam;s.N=max(1,int(dur*FPS));os.makedirs(os.path.dirname(out) or '.',exist_ok=True)
+        s.p=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE);s.n=0;s.last=None;s.sfx=[]
+    def _cam(s,im):
+        if s.cam=='none':return im
+        u=s.n/max(1,s.N-1);e=u*u*(3-2*u)*0.6+u*0.4
+        z={'in':1.0+0.08*e,'out':1.08-0.08*e}.get(s.cam,1.06);dx={'left':-0.03+0.06*e,'right':0.03-0.06*e}.get(s.cam,0)
+        w,h=W/z,H/z;cx=W/2+dx*W;cy=H/2
+        return im.crop((int(cx-w/2),int(cy-h/2),int(cx+w/2),int(cy+h/2))).resize((W,H),Image.BILINEAR)
+    def add(s,im):
+        if s.n>=s.N:return
+        s.lastim=im.convert('RGB');b=s._cam(s.lastim).tobytes();s.p.stdin.write(b);s.n+=1
+    def full(s):return s.n>=s.N
     def close(s):
-        while s.n<int(s.dur*FPS):s.p.stdin.write(s.last);s.n+=1
+        while s.n<s.N:s.p.stdin.write(s._cam(s.lastim).tobytes());s.n+=1
         s.p.stdin.close();s.p.wait()
