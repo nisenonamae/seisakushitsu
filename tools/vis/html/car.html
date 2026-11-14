@@ -38,11 +38,11 @@ window.render=function(t){
  else if(m==='suspect'||m==='points'){
    sky();hills(t*200);const off=t*360,top=x=>520+wb(x+off,6,58);ground(top);
    const cx=600,bob=6*Math.sin(t*34);
-   let alpha=1;if(m==='suspect'){alpha=1-ease((t-T(1,DUR*0.55))/0.6)}
+   let alpha=1;if(m==='suspect'){alpha=1-0.8*ease((t-DUR*0.55)/0.6)}
    // 光（スポットライト）が車体→車輪と地面へ
-   if(m==='suspect'){const u=ease((t-0.3)/(Math.max(0.6,T(1,DUR*0.55)-0.3)));const lx=lerp(cx+60,cx-110,u),ly=lerp(440,520,u),lr=lerp(170,70,u);g.save();g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.rect(0,0,W,H);g.moveTo(lx+lr,ly);g.arc(lx,ly,lr,0,Math.PI*2,true);g.fill('evenodd');g.restore();}
+   if(m==='suspect'){const u=ease((t-0.2)/0.5);const lr=lerp(600,260,u);g.save();g.fillStyle=`rgba(0,0,0,${0.55*u})`;g.beginPath();g.rect(0,0,W,H);g.moveTo(cx+lr,440);g.arc(cx,440,lr,0,Math.PI*2,true);g.fill('evenodd');g.restore();}
    car(cx,520-34,1.1,{bob,heads:5,t,wheelAng:off/34,alpha,wheelLift:[Math.abs(5*Math.sin(t*40)),Math.abs(5*Math.sin(t*36+1))]});
-   if(m==='suspect'){sfxOnce('s',T(1,DUR*0.55),'whoosh')}
+   if(m==='suspect'){sfxOnce('s',DUR*0.55,'whoosh')}
    if(m==='points'){
      const items=[[T(1,0.2),'車輪',cx-121,520-34,cx-250,300],[T(2,1.5),'ゆるい地面',820,524,820,640],[T(3,2.8),'ある程度の速さ',0,0,0,0]];
      items.forEach(([t0,txt,ax,ay,lx,ly],i)=>{const k=back((t-t0)/0.35);if(k<=0)return;sfxOnce('p'+i,t0,'pop');
@@ -99,7 +99,8 @@ window.render=function(t){
    const sand=eout((t-t2)/0.7);g.save();g.beginPath();g.rect(0,520-sand*80,W,200);g.clip();
    const sp=t>t3?lerp(0,1,ease((t-t3)/0.8)):0;window._o=(window._o||0)+(t>t1?2+sp*14:0);const o=window._o;
    const amp=x=>sp*Math.max(0,Math.min(1,(640-x)/500))*10*ease((t-t3-0.5)/1.5);const top=x=>440+(1-sand)*80-amp(x)*Math.sin((x+o)/16);ground(top,-20,W+20,'#c9a46a');g.restore();
-   if(t>t2&&t<t2+0.8){for(let i=0;i<30;i++){const r2=R(i);const a=((t-t2)*1.5+r2())%1;g.fillStyle='rgba(210,170,110,.8)';g.beginPath();g.arc(200+r2()*900,380+a*80,3,0,7);g.fill()}sfxOnce('s',t2,'puff')}
+   if(t>t2){for(let i=0;i<160;i++){const r2=R(i+3);const x=40+r2()*1200,base=(440+(1-sand)*80);const fall=clamp((t-t2-r2()*0.6)/0.5);const y=lerp(base-260-r2()*80,base-4+r2()*10,fall);g.fillStyle=r2()<.5?'#e8cf9c':'#9b7748';g.beginPath();g.arc(x,y,3+r2()*3,0,7);g.fill()}sfxOnce('s',t2,'puff')}
+   if(t>t3){for(let i=0;i<30;i++){const r2=R(i+90);const a=((t-t3)*2.2+r2())%1;g.fillStyle='rgba(225,195,140,.85)';g.beginPath();g.arc(560-a*200+r2()*30,440-60*a+90*a*a*1.2,3+r2()*2,0,7);g.fill()}}
    const wk=eout((t-t1)/0.5);if(wk>0){sfxOnce('w',t1,'thump');const wx=640,wy=(t>t2?440+(1-sand)*80:520)-60;g.globalAlpha=wk;tire(wx,lerp(-80,wy,wk),60,o/60);g.globalAlpha=1;
      if(sp>0){sfxOnce('m',t3,'motor',DUR-t3);for(let i=0;i<5;i++){const y=wy-40+i*20;g.strokeStyle=`rgba(255,255,255,${0.5*sp})`;g.lineWidth=4;const a=((t*3+i*0.3)%1);g.beginPath();g.moveTo(wx-100-a*200,y);g.lineTo(wx-70-a*200,y);g.stroke()}}}
  }

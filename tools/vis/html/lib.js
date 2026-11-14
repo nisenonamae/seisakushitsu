@@ -49,7 +49,7 @@ function speedo(cx,cy,R,v,o={}){const vmax=o.vmax||60,mark=o.mark;g.save();
   g.fillStyle='#0b0f14';g.beginPath();g.roundRect(cx-R*0.32,cy+R*0.45,R*0.64,R*0.26,R*0.05);g.fill();g.fillStyle='#7dd3fc';g.font=`800 ${Math.round(R*0.18)}px ${FONT}`;g.fillText(o.scramble!=null?String(10+Math.floor(Math.abs(Math.sin(o.scramble*37.1)*89))):String(Math.round(v)),cx,cy+R*0.585);if(o.scramble!=null&&Math.floor(o.scramble*12)%1===0){}
   g.restore()}
 function shake(t,amp){return [amp*(Math.sin(t*71)+0.6*Math.sin(t*113)),amp*(Math.sin(t*89+1)+0.5*Math.sin(t*131))]}
-function sfxOnce(key,t,kind,dur){window._done=window._done||{};if(window._done[key])return;window._done[key]=1;window.SFX.push(dur?[t,kind,dur]:[t,kind])}
+function sfxOnce(key,t,kind,dur,rise){window._done=window._done||{};if(window._done[key])return;window._done[key]=1;window.SFX.push(dur?(rise!=null?[t,kind,dur,rise]:[t,kind,dur]):[t,kind])}
 function arrowLine(x1,y1,x2,y2,col='#ffd36a',w=6){g.strokeStyle=col;g.fillStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const a=Math.atan2(y2-y1,x2-x1);g.beginPath();g.moveTo(x2+Math.cos(a)*12,y2+Math.sin(a)*12);g.lineTo(x2-Math.cos(a-0.6)*18,y2-Math.sin(a-0.6)*18);g.lineTo(x2-Math.cos(a+0.6)*18,y2-Math.sin(a+0.6)*18);g.fill()}
 window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init()};
 // 画像を読み込む（読み終わるまで撮影を待つ）

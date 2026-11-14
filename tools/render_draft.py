@@ -240,7 +240,7 @@ def snd(kind):
     if kind=='boing':m=int(SR*0.7);tt=np.arange(m)/SR;f=220+90*np.sin(2*np.pi*7*tt)*np.exp(-tt*3)+120*np.exp(-tt*4);return 0.16*np.sin(2*np.pi*np.cumsum(f)/SR)*np.exp(-tt*4.5)
     if kind=='puff':m=int(SR*0.35);return 0.10*_noise(m,150,1500)*np.exp(-np.linspace(0,6,m))*np.sin(np.linspace(0,np.pi/2,m))
     return np.zeros(1)
-def snd_long(kind,dur,amt=1.0):
+def snd_long(kind,dur,rise=None,amt=1.0):
     m=int(SR*dur);tt=np.arange(m)/SR
     if kind=='rattle':
         y=np.zeros(m);r=np.random.default_rng(5);k=0
@@ -251,13 +251,13 @@ def snd_long(kind,dur,amt=1.0):
     if kind=='car':  # 遠くを通り過ぎる車（小さく、近づいて遠ざかる）
         env=np.exp(-((tt-dur/2)/(dur/4))**2);return 0.05*amt*_noise(m,80,1200)*env
     if kind in('engine','motor'):
-        f0,f1=(45,110) if kind=='engine' else (180,420);f=f0+(f1-f0)*np.minimum(1,tt/max(0.1,dur*0.7));ph=2*np.pi*np.cumsum(f)/SR
+        f0,f1=(45,110) if kind=='engine' else (150,420);r0=(rise if rise is not None else 0);f=f0+(f1-f0)*np.clip((tt-r0)/max(0.1,(dur-r0)*0.8),0,1);ph=2*np.pi*np.cumsum(f)/SR   # rise 秒まではゆっくり（低い音のまま）
         y=np.sign(np.sin(ph))*0.5+np.sin(2*ph)*0.3+_noise(m,80,900)*0.15
         return (0.08 if kind=='engine' else 0.05)*amt*y*np.minimum(1,np.minimum(tt/0.2,(dur-tt)/0.3))
     return np.zeros(1)
 for e in sfx:
     tt,kd=e[0],e[1]
-    w_=snd_long(kd,e[2]) if len(e)>2 else snd(kd);i=int(max(0,tt-(0.08 if kd=='whoosh' else 0))*SR);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
+    w_=snd_long(kd,e[2],e[3] if len(e)>3 else None) if len(e)>2 else snd(kd);i=int(max(0,tt-(0.08 if kd=='whoosh' else 0))*SR);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
 mix=np.clip(mix,-1,1)
 with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(SR);wv.writeframes((mix*32767).astype(np.int16).tobytes())
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)

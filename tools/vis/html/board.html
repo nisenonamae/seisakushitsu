@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* いろいろな説：コルクの掲示板に、説の絵のカードが一枚ずつピンで留められていく。文字なし。
+   cards＝["truck","rain","brake","tread","spring","soil","grains"] のうち使うもの。keep＝最初から貼ってある枚数（前の場面の続き）。times[1..]＝新しいカードを貼る瞬間 */
+window.DEF={cards:['truck','rain','brake','tread'],keep:0};
+function card(kind,x,y,rot,k){g.save();g.translate(x,y);g.rotate(rot);g.scale(k,k);g.fillStyle='rgba(0,0,0,.3)';g.fillRect(-92,-78,190,166);g.fillStyle='#fbfaf6';g.fillRect(-96,-84,190,166);
+  g.save();g.beginPath();g.rect(-84,-72,166,120);g.clip();g.fillStyle='#bcd7ee';g.fillRect(-84,-72,166,120);g.fillStyle='#c9a46a';g.fillRect(-84,10,166,40);
+  const tk=()=>{g.fillStyle='#4f6f9f';g.fillRect(-60,-30,80,40);g.fillStyle='#3d5a85';g.fillRect(20,-16,34,26);g.fillStyle='#1b1d22';for(const wx of [-40,-10,40]){g.beginPath();g.arc(wx,12,10,0,7);g.fill()}};
+  if(kind==='truck')tk();
+  if(kind==='rain'){g.fillStyle='#8899aa';g.fillRect(-84,-72,166,82);g.strokeStyle='#e5efff';g.lineWidth=2;for(let i=0;i<16;i++){const xx=-80+i*11;g.beginPath();g.moveTo(xx,-60+(i%3)*10);g.lineTo(xx-4,-44+(i%3)*10);g.stroke()}g.strokeStyle='#5b8fc9';g.lineWidth=4;g.beginPath();g.moveTo(-70,20);g.lineTo(60,32);g.stroke()}
+  if(kind==='brake'){g.fillStyle='#d9534f';g.beginPath();g.roundRect(-50,-22,90,30,8);g.fill();g.fillStyle='#1b1d22';g.beginPath();g.arc(-30,10,10,0,7);g.arc(24,10,10,0,7);g.fill();g.fillStyle='#a07b4c';g.beginPath();g.arc(48,14,10,Math.PI,0);g.fill();g.strokeStyle='#333';g.lineWidth=3;for(let i=0;i<3;i++){g.beginPath();g.moveTo(-80+i*6,4+i*4);g.lineTo(-56+i*6,4+i*4);g.stroke()}}
+  if(kind==='tread'){g.fillStyle='#1b1d22';g.beginPath();g.arc(0,-14,34,0,7);g.fill();for(let i=0;i<12;i++){g.save();g.translate(0,-14);g.rotate(i*Math.PI/6);g.fillStyle='#3a3d44';g.fillRect(-4,-40,8,10);g.restore()}g.fillStyle='rgba(90,60,30,.8)';for(let x=-80;x<80;x+=14)g.fillRect(x,22,6,18)}
+  if(kind==='spring'){g.fillStyle='#d9534f';g.globalAlpha=0.5;g.beginPath();g.roundRect(-60,-56,120,40,8);g.fill();g.globalAlpha=1;g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();for(let i=0;i<=7;i++)g.lineTo(-30+(i%2?8:-8),-16+i*4);g.stroke();g.beginPath();for(let i=0;i<=7;i++)g.lineTo(34+(i%2?8:-8),-16+i*4);g.stroke();g.fillStyle='#1b1d22';g.beginPath();g.arc(-30,20,12,0,7);g.arc(34,20,12,0,7);g.fill()}
+  if(kind==='soil'){g.fillStyle='#d8bd8c';g.beginPath();g.moveTo(-84,48);for(let xx=-84;xx<=82;xx+=4)g.lineTo(xx,10-14*Math.sin(xx/18));g.lineTo(82,48);g.fill();g.fillStyle='#8a6440';for(let xx=-84;xx<82;xx+=113){g.beginPath();g.ellipse(xx+56,30,20,14,0,0,7);g.fill()}}
+  if(kind==='grains'){const r2=R(3);for(let i=0;i<40;i++){const big=r2()<.35;g.fillStyle=big?'#ecd3a0':'#4a3218';g.beginPath();g.arc(-80+r2()*160,-10+r2()*50,big?7:3,0,7);g.fill()}}
+  g.restore();g.fillStyle='#d32f2f';g.beginPath();g.arc(0,-78,8,0,7);g.fill();g.restore()}
+window.render=function(t){g.fillStyle='#8b5a2b';g.fillRect(0,0,W,H);g.fillStyle='#b98a55';g.fillRect(40,40,W-80,H-80);
+  const r2=R(9);for(let i=0;i<500;i++){g.fillStyle=`rgba(120,80,40,${0.25*r2()})`;g.fillRect(40+r2()*(W-80),40+r2()*(H-80),3,3)}
+  const n=P.cards.length;const pos=P.cards.map((c,i)=>{const cols=Math.min(4,n),row=Math.floor(i/cols),col=i%cols;const rows=Math.ceil(n/cols);return [W*(col+1)/(cols+1)+(row%2?40:0),H*(row+1)/(rows+1)+(rows===1?0:10),((i*37)%11-5)*0.03]});
+  P.cards.forEach((c,i)=>{const t0=i<P.keep?-1:T(i-P.keep+1,0.2+(i-P.keep)*0.5);const k=i<P.keep?1:back((t-t0)/0.3);if(k<=0)return;if(i>=P.keep)sfxOnce('c'+i,t0,'pop');card(c,...pos[i],k)});
+};
+</script></body></html>

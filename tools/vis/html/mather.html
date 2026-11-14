@@ -31,9 +31,7 @@ function wheelAt(a,lift=0,spin=0){const [x,y]=E(a,0.8,lift);const k=RY/RX,r=40,t
   const ux=-Math.sin(a),uy=Math.cos(a)*k,nx=Math.cos(a)*th,ny=Math.sin(a)*k*th;   // 接線（車輪の向き）と、軸の向き
   const face=(ox,oy,col)=>{g.save();g.setTransform(ux*r,uy*r,0,-r,x+ox,y-r+oy);g.fillStyle=col;g.beginPath();g.arc(0,0,1,0,7);g.restore();g.fill()};
   // 奥の面 → 側面（ゴム） → 手前の面
-  face(-nx/2,-ny/2,'#121418');
-  g.fillStyle='#1d2026';g.beginPath();for(let i=0;i<=24;i++){const q=i/24*Math.PI*2;g.lineTo(x-nx/2+ux*r*Math.cos(q),y-r-ny/2+uy*r*Math.cos(q)-r*Math.sin(q))}for(let i=24;i>=0;i--){const q=i/24*Math.PI*2;g.lineTo(x+nx/2+ux*r*Math.cos(q),y-r+ny/2+uy*r*Math.cos(q)-r*Math.sin(q))}g.fill();
-  face(nx/2,ny/2,'#2a2e36');
+  for(let k=0;k<=12;k++){const q=k/12-0.5;face(nx*q,ny*q,k===12?'#2a2e36':'#16181d')}
   g.save();g.setTransform(ux*r,uy*r,0,-r,x+nx/2,y-r+ny/2);g.fillStyle='#aab2bd';g.beginPath();g.arc(0,0,0.5,0,7);g.fill();g.strokeStyle='#5b6470';g.lineWidth=0.08;for(let i=0;i<5;i++){const q=spin+i*Math.PI*2/5;g.beginPath();g.moveTo(0,0);g.lineTo(0.45*Math.cos(q),0.45*Math.sin(q));g.stroke()}g.restore();
   return [x,y]}
 function hub(){g.fillStyle='#9aa3ae';g.fillRect(CX-8,CY-50,16,50);g.fillStyle='#d1d5db';g.beginPath();g.ellipse(CX,CY-50,14,6,0,0,7);g.fill()}
@@ -56,7 +54,7 @@ function storyRender(t){
   const a=Math.PI*0.35+ang;
   if(t>T2&&t<T3){const u=eout((t-T2)/0.5);const [x,y]=E(a,0.8*u);g.strokeStyle='#c7ccd3';g.lineWidth=8;g.beginPath();g.moveTo(CX,CY-46);g.lineTo(x,y-40);g.stroke();sfxOnce('r',T2,'tick')}
   if(t>=T3){sfxOnce('wl',T3,'pop');wheelAt(a,0,ang*4)}
-  if(t>T6){const k=eout((t-T6)/0.4);g.save();g.globalAlpha=k;g.fillStyle='#374151';g.beginPath();g.roundRect(CX-50,CY-118,100,70,12);g.fill();g.fillStyle='#4b5563';g.fillRect(CX-40,CY-108,80,12);g.restore();sfxOnce('m',T6,'motor',Math.max(1,DUR-T6))}
+  if(t>T6){const k=eout((t-T6)/0.4);g.save();g.globalAlpha=k;g.fillStyle='#374151';g.beginPath();g.roundRect(CX-50,CY-118,100,70,12);g.fill();g.fillStyle='#4b5563';g.fillRect(CX-40,CY-108,80,12);g.restore();sfxOnce('m',T8,'motor',Math.max(1,DUR-T8),0)}
   if(t>T7-0.2){const k=eout((t-T7+0.2)/0.4);speedo(1110,160,115*k,sp*7,{vmax:30,step:10,plain:true,mark:(0.8+3.4*ease((T9-T8)/Math.max(0.8,T9-T8+0.8)))*7})}
 }
 window.render=function(t){

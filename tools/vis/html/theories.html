@@ -19,8 +19,12 @@ window.render=function(t){const m=P.mode;sky();hills(0);
   if(m==='tread'){const off=t*180;const top=x=>540;ground(top);
     for(let x=-(off%30);x<640-70;x+=30){g.fillStyle='rgba(95,65,35,.8)';g.fillRect(x,541,14,40)}
     const wx=640,wy=540-110;g.save();g.translate(wx,wy);g.rotate(off/110);g.fillStyle='#1b1d22';g.beginPath();g.arc(0,0,110,0,7);g.fill();for(let i=0;i<24;i++){g.save();g.rotate(i*Math.PI/12);g.fillStyle='#34373e';g.fillRect(-9,-122,18,26);g.restore()}g.fillStyle='#9aa3ae';g.beginPath();g.arc(0,0,60,0,7);g.fill();g.restore()}
-  if(m==='sort'){const top=x=>330;ground(top,-20,W+20,'#7a5c38');const shake_=Math.sin(t*40)*3*(t<DUR*0.8?1:0);const u=ease(t/(DUR*0.8));
-    for(let i=0;i<260;i++){const r2=R(i+40);const big=r2()<0.3;const x=60+r2()*1160;const y0=360+r2()*330;const y=lerp(y0,big?350+r2()*90:470+r2()*220,u)+shake_*(big?1:0.5);g.fillStyle=big?'#e3c891':'#2e1f10';g.beginPath();g.arc(x,y,big?13:5,0,7);g.fill()}
-    sfxOnce('s',0,'rattle',DUR*0.8)}
+  if(m==='sort'){ // 大きな粒と小さな粒が混ざった平らな道 → 揺れで大きな粒が等間隔に寄り集まり、そこが盛り上がって波になる（断面）
+    const u=ease((t-0.3)/(DUR*0.75));const shake_=(t<DUR*0.85?1:0)*2*Math.sin(t*40);
+    const lam=200;const top=x=>420-26*u*Math.max(0,Math.sin(2*Math.PI*x/lam));ground(top,-20,W+20,'#7a5c38');
+    for(let i=0;i<420;i++){const r2=R(i+40);const big=r2()<0.28;const x0=r2()*W,y0=430+r2()*260;
+      let x=x0,y=y0;if(big){const k=Math.round(x0/lam-0.25)+0.25;const cxk=k*lam;x=lerp(x0,cxk+(r2()-.5)*70,u);y=lerp(y0,top(x)+16+r2()*40,u)}else{y=Math.max(y0,top(x0)+10)}
+      g.fillStyle=big?'#ecd3a0':'#3a2814';g.beginPath();g.arc(x+(big?shake_:0),y,big?11:4,0,7);g.fill()}
+    sfxOnce('s',0,'rattle',DUR*0.85)}
 };
 </script></body></html>

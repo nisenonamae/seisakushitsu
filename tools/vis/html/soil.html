@@ -2,20 +2,21 @@
 <canvas id="c" width="1280" height="720"></canvas>
 <script src="lib.js"></script>
 <script>
-/* 土の固まり方：山のてっぺんはふんわり、谷底はぎゅっと詰まっている（断面を大きく） */
+/* 土の固さが違う、という説：断面の山と谷。谷はぎゅっと固く（色が濃く粒が詰まる）、山はふかふか。
+   上から棒を同じ力で押し込むと、山ではずぶっと沈み、谷ではほとんど沈まない。文字なし */
 window.DEF={};
-const rr=R(11);const grains=[];
-for(let i=0;i<1600;i++){const x=rr()*W,y=430+rr()*290;grains.push({x,y,r:4+rr()*4})}
-function prof(x){return 470-70*Math.sin(2*Math.PI*(x-160)/640)}
-window.render=function(t){
-  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#141a22');g.fillStyle=bg;g.fillRect(0,0,W,H);
-  // 車輪が谷に着地するたびに、谷の粒がぎゅっと寄せられ、色が濃くなる
-  const hits=Math.min(4,Math.floor(t/0.7));const u=clamp(hits/4+ ((t%0.7)<0.2&&t<2.8?0.05:0));
-  for(const p of grains){const top=prof(p.x);if(p.y<top)continue;
-    const valley=Math.exp(-Math.pow((p.x-640)/150,2)),crest=Math.exp(-Math.pow((p.x-320)/150,2))+Math.exp(-Math.pow((p.x-960)/150,2));
-    const sq=valley*u;const x=lerp(p.x,640+(p.x-640)*0.75,sq),y=lerp(p.y,top+(p.y-top)*0.7,sq);
-    const sz=p.r*(1-0.15*sq+0.1*crest);g.fillStyle=`rgba(${Math.round(200-60*sq)},${Math.round(165-50*sq)},${Math.round(110-40*sq)},${0.6+0.35*sq-0.2*crest})`;g.beginPath();g.arc(x,y,sz,0,7);g.fill()}
+const rr=R(11);const grains=[];for(let i=0;i<1700;i++){grains.push({x:rr()*W,y:380+rr()*340,r:3+rr()*3})}
+function prof(x){return 470-80*Math.sin(2*Math.PI*(x-160)/640)}
+function hard(x){return Math.exp(-Math.pow((x-640)/150,2))}   // 谷（x=640）が固い
+window.render=function(t){const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#141a22');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  const u=ease(t/0.6);
+  for(const p of grains){const top=prof(p.x);if(p.y<top)continue;const h=hard(p.x)*u;const x=lerp(p.x,640+(p.x-640)*0.82,h),y=lerp(p.y,top+(p.y-top)*0.8,h);
+    g.fillStyle=`rgba(${Math.round(215-80*h)},${Math.round(178-70*h)},${Math.round(120-55*h)},${0.55+0.4*h})`;g.beginPath();g.arc(x,y,p.r*(1-0.2*h),0,7);g.fill()}
   g.strokeStyle='rgba(255,236,200,.9)';g.lineWidth=4;g.beginPath();for(let x=0;x<=W;x+=4){x?g.lineTo(x,prof(x)):g.moveTo(x,prof(x))}g.stroke();
-  // 着地する車輪（上から落ちてきて谷を押す）
-  const ph=(t%0.7)/0.7;if(t<2.8){const y=lerp(prof(640)-260,prof(640)-62,Math.min(1,ph/0.45))+(ph>0.45?-Math.sin((ph-0.45)/0.55*Math.PI)*90:0);tire(640,y,60,t*6);if(ph<0.47&&ph>0.4)sfxOnce('h'+hits,t,'thump')}
-};</script></body></html>
+  // 2本の棒を同時に押し込む：山（x=320）は深く、谷（x=640）は浅く
+  const press=ease((t-0.9)/0.8);if(t>0.9)sfxOnce('p',0.9,'whoosh');
+  for(const [x,depth] of [[320,90],[640,10]]){const y0=prof(x);const tip=y0-150+(150+depth)*press;g.fillStyle='#9ca3af';g.fillRect(x-10,tip-260,20,260);g.fillStyle='#e5e7eb';g.beginPath();g.moveTo(x-10,tip);g.lineTo(x+10,tip);g.lineTo(x,tip+16);g.fill();
+    g.fillStyle='#6b7280';g.beginPath();g.roundRect(x-34,tip-280,68,26,6);g.fill()}
+  if(press>0.98)sfxOnce('s',0.9+0.8,'thump');
+};
+</script></body></html>

@@ -99,8 +99,8 @@ def compare(s,dur,c,repo):
             if u<=0:continue
             if n==int(t0*FPS):c.sfx.append([t0,'whoosh'])
             x=(20 if i==0 else 640)+(1-u)*(-300 if i==0 else 300);fr.paste(im,(int(x),60))
-            d=ImageDraw.Draw(fr,'RGBA');f=font(40);tw=d.textlength(it['label'],font=f);cx=x+310
-            d.rounded_rectangle([cx-tw/2-20,580,cx+tw/2+20,640],12,fill=(10,14,20,200));d.text((cx,610),it['label'],font=f,fill=WHITE,anchor='mm')
+            d=ImageDraw.Draw(fr,'RGBA');f=font(40);tw=d.textlength(it.get('label',''),font=f);cx=x+310
+            if it.get('label'):d.rounded_rectangle([cx-tw/2-20,580,cx+tw/2+20,640],12,fill=(10,14,20,200));d.text((cx,610),it['label'],font=f,fill=WHITE,anchor='mm') if it.get('label') else None
         if s.get('eq') and t>1.4:k=back((t-1.4)/0.3);d.text((W/2,330),'＝',font=font(int(110*max(.1,k))),fill=(242,194,48),anchor='mm',stroke_width=6,stroke_fill=(0,0,0))
         c.add(fr)
 # ---------- 年表 ----------
