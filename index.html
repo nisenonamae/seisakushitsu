@@ -463,7 +463,8 @@ function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.t
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
 const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し'};
-const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.result?'　'+esc(j.result):''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
+const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
+function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
@@ -563,8 +564,15 @@ ${v.clip?`<video data-gh="${esc(v.clip)}" controls playsinline loop style="width
 ${v.status==='できた'?`<label>直したいこと</label><textarea data-vfix="${v.id}" placeholder="例：波ができるのをもっとゆっくり／色を地図と合わせて"></textarea><div class="row"><button class="b" data-vjob="visual_fix" data-vid="${v.id}">直しを頼む</button></div>`:''}</div>`).join('')}${jobLine(p,'visual_fix')}`:''}
 <div class="row"><button class="b main" data-next>図解はこれでいい</button></div>`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
-if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}</p>${j.status==='作業中'?progHTML(j):''}`}
-function queueJob(o){const j={id:uid('j'),status:'待ち',createdAt:now(),updatedAt:now(),...o};D.jobs.push(j);save();return j}
+if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
+function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&o.type!=='summary'&&o.type!=='pick');
+if(o.type==='gather'&&old.length){const j=old[0];for(const [k] of GK)j.counts[k]=Math.max(j.counts[k]||0,(o.counts||{})[k]||0);for(const x of old.slice(1)){x.deleted=true;x.updatedAt=now()}j.updatedAt=now();save();return j}
+if(o.type==='visual_make'&&old.length){const j=old[0];j.ids=[...new Set([...(j.ids||[]),...(o.ids||[])])];j.updatedAt=now();save();return j}
+for(const x of old){x.deleted=true;x.updatedAt=now()}
+const j={id:uid('j'),status:'待ち',createdAt:now(),updatedAt:now(),...o};D.jobs.push(j);save();return j}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-jcancel]');if(!b)return;e.stopPropagation();const j=D.jobs.find(x=>x.id===b.dataset.jcancel);if(!j||j.status!=='待ち')return;j.deleted=true;j.updatedAt=now();
+const p=D.projects.find(x=>x.id===j.projId);if(p&&p.visuals){if(j.type==='visual_make')p.visuals.forEach(v=>{if((j.ids||[]).includes(v.id)&&v.status==='作成待ち')v.status='提案'});if(j.type==='visual_fix'){const v=p.visuals.find(v=>v.id===j.visualId);if(v&&v.status==='直し待ち')v.status='できた'}p.updatedAt=now()}
+save();renderAll()},true);
 async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());return bytesToB64(buf)}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
 function touchP(p){p.updatedAt=now();save()}
