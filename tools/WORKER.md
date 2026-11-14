@@ -133,7 +133,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 
 ### footage_check（実写の出どころ調べ：フリー素材か）
 参考動画（`jobs[].relUrl`＝projects の related の url）か、作り手の録画（`jobs[].recPath`＝projects の recs の path）に出てくる**実写の映像**が、ネット上の自由に使える素材（フリー素材）かを調べる。
-- 見る材料：録画があればそれを ffmpeg でコマに分けて見る（1秒に1枚＋場面の変わり目。いちばん確か）。参考動画なら、その動画の録画が recs にあればそれを使い、なければサムネイル（`https://i.ytimg.com/vi/<id>/hqdefault.jpg` と `maxresdefault.jpg`）と、YouTube 検索の結果に出る説明文の一部（`tools/yt_common.py` の search で題名を検索）を見る。YouTube の動画ページそのものはこの環境から開けないので、開こうとしない
+- 見る材料：録画があればそれを ffmpeg でコマに分けて見る（1秒に1枚＋場面の変わり目。いちばん確か）。参考動画なら、その動画の録画が recs にあればそれを使い、なければ **YouTube が自動で作る途中のコマ** `https://i.ytimg.com/vi/<id>/maxres1.jpg`・`maxres2.jpg`・`maxres3.jpg`（動画のおよそ1/4・1/2・3/4の所。1280×720。取れなければ `sd1`〜`sd3`、`hq1`〜`hq3`）とサムネイル（`hqdefault.jpg`・`maxresdefault.jpg`）を curl で取って見る。これで録画がなくても4枚ほどは自動で見られる（ただし動画の一部だけなので、`note` に「途中の3コマとサムネで調べた。ほかの場面は録画があれば調べられる」と書く）。あわせて YouTube 検索の結果に出る説明文の一部（`tools/yt_common.py` の search で題名を検索）を見る。YouTube の動画ページそのものはこの環境から開けないので、開こうとしない
 - 実写の場面ごとに、何が写っているか（例：「砂利道を走る白い四駆を後ろから」「研究室の回転する円形の道」）を短く言葉にする。アニメーションや図だけなら `verdict` を「実写なし」にする
 - その言葉で、自由に使える素材のある所を探す：Wikimedia Commons（API が使える）、NASA の画像・映像（images-api.nasa.gov）、Internet Archive のパブリックドメイン、各国の政府や研究機関の公開映像、Pexels・Pixabay・Mixkit・Videvo などの無料素材サイト（WebSearch で「site:pexels.com gravel road car」のように探す。サイトによってはこの環境から開けないので、検索結果の題名・説明・サムネイルで判断する）。説明文やクレジットに出どころ（Pond5・Storyblocks などの有料素材、研究者の名前など）が書かれていれば、それを手がかりにする
 - 見つけた候補は、見られるならサムネイルや見本の画像を取ってきて、元の場面と見比べる。判定（`match`）は正直に：「同じ映像」（構図・動き・写っている物がはっきり一致）／「似た映像」（同じ題材だが別の撮影）。確かめられないのに「同じ」と言わない
