@@ -457,7 +457,7 @@ function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.t
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
 const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',gather:'参考集め'};
-return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.result?'　'+esc(j.result):''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
+const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.result?'　'+esc(j.result):''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function renderMake(){ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
@@ -533,6 +533,7 @@ async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());retu
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
 function touchP(p){p.updatedAt=now();save()}
 $('makeTop').addEventListener('click',e=>{
+if(e.target.id==='jobsNow'){copyOpen('制作室の頼みごとを今すぐ片づけて。GitHub の nisenonamae/seisakushitsu と nisenonamae/notion-daily を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、seisakushitsu の tools/WORKER.md の手順どおりに、待ちの頼みごとを全部片づけて push して。進み具合も手順どおり書き込んで。');return}
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
 const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
