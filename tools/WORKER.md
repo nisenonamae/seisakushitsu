@@ -1,14 +1,14 @@
 # 頼みごとの片づけ（Claude が毎時実行する手順）
 
 制作室アプリの「頼みごと」（要約・題材探し・台本づくり・台本の直し）を片づける。
-アプリのデータは private のリポジトリ `nisenonamae/study-data` の `seisakushitsu/data.json` にある（同じリポジトリのほかのファイルはほかのアプリのものなので、絶対に触らない）。録画は `seisakushitsu/refs/` の下。
+アプリのデータは private のリポジトリ `nisenonamae/notion-daily` の `roadmap/apps/seisakushitsu/data.json` にある（同じリポジトリのほかのファイルはほかのアプリのものなので、絶対に触らない）。録画は `roadmap/apps/seisakushitsu/refs/` の下。
 
 ## 0. 用意
-- `nisenonamae/study-data`（データ）と `nisenonamae/seisakushitsu`（アプリと道具）を用意する。セッションになければ add_repo ツールで push 権限つきで追加してクローン、あれば git pull
-- `seisakushitsu/data.json` がまだないとき（アプリの同期がまだ）は、何もせずに「データがまだありません」とだけ報告して終わる
+- `nisenonamae/notion-daily`（データ）と `nisenonamae/seisakushitsu`（アプリと道具）を用意する。セッションになければ add_repo ツールで push 権限つきで追加してクローン、あれば git pull
+- `roadmap/apps/seisakushitsu/data.json` がまだないとき（アプリの同期がまだ）は、何もせずに「データがまだありません」とだけ報告して終わる
 
 ## 1. 仕事があるか見る
-- `seisakushitsu/data.json` を読み、`jobs` の中で `status` が `"待ち"` で `deleted` でないものを、`createdAt` の古い順に最大 5 件取る
+- `roadmap/apps/seisakushitsu/data.json` を読み、`jobs` の中で `status` が `"待ち"` で `deleted` でないものを、`createdAt` の古い順に最大 5 件取る
 - **1件もなければ、すぐに「仕事なし」とだけ報告して終わる**（何も書き込まない）
 
 ## 2. 仕事の種類ごとのやり方

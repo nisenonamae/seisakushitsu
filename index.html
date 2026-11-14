@@ -210,9 +210,9 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <p>無料で、1日に約30テーマ調べられます。詰まったら画面のスクショを Claude に送ってください。</p></details>
 
 <details><summary>最初の設定③　同期と自動の頼みごと（いちばん大事）</summary>
-<p>端末どうしの同期と、ボタン一つで Claude に頼める仕組みは、どちらもこの設定で動きます。データは、ほかのアプリと同じ private のリポジトリ <b>study-data</b> の中の、制作室用のファイルに置きます。</p><ol>
-<li>設定に、持ち主 <code>nisenonamae</code>、リポジトリ名 <code>study-data</code>、データのファイル名 <code>seisakushitsu/data.json</code> を入れる</li>
-<li>トークンは、<b>ほかのアプリ（study-data を使っているもの）と同じトークン</b>をそのまま貼る</li>
+<p>端末どうしの同期と、ボタン一つで Claude に頼める仕組みは、どちらもこの設定で動きます。データは、ほかのアプリ（行軍表・Anki2 など）と同じ private のリポジトリ <b>notion-daily</b> の中の、制作室用の場所に置きます。</p><ol>
+<li>設定に、持ち主 <code>nisenonamae</code>、リポジトリ名 <code>notion-daily</code>、データのファイル名 <code>roadmap/apps/seisakushitsu/data.json</code> を入れる</li>
+<li>トークンは、<b>ほかのアプリ（行軍表・Anki2 など）と同じトークン</b>をそのまま貼る</li>
 <li>「保存して同期」を押し、右上が「同期ずみ」になれば完了</li>
 <li>ほかの端末は、設定の「読み取り用のコードを出す」でコードを出し、スマホのカメラで読み取るだけで同じ設定になる</li></ol></details>
 
@@ -232,7 +232,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <h2 style="margin-top:20px">端末どうしの同期（GitHub）</h2>
 <p class="lead">設定すると、開いたとき・変えたときに自動で GitHub のデータと合わせます。どの端末で何をしたかを気にしなくて大丈夫です。</p>
 <div class="grid2"><div><label>持ち主（ユーザー名）</label><input id="gho"></div><div><label>リポジトリ名</label><input id="ghr"></div></div>
-<label>データのファイル名</label><input id="ghp" placeholder="seisakushitsu/data.json">
+<label>データのファイル名</label><input id="ghp" placeholder="roadmap/apps/seisakushitsu/data.json">
 <label>トークン（このリポジトリの Contents を読み書きできる fine-grained トークン）</label><input id="ght" type="password" autocomplete="off">
 <div class="row"><button class="b main" id="saveSet">保存して同期</button><span class="msg" id="setmsg"></span></div>
 <div class="item" style="margin-top:10px"><div class="q" style="font-size:15px">ほかの端末に設定を渡す</div>
@@ -275,7 +275,7 @@ function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
 function touch(o){o.updatedAt=now();save()}
 
 /* ---------- 同期（GitHub） ---------- */
-const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','seisakushitsu/data.json')||'seisakushitsu/data.json',t:LS.get('gh_t','')});
+const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','roadmap/apps/seisakushitsu/data.json')||'roadmap/apps/seisakushitsu/data.json',t:LS.get('gh_t','')});
 const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
@@ -554,7 +554,7 @@ p.finished=true;p.step=STEPS.length;const c=D.candidates.find(x=>x.id===p.candId
 touchP(p);curProj=null;renderAll();window.scrollTo(0,0)}});
 $('makeSteps').addEventListener('change',async e=>{const p=projOf();if(!p)return;const el=e.target;
 if(el.matches('[data-recs]')){const fs=[...el.files];for(const f of fs){if(f.size>90e6){alert(f.name+' は大きすぎます（90MBまで）。短く録り直してください');continue}
-$('recMsg').textContent=f.name+' を送っています…';try{const path=`seisakushitsu/refs/${p.id}/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;await ghPutFile(path,await fileToB64(f),'録画を追加');p.recs=p.recs||[];p.recs.push({name:f.name,path});touchP(p);$('recMsg').textContent=f.name+' を送りました'}catch(err){$('recMsg').textContent='送れませんでした：'+err.message}}
+$('recMsg').textContent=f.name+' を送っています…';try{const path=`roadmap/apps/seisakushitsu/refs/${p.id}/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;await ghPutFile(path,await fileToB64(f),'録画を追加');p.recs=p.recs||[];p.recs.push({name:f.name,path});touchP(p);$('recMsg').textContent=f.name+' を送りました'}catch(err){$('recMsg').textContent='送れませんでした：'+err.message}}
 renderMake();return}
 if(el.matches('[data-ref]')){p.refs=p.refs||[];const id=el.dataset.ref;if(el.checked){if(!p.refs.includes(id))p.refs.push(id)}else p.refs=p.refs.filter(x=>x!==id);touchP(p);
 const lead=el.closest('.sb').querySelector('.lead');if(lead)lead.textContent=`この動画で参考にするメモに印を付ける（${p.refs.length}件選択中）`}});
