@@ -65,6 +65,9 @@ table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bott
 .props{border-color:var(--sea)}.prop{border-top:1px solid var(--line);padding:6px 0;font-size:14px}.prop .before{color:var(--sub);text-decoration:line-through}.prop .after{margin-top:2px}
 .useform{margin:6px 0;padding:8px;border:1px solid var(--sea);border-radius:8px;background:var(--row)}
 .fixrec{border-top:1px solid var(--line);padding:6px 0;font-size:14px}.ba{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0}.ba img{width:100%;border-radius:4px;background:var(--line);min-height:30px}
+.foot{font-size:13px;margin:4px 0;padding:5px 8px;background:var(--paper);border-radius:6px}.shot{border-top:1px solid var(--line);padding:3px 0}.foot a{color:var(--sea)}.mk.no{color:var(--sub)}
+.ytt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}.ytt a{color:var(--ink);font-size:12px;text-decoration:none}.ytt img{width:100%;border-radius:6px;display:block}
+.item.picked{border:2px solid var(--sea)}
 .msg{font-size:13.5px;color:var(--busy)}.ok{color:var(--good)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
@@ -144,10 +147,21 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <p class="lead">「こういうときは、こうして」という頼み方の決まり。Claude は頼みごとや話し合いのたびに、ここにある「使う」の決まりを全部読んで守ります。話し合いの中で言った決まりも、Claude がここに足します。</p>
 <div id="ruleList"></div>
 <details><summary>決まりを足す</summary>
-<label>どの仕事で</label><select id="rs"><option>全部</option><option>題材探し</option><option>参考集め</option><option>構成</option><option>肉付け</option><option>図解</option><option>動画</option></select>
+<label>どの仕事で</label><select id="rs"><option>全部</option><option>題材探し</option><option>参考集め</option><option>構成</option><option>肉付け</option><option>図解</option><option>サムネ</option><option>動画</option></select>
 <label>こういうとき（任意）</label><input id="rw" placeholder="例：数字を出すとき">
 <label>こうする</label><textarea id="rd" placeholder="例：出どころを段のそばに書く。1段に数字は1つまで"></textarea>
 <div class="row"><button class="b main" id="addRule">決まりに足す</button></div></details>
+<h2 style="margin-top:22px">餌箱（作り方を育てる）</h2>
+<p class="lead">制作とは関係なく、「この動画（文章）の構成や語りがうまい」と思ったものを餌として入れる。Claude が読んで、構成・肉付け・見せ方・サムネの学びに分けて取り出します。気に入った学びは「決まりにする」で毎回守られ、それ以外も構成や肉付けを考えるときの引き出しとして使われます。</p>
+<details id="feedForm"><summary>餌をあげる</summary>
+<label>種類</label><select id="fdKind"><option>動画の文字起こし</option><option>文章</option><option>録画</option><option>メモ</option></select>
+<label>題名か URL</label><input id="fdTitle" placeholder="例：Why Roads Get Washboards https://www.youtube.com/watch?v=…">
+<div id="fdTextBox"><label>中身（文字起こし・文章・メモを全部貼る）</label><textarea id="fdText" style="min-height:100px"></textarea></div>
+<div id="fdFileBox" hidden><label>録画ファイル（90MBまで）</label><input type="file" id="fdFile" accept="video/*"></div>
+<label>何を学ばせたい？</label><div class="chips" id="fdFocus"><button data-fd="構成" aria-pressed="true">構成</button><button data-fd="肉付け" aria-pressed="true">肉付け</button><button data-fd="見せ方" aria-pressed="true">見せ方</button><button data-fd="サムネ" aria-pressed="true">サムネ</button></div>
+<label>どこがいいと思った？（任意。あると的が絞れる）</label><input id="fdWhy" placeholder="例：最初の15秒の引きが強い／数字の出し方がうまい">
+<div class="row"><button class="b main" id="addFeed">餌をあげる</button><span class="lead" id="fdMsg"></span></div></details>
+<div id="feedList"></div>
 <h2 style="margin-top:22px">編集スタイル</h2>
 <p class="lead">作った動画の編集スタイル（型紙）がたまっていきます。制作のときに「そのまま使う」「混ぜる」「新しく作る」を選べます。</p>
 <div id="styleList"></div>
@@ -182,11 +196,12 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 </ol></details>
 
 <details><summary>▶ 制作（一本の動画を作る）</summary>
-<p>「作る」にした題材が並びます。「これを作る」を押すと、6つの手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
+<p>「作る」にした題材が並びます。「これを作る」を押すと、7つの手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
 <li><b>参考と資料を集める</b>：集めたいもの（見せ方の参考・中身の参考・調べた資料・使えそうな素材）に印を付けて数を選び、ボタンを押すと Claude が集めて置きます。足りないものだけ、あとから何度でも追加で頼めます。そのうえで、真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
 <li><b>構成を磨く</b>：Claude が骨組み（段ごとに「何を言う・画面で何を見せる・ねらい・秒数」）を出す。段ごとに「残す／差し替え案がほしい／削る」の印や一言の注文を付け、並べ替えや自分での書き換えもして、「次の版にしてもらう」。臨機応変に話したいときは「Claude と話し合う」でチャットへ（決まったことは自動でアプリに反映）。固まったら「決まり」</li>
 <li><b>肉付けを磨く</b>：決まりにすると自動で頼まれ、段ごとに語り（読み上げる文）と画面の指示が届く。「▶通しで聞く」で読み上げを流し、気になった所でその場で「ここ気になる」。段ごとに「いい／直す／書き直し案がほしい／削る」。磨き方は構成と同じ</li>
 <li><b>図解を選ぶ</b>：Claude が台本に合う図解の案を見本の画像つきで出すので、気に入ったものだけ選んで作ってもらい、直したい所を書いて直してもらう</li>
+<li><b>サムネと題名</b>：参考動画のサムネと構成を読んで、Claude が題名とサムネの組み合わせを見本つきで出す。「これにする」で選び、直しを書いて直してもらう。直しは「決まりにする」で貯まる</li>
 <li><b>動画を確かめる</b>：1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて送る</li>
 <li><b>残して終わる</b>：次からも同じにしたい直しに印 → 工夫の棚に入る</li></ol>
 <p><b>手順は行き来できます</b>：参考集め・構成・肉付けは、途中で「あ、これもある」となったらいつでも戻って足せます。足した資料や素材は「これを使って直してもらう」で、使ってほしい段を選んで頼むと、Claude が段ごとの変更案を出し、採用したものだけが入ります。構成を変えると、肉付けのずれた段に印が付き、「構成の変化だけ肉付けに反映してもらう」でそこだけ直せます。</p>
@@ -305,7 +320,7 @@ const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'億':n>=1e4?Math.round(n/1e4).toLocaleSt
 /* ---------- データ ---------- */
 let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}
 if(!D)D=JSON.parse(JSON.stringify(SEED));
-['candidates','ideas','kufu','projects','jobs','materials','styles','rules'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
+['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
 function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
 function touch(o){o.updatedAt=now();save()}
 
@@ -314,7 +329,7 @@ const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','roadmap/a
 const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
-function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
 let pushTimer=null,busy=false;
 function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
 async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
@@ -486,6 +501,7 @@ const STEPS=[
 {t:'構成を磨く',s:'Claude の骨組みに印を付け、残す・削る・差し替えで磨く'},
 {t:'肉付けを磨く',s:'語りと画面を通しで聞いて、段ごとに直す'},
 {t:'図解を選ぶ',s:'Claude の案から気に入った図解を選び、作って直す'},
+{t:'サムネと題名',s:'案を見本で出してもらい、選んで直す'},
 {t:'動画を確かめる',s:'1.5倍速で見て、直す所を書く'},
 {t:'残して終わる',s:'次からも使う直しを工夫の棚へ'}];
 let curProj=null;
@@ -493,7 +509,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',thumb_fix:'サムネの直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){ensureProj();const p=projOf();
@@ -509,7 +525,7 @@ $('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま�
 ${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const rel=p.related||[];const srcs=p.sources||[];const ast=p.assets||[];
-const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${usedIn(p,r.url)}${useBtn(p,'related',r.url,r.title,'r'+rel.indexOf(r))}
+const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${footHTML(p,r.footage,'rel',r.url)}${usedIn(p,r.url)}${useBtn(p,'related',r.url,r.title,'r'+rel.indexOf(r))}
 <div class="st">${kind==='見せ方'?`<button data-relmemo="${esc(r.url)}">録画したらメモを書く</button>`:`<button data-relmat="${esc(r.url)}" data-reltitle="${esc(r.title)}">文字起こしを貼る</button>`}</div></div>`).join('');
 const gatherHTML=`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">Claude が集めた参考</div>
 ${rel.length||srcs.length||ast.length?`<details ${rel.length?'open':''}><summary>見せ方の参考（${rel.filter(r=>r.kind==='見せ方').length}本）</summary><p class="lead" style="margin:2px 0">同じような題材を、地図やアニメーションで見せて伸びた動画。気に入った場面だけ録画してください。</p>${relHTML('見せ方')}</details>
@@ -537,7 +553,7 @@ gatherHTML+`<div class="how"><b>やること</b><ol>
 ${refs.length?refs.map(i=>`<label class="chk"><input type="checkbox" data-ref="${i.id}" ${(p.refs||[]).includes(i.id)?'checked':''}><span>${i.sec?toClock(i.sec)+'　':''}${esc(i.memo)}<br><span class="lead">${esc((i.video||'').replace(urlOf(i.video),'').trim()||urlOf(i.video)||'')}</span></span></label>`).join(''):'<div class="empty">まだ「作り方の工夫」のメモがありません。ひらめき帳で書くと、ここに出ます。</div>'}
 <h3 style="font-size:15px;margin:14px 0 4px">見せ方の録画</h3>
 ${syncOn()?`<p class="lead" style="margin:0 0 4px">録画ファイル（屏幕录制….mov）をここで選ぶと、そのまま Claude に届きます。</p><input type="file" accept="video/*" multiple data-recs>
-${(p.recs||[]).map(r=>`<div class="lead">・${esc(r.name)}</div>`).join('')}<div class="lead" id="recMsg"></div>`:`<p class="lead">同期を設定すると、録画をここから直接届けられます（今は手順2でチャットにドラッグ）。</p>`}
+${(p.recs||[]).map(r=>`<div class="lead">・${esc(r.name)}</div>${footHTML(p,r.footage,'rec',r.path)}`).join('')}<div class="lead" id="recMsg"></div>`:`<p class="lead">同期を設定すると、録画をここから直接届けられます（今は手順2でチャットにドラッグ）。</p>`}
 <h3 style="font-size:15px;margin:14px 0 4px">中身の資料（動画の文字起こし）</h3>
 <div class="how"><b>文字起こしの取り方（Mac・Chromebook）</b><ol><li>YouTube の動画の説明欄を「もっと見る」で開き、下の方の<b>「文字起こしを表示」</b>を押す（中国語表示なら「内容转文字」などの名前）</li><li>右に出た欄の中を全部選んでコピーして、下に貼る</li></ol></div>
 ${(()=>{const n=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted).length;return n?`<p style="font-weight:700;margin:8px 0 2px">入れた資料（${n}本）</p>`:''})()}
@@ -554,6 +570,7 @@ ${(()=>{const n=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m
 outlineStep(p),
 fleshStep(p),
 visualStep(p),
+thumbStep(p),
 `<div class="how"><b>やること</b><ol><li>届いた動画を 1.5倍速で見る</li><li>直したい所を、時間と一緒に一行ずつ書く</li><li>直しを送り、直った版がきたらもう一度見る。気が済んだら「完成」</li></ol></div>
 <div id="fixes">${(p.fixes||[]).map((f,k)=>`<div class="fix"><input data-fsec="${k}" value="${esc(f.sec||'')}" placeholder="1:23"><input data-ftxt="${k}" value="${esc(f.text||'')}" placeholder="直したいこと"><button class="b" data-fdel="${k}">×</button></div>`).join('')}</div>
 <div class="row"><button class="b" data-fadd>直しを一行足す</button></div>
@@ -571,9 +588,9 @@ const st=(D.styles||[]).find(s=>s.id===(p.styleId||(liveStyles()[0]||{}).id));co
 return `地図で「なぜ」を解く YouTube チャンネルの動画を、完全 AI 版で一本作ってほしい。\n\n編集スタイル：${SMODE[smode]}${smode!=='新しく'&&st?'\n使うスタイル「'+st.name+'」：\n'+st.kata:''}\n\n題材：${candQ(p)}\n${c.angle?'切り口：'+c.angle+'\n':''}長さ：10分ほど\n\n参考にしたい見せ方（このあと録画を送ります）：\n${refs.map((i,k)=>`${k+1}. ${i.video||'（動画）'}${i.sec?'（'+toClock(i.sec)+'）':''}\n   ${i.memo}${i.where&&i.where!=='全体'?'（効く場所：'+i.where+'）':''}`).join('\n')||'（なし）'}\n\n中身の資料（動画の要約・文字起こし）：\n${mats.map(m=>`■ ${m.title||m.url||'資料'}\n${m.summary||m.text.slice(0,4000)}`).join('\n\n')||'（なし）'}\n\n進め方：\n1. 送る録画をコマに分けて見て、画面の切り替わる間隔・地図の動き・字幕・色の使い方を型紙にまとめる\n2. 台本を書いて見せる\n3. OK が出たら、声・地図アニメーション・字幕まで入れて、最後まで書き出した動画にする`}
 function fixText(p){return `さっきの動画の直しです。\n${(p.fixes||[]).filter(f=>f.text).map(f=>`・${f.sec?f.sec+' ':''}${f.text}`).join('\n')}\n直した版を書き出してください。`}
 const md=ms=>{const d=new Date(ms);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`};
-const GK=[['style','見せ方の参考（動画）','本'],['content','中身の参考（動画）','本'],['sources','調べた資料','件'],['assets','使えそうな素材','件']];
+const GK=[['style','見せ方の参考（動画）','本'],['content','中身の参考（動画）','本'],['sources','調べた資料','件'],['assets','使えそうな素材','件'],['footage','参考動画の実写の出どころ（フリー素材か）','本']];
 const GN=[2,3,5,8,10,15,20];
-function gSel(){let g={};try{g=JSON.parse(LS.get('g_sel','{}'))||{}}catch(e){}const d={style:5,content:3,sources:5,assets:5};
+function gSel(){let g={};try{g=JSON.parse(LS.get('g_sel','{}'))||{}}catch(e){}const d={style:5,content:3,sources:5,assets:5,footage:3};
 const o={};for(const [k] of GK)o[k]={on:g[k]?g[k].on!==false:true,n:g[k]&&GN.includes(+g[k].n)?+g[k].n:d[k]};return o}
 function gSave(g){LS.set('g_sel',JSON.stringify(g))}
 function nextRun(from){const d=new Date(from||Date.now());for(let i=0;i<48;i++){const c=new Date(d);c.setMinutes(17,0,0);c.setHours(d.getHours()+i);if(c>d&&c.getHours()>=7&&c.getHours()<=23)return c}return null}
@@ -594,6 +611,25 @@ ${made.length?`<h3 style="font-size:15px;margin:12px 0 4px">作った図解</h3>
 ${v.clip?`<video data-gh="${esc(v.clip)}" controls playsinline loop style="width:100%;border-radius:6px;background:#000;margin-top:6px"></video>`:v.preview?`<img data-gh="${esc(v.preview)}" style="width:100%;border-radius:6px;margin-top:6px">`:''}
 ${v.status==='できた'||v.status==='直し待ち'?vfixHTML(p,v,'動画'):''}</div>`).join('')}${jobLine(p,'visual_fix')}`:''}
 <div class="row"><button class="b main" data-next>図解はこれでいい</button></div>`}
+function ytThumbs(p){return (p.related||[]).filter(r=>r.kind==='見せ方'||r.kind==='中身').map(r=>{const m=/[?&]v=([\w-]{11})/.exec(r.url||'');return m?{id:m[1],r}:null}).filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.id===x.id)===i).slice(0,8)}
+function thumbStep(p){if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、サムネと題名の案を見本つきで出してもらえます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
+const ts=(p.thumbs||[]);const yt=ytThumbs(p);
+return `<div class="how"><b>やること</b><ol><li>Claude が、題名とサムネの組み合わせの案を見本の画像つきで出す（参考動画のサムネと、構成・肉付けを読んで考える）</li><li>気に入ったものを「これにする」。直したい所は書いて直してもらう</li><li>直しの中で、これからも守りたいものは「決まりにする」で貯まる</li></ol></div>
+${yt.length?`<details><summary>参考動画のサムネ（${yt.length}）</summary><div class="ytt">${yt.map(x=>`<a href="${esc(x.r.url)}" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/${x.id}/mqdefault.jpg" loading="lazy" alt=""><div>${esc(x.r.title)}${x.r.views?'　'+fmt(x.r.views)+'回':''}</div></a>`).join('')}</div></details>`:''}
+<label>案の数</label><select id="tN">${[3,5,8].map(n=>`<option ${n===5?'selected':''}>${n}</option>`).join('')}</select>
+<label>こういうサムネにしたい（任意）</label><input id="tWish" placeholder="例：地図を大きく、文字は5字以内／驚きの数字を前に">
+<div class="row"><button class="b" data-tjob="thumb_ideas">${ts.length?'もっと案を出してもらう':'サムネと題名の案を出してもらう'}</button></div>${jobLine(p,'thumb_ideas')}
+${ts.map(t=>`<div class="item ${p.thumbId===t.id?'picked':''}" style="margin:8px 0">${t.title?`<div class="q" style="font-size:15.5px">${esc(t.title)}</div>`:''}<div class="lead" style="margin:2px 0">${esc(t.idea||'')}${t.text?'　サムネの文字：「'+esc(t.text)+'」':''}</div>
+${t.preview?`<img data-gh="${esc(t.preview)}" style="width:100%;border-radius:6px;background:var(--line);min-height:60px">`:''}
+${t.desc?`<div style="font-size:14px">${esc(t.desc)}</div>`:''}${usesHTML(t)}
+<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'これに決めた':'これにする'}</button></div>
+${tfixHTML(p,t)}</div>`).join('')}${jobLine(p,'thumb_fix')}
+<div class="row"><button class="b main" data-next>サムネと題名はこれでいい</button></div>`}
+function tfixHTML(p,t){const log=t.fixlog||[];const wait=log.some(f=>f.status==='待ち');
+return `${log.length?`<details ${wait?'open':''}><summary>直しの記録（${log.length}）</summary>${log.map(f=>`<div class="fixrec"><div>${esc(f.text)}　<span class="lead" style="margin:0">${f.at?md(f.at):''}　${esc(f.status||'')}</span></div>${f.reply?`<div class="chg">Claude：${esc(f.reply)}</div>`:''}
+${f.before||f.after?`<div class="ba">${f.before?`<div><div class="lead" style="margin:0">前</div><img data-gh="${esc(f.before)}"></div>`:''}${f.after?`<div><div class="lead" style="margin:0">後</div><img data-gh="${esc(f.after)}"></div>`:''}</div>`:''}
+${f.status==='できた'?`<div class="st"><button data-trule="${t.id}:${f.id}" class="${f.rule?'on':''}">${f.rule?'決まりに入れた':'これからのサムネでも守る決まりにする'}</button></div>`:''}</div>`).join('')}</details>`:''}
+${wait?'<p class="lead" style="margin:4px 0">直しを頼んでいます。</p>':`<label>直したいこと（題名・文字・絵・色・配置なんでも）</label><textarea data-tfix="${t.id}" placeholder="例：文字が長い。3文字にして大きく／題名は疑問形に"></textarea><div class="row"><button class="b" data-tjob="thumb_fix" data-tid="${t.id}">直してもらう</button></div>`}`}
 function vfixHTML(p,v,stage){const log=(v.fixlog||[]);const wait=v.status==='直し待ち'||log.some(f=>f.status==='待ち');
 return `${log.length?`<details ${log.some(f=>f.status==='待ち')?'open':''}><summary>直しの記録（${log.length}）</summary>${log.map(f=>`<div class="fixrec"><div><span class="mk">${esc(f.stage||'')}</span> ${esc(f.text)}　<span class="lead" style="margin:0">${f.at?md(f.at):''}　${esc(f.status||'')}</span></div>${f.reply?`<div class="chg">Claude：${esc(f.reply)}</div>`:''}
 ${f.before||f.after?`<div class="ba">${f.before&&/\.png$/.test(f.before)?`<div><div class="lead" style="margin:0">前</div><img data-gh="${esc(f.before)}"></div>`:''}${f.after&&/\.png$/.test(f.after)?`<div><div class="lead" style="margin:0">後</div><img data-gh="${esc(f.after)}"></div>`:''}</div>`:''}
@@ -602,13 +638,14 @@ ${wait?'<p class="lead" style="margin:4px 0">直しを頼んでいます。届�
 <div class="row"><button class="b" data-vjob="${stage==='見本'?'visual_redesign':'visual_fix'}" data-vid="${v.id}">${stage==='見本'?'見本を直してもらう':'直しを頼む'}</button></div>`}`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
 if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
-function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&o.type!=='summary'&&o.type!=='pick'&&o.type!=='use_item');
+function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&!['summary','pick','use_item','footage_check','digest','thumb_fix'].includes(o.type));
 if(o.type==='gather'&&old.length){const j=old[0];for(const [k] of GK)j.counts[k]=Math.max(j.counts[k]||0,(o.counts||{})[k]||0);for(const x of old.slice(1)){x.deleted=true;x.updatedAt=now()}j.updatedAt=now();save();return j}
 if(o.type==='visual_make'&&old.length){const j=old[0];j.ids=[...new Set([...(j.ids||[]),...(o.ids||[])])];j.updatedAt=now();save();return j}
 for(const x of old){x.deleted=true;x.updatedAt=now()}
 const j={id:uid('j'),status:'待ち',createdAt:now(),updatedAt:now(),...o};D.jobs.push(j);save();return j}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-jcancel]');if(!b)return;e.stopPropagation();const j=D.jobs.find(x=>x.id===b.dataset.jcancel);if(!j||j.status!=='待ち')return;j.deleted=true;j.updatedAt=now();
-const p=D.projects.find(x=>x.id===j.projId);if(p&&p.visuals){if(j.type==='visual_make')p.visuals.forEach(v=>{if((j.ids||[]).includes(v.id)&&v.status==='作成待ち')v.status='提案'});if(j.type==='visual_fix'||j.type==='visual_redesign'){const v=p.visuals.find(v=>v.id===j.visualId);if(v&&v.status==='直し待ち')v.status='できた';const f=v&&(v.fixlog||[]).find(x=>x.id===j.fixId);if(f)f.status='取り消し'}p.updatedAt=now()}
+const p=D.projects.find(x=>x.id===j.projId);if(p&&p.visuals){if(j.type==='visual_make')p.visuals.forEach(v=>{if((j.ids||[]).includes(v.id)&&v.status==='作成待ち')v.status='提案'});if(j.type==='thumb_fix'){const t=(p.thumbs||[]).find(x=>x.id===j.thumbId);const f=t&&(t.fixlog||[]).find(x=>x.id===j.fixId);if(f)f.status='取り消し'}
+if(j.type==='visual_fix'||j.type==='visual_redesign'){const v=p.visuals.find(v=>v.id===j.visualId);if(v&&v.status==='直し待ち')v.status='できた';const f=v&&(v.fixlog||[]).find(x=>x.id===j.fixId);if(f)f.status='取り消し'}p.updatedAt=now()}
 save();renderAll()},true);
 async function fileToB64(f){const buf=new Uint8Array(await f.arrayBuffer());return bytesToB64(buf)}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
@@ -755,6 +792,11 @@ else if(x.op==='insert'){bl.splice(bi+1,0,{...A,id:uid('b'),change:'変更案か
 else if(x.op==='delete'&&bi>=0){bl.splice(bi,1)}
 x.status='採用';x.updatedAt=now()}
 let useSel=null;
+function footHTML(p,f,kind,key){const busy=(D.jobs||[]).some(j=>!j.deleted&&j.projId===p.id&&j.type==='footage_check'&&(j.status==='待ち'||j.status==='作業中')&&(j.relUrl===key||j.recPath===key));
+const V={'フリー素材で見つかった':'good','似たフリー素材あり':'','見つからない':'no','実写なし':'no'};
+let h='';if(f){h=`<div class="foot"><div><b>実写の出どころ</b>　${f.checkedAt?md(f.checkedAt):''}</div>${f.note?`<div class="lead" style="margin:0">${esc(f.note)}</div>`:''}${(f.shots||[]).map(x=>`<div class="shot"><div>${x.at?esc(x.at)+'　':''}${esc(x.desc||'')}　<span class="mk ${V[x.verdict]||''}">${esc(x.verdict||'')}</span></div>${(x.found||[]).map(y=>`<div>・<a href="${esc(y.url)}" target="_blank" rel="noopener">${esc(y.title||y.site||y.url)}</a>　${esc(y.site||'')}${y.license?'　'+esc(y.license):''}${y.match?`　<b>${esc(y.match)}</b>`:''}${y.terms?`<div class="lead" style="margin:0">${esc(y.terms)}</div>`:''}</div>`).join('')}</div>`).join('')}</div>`}
+if(!syncOn())return h;
+return h+(busy?'<div class="lead" style="margin:2px 0">実写の出どころを調べてもらっています</div>':`<div class="st" style="margin-top:3px"><button data-foot="${kind}" data-fkey="${esc(key||'')}">${f?'実写の出どころを調べ直してもらう':'実写の出どころを調べてもらう'}</button></div>`)}
 function useBtn(p,type,url,title,key){if(!syncOn()||!blsOf(p,'o').length||!url)return'';
 if(!useSel||useSel.key!==key)return `<div class="st" style="margin-top:3px"><button data-use="${esc(url)}" data-ukey="${key}" data-ut="${type}" data-utitle="${esc(title||'')}">これを使って直してもらう</button></div>`;
 const t=useSel.target||'o';const bl=blsOf(p,t);
@@ -764,7 +806,7 @@ ${(t==='f'?fOrder(p).map(x=>x.b):bl).filter(b=>b.mark!=='削る').map((b,j)=>`<l
 <input id="uNote" value="${esc(useSel.note||'')}" placeholder="どう使いたいか（任意）例：時速8kmの所の裏付けに" style="margin-top:4px">
 <p class="lead" style="margin:4px 0">Claude は直接書き換えず、段ごとの「変更案」を出します。採用したものだけ入ります。</p>
 <div class="row"><button class="b main" data-usego>変更案を出してもらう</button><button class="b" data-usecancel>やめる</button></div></div>`}
-const UK={source:'資料',asset:'素材',related:'参考動画',material:'文字起こし',rec:'録画',idea:'メモ'};
+const UK={source:'資料',asset:'素材',related:'参考動画',material:'文字起こし',rec:'録画',idea:'メモ',feed:'餌'};
 function usesHTML(b){if(b.mark==='追加'&&!b.text&&!b.narr)return'';const u=b.uses||[];
 if(!u.length)return `<div class="uses none">使った集めもの：なし（Claude の組み立てだけ。事実が入っていれば要確認）</div>`;
 return `<div class="uses"><div>使った集めもの：</div>${u.map(x=>`<div>・<span class="uk">${esc(UK[x.type]||x.type)}</span>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`:esc(x.title||'')}${x.what?` → ${esc(x.what)}`:''}</div>`).join('')}</div>`}
@@ -804,6 +846,13 @@ function talkText(p,k){return `制作室の${KN[k]}を一緒に磨きたい。Gi
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function snap(d){d.history=d.history||[];d.history.unshift({ver:d.ver||1,at:now(),blocks:clone(d.blocks)});d.history=d.history.slice(0,15)}
 function blkClick(e,p){const el=e.target;
+if(el.matches('[data-tjob]')){const type=el.dataset.tjob;const extra={};
+if(type==='thumb_ideas'){extra.n=+($('tN')?$('tN').value:5);extra.wish=($('tWish')?$('tWish').value.trim():'')}
+if(type==='thumb_fix'){const t=(p.thumbs||[]).find(x=>x.id===el.dataset.tid);const ta=document.querySelector(`[data-tfix="${t.id}"]`);if(!ta||!ta.value.trim()){alert('直したいことを書いてください');return true}
+const fx={id:uid('x'),text:ta.value.trim(),stage:'サムネ',at:now(),before:t.preview||'',status:'待ち'};t.fixlog=t.fixlog||[];t.fixlog.push(fx);extra.thumbId=t.id;extra.notes=fx.text;extra.fixId=fx.id}
+queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return true}
+if(el.matches('[data-tpick]')){p.thumbId=p.thumbId===el.dataset.tpick?'':el.dataset.tpick;touchP(p);renderMake();return true}
+if(el.matches('[data-trule]')){const [tid,fid]=el.dataset.trule.split(':');const t=p.thumbs.find(x=>x.id===tid);const f=(t.fixlog||[]).find(x=>x.id===fid);if(!f||f.rule)return true;const tx=prompt('決まりとして残す文（これからのサムネで毎回守ります）',f.text);if(!tx||!tx.trim())return true;addRule({scope:'サムネ',do:tx.trim(),from:'サムネの直しから',ex:{before:f.before||'',after:f.after||'',idea:t.idea}});f.rule=true;touchP(p);renderAll();return true}
 if(el.matches('[data-osok]')){const f=blsOf(p,'f')[+el.dataset.osok];const o=blsOf(p,'o').find(x=>x.id===f.oid);if(o)f.osnap={text:o.text||'',show:o.show||''};touchP(p);renderMake();return true}
 if(el.matches('[data-pyes]')||el.matches('[data-pno]')){const x=(p.proposals||[]).find(y=>y.id===(el.dataset.pyes||el.dataset.pno));if(!x)return true;if(el.matches('[data-pyes]'))applyProp(p,x);else{x.status='見送り';x.updatedAt=now()}touchP(p);renderMake();return true}
 if(el.matches('[data-pall]')||el.matches('[data-pnoall]')){const k=el.dataset.pall||el.dataset.pnoall;(p.proposals||[]).filter(x=>x.kind===k&&x.status==='提案').forEach(x=>{if(el.matches('[data-pall]'))applyProp(p,x);else{x.status='見送り';x.updatedAt=now()}});touchP(p);renderMake();return true}
@@ -812,6 +861,7 @@ if(el.matches('[data-utarget]')){useSel.note=($('uNote')||{}).value||'';useSel.t
 if(el.matches('[data-ublk]')){const id=el.dataset.ublk;useSel.blocks=el.checked?[...new Set([...(useSel.blocks||[]),id])]:(useSel.blocks||[]).filter(x=>x!==id);return true}
 if(el.matches('[data-usecancel]')){useSel=null;renderMake();return true}
 if(el.matches('[data-usego]')){queueJob({type:'use_item',projId:p.id,item:{type:useSel.type,url:useSel.url,title:useSel.title},target:useSel.target||'o',blocks:useSel.blocks||[],note:(($('uNote')||{}).value||'').trim()});useSel=null;touchP(p);renderMake();return true}
+if(el.matches('[data-foot]')){const o={type:'footage_check',projId:p.id};if(el.dataset.foot==='rel')o.relUrl=el.dataset.fkey;else o.recPath=el.dataset.fkey;queueJob(o);renderMake();return true}
 if(el.matches('[data-mkadd]')){const t=$('mkTitle').value.trim(),u=$('mkUrl').value.trim(),n=$('mkNote').value.trim(),kd=$('mkKind').value;if(!t&&!u){alert('題名か URL を入れてください');return true}
 const it={title:t||u,url:u,note:n,mine:true,addedAt:now()};if(kd==='source'){p.sources=p.sources||[];p.sources.push(it)}else if(kd==='asset'){p.assets=p.assets||[];p.assets.push({...it,source:'自分で見つけた',license:'',terms:'利用規約は自分で確かめる'})}else{p.related=p.related||[];p.related.push({...it,kind:kd,why:n})}
 touchP(p);renderMake();return true}
@@ -876,6 +926,28 @@ ${mode!=='新しく'?`<label>使う過去のスタイル</label><select data-sid
 <p class="lead" style="margin:4px 0 0">${mode==='そのまま'?'今回の録画や見せ方の参考は使わず、選んだスタイルの通りに作ります。':mode==='混ぜる'?'選んだスタイルを土台に、今回の録画・見せ方の参考で気に入った所を足します。':'今回の録画・見せ方の参考だけから型紙を作ります（録画があると精度が上がります）。'}</p></div>`}
 const liveRules=()=>(D.rules||[]).filter(r=>!r.deleted).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 function addRule(o){D.rules=D.rules||[];const r={id:uid('r'),scope:'全部',when:'',do:'',from:'自分で',active:true,createdAt:now(),updatedAt:now(),...o};D.rules.push(r);save();return r}
+function renderFeeds(){if(!$('feedList'))return;const fs=(D.feeds||[]).filter(f=>!f.deleted).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+$('feedList').innerHTML=fs.length?fs.map(f=>`<div class="item" data-feed="${f.id}"><div class="q" style="font-size:15px">${esc(f.title||f.kind)}</div><div class="tags"><span>${esc(f.kind)}</span><span>${esc(f.status||'')}</span>${(f.focus||[]).map(x=>`<span>${esc(x)}</span>`).join('')}${f.createdAt?`<span>${md(f.createdAt)}</span>`:''}</div>
+${f.why?`<div class="lead" style="margin:2px 0">いいと思った所：${esc(f.why)}</div>`:''}
+${(f.lessons||[]).length?`<details open><summary>取り出した学び（${f.lessons.length}）</summary>${f.lessons.map((l,li)=>`<div class="fixrec ${l.drop?'off':''}"><span class="mk">${esc(l.area||'')}</span> ${esc(l.text)}${l.why?`<div class="lead" style="margin:0">餌のどこから：${esc(l.why)}</div>`:''}${l.example?`<div class="lead" style="margin:0">このチャンネルなら：${esc(l.example)}</div>`:''}
+<div class="st"><button data-lrule="${li}" class="${l.rule?'on':''}">${l.rule?'決まりに入れた':'決まりにする'}</button><button data-ldrop="${li}" class="${l.drop?'on':''}">${l.drop?'いらない（戻す）':'いらない'}</button></div></div>`).join('')}</details>`:''}
+<div class="st"><button data-fdel>消す</button></div></div>`).join(''):'<div class="empty">まだ餌はありません。</div>';
+if(!$('feedList').dataset.on){$('feedList').dataset.on=1;
+$('fdKind').onchange=()=>{const r=$('fdKind').value==='録画';$('fdFileBox').hidden=!r;$('fdTextBox').hidden=r};
+$('fdFocus').onclick=e=>{const b=e.target.closest('[data-fd]');if(!b)return;b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')==='true'?'false':'true')};
+$('addFeed').onclick=async()=>{const kind=$('fdKind').value,title=$('fdTitle').value.trim(),text=$('fdText').value.trim();const focus=[...document.querySelectorAll('#fdFocus [aria-pressed="true"]')].map(b=>b.dataset.fd);
+if(!focus.length){alert('何を学ばせたいか選んでください');return}
+const f={id:uid('f'),kind,title,url:urlOf(title),text:kind==='録画'?'':text,focus,why:$('fdWhy').value.trim(),status:'消化待ち',lessons:[],createdAt:now(),updatedAt:now()};
+if(kind==='録画'){const file=$('fdFile').files[0];if(!file){alert('録画ファイルを選んでください');return}if(!syncOn()){alert('録画を送るには同期の設定が要ります');return}if(file.size>90e6){alert('大きすぎます（90MBまで）');return}
+$('fdMsg').textContent='送っています…';try{const path=`roadmap/apps/seisakushitsu/refs/feed/${Date.now()}_${file.name.replace(/[^\w.\-]/g,'_')}`;await ghPutFile(path,await fileToB64(file),'餌の録画を追加');f.rec=path}catch(err){$('fdMsg').textContent='送れませんでした：'+err.message;return}}
+else if(!text){alert('中身を貼ってください');return}
+D.feeds=D.feeds||[];D.feeds.push(f);if(syncOn())queueJob({type:'digest',feedId:f.id});else save();
+$('fdTitle').value='';$('fdText').value='';$('fdWhy').value='';$('fdFile').value='';$('fdMsg').textContent='あげました。Claude が消化すると、下に学びが出ます';renderFeeds()};
+$('feedList').addEventListener('click',e=>{const it=e.target.closest('[data-feed]');if(!it)return;const f=D.feeds.find(x=>x.id===it.dataset.feed);
+if(e.target.matches('[data-fdel]')){if(!confirm('この餌を消しますか？（決まりにした学びは残ります）'))return;f.deleted=true}
+else if(e.target.matches('[data-ldrop]')){const l=f.lessons[+e.target.dataset.ldrop];l.drop=!l.drop}
+else if(e.target.matches('[data-lrule]')){const l=f.lessons[+e.target.dataset.lrule];if(l.rule)return;const t=prompt('決まりとして残す文',l.text);if(!t||!t.trim())return;const sc={'構成':'構成','肉付け':'肉付け','見せ方':'図解','サムネ':'サムネ'}[l.area]||'全部';addRule({scope:sc,do:t.trim(),from:'餌から（'+(f.title||f.kind).slice(0,30)+'）'});l.rule=true;renderRules()}
+else return;f.updatedAt=now();save();renderFeeds()})}}
 function renderRules(){if(!$('ruleList'))return;const rs=liveRules();
 $('ruleList').innerHTML=rs.length?rs.map(r=>`<div class="item ${r.active?'':'off'}" data-rule="${r.id}"><div class="tags"><span>${esc(r.scope)}</span><span>${esc(r.from||'')}</span>${r.createdAt>1?`<span>${md(r.createdAt)}</span>`:''}</div>
 <div style="font-size:15px;margin-top:2px">${r.when?`<b>${esc(r.when)}</b> → `:''}${esc(r.do)}</div>
@@ -895,7 +967,7 @@ if(!$('styleList').dataset.on){$('styleList').dataset.on=1;$('styleList').addEve
 if(e.target.matches('[data-srename]')){const n=prompt('新しい名前',s.name);if(n&&n.trim()){s.name=n.trim();s.updatedAt=now();save();renderAll()}}
 if(e.target.matches('[data-sdel]')&&confirm(`「${s.name}」を消しますか？`)){s.deleted=true;s.updatedAt=now();save();renderAll()}});}
 
-function renderAll(){renderRules();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
+function renderAll(){renderRules();renderFeeds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script><div id="play" class="play" hidden><div class="pscr"><div class="prole" id="pRole"></div><div class="pshow" id="pShow"></div></div>
