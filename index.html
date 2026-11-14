@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f6db0">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">
+<title>制作室</title>
+<style>
+:root{--ink:#1d2433;--sub:#5b6577;--paper:#f6f7f9;--row:#fff;--line:#d6dbe4;--sea:#2f6db0;--seaInk:#fff;--yel:#f2c230;--good:#2e8b57;--busy:#c0503a}
+@media (prefers-color-scheme:dark){:root{--ink:#e7ebf2;--sub:#9aa5b8;--paper:#141a26;--row:#1b2232;--line:#2c3547;--sea:#6ea4e6;--seaInk:#0e1420;--good:#5cc28a;--busy:#e57b65}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6;padding-top:env(safe-area-inset-top);padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 14px 8px;display:flex;align-items:baseline;gap:10px}
+header h1{font-size:18px;margin:0}header .sync{font-size:12px;color:var(--sub);margin-left:auto}
+main{max-width:820px;margin:0 auto;padding:12px 14px 30px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--row);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);padding-bottom:env(safe-area-inset-bottom)}
+nav button{background:none;border:0;color:var(--sub);font:inherit;font-size:12px;padding:8px 2px 9px;cursor:pointer}
+nav button b{display:block;font-size:18px;line-height:1.2}
+nav button[aria-current="true"]{color:var(--sea);font-weight:700}
+section[data-tab]{display:none}section[data-tab].on{display:block}
+h2{font-size:17px;margin:6px 0 10px}
+.lead{color:var(--sub);font-size:13.5px;margin:0 0 12px}
+label{display:block;font-size:12.5px;color:var(--sub);margin:8px 0 3px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--row);color:var(--ink)}
+textarea{min-height:70px}
+button.b{font:inherit;font-size:14.5px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.main{background:var(--sea);color:var(--seaInk);border-color:var(--sea);font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.chips button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.item{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:0 0 10px}
+.item .q{font-weight:700;font-size:16px;line-height:1.5}
+.tags{font-size:12px;color:var(--sub);margin:3px 0 0}
+.tags span{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 6px;margin:0 4px 3px 0}
+.score{float:right;font-weight:700;color:var(--sea);font-size:15px;margin-left:8px}
+.more{margin-top:8px;font-size:14px;display:none}.item.open .more{display:block}
+.more a{color:var(--sea)}
+.st{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.st button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:3px 9px;cursor:pointer}
+.st button.on{background:var(--sea);color:var(--seaInk);border-color:var(--sea)}
+.stars button{background:none;border:0;font-size:20px;color:var(--line);cursor:pointer;padding:0 1px}.stars button.on{color:var(--yel)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:6px 0 10px}
+.sum div{background:var(--row);border:1px solid var(--line);border-radius:8px;padding:6px 9px}.sum b{display:block;font-size:19px}.sum span{font-size:11.5px;color:var(--sub)}
+.verdict{font-weight:700;margin:4px 0}.verdict.good{color:var(--good)}.verdict.busy{color:var(--busy)}
+table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bottom:1px solid var(--line);padding:6px 4px;vertical-align:top}
+.vt td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.vt a{color:var(--ink)}.vt .ch{color:var(--sub);font-size:12px}.off{opacity:.4}
+.msg{font-size:13.5px;color:var(--busy)}.ok{color:var(--good)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+details summary{cursor:pointer;color:var(--sub);font-size:14px}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.empty{color:var(--sub);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;text-align:center}
+</style></head><body>
+<header><h1>制作室</h1><span class="sync" id="sync">この端末だけに保存中</span></header>
+<main>
+
+<section data-tab="cand" class="on">
+<h2>題材の候補</h2>
+<div class="chips" id="candFilter"></div>
+<div id="candList"></div>
+<details><summary>候補を手で足す</summary>
+<label>問い</label><input id="nq" placeholder="例：なぜ日本は電柱だらけなのか">
+<div class="grid2"><div><label>柱</label><select id="np"><option>土地</option><option>暮らし</option><option>日本</option></select></div>
+<div><label>入口</label><select id="ne"><option>海外</option><option>最新</option><option>組み合わせ</option><option>ひらめき</option></select></div></div>
+<label>日本の切り口</label><input id="na"><label>元動画の URL（あれば）</label><input id="nl">
+<div class="row"><button class="b main" id="addCand">候補に足す</button></div></details>
+</section>
+
+<section data-tab="idea">
+<h2>ひらめき帳</h2>
+<p class="lead">見ていた動画で「これ使える」と思ったら、YouTube の「共有」からこのアプリへ。気づいたことを一言書いて、AI に広げてもらいます。</p>
+<label>見た動画（題名や URL）</label><input id="iv">
+<div class="grid2"><div><label>何分何秒のところか（任意）</label><input id="it" inputmode="numeric" placeholder="例：1:23"></div>
+<div><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink);margin:6px 0"><input type="checkbox" id="ikeep" checked style="width:auto">同じ動画で続けて書く</label></div></div>
+<label>気づいたこと</label><textarea id="im" placeholder="例：歌詞に出てくる地名が本当かを地図で確かめていた"></textarea>
+<label>種類</label><div class="chips" id="ikind"><button aria-pressed="true" data-k="題材">題材の型</button><button aria-pressed="false" data-k="工夫">作り方の工夫</button></div>
+<div id="iwhereBox" style="display:none"><label>どこに効く工夫か</label><div class="chips" id="iwhere"></div></div>
+<div class="row"><button class="b main" id="ask">AI に聞く</button><button class="b" id="keepIdea">ひらめき帳に残すだけ</button><button class="b" id="newVideo">別の動画にする</button><span class="msg" id="imsg"></span></div>
+<div id="ideaList"></div>
+</section>
+
+<section data-tab="search">
+<h2>テーマ検索</h2>
+<p class="lead">いまその題材の動画がいくつあって、どれくらい見られているかを、日本語と海外で比べます。</p>
+<div class="grid2">
+<div><label>日本語の検索の言葉</label><input id="sja" placeholder="例：自動販売機 日本 なぜ 多い"></div>
+<div><label>日本語で、題名に入っていれば数える言葉</label><input id="sjak" placeholder="例：自販機 自動販売機"></div>
+<div><label>英語の検索の言葉（任意）</label><input id="sen" placeholder="例：why japan has so many vending machines"></div>
+<div><label>英語で数える言葉</label><input id="senk" placeholder="例：vending"></div>
+<div><label>中国語の検索の言葉（任意）</label><input id="szh"></div>
+<div><label>中国語で数える言葉</label><input id="szhk"></div>
+</div>
+<div class="row"><button class="b main" id="go">調べる</button><button class="b" id="toCand">候補にする</button><span class="msg" id="smsg"></span></div>
+<div id="sres"></div>
+</section>
+
+<section data-tab="kufu">
+<h2>工夫の棚</h2>
+<p class="lead">「採用」の工夫は、動画を作るたびに全部あてはめます。一本で目立たせる工夫は一つまで。</p>
+<div class="chips" id="kufuFilter"></div>
+<div id="kufuList"></div>
+<details><summary>工夫を手で足す</summary>
+<label>名前</label><input id="kn"><label>中身</label><textarea id="kb"></textarea>
+<div class="grid2"><div><label>種類</label><select id="kk"><option>設定</option><option>決まり</option><option>部品</option></select></div>
+<div><label>どこに効くか</label><select id="kw"><option>全体</option><option>冒頭</option><option>中盤</option><option>結末</option><option>題名</option><option>サムネイル</option><option>声</option><option>地図</option><option>字幕・文字</option><option>音</option></select></div></div>
+<label>出どころ（動画の題名や URL）</label><input id="ks">
+<div class="row"><button class="b main" id="addKufu">棚に足す</button></div></details>
+</section>
+
+<section data-tab="num">
+<h2>数字</h2>
+<p class="lead">自分のチャンネルの動画ごとの再生数を一覧にします。見るのをやめた場所やサムネイルが押された割合は、YouTube Studio の数字のつなぎ込みで次に足します。</p>
+<label>チャンネル ID（UC から始まる）</label><input id="chid">
+<div class="row"><button class="b main" id="loadNum">読み込む</button><span class="msg" id="nmsg"></span></div>
+<div id="numRes"></div>
+</section>
+
+<section data-tab="set">
+<h2>設定</h2>
+<label>YouTube の API キー（この端末にだけ保存）</label><input id="key" type="password" autocomplete="off">
+<p class="lead">Google Cloud で「YouTube Data API v3」を有効にして作ったキー。1回のテーマ検索で約200〜300ユニット（1日10,000まで）。</p>
+<h2 style="margin-top:20px">端末どうしの同期（GitHub）</h2>
+<p class="lead">設定すると、開いたとき・変えたときに自動で GitHub のデータと合わせます。どの端末で何をしたかを気にしなくて大丈夫です。</p>
+<div class="grid2"><div><label>持ち主（ユーザー名）</label><input id="gho"></div><div><label>リポジトリ名</label><input id="ghr"></div></div>
+<label>データのファイル名</label><input id="ghp" placeholder="data/seisakushitsu.json">
+<label>トークン（このリポジトリの Contents を読み書きできる fine-grained トークン）</label><input id="ght" type="password" autocomplete="off">
+<div class="row"><button class="b main" id="saveSet">保存して同期</button><span class="msg" id="setmsg"></span></div>
+<h2 style="margin-top:20px">AI</h2>
+<label>「AI に聞く」で開く場所</label><input id="aiurl" placeholder="https://claude.ai/new">
+<p class="lead">Claude のプロジェクト「ひらめき相談」の URL を入れると、そこが開きます。</p>
+<div class="row"><button class="b" id="exp">全部のデータをコピー</button></div>
+</section>
+</main>
+
+<nav id="nav">
+<button data-t="cand" aria-current="true"><b>◎</b>候補</button>
+<button data-t="idea"><b>✎</b>ひらめき</button>
+<button data-t="search"><b>⌕</b>検索</button>
+<button data-t="kufu"><b>▤</b>工夫</button>
+<button data-t="num"><b>▦</b>数字</button>
+<button data-t="set"><b>⚙</b>設定</button>
+</nav>
+
+<script>
+'use strict';
+const SEED={"candidates": [{"id": "c103", "q": "なぜアメリカの州境は直線だらけなのか", "pillar": "土地", "entry": "海外", "angle": "州境を年代順に引いていく", "supply": "日本語は最多 約2.8万回（2年前）。1か月前に2本出たがどちらも1千回未満", "demand": "英語で約352万回（Atlas Pro）", "links": [{"src": "EN Atlas Pro", "title": "The Problem With the USA's Borders", "views": 3524313, "url": "https://www.youtube.com/watch?v=hnaRppzurpw"}], "status": "候補", "memo": "", "score": 0, "like": 0, "updatedAt": 3}, {"id": "c102", "q": "なぜイギリスの蛇口は、お湯と水が別々なのか", "pillar": "暮らし", "entry": "海外", "angle": "お湯と水が別の蛇口の国を地図で見せ、理由を水道の歴史から解く", "supply": "日本で作られた動画は最多 約4千回", "demand": "英語で約684万回（Tom Scott）", "links": [{"src": "EN Tom Scott", "title": "Why Britain Uses Separate Hot and Cold Taps", "views": 6844536, "url": "https://www.youtube.com/watch?v=HfHgUu_8KgA"}], "status": "候補", "memo": "", "score": 0, "like": 0, "updatedAt": 3}, {"id": "c101", "q": "なぜアメリカ人は電気ケトルを使わないのか（そして日本はもっと不利だった）", "pillar": "暮らし", "entry": "海外", "angle": "世界の電圧を地図で塗り分け、120Vのアメリカより100Vの日本の方が不利なことを見せる", "supply": "同じ問いの日本で作られた動画はほぼなし。ただし2か月前に「なぜ日本だけ100V」が約60万回", "demand": "英語で約534万回（Technology Connections）", "links": [{"src": "EN Technology Connections", "title": "Why don't Americans use electric kettles?", "views": 5342215, "url": "https://www.youtube.com/watch?v=_yMMTVVJI4c"}, {"src": "EN Kathy Loves Physics", "title": "Why USA uses 120 volts and not 220 volts", "views": 2547540, "url": "https://www.youtube.com/watch?v=7yRGvMgieEU"}, {"src": "JP 日本を変えたいあなた応援チャンネル", "title": "なぜ日本だけが100Vに固執するのか？", "views": 602556, "url": "https://www.youtube.com/watch?v=BBesBCOJnEg"}], "status": "作る", "memo": "1本目の第一候補（作り手の気づき：日本人が知らない海外のなぜ）", "score": 0, "like": 0, "updatedAt": 3}, {"id": "c100", "q": "なぜ日本だけ、国の中で電気が2種類あるのか（50Hzと60Hz）", "pillar": "日本", "entry": "組み合わせ", "angle": "富士川と糸魚川の線を地図に引き、東西の境目を方言・食べ物の境目と重ねる", "supply": "同じ問いの日本語は最多 約2.4万回。3週間前に2本出たが、どちらも1千回未満", "demand": "英語で約168万回（Half as Interesting）", "score": 0, "links": [{"src": "EN Half as Interesting", "title": "Japan's Massive Mistake of Building Two Incompatible Power Grids", "views": 1682233, "url": "https://www.youtube.com/watch?v=Mo88zA5nq4Q"}], "status": "保留", "like": 0, "memo": "日本の人は日常で知っている（初耳度が低い）", "updatedAt": 3}, {"id": "c1", "q": "なぜ台湾の人の9割は西側に住んでいるのか", "pillar": "土地", "entry": "海外", "angle": "日本も太平洋側に人が集まる。山脈が住む場所を決める", "supply": "同じ問いの日本語動画は見当たらない", "score": 47, "links": [{"src": "ZH 後見之明", "title": "為什麼90%的臺灣人都居住在西部？#地理趣聞 #地理知識 #地理 #shorts", "views": 2213170, "url": "https://www.youtube.com/watch?v=KHNNa_a7QDQ"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c2", "q": "世界の言語地図は、なぜ描けないのか", "pillar": "土地", "entry": "海外", "angle": "日本の方言にも境界線はあるのか", "supply": "直接の動画10本、問いが違う", "score": 46, "links": [{"src": "EN Map Men", "title": "Why a Language Map of the World is Impossible", "views": 5636573, "url": "https://www.youtube.com/watch?v=hX21ctsGhNc"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c3", "q": "3つの国に分けられた島、2つの国に分けられた島", "pillar": "土地", "entry": "海外", "angle": "ボルネオ島とフエゴ島を並べる", "supply": "フエゴ島はほぼなし", "score": 43, "links": [{"src": "ZH 後見之明", "title": "為什麼火地島分屬於兩個國家？#地理趣聞 #智利 #阿根廷", "views": 158216, "url": "https://www.youtube.com/watch?v=nGjnUtOIuAI"}, {"src": "FR Mondegeo", "title": "Une île divisée en trois 🤯 #geography", "views": 7593, "url": "https://www.youtube.com/watch?v=QM7AY3VzCCo"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c4", "q": "国土の17%が「人工」の国", "pillar": "土地", "entry": "海外", "angle": "オランダと東京湾の埋め立てを並べる", "supply": "オランダ干拓の解説が1本（約23万）", "score": 43, "links": [{"src": "EN Map Men", "title": "This country is 17% fake", "views": 2575756, "url": "https://www.youtube.com/watch?v=eq-kgUpd-5E"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c5", "q": "主食の地図は、なぜこう分かれたのか", "pillar": "暮らし", "entry": "海外", "angle": "日本の米と麦の境目", "supply": "ほぼなし", "score": 43, "links": [{"src": "EN Atlas Pro", "title": "The GEOGRAPHY of Grains", "views": 381106, "url": "https://www.youtube.com/watch?v=nvtFWV_WxIU"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c6", "q": "ヒマラヤの氷河湖は、なぜ決壊するのか", "pillar": "土地", "entry": "最新", "angle": "日本の土砂ダムとの違い", "supply": "ニュースが多い（最多 約185万）", "score": 41, "links": [{"src": "EN RealLifeLore", "title": "Why The Nepal Flood Was WAY Scarier Than You Think", "views": 2330524, "url": "https://www.youtube.com/watch?v=WiRLNEl-4bk"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c7", "q": "姉妹都市は、なぜこんなに増えたのか", "pillar": "暮らし", "entry": "海外", "angle": "日本は姉妹都市がとても多い国", "supply": "ほぼなし", "score": 40, "links": [{"src": "EN Map Men", "title": "Twin Towns: What Went Wrong?", "views": 1737854, "url": "https://www.youtube.com/watch?v=zte_vg0D8Z4"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c8", "q": "なぜ国には「しっぽ」があるのか", "pillar": "土地", "entry": "組み合わせ", "angle": "ワハーン回廊・アラスカ・カプリビ回廊を並べる", "supply": "一つずつの動画はある（最多 約70万）", "score": 38, "links": [{"src": "ZH 後見之明", "title": "為什麼阿拉斯加有一塊狹長地帶？#地理趣聞", "views": 340117, "url": "https://www.youtube.com/watch?v=zA-5SoPA3-g"}, {"src": "ZH 地球知识局", "title": "中国最短边境，差一点就没了，现在什么情况了？【地球知识局】The Shortest Border of China Almost Disappeared", "views": 16147, "url": "https://www.youtube.com/watch?v=SGEEoyNhM5c"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c9", "q": "北極航路で、日本とヨーロッパは近くなるのか", "pillar": "土地", "entry": "最新", "angle": "日本の港から見た北極航路", "supply": "資源争いの解説が1本（約60万）", "score": 35, "links": [{"src": "ZH 地球知识局", "title": "俄罗斯太靠北了，能逆天改命么？【地球知识局】Can Russia Turn the Tide With the Arctic Route?", "views": 9658, "url": "https://www.youtube.com/watch?v=XiXOWByWyek"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c10", "q": "なぜポルトガルはスペインに飲み込まれなかったのか", "pillar": "土地", "entry": "海外", "angle": "川と山と海の向きで国が決まる", "supply": "近い問いが1本（約46万）", "score": 32, "links": [{"src": "FR Mondegeo", "title": "L'Espagne a échoué à annexer le Portugal 🇵🇹 #geography", "views": 21697, "url": "https://www.youtube.com/watch?v=NLx9-vxYdSA"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c11", "q": "日本の8倍の広さの「県」", "pillar": "土地", "entry": "海外", "angle": "サハ共和国と日本を重ねる", "supply": "寒さの旅動画が中心", "score": 30, "links": [{"src": "FR Mondegeo", "title": "Quelle est la plus grande subdivision du monde ? #geographie", "views": 18257, "url": "https://www.youtube.com/watch?v=xud_zpZwyjg"}], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c12", "q": "なぜ日本は自動販売機だらけなのか", "pillar": "日本", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約1万", "demand": "英語で約627万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c13", "q": "なぜ日本は電柱だらけなのか", "pillar": "日本", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約6万", "demand": "英語で約264万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c14", "q": "なぜ日本の住所は分かりにくいのか", "pillar": "日本", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は2本", "demand": "英語で約163万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c15", "q": "なぜ日本はいまだに現金なのか", "pillar": "日本", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語はほぼなし", "demand": "英語で約386万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c16", "q": "なぜ日本の電車は時間通りなのか", "pillar": "日本", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約16万", "demand": "英語で約296万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c17", "q": "なぜ日本の街にはゴミ箱がないのか", "pillar": "日本", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約51万", "demand": "英語で約538万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c18", "q": "なぜ週末の曜日が違う国があるのか", "pillar": "暮らし", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約1万", "demand": "英語で約1410万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c19", "q": "なぜ手で食べる国があるのか", "pillar": "暮らし", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約7万", "demand": "英語で約726万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c20", "q": "なぜ日付の書き方は国ごとに違うのか", "pillar": "暮らし", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約16万", "demand": "英語で約509万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c21", "q": "なぜ左側通行の国と右側通行の国があるのか", "pillar": "暮らし", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約32万", "demand": "英語で約164万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}, {"id": "c22", "q": "なぜコンセントの形は国ごとに違うのか", "pillar": "暮らし", "entry": "海外", "angle": "世界と並べて理由を解く", "supply": "日本語は最多 約135万", "demand": "英語で約759万回", "score": 0, "links": [], "status": "候補", "like": 0, "memo": "", "updatedAt": 1}], "ideas": [], "kufu": [{"id": "k1", "name": "語り手を一人に固定する", "kind": "設定", "body": "毎回同じ声にし、速さ・高さ・抑揚を少し調整して、このチャンネルだけの響きにする", "where": "全体", "src": "音声の聴き比べの話し合い", "status": "案", "effect": "", "updatedAt": 1}, {"id": "k2", "name": "役割ごとに脇の声を分ける", "kind": "設定", "body": "地図の注記、引用、問いかけを語り手とは別の声で読む", "where": "全体", "src": "音声の聴き比べの話し合い", "status": "案", "effect": "", "updatedAt": 1}, {"id": "k3", "name": "柱ごとに声の色を少し変える", "kind": "設定", "body": "土地のなぜは落ち着いた低め、海外が首をかしげる日本のなぜは少し軽め", "where": "全体", "src": "", "status": "案", "effect": "", "updatedAt": 1}]};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const now=()=>Date.now();
+const uid=p=>p+now().toString(36)+Math.random().toString(36).slice(2,6);
+const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'億':n>=1e4?Math.round(n/1e4).toLocaleString()+'万':(+n||0).toLocaleString();
+
+/* ---------- データ ---------- */
+let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}
+if(!D)D=JSON.parse(JSON.stringify(SEED));
+['candidates','ideas','kufu'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
+function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
+function touch(o){o.updatedAt=now();save()}
+
+/* ---------- 同期（GitHub） ---------- */
+const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','data/seisakushitsu.json')||'data/seisakushitsu.json',t:LS.get('gh_t','')});
+const b64e=s=>btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+let pushTimer=null,busy=false;
+function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
+async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
+if(r.status===404)return{data:null,sha:null};if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();return{data:JSON.parse(b64d(j.content)),sha:j.sha}}
+async function ghPut(data,sha){const s=S();const body={message:'制作室 '+new Date().toISOString(),content:b64e(JSON.stringify(data))};if(sha)body.sha=sha;
+const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify(body)});
+if(r.status===409||r.status===422)return false;if(!r.ok)throw new Error('GitHub '+r.status);return true}
+async function sync(){const s=S();if(!s.o||!s.r||!s.t){syncLabel('この端末だけに保存中');return}
+if(busy)return;busy=true;syncLabel('同期中…');
+try{for(let i=0;i<3;i++){const {data,sha}=await ghGet();const m=data?merge(data,D):D;const changed=JSON.stringify(m)!==JSON.stringify(D);
+if(changed){D=m;LS.set('ss_data',JSON.stringify(D));renderAll()}
+if(data&&JSON.stringify(merge(data,{}))===JSON.stringify(merge(D,{}))){break}
+if(await ghPut(D,sha))break}
+syncLabel('同期ずみ '+new Date().toLocaleTimeString().slice(0,5),true)}catch(e){syncLabel('同期できません：'+e.message,false)}busy=false}
+function schedulePush(){clearTimeout(pushTimer);pushTimer=setTimeout(sync,1500)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
+
+/* ---------- タブ（スクロール位置を保つ） ---------- */
+const scrollPos={};let curTab='cand';
+function showTab(t){scrollPos[curTab]=window.scrollY;curTab=t;document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));
+document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.t===t));window.scrollTo(0,scrollPos[t]||0)}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+
+/* ---------- 候補 ---------- */
+let candF='すべて';const CF=['すべて','土地','暮らし','日本','作る','保留'];
+$('candFilter').innerHTML=CF.map(f=>`<button data-f="${f}" aria-pressed="${f===candF}">${f}</button>`).join('');
+$('candFilter').onclick=e=>{const b=e.target.closest('button');if(!b)return;candF=b.dataset.f;$('candFilter').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderCand()};
+const STATES=['候補','作る','保留','作った','捨てる'];
+function candHTML(c){return `<div class="item" data-id="${c.id}">
+<span class="score">${c.score?c.score+'点':''}</span><div class="q">${esc(c.q)}</div>
+<div class="tags"><span>${esc(c.pillar)}</span><span>${esc(c.entry)}</span>${c.demand?`<span>${esc(c.demand)}</span>`:''}<span>${esc(c.status)}</span>${c.like?`<span>${'★'.repeat(c.like)}</span>`:''}</div>
+<div class="more"><div>切り口：${esc(c.angle||'')}</div><div>日本語の供給：${esc(c.supply||'')}</div>
+${(c.links||[]).map(l=>`<div>元動画：<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.src)}「${esc(l.title)}」</a>${l.views?'（'+fmt(l.views)+'回）':''}</div>`).join('')}
+<div class="stars" aria-label="作りたい度">${[1,2,3,4,5].map(n=>`<button data-like="${n}" class="${n<=(c.like||0)?'on':''}" aria-label="作りたい度${n}">★</button>`).join('')}</div>
+<div class="st">${STATES.map(s=>`<button data-st="${s}" class="${s===c.status?'on':''}">${s}</button>`).join('')}</div>
+<label>メモ</label><input data-memo value="${esc(c.memo||'')}"></div></div>`}
+function renderCand(){const list=D.candidates.filter(c=>!c.deleted&&c.status!=='捨てる'&&(candF==='すべて'||c.pillar===candF||c.status===candF))
+.sort((a,b)=>(b.like||0)-(a.like||0)||(b.score||0)-(a.score||0));
+$('candList').innerHTML=list.length?list.map(candHTML).join(''):'<div class="empty">この絞り込みの候補はまだありません。</div>'}
+$('candList').addEventListener('click',e=>{const it=e.target.closest('.item');if(!it)return;const c=D.candidates.find(x=>x.id===it.dataset.id);
+const like=e.target.closest('[data-like]'),st=e.target.closest('[data-st]');
+if(like){const n=+like.dataset.like;c.like=c.like===n?0:n;touch(c);it.querySelectorAll('[data-like]').forEach(b=>b.classList.toggle('on',+b.dataset.like<=c.like));refreshTags(it,c);return}
+if(st){c.status=st.dataset.st;touch(c);it.querySelectorAll('[data-st]').forEach(b=>b.classList.toggle('on',b===st));refreshTags(it,c);return}
+if(e.target.closest('a,input,.more'))return;it.classList.toggle('open')});
+$('candList').addEventListener('input',e=>{if(!e.target.matches('[data-memo]'))return;const c=D.candidates.find(x=>x.id===e.target.closest('.item').dataset.id);c.memo=e.target.value;touch(c)});
+function refreshTags(it,c){it.querySelector('.tags').innerHTML=`<span>${esc(c.pillar)}</span><span>${esc(c.entry)}</span>${c.demand?`<span>${esc(c.demand)}</span>`:''}<span>${esc(c.status)}</span>${c.like?`<span>${'★'.repeat(c.like)}</span>`:''}`}
+$('addCand').onclick=()=>{const q=$('nq').value.trim();if(!q)return;const l=$('nl').value.trim();
+D.candidates.push({id:uid('c'),q,pillar:$('np').value,entry:$('ne').value,angle:$('na').value.trim(),supply:'',score:0,links:l?[{src:'元動画',title:l,url:l}]:[],status:'候補',like:0,memo:'',updatedAt:now()});save();['nq','na','nl'].forEach(i=>$(i).value='');renderCand()};
+
+/* ---------- ひらめき帳 ---------- */
+let ikind='題材',iwhere='全体';const WHERE=['全体','冒頭','中盤','結末','題名','サムネイル','声','地図','字幕・文字','音'];
+$('iwhere').innerHTML=WHERE.map(w=>`<button data-w="${w}" aria-pressed="${w===iwhere}">${w}</button>`).join('');
+$('iwhere').onclick=e=>{const b=e.target.closest('button');if(!b)return;iwhere=b.dataset.w;$('iwhere').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};
+$('ikind').onclick=e=>{const b=e.target.closest('button');if(!b)return;ikind=b.dataset.k;$('ikind').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('iwhereBox').style.display=ikind==='工夫'?'':'none'};
+$('newVideo').onclick=()=>{$('iv').value='';$('it').value='';$('im').value='';$('imsg').textContent='';$('iv').focus()};
+/* 秒の読み書き */
+const toSec=s=>{s=String(s||'').trim();if(!s)return 0;if(/^\d+$/.test(s))return +s;const p=s.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+(p[1]||0)};
+const toClock=n=>{n=+n||0;if(!n)return'';const h=Math.floor(n/3600),m=Math.floor(n%3600/60),s=n%60;return(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0')};
+const urlOf=v=>((v||'').match(/https?:\/\/\S+/)||[''])[0];
+const tFromUrl=u=>{const m=(u||'').match(/[?&#]t=(\d+h)?(\d+m)?(\d+)s?/);if(!m)return 0;return (parseInt(m[1])||0)*3600+(parseInt(m[2])||0)*60+(+m[3]||0)};
+const withTime=(u,sec)=>{if(!u)return'';if(!sec)return u;const base=u.replace(/([?&])t=[^&#]*/,'$1').replace(/[?&]$/,'');return base+(base.includes('?')?'&':'?')+'t='+sec+'s'};
+const linkHTML=(video,sec)=>{const u=urlOf(video);const label=esc(video.replace(u,'').trim()||u);const at=sec?'（'+toClock(sec)+'）':'';return u?`<a href="${esc(withTime(u,sec))}" target="_blank" rel="noopener">${label}${at}</a>`:esc(video)+at};
+const PROMPT={
+'題材':(v,m)=>`地図で「なぜ」を解く YouTube チャンネル（三本柱：土地のなぜ／暮らしのなぜ／海外が首をかしげる日本のなぜ）の題材探しを手伝って。\n\n見た動画：${v}\n気づいたこと：${m}\n\n1. この気づきを、ほかの題材にも当てはめられる「型」にして一行で名づけて\n2. その型に当てはまる題材を、日本から10個、海外から5個以上。それぞれ「問い」「地図で見せるもの」「確かめる資料」「日本で見られそうか（高中低と理由）」を表で\n3. 同じ型を別の素材（歌・映画・アニメ・小説・昔話・校歌など）に広げる案を3つ\n4. 上位5つの、日本語・英語・中国語の検索の言葉\n5. 気をつけること（歌詞や本文を画面に出さない、政治・戦争・健康・お金・法律の助言に寄らない、など）\n確かでない事実には「要確認」と付けて。`,
+'工夫':(v,m)=>`地図で「なぜ」を解く YouTube チャンネルの作り方を育てたい。見た動画で、次の工夫に気づいた。\n\n見た動画：${v}\n気づいた工夫：${m}\n\n1. この工夫を、次の書式に直して：名前／種類（設定・決まり・部品のどれか）／中身（一文）／どこに効くか（冒頭・中盤・結末・全体・サムネイル・題名）\n   設定＝数字や割り当てを変えるだけ、決まり＝台本や構成の書き方、部品＝今の仕組みにない新しい見せ方\n2. この工夫を入れた見本（15〜30秒）の作り方\n3. 入れすぎると逆効果になる場面\n4. 効いたかを確かめるために、投稿後のどの数字を見ればよいか`};
+async function askAI(mode){const v=$('iv').value.trim(),m=$('im').value.trim();if(!m){$('imsg').className='msg';$('imsg').textContent='気づいたことを一言書いてください';return}
+const sec=toSec($('it').value)||tFromUrl(urlOf(v));
+const it={id:uid('i'),video:v,sec,memo:m,kind:ikind,where:ikind==='工夫'?iwhere:'',date:new Date().toISOString().slice(0,10),done:false,updatedAt:now()};D.ideas.unshift(it);save();renderIdeas();
+const keep=$('ikeep').checked;$('im').value='';$('it').value='';if(!keep)$('iv').value='';
+if(mode==='only'){$('imsg').className='msg ok';$('imsg').textContent=keep?'残しました。同じ動画で続けて書けます':'残しました';$('im').focus();return}
+const vtxt=(v||'（なし）')+(sec?'（'+toClock(sec)+'のところ）':'');const mtxt=m+(it.where&&it.where!=='全体'?'（効く場所：'+it.where+'）':'');
+const text=PROMPT[ikind](vtxt,mtxt);let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false}
+$('imsg').className=ok?'msg ok':'msg';$('imsg').textContent=ok?'質問の文をコピーしました。開いた画面に貼りつけてください':'コピーできませんでした。下の文を長押しでコピーしてください';
+if(!ok){const ta=document.createElement('textarea');ta.value=text;ta.style.minHeight='160px';$('imsg').after(ta)}
+window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
+$('ask').onclick=()=>askAI();$('keepIdea').onclick=()=>askAI('only');
+function renderIdeas(){const list=D.ideas.filter(x=>!x.deleted);if(!list.length){$('ideaList').innerHTML='<div class="empty">まだありません。</div>';return}
+const groups=[];const idx={};for(const x of list){const k=x.video||'（動画なし）';if(!(k in idx)){idx[k]=groups.length;groups.push({k,items:[]})}groups[idx[k]].items.push(x)}
+$('ideaList').innerHTML=groups.map(g=>`<div class="item"><div class="tags" style="margin:0 0 6px">${g.k==='（動画なし）'?'動画なし':linkHTML(g.k,0)}　${g.items.length}件</div>`+g.items.slice().sort((a,b)=>(a.sec||0)-(b.sec||0)).map(x=>`<div data-id="${x.id}" style="border-top:1px solid var(--line);padding:8px 0 4px">
+<div class="q" style="font-size:15px">${x.sec?`<a href="${esc(withTime(urlOf(x.video),x.sec))}" target="_blank" rel="noopener" style="color:var(--sea);margin-right:6px">${toClock(x.sec)}</a>`:''}${esc(x.memo)}</div>
+<div class="tags"><span>${esc(x.kind)}</span>${x.where?`<span>${esc(x.where)}</span>`:''}<span>${esc(x.date)}</span>${x.done?'<span>済み</span>':''}</div>
+<div class="st"><button data-act="cand">${x.kind==='工夫'?'工夫の棚へ':'候補にする'}</button><button data-act="done">${x.done?'未にもどす':'済みにする'}</button><button data-act="del">消す</button></div></div>`).join('')+'</div>').join('')}
+$('ideaList').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const x=D.ideas.find(i=>i.id===b.closest('[data-id]').dataset.id);
+if(b.dataset.act==='del'){x.deleted=true;touch(x);renderIdeas();return}
+if(b.dataset.act==='done'){x.done=!x.done;touch(x);renderIdeas();return}
+if(x.kind==='工夫'){D.kufu.unshift({id:uid('k'),name:x.memo.slice(0,30),kind:'設定',body:x.memo,where:x.where||'全体',src:x.video,sec:x.sec||0,status:'案',effect:'',updatedAt:now()});renderKufu();b.textContent='棚に入れました'}
+else{D.candidates.push({id:uid('c'),q:x.memo,pillar:'土地',entry:'ひらめき',angle:'',supply:'',score:0,links:urlOf(x.video)?[{src:'見た動画',title:x.video.replace(urlOf(x.video),'').trim()||'見た動画',url:withTime(urlOf(x.video),x.sec)}]:[],status:'候補',like:0,memo:'',updatedAt:now()});renderCand();b.textContent='候補に入れました'}
+x.done=true;touch(x)});
+// 共有から開かれたとき
+(function(){const p=new URLSearchParams(location.search);const t=p.get('title'),tx=p.get('text'),u=p.get('url');if(t||tx||u){const url=u||((tx||'').match(/https?:\/\/\S+/)||[''])[0];
+$('iv').value=[t,url].filter(Boolean).join(' ')||tx;const ts=tFromUrl(url);if(ts)$('it').value=toClock(ts);history.replaceState(null,'',location.pathname);setTimeout(()=>{showTab('idea');$('im').focus()},50)}})();
+
+/* ---------- テーマ検索 ---------- */
+const dur=s=>{const m=String(s).match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)||[];return (+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0)};
+async function ytSearch(q,lang,region){const key=LS.get('yt_key','');const p=new URLSearchParams({part:'snippet',q,type:'video',maxResults:'25',relevanceLanguage:lang,regionCode:region,key});
+const j=await (await fetch('https://www.googleapis.com/youtube/v3/search?'+p)).json();if(j.error)throw new Error(j.error.message);
+const ids=j.items.map(i=>i.id.videoId).join(',');if(!ids)return[];
+const j2=await (await fetch('https://www.googleapis.com/youtube/v3/videos?'+new URLSearchParams({part:'statistics,snippet,contentDetails',id:ids,key}))).json();if(j2.error)throw new Error(j2.error.message);
+return j2.items.map(v=>({id:v.id,t:v.snippet.title,ch:v.snippet.channelTitle,d:v.snippet.publishedAt.slice(0,10),views:+(v.statistics.viewCount||0),sec:dur(v.contentDetails.duration)}))}
+function summarize(items,keys){const kw=keys.split(/\s+/).filter(Boolean);const on=v=>!kw.length||kw.some(k=>v.t.toLowerCase().includes(k.toLowerCase()));
+const hit=items.filter(on);const vs=hit.map(v=>v.views).sort((a,b)=>a-b);const ya=new Date(now()-365*864e5).toISOString().slice(0,10);
+return{on,count:hit.length,max:vs.length?vs[vs.length-1]:0,med:vs.length?vs[Math.floor(vs.length/2)]:0,big:hit.filter(v=>v.views>=1e5).length,recent:hit.filter(v=>v.d>=ya).length,shorts:hit.filter(v=>v.sec<=60).length}}
+let lastSearch=null;
+function verdict(name,s){if(name==='日本語'){if(s.count<=3&&s.max<1e5)return['日本語ではほぼ空いている','good'];if(s.big>=5)return['日本語でも混んでいる（10万回超が多い）','busy'];return['日本語は少しある。角度しだいで勝てる','']}
+if(s.max>=1e6)return['海外では大きく見られている','good'];if(s.max>=1e5)return['海外でもそこそこ見られている',''];return['海外でもあまり見られていない','busy']}
+$('go').onclick=async()=>{$('smsg').textContent='';if(!LS.get('yt_key','')){$('smsg').textContent='設定で API キーを入れてください';return}if(!$('sja').value.trim()){$('smsg').textContent='日本語の検索の言葉を入れてください';return}
+$('go').disabled=true;$('go').textContent='調べています…';
+const jobs=[['日本語',$('sja').value,'ja','JP',$('sjak').value],['英語',$('sen').value,'en','US',$('senk').value],['中国語',$('szh').value,'zh-Hant','TW',$('szhk').value]].filter(x=>x[1].trim());
+let html='';lastSearch={q:$('sja').value.trim(),res:{}};
+for(const [name,q,lang,reg,keys] of jobs){try{const items=await ytSearch(q.trim(),lang,reg);const s=summarize(items,keys);const [vd,cls]=verdict(name,s);
+lastSearch.res[name]={count:s.count,max:s.max,top:items.slice().sort((a,b)=>b.views-a.views).filter(s.on).slice(0,3).map(v=>({src:name,title:v.t,views:v.views,url:'https://www.youtube.com/watch?v='+v.id}))};
+html+=`<h2 style="margin-top:18px">${name}</h2><p class="verdict ${cls}">${vd}</p><div class="sum"><div><b>${s.count}</b><span>題材に合う動画（上位25本中）</span></div><div><b>${fmt(s.max)}</b><span>最多の再生</span></div><div><b>${fmt(s.med)}</b><span>中央値</span></div><div><b>${s.big}</b><span>10万回超</span></div><div><b>${s.recent}</b><span>この1年</span></div><div><b>${s.shorts}</b><span>うちショート</span></div></div>
+<table class="vt">${items.slice().sort((a,b)=>b.views-a.views).map(v=>`<tr class="${s.on(v)?'':'off'}"><td class="n">${fmt(v.views)}</td><td><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${esc(v.t)}</a><div class="ch">${esc(v.ch)}　${v.d}　${v.sec<=60?'ショート':Math.round(v.sec/60)+'分'}</div></td></tr>`).join('')}</table>`}
+catch(e){html+=`<h2>${name}</h2><p class="msg">うまく取れませんでした：${esc(e.message)}</p>`}}
+$('sres').innerHTML=html;$('go').disabled=false;$('go').textContent='調べる'};
+$('toCand').onclick=()=>{if(!lastSearch){$('smsg').textContent='先に調べてください';return}const r=lastSearch.res;
+const sup=r['日本語']?`日本語${r['日本語'].count}本、最多${fmt(r['日本語'].max)}`:'';const dem=r['英語']?`英語の最多${fmt(r['英語'].max)}`:'';
+D.candidates.push({id:uid('c'),q:lastSearch.q,pillar:'暮らし',entry:'検索',angle:'',supply:sup,demand:dem,score:0,links:[...(r['英語']?.top||[]),...(r['中国語']?.top||[])],status:'候補',like:0,memo:'',updatedAt:now()});save();renderCand();$('smsg').className='msg ok';$('smsg').textContent='候補に入れました（候補の画面で柱を直せます）'};
+
+/* ---------- 工夫の棚 ---------- */
+let kufuF='すべて';const KF=['すべて','案','試し','採用','外した'];
+$('kufuFilter').innerHTML=KF.map(f=>`<button data-f="${f}" aria-pressed="${f===kufuF}">${f}</button>`).join('');
+$('kufuFilter').onclick=e=>{const b=e.target.closest('button');if(!b)return;kufuF=b.dataset.f;$('kufuFilter').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderKufu()};
+const KS=['案','試し','採用','外した'];
+function renderKufu(){const list=D.kufu.filter(k=>!k.deleted&&(kufuF==='すべて'||k.status===kufuF));
+$('kufuList').innerHTML=list.length?list.map(k=>`<div class="item" data-id="${k.id}"><div class="q">${esc(k.name)}</div><div class="tags"><span>${esc(k.kind)}</span><span>${esc(k.where)}</span><span>${esc(k.status)}</span></div>
+<div style="font-size:14px;margin-top:4px">${esc(k.body)}</div>${k.src?`<div class="lead" style="margin:4px 0 0">出どころ：${linkHTML(k.src,k.sec)}</div>`:''}
+<div class="st">${KS.map(s=>`<button data-ks="${s}" class="${s===k.status?'on':''}">${s}</button>`).join('')}</div>
+<label>効いたか（採用後の数字）</label><input data-eff value="${esc(k.effect||'')}"></div>`).join(''):'<div class="empty">まだありません。</div>'}
+$('kufuList').addEventListener('click',e=>{const b=e.target.closest('[data-ks]');if(!b)return;const it=b.closest('.item');const k=D.kufu.find(x=>x.id===it.dataset.id);k.status=b.dataset.ks;touch(k);
+it.querySelectorAll('[data-ks]').forEach(x=>x.classList.toggle('on',x===b));it.querySelector('.tags').innerHTML=`<span>${esc(k.kind)}</span><span>${esc(k.where)}</span><span>${esc(k.status)}</span>`});
+$('kufuList').addEventListener('input',e=>{if(!e.target.matches('[data-eff]'))return;const k=D.kufu.find(x=>x.id===e.target.closest('.item').dataset.id);k.effect=e.target.value;touch(k)});
+$('addKufu').onclick=()=>{const n=$('kn').value.trim();if(!n)return;D.kufu.unshift({id:uid('k'),name:n,kind:$('kk').value,body:$('kb').value.trim(),where:$('kw').value,src:$('ks').value.trim(),status:'案',effect:'',updatedAt:now()});save();['kn','kb','ks'].forEach(i=>$(i).value='');renderKufu()};
+
+/* ---------- 数字 ---------- */
+$('chid').value=LS.get('ch_id','');
+$('loadNum').onclick=async()=>{const key=LS.get('yt_key',''),ch=$('chid').value.trim();LS.set('ch_id',ch);$('nmsg').textContent='';if(!key||!ch){$('nmsg').textContent='API キー（設定）とチャンネル ID を入れてください';return}
+try{const up='UU'+ch.slice(2);const j=await (await fetch('https://www.googleapis.com/youtube/v3/playlistItems?'+new URLSearchParams({part:'contentDetails',playlistId:up,maxResults:'50',key}))).json();if(j.error)throw new Error(j.error.message);
+const ids=j.items.map(i=>i.contentDetails.videoId).join(',');if(!ids){$('numRes').innerHTML='<div class="empty">まだ動画がありません。</div>';return}
+const j2=await (await fetch('https://www.googleapis.com/youtube/v3/videos?'+new URLSearchParams({part:'statistics,snippet',id:ids,key}))).json();if(j2.error)throw new Error(j2.error.message);
+const v=j2.items.map(x=>({t:x.snippet.title,d:x.snippet.publishedAt.slice(0,10),views:+(x.statistics.viewCount||0),likes:+(x.statistics.likeCount||0),com:+(x.statistics.commentCount||0),id:x.id}));
+const tot=v.reduce((a,b)=>a+b.views,0);const sorted=v.map(x=>x.views).sort((a,b)=>a-b);
+$('numRes').innerHTML=`<div class="sum"><div><b>${v.length}</b><span>動画（最新50本）</span></div><div><b>${fmt(tot)}</b><span>合計の再生</span></div><div><b>${fmt(sorted[Math.floor(sorted.length/2)])}</b><span>1本の中央値</span></div><div><b>${v.filter(x=>x.views>=1e4).length}</b><span>1万回超</span></div></div>
+<table class="vt">${v.map(x=>`<tr><td class="n">${fmt(x.views)}</td><td><a href="https://www.youtube.com/watch?v=${x.id}" target="_blank" rel="noopener">${esc(x.t)}</a><div class="ch">${x.d}　高評価${fmt(x.likes)}　コメント${fmt(x.com)}</div></td></tr>`).join('')}</table>`}
+catch(e){$('nmsg').textContent='うまく取れませんでした：'+e.message}};
+
+/* ---------- 設定 ---------- */
+$('key').value=LS.get('yt_key','');$('gho').value=LS.get('gh_o','');$('ghr').value=LS.get('gh_r','');$('ghp').value=LS.get('gh_p','');$('ght').value=LS.get('gh_t','');$('aiurl').value=LS.get('ai_url','');
+$('key').onchange=()=>LS.set('yt_key',$('key').value.trim());$('aiurl').onchange=()=>LS.set('ai_url',$('aiurl').value.trim());
+$('saveSet').onclick=async()=>{LS.set('yt_key',$('key').value.trim());LS.set('gh_o',$('gho').value.trim());LS.set('gh_r',$('ghr').value.trim());LS.set('gh_p',$('ghp').value.trim());LS.set('gh_t',$('ght').value.trim());LS.set('ai_url',$('aiurl').value.trim());
+$('setmsg').className='msg ok';$('setmsg').textContent='保存しました';await sync()};
+$('exp').onclick=async()=>{const t=JSON.stringify(D,null,1);try{await navigator.clipboard.writeText(t);$('exp').textContent='コピーしました'}catch(e){prompt('コピーしてください',t)}setTimeout(()=>$('exp').textContent='全部のデータをコピー',2000)};
+
+function renderAll(){renderCand();renderIdeas();renderKufu()}
+renderAll();sync();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
