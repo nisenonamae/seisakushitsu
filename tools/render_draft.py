@@ -37,7 +37,9 @@ def wrap(t,n=26):
     for ch in t:
         cur+=ch
         if len(cur)>=n and ch in '、。！？）」 ' or len(cur)>=n+6: out.append(cur);cur=''
-    if cur: out.append(cur)
+    if cur:
+        if out and len(cur)<=2: out[-1]+=cur
+        else: out.append(cur)
     return out[-3:]
 def card(b,k,n):
     im=Image.new('RGB',(W,H),(28,36,48));d=ImageDraw.Draw(im)

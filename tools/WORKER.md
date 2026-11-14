@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make と video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
@@ -175,12 +175,14 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### video_make（仮の動画づくり）
 声・図解・字幕まで入った下書きの動画を作る。作り手はこれを見て直す所を書く。
 1. `bash tools/setup_voice.sh`（声の用意。初回は数分。GitHub の API は使えないのでリリースの直リンクで落とす）
-2. `python3 tools/render_draft.py --data <data.json> --proj <projId> --repo <notion-daily の場所> --out <notion-daily>/roadmap/apps/seisakushitsu/videos/<projId>/draft_v<版>.mp4 --voice <声> --speed <速さ>`
+2. **全部の段の画面を作る（絵コンテのカードを出さない）**：肉付けの各段に `scene`（図解の部品の指定。`tools/vis/README.md` の表から選ぶ）を書く。段の「画面の指示」をいちばんよく見せられる部品と指定を選ぶ。合う部品がなければ `tools/vis/scenes.py` に部品か `mode` を足す（足したら README の表にも書く）。書いたら `python3 tools/make_scenes.py --data <data.json> --proj <projId> --repo <notion-daily の場所>` で全段の画面を作る（作った段には構成の段の `visual` が付く。すでに `visual` がある段は飛ばす。作り直すときは `--force`）。作った画面のうち何枚かをコマで見て、おかしければ直してから次へ
+3. `python3 tools/render_draft.py --data <data.json> --proj <projId> --repo <notion-daily の場所> --out <notion-daily>/roadmap/apps/seisakushitsu/videos/<projId>/draft_v<版>.mp4 --voice <声> --speed <速さ>`
    - 声は `projects[].voice`（なければ 2＝四国めたん ノーマル）、速さは `projects[].speed`（なければ 1.1）
    - 肉付けがあればその語り、なければ構成の text を読む。段に `visual`（作った図解の .mp4 か見本の .png のパス）があればそれを映し、なければ「画面の指示」を書いた絵コンテのカードを出す
-3. できた mp4 が 95MB を超えたら、`-crf` を上げて作り直す（GitHub の1ファイルの上限が100MB）
-4. `projects[].video` に `{"path","ver","duration","blocks"（出力と同じ名前の .json の blocks。段ごとの開始・終了秒）,"voice","at","reply"}` を書き、前の `video` は `projects[].videoHistory` に足す。mp4 と json を commit して push。`projects[].builtAt` を今の時刻、`builtLen` を `projects[].len` にする（「前に作ったあとで変わったこと」の起点になる）
-- total は 3（声の用意→組み立て→置く）
+4. できた mp4 が 95MB を超えたら、`-crf` を上げて作り直す（GitHub の1ファイルの上限が100MB）
+5. `projects[].video` に `{"path","ver","duration","blocks"（出力と同じ名前の .json の blocks。段ごとの開始・終了秒）,"voice","at","reply"}` を書き、前の `video` は `projects[].videoHistory` に足す。mp4 と json を commit して push。`projects[].builtAt` を今の時刻、`builtLen` を `projects[].len` にする（「前に作ったあとで変わったこと」の起点になる）
+- 作った画面の mp4 と、`scene` を書いた data.json も commit して push する
+- total は 4（声の用意→画面→組み立て→置く）
 
 ### video_fix（動画の直し）
 - `jobs[].fixes` は `[{"sec":"2:10","text":"ここをゆっくり"}]`。`sec` を秒にして、`projects[].video.blocks` から何段目の話かを見つける
