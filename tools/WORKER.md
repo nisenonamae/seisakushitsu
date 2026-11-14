@@ -18,6 +18,14 @@
 - `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix は 2、outline は 3、outline_fix・flesh・flesh_fix は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
+## 1.7 決まりごと（必ず読んで守る）
+作り手が「こういうときは、こうして」と決めたことが、データの `rules[]` にある。`{"id","scope","when","do","active","from","createdAt","updatedAt"}`
+- 仕事に取りかかる前に、`deleted` でなく `active` が true の決まりのうち、`scope` が「全部」か、その仕事に当たるものを全部読む（gather＝参考集め、pick＝題材探し、outline・outline_fix＝構成、flesh・flesh_fix＝肉付け、visual_ideas・visual_make・visual_fix＝図解、動画の組み立て＝動画。summary は「全部」だけ）
+- 決まりはこの手順書の書き方より優先する。ただし「ほかのアプリのファイルを触らない」「著作権・利用規約」「事実の確かめ」の決まりは決まりごとより優先する（ぶつかるときは、守れなかったことを result に書く）
+- 守った結果が分かるようにする（構成なら `change` や `memo` に「決まり『〜』に合わせた」など）
+- **話し合い（talk）のとき**：作り手が「こういうときは」「毎回」「今後は」「いつも」のように、この制作だけでなくこれからも使う指示を言ったら、`rules` に `{"scope":（当てはまる仕事）,"when","do","from":"話し合い","active":true}` で足して push し、チャットで「決まりごとに入れました：〜」と一行で伝える。この制作だけの話か、これからもの話か迷ったら一言だけ聞く
+- 決まりの文は作り手の言葉をなるべくそのまま使う。勝手に広げたり強めたりしない
+
 ## 2. 仕事の種類ごとのやり方
 `candId` がない制作（`trial: true` のお試しなど）は、`projects[].title` を題材として使う。
 JSON の中身はすべて ID でつながっている：`jobs[].projId` → `projects[].id`、`jobs[].matId` → `materials[].id`、`projects[].candId` → `candidates[].id`、`projects[].refs` → `ideas[].id`、`projects[].mats` → `materials[].id`、`projects[].recs[].path` → データのリポジトリの中の録画ファイル。

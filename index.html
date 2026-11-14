@@ -135,7 +135,15 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 </section>
 
 <section data-tab="kufu">
-<h2>編集スタイル</h2>
+<h2>Claude への決まりごと</h2>
+<p class="lead">「こういうときは、こうして」という頼み方の決まり。Claude は頼みごとや話し合いのたびに、ここにある「使う」の決まりを全部読んで守ります。話し合いの中で言った決まりも、Claude がここに足します。</p>
+<div id="ruleList"></div>
+<details><summary>決まりを足す</summary>
+<label>どの仕事で</label><select id="rs"><option>全部</option><option>題材探し</option><option>参考集め</option><option>構成</option><option>肉付け</option><option>図解</option><option>動画</option></select>
+<label>こういうとき（任意）</label><input id="rw" placeholder="例：数字を出すとき">
+<label>こうする</label><textarea id="rd" placeholder="例：出どころを段のそばに書く。1段に数字は1つまで"></textarea>
+<div class="row"><button class="b main" id="addRule">決まりに足す</button></div></details>
+<h2 style="margin-top:22px">編集スタイル</h2>
 <p class="lead">作った動画の編集スタイル（型紙）がたまっていきます。制作のときに「そのまま使う」「混ぜる」「新しく作る」を選べます。</p>
 <div id="styleList"></div>
 <h2 style="margin-top:22px">工夫の棚</h2>
@@ -291,7 +299,7 @@ const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'億':n>=1e4?Math.round(n/1e4).toLocaleSt
 /* ---------- データ ---------- */
 let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}
 if(!D)D=JSON.parse(JSON.stringify(SEED));
-['candidates','ideas','kufu','projects','jobs','materials','styles'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
+['candidates','ideas','kufu','projects','jobs','materials','styles','rules'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
 function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
 function touch(o){o.updatedAt=now();save()}
 
@@ -300,7 +308,7 @@ const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','roadmap/a
 const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
-function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
 let pushTimer=null,busy=false;
 function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
 async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
@@ -712,6 +720,7 @@ ${work?`<p class="msg">Claude が作業中か、頼んだ直しの順番待ち�
 ${(d.memo||[]).length?`<details ${k==='o'?'':'open'}><summary>話し合いで決めたこと（${d.memo.length}）</summary><ul style="margin:4px 0;padding-left:20px;font-size:14px">${d.memo.map(m=>`<li>${esc(typeof m==='string'?m:m.t)}</li>`).join('')}</ul></details>`:''}
 ${bl.map((b,i)=>blockHTML(k,b,i,bl.length)).join('')}
 <label>全体への注文（流れ・順番・雰囲気・長さなど）</label><textarea data-onote="${k}" placeholder="例：前半が説明っぽい。もっと早く「えっ」となる所を出して">${esc(d.overall||'')}</textarea>
+<div class="st" style="margin-top:4px"><button data-torule="${k}">この注文を、これからも守る決まりにする</button></div>
 <div class="row"><button class="b" data-job="${k==='o'?'outline_fix':'flesh_fix'}">印と注文を送って、次の版にしてもらう${marked?'（'+marked+'段）':''}</button></div>${jobLine(p,k==='o'?'outline_fix':'flesh_fix')}
 <div class="how" style="margin-top:8px"><b>話し合いながら磨く（今すぐ・臨機応変に）</b><p style="margin:4px 0">押すと依頼文がコピーされて Claude が開くので、貼るだけ。Claude がこの${KN[k]}と付けた印・注文を読んで次の版をここに書き込み、迷っている所を質問してきます。あとはチャットで自由に話して、決まるたびにここに反映されます（押してから1時間半は、アプリが15秒ごとに読み直します）。</p><div class="row"><button class="b" data-talk="${k}">Claude と話し合う</button></div></div>
 ${(d.history||[]).length?`<details><summary>前の版（${d.history.length}）</summary><select data-hsel="${k}">${d.history.map((h,j)=>`<option value="${j}">${h.ver}版（${h.blocks.length}段）${h.at?'　'+md(h.at):''}</option>`).join('')}</select><div class="row"><button class="b" data-hshow="${k}">中身を見る</button><button class="b" data-hgo="${k}">この版にもどす</button></div><div data-hview="${k}"></div></details>`:''}
@@ -744,6 +753,7 @@ else if(a==='add'){bl.splice(+i+1,0,{id:uid('b'),role:'追加',mark:'追加',not
 touchP(p);renderMake();return true}
 m=el.closest('[data-balt]');if(m){const [k,i,j]=m.dataset.balt.split(':');const b=docOf(p,k).blocks[+i];const a=b.alts[+j];
 for(const f of ['text','show','aim','narr','screen','sec','role','uses','check'])if(a[f]!=null&&a[f]!=='')b[f]=a[f];b.alts=[];b.mark=null;b.change='（代わりの案から選んだ）';touchP(p);renderMake();return true}
+if(el.matches('[data-torule]')){const k=el.dataset.torule;const d=docOf(p,k);const t=prompt('決まりとして残す文（次の動画からも毎回守ります）',(d.overall||'').trim());if(!t||!t.trim())return true;addRule({scope:KN[k],do:t.trim(),from:'注文から'});alert('工夫の画面の「Claude への決まりごと」に入れました');renderAll();return true}
 if(el.matches('[data-talk]')){LS.set('talk_until',String(Date.now()+90*60000));copyOpen(talkText(p,el.dataset.talk));return true}
 if(el.matches('[data-hshow]')){const k=el.dataset.hshow;const d=docOf(p,k);const h=d.history[+document.querySelector(`[data-hsel="${k}"]`).value];
 document.querySelector(`[data-hview="${k}"]`).innerHTML=h.blocks.map((b,i)=>`<div style="border-top:1px solid var(--line);padding:4px 0;font-size:13.5px"><b>${i+1}. ${esc(b.role||'')}</b>　${esc(k==='o'?b.text||'':b.narr||'')}</div>`).join('');return true}
@@ -793,6 +803,18 @@ return `<div class="item" style="background:var(--paper)"><div class="q" style="
 ${Object.entries(SMODE).map(([k,v])=>`<label class="chk" style="border:0;padding:3px 0"><input type="radio" name="smode" data-smode="${k}" ${k===mode?'checked':''}><span>${v}</span></label>`).join('')}
 ${mode!=='新しく'?`<label>使う過去のスタイル</label><select data-sid>${opts}</select>${(()=>{const s=ss.find(x=>x.id===sid);return s?`<details><summary>このスタイルの中身</summary><div style="white-space:pre-wrap;font-size:13.5px">${esc(s.kata)}</div></details>`:''})()}`:''}
 <p class="lead" style="margin:4px 0 0">${mode==='そのまま'?'今回の録画や見せ方の参考は使わず、選んだスタイルの通りに作ります。':mode==='混ぜる'?'選んだスタイルを土台に、今回の録画・見せ方の参考で気に入った所を足します。':'今回の録画・見せ方の参考だけから型紙を作ります（録画があると精度が上がります）。'}</p></div>`}
+const liveRules=()=>(D.rules||[]).filter(r=>!r.deleted).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+function addRule(o){D.rules=D.rules||[];const r={id:uid('r'),scope:'全部',when:'',do:'',from:'自分で',active:true,createdAt:now(),updatedAt:now(),...o};D.rules.push(r);save();return r}
+function renderRules(){if(!$('ruleList'))return;const rs=liveRules();
+$('ruleList').innerHTML=rs.length?rs.map(r=>`<div class="item ${r.active?'':'off'}" data-rule="${r.id}"><div class="tags"><span>${esc(r.scope)}</span><span>${esc(r.from||'')}</span>${r.createdAt>1?`<span>${md(r.createdAt)}</span>`:''}</div>
+<div style="font-size:15px;margin-top:2px">${r.when?`<b>${esc(r.when)}</b> → `:''}${esc(r.do)}</div>
+<div class="st" style="margin-top:4px"><button data-ract class="${r.active?'on':''}">${r.active?'使う':'休み中'}</button><button data-redit>書き換える</button><button data-rdel>消す</button></div></div>`).join(''):'<div class="empty">まだありません。</div>';
+if(!$('ruleList').dataset.on){$('ruleList').dataset.on=1;$('ruleList').addEventListener('click',e=>{const it=e.target.closest('[data-rule]');if(!it)return;const r=D.rules.find(x=>x.id===it.dataset.rule);
+if(e.target.matches('[data-ract]')){r.active=!r.active}
+else if(e.target.matches('[data-redit]')){const w=prompt('こういうとき（空でもよい）',r.when||'');if(w===null)return;const d=prompt('こうする',r.do||'');if(!d||!d.trim())return;r.when=w.trim();r.do=d.trim()}
+else if(e.target.matches('[data-rdel]')){if(!confirm('この決まりを消しますか？'))return;r.deleted=true}else return;
+r.updatedAt=now();save();renderRules()});
+$('addRule').onclick=()=>{const d=$('rd').value.trim();if(!d){alert('「こうする」を書いてください');return}addRule({scope:$('rs').value,when:$('rw').value.trim(),do:d});$('rd').value='';$('rw').value='';renderRules()}}}
 function renderStyles(){if(!$('styleList'))return;const ss=liveStyles();
 $('styleList').innerHTML=ss.length?ss.map(s=>`<div class="item" data-style="${s.id}"><div class="q">${esc(s.name)}</div><div class="tags"><span>${esc(s.origin||'')}</span>${s.createdAt>1?`<span>${md(s.createdAt)}</span>`:''}</div>
 <details><summary>中身（型紙）</summary><div style="white-space:pre-wrap;font-size:13.5px">${esc(s.kata||'')}</div></details>
@@ -801,7 +823,7 @@ if(!$('styleList').dataset.on){$('styleList').dataset.on=1;$('styleList').addEve
 if(e.target.matches('[data-srename]')){const n=prompt('新しい名前',s.name);if(n&&n.trim()){s.name=n.trim();s.updatedAt=now();save();renderAll()}}
 if(e.target.matches('[data-sdel]')&&confirm(`「${s.name}」を消しますか？`)){s.deleted=true;s.updatedAt=now();save();renderAll()}});}
 
-function renderAll(){renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
+function renderAll(){renderRules();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script><div id="play" class="play" hidden><div class="pscr"><div class="prole" id="pRole"></div><div class="pshow" id="pShow"></div></div>
