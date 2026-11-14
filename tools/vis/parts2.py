@@ -116,7 +116,7 @@ def ruler(s,dur,c,repo):
                 d.line([(x,yy-22),(x,yy+22)],fill=(242,194,48),width=7)
                 if i:d.line([(crest[i-1],yy),(crest[i-1]+(x-crest[i-1])*ease((t-t0+0.2)/0.25),yy)],fill=(242,194,48),width=5)
             tq=0.3+6*0.32+0.2
-            if t>tq:
+            if t>tq and s.get('q',False):
                 if 'q' not in done:c.sfx.append([tq,'pop']);done.add('q')
                 k=back((t-tq)/0.35);d.ellipse([W/2-70*k,170-70*k,W/2+70*k,170+70*k],fill=(20,24,32,220));d.text((W/2,170),'？',font=font(int(100*max(.05,k))),fill=(242,194,48),anchor='mm')
         c.add(im)

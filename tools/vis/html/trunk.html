@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 舗装されているのは幹線道路だけ：上から見た地方。都市と都市を結ぶ太い灰色の道（舗装）だけがきれいで、そこから町や村へ伸びる道はぜんぶ土の道。
+   車が幹線から土の道へ入ると、土ぼこりを上げて揺れる */
+window.DEF={};
+const rr=R(7);const vil=[];for(let i=0;i<16;i++)vil.push({x:120+rr()*1040,y:rr()<.5?120+rr()*190:430+rr()*210,t:0.9+i*0.08});
+window.render=function(t){g.fillStyle='#8fa564';g.fillRect(0,0,W,H);
+  for(let i=0;i<40;i++){const r2=R(i+3);g.fillStyle='rgba(70,95,50,.35)';g.beginPath();g.arc(r2()*W,r2()*H,20+r2()*50,0,7);g.fill()}
+  const hy=x=>360+30*Math.sin(x/260);
+  // 土の道（村へ）
+  for(const v of vil){const k=eout((t-v.t)/0.5);if(k<=0)continue;const x0=v.x+(v.y<360?-60:60);g.strokeStyle='#d8b57a';g.lineWidth=10;g.lineCap='round';g.beginPath();g.moveTo(x0,hy(x0));const ex=lerp(x0,v.x,k),ey=lerp(hy(x0),v.y,k);g.quadraticCurveTo((x0+ex)/2+30,(hy(x0)+ey)/2,ex,ey);g.stroke();
+    if(k>0.95){g.fillStyle='#e5e7eb';g.fillRect(v.x-10,v.y-10,20,20);g.fillStyle='#b45309';g.beginPath();g.moveTo(v.x-14,v.y-10);g.lineTo(v.x,v.y-22);g.lineTo(v.x+14,v.y-10);g.fill()}}
+  // 幹線道路（舗装）
+  const k=eout((t-0.1)/0.7);g.strokeStyle='#4b5160';g.lineWidth=34;g.beginPath();for(let x=0;x<=W*k;x+=10){x?g.lineTo(x,hy(x)):g.moveTo(x,hy(x))}g.stroke();g.strokeStyle='#f3f4f6';g.lineWidth=3;g.setLineDash([22,18]);g.beginPath();for(let x=0;x<=W*k;x+=10){x?g.lineTo(x,hy(x)):g.moveTo(x,hy(x))}g.stroke();g.setLineDash([]);
+  for(const [x,n] of [[60,'都市'],[1220,'都市']]){g.fillStyle='#374151';g.beginPath();g.arc(x,hy(x),30,0,7);g.fill();g.fillStyle='#fff';g.font=`800 22px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(n,x,hy(x))}
+  // 凡例
+  const lk=back((t-1.8)/0.35);if(lk>0){sfxOnce('l',1.8,'pop');g.save();g.globalAlpha=clamp(lk);g.fillStyle='rgba(10,14,20,.82)';g.beginPath();g.roundRect(40,560,420,130,16);g.fill();g.fillStyle='#4b5160';g.fillRect(70,592,70,20);g.fillStyle='#d8b57a';g.fillRect(70,640,70,12);g.fillStyle='#fff';g.font=`800 28px ${FONT}`;g.textAlign='left';g.textBaseline='middle';g.fillText('舗装（幹線道路）',160,602);g.fillText('土の道（それ以外ぜんぶ）',160,646);g.restore()}
+  // 土の道に入る車
+  if(t>2.2){const v=vil[3];const q=clamp((t-2.2)/1.6);const x0=v.x+(v.y<360?-60:60);const cx=lerp(x0,v.x,q),cy=lerp(hy(x0),v.y,q)+3*Math.sin(t*40);g.fillStyle='#d9534f';g.beginPath();g.roundRect(cx-16,cy-10,32,20,5);g.fill();for(let i=0;i<4;i++){const a=(t*2+i/4)%1;g.fillStyle=`rgba(216,181,122,${0.6*(1-a)})`;g.beginPath();g.arc(cx-(v.x-x0)*0.05*a*8,cy+(v.y-hy(x0))*-0.04*a*8,6+a*16,0,7);g.fill()}sfxOnce('d',2.2,'rattle',1.6)}
+};
+</script></body></html>

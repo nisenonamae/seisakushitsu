@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 土の固まり方：山のてっぺんはふんわり、谷底はぎゅっと詰まっている（断面を大きく） */
+window.DEF={};
+const rr=R(11);const grains=[];
+for(let i=0;i<1600;i++){const x=rr()*W,y=430+rr()*290;grains.push({x,y,r:4+rr()*4})}
+function prof(x){return 470-70*Math.sin(2*Math.PI*(x-160)/640)}
+window.render=function(t){
+  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#141a22');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  const u=ease((t-0.2)/1.0);
+  for(const p of grains){const top=prof(p.x);if(p.y<top)continue;
+    // 谷（x≈640 付近）は粒を寄せて詰める、山（x≈320,960）はすき間を空ける
+    const valley=Math.exp(-Math.pow((p.x-640)/150,2)),crest=Math.exp(-Math.pow((p.x-320)/150,2))+Math.exp(-Math.pow((p.x-960)/150,2));
+    const sz=p.r*(1+0.35*valley*u-0.25*crest*u);const al=0.55+0.4*valley*u-0.25*crest*u;
+    g.fillStyle=`rgba(${200+20*valley},${165+10*valley},${110},${al})`;g.beginPath();g.arc(p.x,p.y,sz,0,7);g.fill()}
+  g.strokeStyle='rgba(255,236,200,.9)';g.lineWidth=4;g.beginPath();for(let x=0;x<=W;x+=4){x?g.lineTo(x,prof(x)):g.moveTo(x,prof(x))}g.stroke();
+  const k1=back((t-0.9)/0.35),k2=back((t-1.5)/0.35);sfxOnce('a',0.9,'pop');sfxOnce('b',1.5,'pop');
+  label(320,330,'山：ふんわり',k1,'#fff',38);label(640,380,'谷：ぎゅっと詰まる',k2,'#ffd36a',38);
+};
+</script></body></html>

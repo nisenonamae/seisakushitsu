@@ -245,11 +245,17 @@ def circle(s,dur,c,repo):
             ang+=0.05+v*0.12;_track(d,450,370,170,300,amp,rut,ang,hand=hand,motor=not hand);_slider(d,860,470,320,v)
             d.text((1020,330),'手で押す' if hand else 'モーター',font=font(44),fill=WHITE,anchor='mm')
         elif mode=='2007':
-            ang+=0.16;laps=ang/(2*math.pi);spread=max(0,min(1,(laps-3)/(dur*0.35)))
-            sp=lambda a,sp=spread:1.0 if (math.cos(a-0.8)>1-2.2*sp) else 0
-            amp=min(1,0.3+laps*0.06) if laps>3 else 0
-            _track(d,450,370,170,300,amp,0,ang,K=48,spots=sp);d.text((1010,300),f'{int(laps)} 周',font=font(80),fill=WHITE,anchor='mm')
-            d.text((1010,400),'1秒に約0.6回転',font=font(32),fill=GREY,anchor='mm')
+            # times：[0, 1か所に生まれる, そこから広がる, 全体が埋まる]。周の数は、生まれる時に約30周になる速さで回す
+            tm=s.get('times') or [0,dur*0.3,dur*0.45,dur*0.8];tb,tsp,tf=tm[1],tm[2] if len(tm)>2 else tm[1]+1,tm[3] if len(tm)>3 else dur*0.85
+            if n==0:amps=[0.0]*72;b0=50
+            rate=30/max(0.5,tb);laps=rate*t;ang+=2*math.pi*0.9/FPS   # 周の数は早回し、車輪の見た目は落ち着いた速さ
+            if t>=tb:amps[b0]=min(1,amps[b0]+0.03)
+            if t>=tsp:
+                reach=int((len(amps)-1)*min(1,(t-tsp)/max(0.5,tf-tsp)))
+                for i in range(1,reach+1):j=(b0+i)%len(amps);amps[j]=min(1,amps[j]+0.04)
+            if n==int(tb*FPS):c.sfx.append([tb,'pop'])
+            K=len(amps);_track(d,450,370,170,300,1.0,0,ang,K=K,spots=lambda a_,A=amps,K=K:A[int(((a_%(2*math.pi))/(2*math.pi))*K)%K])
+            d.text((1010,300),f'{int(laps)} 周',font=font(80),fill=WHITE,anchor='mm')
         elif mode=='speed':
             v=5+19*ease((t-dur*0.4)/1.4)
             if v>8: amp=min(1,amp+0.006*(v-8)/8)
@@ -354,7 +360,7 @@ def make(spec,dur,out,repo=''):
         import subprocess,tempfile;tmp=tempfile.mkdtemp();L=spec['seq'];parts=[];sfx=[]
         for i,sp in enumerate(L):
             o=f'{tmp}/q{i}.mp4';make(sp,dur/len(L),o,repo);parts.append(o)
-            if os.path.exists(o+'.sfx.json'):sfx+= [[i*dur/len(L)+(e if isinstance(e,(int,float)) else e[0]),'whoosh' if isinstance(e,(int,float)) else e[1]] for e in json.load(open(o+'.sfx.json'))]
+            if os.path.exists(o+'.sfx.json'):sfx+= [[i*dur/len(L)+e,'whoosh'] if isinstance(e,(int,float)) else [i*dur/len(L)+e[0],*e[1:]] for e in json.load(open(o+'.sfx.json'))]
         open(f'{tmp}/l.txt','w').write(''.join(f"file '{x}'\n" for x in parts))
         subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l.txt','-c','copy',out],check=True)
         if sfx:json.dump(sfx,open(out+'.sfx.json','w'))
@@ -363,6 +369,7 @@ def make(spec,dur,out,repo=''):
     if spec['t'] in('bigtext',) or (spec['t']=='year' and not spec.get('allow')):raise ValueError('文字だけの画面は禁止（決まりごと）：'+spec['t']+'。絵のある部品を使う')
     if spec['t']=='clip':parts3.clip_video(spec,dur,out,repo);return
     if spec['t']=='html':parts3.html_scene(spec,dur,out,repo);return
-    c=Clip(out,dur,spec.get('cam','none' if spec['t']=='photo' else 'in'),spec.get('punch'));f={'roads':parts3.roads,'wave':parts3.wave,'compare':parts3.compare,'timeline':parts3.timeline,'voices':parts3.voices,'strip':parts3.strip,'gauge':parts3.gauge_q,'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
+    # カメラは動かさないのがふつう（静止画がゆっくり動くのは不自然）
+    c=Clip(out,dur,spec.get('cam','none'),spec.get('punch'));f={'roads':parts3.roads,'wave':parts3.wave,'compare':parts3.compare,'timeline':parts3.timeline,'voices':parts3.voices,'strip':parts3.strip,'gauge':parts3.gauge_q,'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
     f(spec,dur,c,repo);c.close()
     if c.sfx:json.dump(c.sfx,open(out+'.sfx.json','w'))

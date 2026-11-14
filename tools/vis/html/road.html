@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 道を斜め上から。mode：
+ timelapse … 平らな道を車が次々に通り（早回し）、ひとりでに等間隔の波が浮かび上がる
+ grader    … 重機が削って平らにする → また車が通ると、波が戻ってくる */
+window.DEF={mode:'timelapse'};
+// 道の台形（奥が狭い）。s＝0（手前）〜1（奥）
+function roadPt(s,q){const yN=640,yF=250,wN=900,wF=180;const y=lerp(yN,yF,Math.pow(s,0.8));const w=lerp(wN,wF,Math.pow(s,0.8));return [640+(q-0.5)*w,y]}
+function drawRoad(A,t,phase=0){sky('#9cc3e6','#e8d6b4');g.fillStyle='#8aa05e';g.fillRect(0,250,W,H-250);
+  const p=[roadPt(0,0),roadPt(0,1),roadPt(1,1),roadPt(1,0)];g.fillStyle='#cfa86c';g.beginPath();g.moveTo(...p[0]);for(const q of p.slice(1))g.lineTo(...q);g.fill();
+  if(A>0.01){const N=26;for(let i=0;i<N;i++){const s0=(i+phase)/N,s1=(i+0.45+phase)/N;if(s1>1)continue;const a=roadPt(s0,0),b=roadPt(s0,1),c=roadPt(s1,1),d=roadPt(s1,0);g.fillStyle=`rgba(120,88,52,${0.6*A})`;g.beginPath();g.moveTo(...a);g.lineTo(...b);g.lineTo(...c);g.lineTo(...d);g.fill();
+    const e=roadPt(s1,0),f=roadPt(s1,1),h=roadPt(Math.min(1,s1+0.18/N),1),k=roadPt(Math.min(1,s1+0.18/N),0);g.fillStyle=`rgba(255,240,205,${0.5*A})`;g.beginPath();g.moveTo(...e);g.lineTo(...f);g.lineTo(...h);g.lineTo(...k);g.fill()}}}
+function miniCar(s,lane,col){const [x,y]=roadPt(s,lane);const sc=lerp(1,0.22,Math.pow(s,0.8));g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.ellipse(x,y+4*sc,70*sc,14*sc,0,0,7);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(x-60*sc,y-58*sc,120*sc,50*sc,12*sc);g.fill();g.fillStyle='#bfe0f2';g.fillRect(x-40*sc,y-90*sc,80*sc,34*sc);g.fillStyle=col;g.fillRect(x-48*sc,y-96*sc,96*sc,8*sc)}
+window.render=function(t){
+  if(P.mode==='timelapse'){const A=ease((t-0.6)/Math.max(1,DUR-1.2));drawRoad(A,t);
+    const cols=['#d9534f','#4f7fd9','#e6e2d8','#3b3b3b','#5cb85c'];for(let i=0;i<5;i++){const s=((t*0.9+i/5)%1);miniCar(1-s,0.35+0.3*(i%2),cols[i])}
+    // 早回しの時計
+    const a=t*6;g.fillStyle='rgba(10,14,20,.75)';g.beginPath();g.arc(1170,90,48,0,7);g.fill();g.strokeStyle='#e5e7eb';g.lineWidth=4;g.beginPath();g.arc(1170,90,40,0,7);g.stroke();g.beginPath();g.moveTo(1170,90);g.lineTo(1170+30*Math.cos(a),90+30*Math.sin(a));g.moveTo(1170,90);g.lineTo(1170+20*Math.cos(a/12),90+20*Math.sin(a/12));g.stroke();
+    if(window._c!==Math.floor(t*4.5)){window._c=Math.floor(t*4.5);window.SFX.push([t,'whoosh'])}
+  }else{ // grader
+    const tg=DUR*0.4;const smooth=1-ease((t-0.3)/(tg-0.3));const back_=t>tg?ease((t-tg-0.4)/(DUR-tg-0.6)):0;drawRoad(t<tg?Math.max(smooth,0):back_,t);
+    if(t<tg+0.2){const s=1-clamp((t-0.1)/(tg-0.1));const [x,y]=roadPt(s,0.5);const sc=lerp(1,0.22,Math.pow(s,0.8));g.fillStyle='#e0a526';g.beginPath();g.roundRect(x-110*sc,y-80*sc,220*sc,60*sc,10*sc);g.fill();g.fillStyle='#333';g.fillRect(x-130*sc,y-20*sc,260*sc,12*sc);g.fillStyle='#bfe0f2';g.fillRect(x-30*sc,y-130*sc,60*sc,46*sc);sfxOnce('g',0.1,'engine',tg)}
+    if(t>tg){for(let i=0;i<3;i++){const s=((t*0.9+i/3)%1);miniCar(1-s,0.35+0.3*(i%2),['#d9534f','#4f7fd9','#e6e2d8'][i])}}
+  }
+};
+</script></body></html>

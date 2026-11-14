@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 虫めがねで写真の道を調べる（原因を探す）。img＝写真のパス */
+window.DEF={};
+function init(){loadImg('p',P.img)}
+window.render=function(t){const im=IMG.p;const r=Math.max(W/im.width,H/im.height);const dw=im.width*r,dh=im.height*r,ox=(W-dw)/2,oy=(H-dh)/2;g.drawImage(im,ox,oy,dw,dh);
+  g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,0,W,H);
+  const u=ease(t/Math.max(1,DUR*0.9));const lx=lerp(300,820,u)+40*Math.sin(t*1.7),ly=lerp(560,470,u)+20*Math.sin(t*2.3);const R0=130,z=2.2;
+  g.save();g.beginPath();g.arc(lx,ly,R0,0,7);g.clip();const sx=(lx-ox)/r,sy=(ly-oy)/r,sw=W/r/z,sh=H/r/z;g.drawImage(im,sx-sw/2,sy-sh/2,sw,sh,lx-W/2,ly-H/2,W,H);g.restore();
+  g.strokeStyle='#d1d5db';g.lineWidth=14;g.beginPath();g.arc(lx,ly,R0,0,7);g.stroke();g.strokeStyle='#6b4f2a';g.lineWidth=26;g.lineCap='round';g.beginPath();g.moveTo(lx+R0*0.72,ly+R0*0.72);g.lineTo(lx+R0*1.5,ly+R0*1.5);g.stroke();
+  sfxOnce('w',0.1,'whoosh')};
+</script></body></html>

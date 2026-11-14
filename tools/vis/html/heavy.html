@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 重い車体：エンジンをふかしてガタガタ揺れるトラック → すっと消えて、小さな車輪と砂だけが残り、それでも波ができる */
+window.DEF={};
+window.render=function(t){
+  sky('#8fbde6','#efd9b2');const top0=x=>540;const tg=DUR*0.5;const gone=ease((t-tg)/0.7);
+  const amp=gone>0.5?14*ease((t-tg-0.6)/1.2):0;const top=x=>540+amp*Math.sin(x/26+t*6)*(x>200&&x<1100?1:0);ground(top);
+  sfxOnce('e',0,'engine',tg+0.4);sfxOnce('w',tg,'whoosh');
+  const [sx,sy]=shake(t,gone<1?4:0);g.save();g.translate(sx,sy);g.globalAlpha=1-gone;g.translate(0,-gone*220);
+  // トラック
+  g.fillStyle='#3f5f8f';g.beginPath();g.roundRect(330,330,420,170,14);g.fill();g.fillStyle='#2f4a72';g.beginPath();g.roundRect(750,380,190,120,18);g.fill();g.fillStyle='#bfe0f2';g.fillRect(800,395,110,50);
+  g.fillStyle='#6b7280';g.fillRect(360,290,30,40);for(let i=0;i<5;i++){const a=(t*2+i*0.2)%1;g.fillStyle=`rgba(80,80,80,${0.5*(1-a)})`;g.beginPath();g.arc(375-a*40,280-a*120,10+a*30,0,7);g.fill()}
+  g.restore();g.globalAlpha=1-gone;tire(420,500,44,t*8);tire(560,500,44,t*8);tire(860,500,44,t*8);g.globalAlpha=1;
+  if(gone>0.4){const k=eout((t-tg-0.3)/0.5);const x=640+((t-tg)*160)%300-150;g.globalAlpha=k;tire(x,540-50+(amp?amp*Math.sin(x/26+t*6):0),50,t*10);g.globalAlpha=1}
+};
+</script></body></html>

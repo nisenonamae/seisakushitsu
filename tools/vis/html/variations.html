@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 条件を変えても波はできる：times[1..3] の瞬間に三つの小さな実験を一つずつ。それぞれ最後に波の線が現れて「✓」 */
+window.DEF={};
+function panel(i,x,t0,t){const k=eout((t-t0)/0.4);if(k<=0)return;sfxOnce('p'+i,t0,'pop');g.save();g.globalAlpha=k;g.translate(x,360+(1-k)*40);
+  g.fillStyle='rgba(10,14,20,.6)';g.beginPath();g.roundRect(-190,-250,380,470,22);g.fill();
+  const a=t-t0;g.fillStyle=sandPat();
+  const wave=ease((a-1.2)/0.8);g.beginPath();g.moveTo(-160,110);for(let xx=-160;xx<=160;xx+=4)g.lineTo(xx,60-wave*10*Math.sin(xx/14));g.lineTo(160,110);g.closePath();g.fill();
+  if(i===0){const press=ease(a/0.6)-ease((a-0.8)/0.4);g.fillStyle='#9ca3af';g.fillRect(-120,-80+press*120,240,20);g.fillRect(-10,-200,20,130+press*120);if(a>0.55)sfxOnce('t0',t0+0.55,'thump');g.fillStyle='rgba(80,60,40,'+0.4*clamp(a/0.6)+')';g.fillRect(-160,62,320,48)}
+  if(i===1){const r0=lerp(3,9,ease(a/0.8));const rr=R(5);for(let n=0;n<60;n++){const xx=-150+rr()*300,yy=70+rr()*36;g.fillStyle=rr()<.5?'#a07b4c':'#e9cf9e';g.beginPath();g.arc(xx,yy,r0*(0.7+rr()*0.6),0,7);g.fill()}}
+  if(i===2){const d=ease(a/0.5);g.fillStyle='#4b5563';g.beginPath();g.roundRect(-40,-210+d*150,80,60,8);g.fill();g.fillStyle='#e5e7eb';g.font=`900 26px ${FONT}`;g.textAlign='center';g.fillText('重り',0,-170+d*150);if(a>0.5)sfxOnce('t2',t0+0.5,'thump');tire(0,20,34,a*4)}
+  if(wave>0.6){g.strokeStyle='#5ee08a';g.lineWidth=10;g.lineCap='round';const c=eout((a-1.7)/0.3);g.beginPath();g.moveTo(-40,170);g.lineTo(-40+20*c,190);if(c>0.5)g.lineTo(-20+50*(c-0.5)*2,190-45*(c-0.5)*2);g.stroke();sfxOnce('c'+i,t0+1.7,'tick')}
+  g.restore()}
+window.render=function(t){const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#33404f');bg.addColorStop(1,'#171d25');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  [T(1,0.2),T(2,1.6),T(3,3.0)].forEach((t0,i)=>panel(i,230+410*i,t0,t))};
+</script></body></html>

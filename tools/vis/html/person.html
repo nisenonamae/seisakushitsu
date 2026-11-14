@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 人物の紹介（似顔絵ではない、絵の人物）。内陸の道ばたでノートを手に、土ぼこりを上げて走る車を見ている。times[1]＝名札を出す瞬間 */
+window.DEF={name:'',role:''};
+window.render=function(t){sky('#9cc3e6','#f1d6ae');hills(0,[['#7d8f5a',440,16,0]]);ground(x=>520,-20,W+20,'#b8532f');
+  // 遠くを走る車と土ぼこり
+  const cx=1300-((t*120)%1700);g.fillStyle='#e6e2d8';g.beginPath();g.roundRect(cx-40,480,80,26,8);g.fill();for(let i=0;i<4;i++){const a=(t*1.5+i/4)%1;g.fillStyle=`rgba(205,130,90,${0.4*(1-a)})`;g.beginPath();g.arc(cx+50+a*120,500-a*20,8+a*20,0,7);g.fill()}
+  // 人物
+  const x=380,y=520,b=Math.sin(t*2)*2;g.fillStyle='#e5e7eb';g.beginPath();g.moveTo(x-60,y-10);g.lineTo(x-50,y-190+b);g.lineTo(x+50,y-190+b);g.lineTo(x+60,y-10);g.closePath();g.fill();g.fillStyle='#374151';g.fillRect(x-40,y-12,30,12);g.fillRect(x+10,y-12,30,12);
+  g.fillStyle='#e9b796';g.beginPath();g.arc(x,y-235+b,42,0,7);g.fill();g.fillStyle='#5b4636';g.beginPath();g.arc(x,y-252+b,40,Math.PI,0);g.fill();
+  g.strokeStyle='#111';g.lineWidth=3;g.beginPath();g.arc(x+14,y-236+b,9,0,7);g.arc(x-12,y-236+b,9,0,7);g.stroke();
+  g.fillStyle='#f8fafc';g.save();g.translate(x+62,y-120+b);g.rotate(-0.3);g.fillRect(-26,-34,52,68);g.restore();g.strokeStyle='#e9b796';g.lineWidth=14;g.lineCap='round';g.beginPath();g.moveTo(x+40,y-160+b);g.lineTo(x+62,y-120+b);g.stroke();
+  const k=back((t-T(1,0.6))/0.4);if(k>0&&P.name){sfxOnce('n',T(1,0.6),'pop');g.save();g.globalAlpha=clamp(k);g.fillStyle='rgba(10,14,20,.85)';g.beginPath();g.roundRect(560,170,560,170,20);g.fill();g.fillStyle='#fff';g.font=`900 ${Math.round(58*back(k))}px ${FONT}`;g.textAlign='left';g.textBaseline='middle';g.fillText(P.name,600,232);g.fillStyle='#cbd5e1';g.font=`800 32px ${FONT}`;g.fillText(P.role,600,300);g.restore()}
+};
+</script></body></html>

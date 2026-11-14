@@ -1,0 +1,67 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 車の場面。mode：
+ rattle  … 洗濯板道路を走る車。人が乗り、車も画面もガタガタ揺れる（字幕に任せて文字は出さない）
+ dust    … 内陸の赤い道。車輪が着地した所でだけ小さな土ぼこりが上がり、道に等間隔の跡が残る
+ hop     … 後ろの車輪に寄る。車輪と地面の間にすき間ができる＝跳ねている
+ suspect … 走る車を光が照らしていき、車体が消えて車輪と地面だけが残る
+ points  … 走る車。times の瞬間に「車輪」「ゆるい地面」「速さ」を一つずつ示す
+ section … 道を横から切った断面の上を車がまるごと進む */
+const r0=R(4);
+window.DEF={mode:'rattle',speed:300};
+function wb(x,amp,lam=60,ph=0){return amp*Math.sin(2*Math.PI*(x+ph)/lam)}
+window.render=function(t){
+ const m=P.mode;
+ if(m==='rattle'){
+   sfxOnce('r',0,'rattle',DUR);
+   const [sx,sy]=shake(t,7);g.save();g.translate(sx,sy);
+   sky();hills(t*300);const off=t*420;const top=x=>520+wb(x+off,7,58);ground(top);
+   const bob=9*Math.sin(t*38)+5*Math.sin(t*61);car(640,520-34*1.5,1.5,{bob,heads:9,t,wheelR:51,wheelAng:off/51,wheelLift:[Math.abs(6*Math.sin(t*41)),Math.abs(6*Math.sin(t*37+1))]});
+   g.restore();
+ }
+ else if(m==='dust'||m==='hop'){
+   sky('#9cc3e6','#f4d9b0');hills(t*120,[['#7d8f5a',455,18,0.2]]);
+   const lam=110,off=t*P.speed,top=x=>520+wb(x+off,4,lam);ground(top,-20,W+20,'#b8532f');
+   // 着地点：車輪が谷に下りた所。地面に跡、そこから小さなほこり
+   const z=m==='hop'?ease((t-0.2)/0.8):0;g.save();if(z>0){const zx=530,zy=500,k=1+1.8*z;g.translate(lerp(zx,560,z),lerp(zy,520,z));g.scale(k,k);g.translate(-zx,-zy)}
+   const cx=640,bobPh=(off/lam)%1;const hopH=Math.max(0,Math.sin(Math.PI*2*((cx-110+off)/lam)))*(m==='hop'?22:14);
+   const marks=[];for(let k=-6;k<16;k++){const wx=k*lam-((off)%lam)+lam*0.25;marks.push(wx)}
+   for(const x of marks){if(x<cx-110){g.fillStyle='rgba(90,30,15,.45)';g.beginPath();g.ellipse(x,top(x)+3,12,3,0,0,7);g.fill()}}
+   // ほこり（少なめ・小さめ）
+   window._p=window._p||[];const landT=Math.floor((off)/lam);if(window._lt!==landT){window._lt=landT;window._p.push({x:cx-110,y:520,t0:t});if(m==='dust')window.SFX.push([t,'puff'])}
+   for(const p of window._p){const a=t-p.t0;if(a>1.4)continue;const x=p.x-a*P.speed*0.6,rad=8+a*36;g.fillStyle=`rgba(205,130,90,${0.45*(1-a/1.4)})`;g.beginPath();g.ellipse(x,p.y-rad*0.4,rad,rad*0.55,0,0,7);g.fill()}
+   car(cx,520-34-hopH*0.5,1,{bob:-hopH*0.3,heads:3,t,wheelAng:off/34,wheelLift:[hopH,hopH*0.6],col:'#e6e2d8'});
+   if(m==='hop'&&t>1.0&&hopH>3){const gx=cx-110,gy=top(gx);g.fillStyle='rgba(255,211,106,.85)';g.fillRect(gx-30,gy-hopH,60,hopH);sfxOnce('h',1.0,'pop')}
+   g.restore();
+ }
+ else if(m==='suspect'||m==='points'){
+   sky();hills(t*200);const off=t*360,top=x=>520+wb(x+off,6,58);ground(top);
+   const cx=600,bob=6*Math.sin(t*34);
+   let alpha=1;if(m==='suspect'){alpha=1-ease((t-T(1,DUR*0.55))/0.6)}
+   // 光（スポットライト）が車体→車輪と地面へ
+   if(m==='suspect'){const u=ease((t-0.3)/(Math.max(0.6,T(1,DUR*0.55)-0.3)));const lx=lerp(cx+60,cx-110,u),ly=lerp(440,520,u),lr=lerp(170,70,u);g.save();g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.rect(0,0,W,H);g.moveTo(lx+lr,ly);g.arc(lx,ly,lr,0,Math.PI*2,true);g.fill('evenodd');g.restore();}
+   car(cx,520-34,1.1,{bob,heads:5,t,wheelAng:off/34,alpha,wheelLift:[Math.abs(5*Math.sin(t*40)),Math.abs(5*Math.sin(t*36+1))]});
+   if(m==='suspect'){sfxOnce('s',T(1,DUR*0.55),'whoosh')}
+   if(m==='points'){
+     const items=[[T(1,0.2),'車輪',cx-121,520-34,cx-250,300],[T(2,1.5),'ゆるい地面',820,524,820,640],[T(3,2.8),'ある程度の速さ',0,0,0,0]];
+     items.forEach(([t0,txt,ax,ay,lx,ly],i)=>{const k=back((t-t0)/0.35);if(k<=0)return;sfxOnce('p'+i,t0,'pop');
+       if(i===2){speedo(1090,200,120,clamp((t-t0)/1.2)*30,{vmax:40,step:10});label(1090,355,txt,k);return}
+       g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(lx,ly+(ly>ay?-30:30));g.lineTo(ax,ay);g.stroke();g.fillStyle='#ffd36a';g.beginPath();g.arc(ax,ay,7,0,7);g.fill();label(lx,ly,txt,k)});
+     if(t>T(2,1.5)){for(let i=0;i<6;i++){const a=(t*3+i*0.37)%1;g.fillStyle=`rgba(190,150,90,${1-a})`;g.beginPath();g.arc(cx-160-a*90+i*6,520-a*30+a*a*60,3,0,7);g.fill()}}
+   }
+ }
+ else if(m==='section'){
+   sky('#7fa9d6','#e9d3ad');const off=t*240,top=x=>480+wb(x+off,16,170);
+   // 断面：地面の中の層が見える
+   g.beginPath();g.moveTo(-20,H);for(let x=-20;x<=W+20;x+=4)g.lineTo(x,top(x));g.lineTo(W+20,H);g.closePath();g.fillStyle=sandPat();g.fill();
+   for(const [y,c] of [[560,'rgba(150,110,70,.35)'],[620,'rgba(120,85,55,.4)'],[680,'rgba(95,65,42,.45)']]){g.fillStyle=c;g.fillRect(0,y,W,H-y)}
+   g.strokeStyle='rgba(255,236,200,.9)';g.lineWidth=4;g.beginPath();for(let x=-20;x<=W+20;x+=4){x===-20?g.moveTo(x,top(x)):g.lineTo(x,top(x))}g.stroke();
+   // 切り口の印（はさみ線）
+   const k=ease(t/0.8);g.strokeStyle=`rgba(255,255,255,${0.5*(1-k)})`;g.setLineDash([12,10]);g.lineWidth=3;g.beginPath();g.moveTo(0,top(0));g.lineTo(W,top(W));g.stroke();g.setLineDash([]);
+   const cx=560,yb=(top(cx-110)+top(cx+112))/2,tilt=Math.atan2(top(cx+112)-top(cx-110),222);g.save();g.translate(cx,yb-34);g.rotate(tilt);car(0,0,1,{heads:4,t,wheelAng:off/34,noWheels:true});g.restore();
+   tire(cx-110,top(cx-110)-34,34,off/34);tire(cx+112,top(cx+112)-34,34,off/34);
+ }
+};
+</script></body></html>

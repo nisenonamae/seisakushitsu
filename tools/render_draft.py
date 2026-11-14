@@ -153,14 +153,20 @@ for k,b in enumerate(seq,1):
         sj+=int(sh.get('n',1)) if not sh.get('at') else 0
         if sh.get('at'):sj=max(jj for jj in range(len(sents)) if cum[jj]<=pos)+1
     # 3) 間（beat）：カットの頭で語りを止める
-    beats=[(starts[i],float(sh.get('beat',0))) for i,sh in enumerate(shots) if float(sh.get('beat',0))>0]
-    for bt,L in sorted(beats,reverse=True):
-        ix=int(bt*SR);A=np.concatenate([A[:ix],np.zeros(int(L*SR),np.float32),A[ix:]])
+    # beat：カットの頭で語りを止める（動きを見せる）／hold：カットの終わりで語りを止める（アニメが終わるのを待つ）
+    tot0=len(A)/SR
+    sil=[(starts[i],float(sh['beat']),'beat',i) for i,sh in enumerate(shots) if float(sh.get('beat',0))>0]
+    sil+=[((starts[i+1] if i+1<len(shots) else tot0),float(sh['hold']),'hold',i) for i,sh in enumerate(shots) if float(sh.get('hold',0))>0]
+    for bt,L,_,_ in sorted(sil,key=lambda x:-x[0]):
+        ix=min(len(A),int(bt*SR));A=np.concatenate([A[:ix],np.zeros(int(L*SR),np.float32),A[ix:]])
+    beats=[(bt,L) for bt,L,_,_ in sil]
     sh_=lambda t,incl=True:t+sum(L for bt,L in beats if (bt<=t if incl else bt<t))
+    def vstart_of(i,st):  # 同じ時刻に hold（前のカットの待ち）と beat（このカットの間）があれば、hold のあとから始まる
+        return st+sum(L for bt,L,kd,ow in sil if bt<st)+sum(L for bt,L,kd,ow in sil if bt==st and kd=='hold' and ow!=i)
     # 長さをコマ（1/30秒）の目に合わせる：声の後ろを少し伸ばし、カットの境目もコマの目に置く（ずれが積もらないように）
     nf=int(math.ceil(len(A)/SR*FPS));A=np.concatenate([A,np.zeros(int(round(nf/FPS*SR))-len(A),np.float32)]) if int(round(nf/FPS*SR))>len(A) else A[:int(round(nf/FPS*SR))]
     D=nf/FPS;voice.append(A)
-    vstarts=[round(sh_(st,False)*FPS)/FPS for st in starts]
+    vstarts=[round(vstart_of(i,st)*FPS)/FPS for i,st in enumerate(starts)]
     # 4) 字幕：塊ごとに、話し始める時刻から次の塊まで（文の終わりの長い間・カットの間には出さない）
     subs=[]
     for j,sx in enumerate(sents):
@@ -169,7 +175,7 @@ for k,b in enumerate(seq,1):
             st=sh_(offs[j]+rt);en=sh_(offs[j]+ch[ci+1][1]) if ci+1<len(ch) else sh_(vend[j])+0.25
             for bt,L in beats:
                 b0=sh_(bt,False)
-                if st<b0<en:en=b0
+                if st<b0+0.01 and b0<en:en=max(st+0.3,b0)
             subs.append((ct,st,en))
     # 5) 画面：カットごとに部品で作ってつなぐ
     clips=[]
@@ -189,7 +195,7 @@ for k,b in enumerate(seq,1):
             cp=f'{tmp}/c{k:03d}_{i:02d}.mp4';scenes.make(spec,d_,cp,a.repo);clips.append(cp)
             if os.path.exists(cp+'.sfx.json'):
                 for e in json.load(open(cp+'.sfx.json')):
-                    tt,kd=(e,'whoosh') if isinstance(e,(int,float)) else e;sfx.append((T+vstarts[i]+tt,kd))
+                    e=[e,'whoosh'] if isinstance(e,(int,float)) else list(e);sfx.append((T+vstarts[i]+e[0],*e[1:]))
             allshots.append({'tag':f'{k}-{i+1}','block':b['id'],'role':b['role'],'start':round(T+vstarts[i],2),'end':round(T+vstarts[i]+d_,2),'t':sh.get('t') or 'seq','at':sh.get('at','')})
     else:
         cp=f'{tmp}/c{k:03d}_00.mp4'
@@ -222,8 +228,22 @@ def snd(kind):
     if kind=='tick':m=int(SR*0.03);tt=np.arange(m)/SR;return 0.12*np.sin(2*np.pi*2200*tt)*np.exp(-tt*160)
     if kind=='puff':m=int(SR*0.35);return 0.10*_noise(m,150,1500)*np.exp(-np.linspace(0,6,m))*np.sin(np.linspace(0,np.pi/2,m))
     return np.zeros(1)
-for tt,kd in sfx:
-    w_=snd(kd);i=int(max(0,tt-(0.08 if kd=='whoosh' else 0))*SR);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
+def snd_long(kind,dur,amt=1.0):
+    m=int(SR*dur);tt=np.arange(m)/SR
+    if kind=='rattle':
+        y=np.zeros(m);r=np.random.default_rng(5);k=0
+        while k<m:
+            L=int(SR*0.03);seg=r.standard_normal(min(L,m-k))*np.exp(-np.linspace(0,8,min(L,m-k)));y[k:k+len(seg)]+=seg*0.5;k+=int(SR*r.uniform(0.05,0.11))
+        low=0.6*np.sin(2*np.pi*55*tt)*(0.5+0.5*np.sign(np.sin(2*np.pi*9*tt)))
+        return 0.09*amt*(y+low*0.4)*np.minimum(1,np.minimum(tt/0.15,(dur-tt)/0.2))
+    if kind in('engine','motor'):
+        f0,f1=(45,110) if kind=='engine' else (180,420);f=f0+(f1-f0)*np.minimum(1,tt/max(0.1,dur*0.7));ph=2*np.pi*np.cumsum(f)/SR
+        y=np.sign(np.sin(ph))*0.5+np.sin(2*ph)*0.3+_noise(m,80,900)*0.15
+        return (0.08 if kind=='engine' else 0.05)*amt*y*np.minimum(1,np.minimum(tt/0.2,(dur-tt)/0.3))
+    return np.zeros(1)
+for e in sfx:
+    tt,kd=e[0],e[1]
+    w_=snd_long(kd,e[2]) if len(e)>2 else snd(kd);i=int(max(0,tt-(0.08 if kd=='whoosh' else 0))*SR);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
 mix=np.clip(mix,-1,1)
 with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(SR);wv.writeframes((mix*32767).astype(np.int16).tobytes())
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)

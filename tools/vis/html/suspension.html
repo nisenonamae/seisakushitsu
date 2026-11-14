@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* サスペンション：車体を透かして、車輪と車体をつなぐ「ばね」を見せ、でこぼこで車体が弾む */
+window.DEF={};
+function spring(x,y0,y1,w,n=9){g.strokeStyle='#e5e7eb';g.lineWidth=7;g.beginPath();g.moveTo(x,y0);for(let i=1;i<=n;i++){const y=y0+(y1-y0)*i/n;g.lineTo(x+(i%2?w:-w),y-(y1-y0)/n/2)}g.lineTo(x,y1);g.stroke()}
+window.render=function(t){
+  sky('#8fbde6','#efd9b2');const gx=t*160;const bumpX=900-gx;const top=x=>560-46*Math.exp(-Math.pow((x-bumpX)/70,2));ground(top);
+  const wx=470;const wy=top(wx)-70;const xr=ease((t-0.5)/0.6);
+  // 車体の高さ：ばねを介して遅れて弾む
+  const tBump=(900-wx)/160;const d=t-tBump;const bounce=d>0?-34*Math.exp(-d*1.6)*Math.cos(d*9):0;
+  if(Math.abs(d)<0.02)sfxOnce('b',t,'thump');
+  const by=wy-215+bounce;
+  // 車体（透ける）
+  g.save();g.globalAlpha=1-0.72*xr;g.fillStyle='#d9534f';g.beginPath();g.roundRect(wx-210,by-40,640,110,30);g.fill();g.beginPath();g.roundRect(wx-60,by-120,330,90,30);g.fill();g.restore();
+  g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=3;g.beginPath();g.roundRect(wx-210,by-40,640,110,30);g.stroke();
+  tire(wx,wy,70,t*4);tire(wx+400,top(wx+400)-70,70,t*4);spring(wx,by+70,wy,28);spring(wx+400,by+70,top(wx+400)-70,28);
+  if(xr>0.5){const k=back((t-0.9)/0.35);sfxOnce('l',0.9,'pop');g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(wx+30,by+105);g.lineTo(wx+170,190);g.stroke();label(wx+330,170,'車輪と車体をつなぐ「ばね」',k,'#ffd36a',36)}
+  if(d>0&&d<2.2){const a=clamp(1-(d-1.6)/0.6);g.globalAlpha=a;arrowLine(wx+250,by+10,wx+250,by-60);arrowLine(wx+250,by+40,wx+250,by+110);g.globalAlpha=1}
+};
+</script></body></html>

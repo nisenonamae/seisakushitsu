@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* メイザーの円い溝の実験（斜め上から）。mode：
+ intro … times[1..4]＝「砂を敷き」「真ん中から伸びた棒」「小さな車輪」「手で押して」の瞬間に、溝→砂→棒→車輪→手 の順に組み上がる
+ hand  … 手で押して回し続けると、小さな波が少しずつ現れる
+ build … times[1..3]＝「モーター」「ばね」「回った数」：速度計が加速／車輪をばねで押さえる／回数の表示が増える
+ speed … ゆっくり回すと轍だけ → times[1]（「ところが」）から速くなり、赤い所を越えた所で1か所に波が生まれ、広がって育つ */
+window.DEF={mode:'intro'};
+const CX=600,CY=440,RX=470,RY=165,TH=50;
+const rg=R(21);const grains=[...Array(1500)].map(()=>({a:rg()*Math.PI*2,r:0.62+rg()*0.33,l:rg()}));
+function E(a,r,h=0){return [CX+RX*r*Math.cos(a),CY+RY*r*Math.sin(a)-h]}
+let ang=0,lastT=0,amp=new Float32Array(96),rut=0,laps=0;
+function init(){ang=0;lastT=0;amp=new Float32Array(96);rut=0;laps=0}
+function trough(fill,show){if(show<=0)return;g.save();g.globalAlpha=clamp(show);
+  g.fillStyle='#5b4636';g.beginPath();g.ellipse(CX,CY+TH,RX*1.04,RY*1.04,0,0,Math.PI);g.lineTo(CX-RX*1.04,CY);g.ellipse(CX,CY,RX*1.04,RY*1.04,0,Math.PI,0,true);g.closePath();g.fill();
+  g.fillStyle='#7a5f49';g.beginPath();g.ellipse(CX,CY,RX*1.04,RY*1.04,0,0,7);g.fill();
+  g.fillStyle='#3d2f25';g.beginPath();g.ellipse(CX,CY+8,RX*0.97,RY*0.97,0,0,7);g.fill();
+  if(fill>0){g.globalAlpha=clamp(show)*clamp(fill);g.fillStyle='#d2ab70';g.beginPath();g.ellipse(CX,CY+8*(1-fill),RX*0.97,RY*0.97,0,0,7);g.fill();
+    for(const p of grains){const [x,y]=E(p.a,p.r);g.fillStyle=p.l<.5?'rgba(140,105,60,.5)':'rgba(245,225,180,.6)';g.fillRect(x,y,2.6,1.8)}}
+  g.globalAlpha=clamp(show);g.fillStyle='#7a5f49';g.beginPath();g.ellipse(CX,CY,RX*0.6,RY*0.6,0,0,7);g.fill();g.fillStyle='#5b4636';g.beginPath();g.ellipse(CX,CY,RX*0.6,RY*0.6,0,0,Math.PI);g.fill();
+  g.restore()}
+function ripples(){ // 波：放射状の明暗の帯（振れ幅 amp[k]）
+  const K=amp.length;for(let k=0;k<K;k++){const a0=2*Math.PI*k/K,a1=2*Math.PI*(k+0.5)/K,A=amp[k];if(A<0.02)continue;
+    for(const [b0,b1,c] of [[a0,a0+(a1-a0)*0.55,`rgba(110,80,45,${0.75*A})`],[a0+(a1-a0)*0.55,a1+0.02,`rgba(255,238,200,${0.6*A})`]]){
+      const p=[E(b0,0.63),E(b0,0.96),E(b1,0.96),E(b1,0.63)];g.fillStyle=c;g.beginPath();g.moveTo(...p[0]);for(const q of p.slice(1))g.lineTo(...q);g.fill()}}
+  if(rut>0.02){g.strokeStyle=`rgba(95,68,40,${0.75*rut})`;g.lineWidth=RY*0.12;g.beginPath();g.ellipse(CX,CY,RX*0.8,RY*0.8,0,0,7);g.stroke()}}
+function wheelAt(a,lift=0){const [x,y]=E(a,0.8,lift);const tx=-Math.sin(a)*RX,ty=Math.cos(a)*RY,L=Math.hypot(tx,ty),ux=tx/L,uy=ty/L;
+  g.strokeStyle='#c7ccd3';g.lineWidth=7;g.beginPath();g.moveTo(CX,CY-38);g.lineTo(x,y-18);g.stroke();
+  g.save();g.translate(x,y-22);g.rotate(Math.atan2(uy,ux));g.fillStyle='#16181c';g.beginPath();g.roundRect(-30,-22,60,44,10);g.fill();g.fillStyle='#4b5563';g.fillRect(-5,-22,10,44);g.restore();return [x,y]}
+function hub(){g.fillStyle='#9aa3ae';g.fillRect(CX-8,CY-50,16,50);g.fillStyle='#d1d5db';g.beginPath();g.ellipse(CX,CY-50,14,6,0,0,7);g.fill()}
+function hand(x,y){g.fillStyle='#e9b796';g.beginPath();g.ellipse(x,y-34,26,18,-0.3,0,7);g.fill();g.fillStyle='#d9a07d';g.fillRect(x-40,y-46,22,18)}
+function stepSim(t,speed,mode){const dt=Math.max(0,t-lastT);lastT=t;const da=speed*dt;ang+=da;laps+=da/(2*Math.PI);
+  const k=((ang%(2*Math.PI))+2*Math.PI)%(2*Math.PI)/(2*Math.PI)*amp.length|0;return [da,k]}
+window.render=function(t){
+  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#33404f');bg.addColorStop(1,'#171d25');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  g.fillStyle='#4a3a2e';g.fillRect(0,600,W,120);
+  const m=P.mode;
+  if(m==='intro'){
+    const t1=T(1,1.2),t2=T(2,2.2),t3=T(3,3.0),t4=T(4,3.8);
+    trough(ease((t-t1)/0.9),ease(t/0.5));
+    if(t<t1+0.8){const k=back((t-0.3)/0.35);if(k>0){g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(CX-RX,CY+RY+70);g.lineTo(CX+RX,CY+RY+70);g.stroke();label(CX,CY+RY+70,'直径 約60cm',k,'#ffd36a',34);sfxOnce('d',0.3,'pop')}}
+    if(t>t1)sfxOnce('s',t1,'puff');
+    if(t>t2)hub();
+    const a=Math.PI*0.35+(t>t4?(t-t4)*1.1:0);
+    if(t>t2){const u=eout((t-t2)/0.5);const [x,y]=E(a,0.8*u);g.strokeStyle='#c7ccd3';g.lineWidth=7;g.beginPath();g.moveTo(CX,CY-38);g.lineTo(x,y-18);g.stroke();sfxOnce('r',t2,'tick')}
+    if(t>t3){sfxOnce('w',t3,'pop');const [x,y]=wheelAt(a);if(t>t4){const [hx,hy]=E(a,0.5);hand(hx,hy);sfxOnce('h',t4,'whoosh')}}
+  }else if(m==='hand'){
+    const [da,k]=stepSim(t,1.1);for(let i=0;i<amp.length;i++){const grow=0.35*clamp(t/Math.max(1,DUR*0.8));const pat=0.5+0.5*Math.sin(i*1.9);amp[i]=grow*pat}
+    trough(1,1);ripples();hub();const [x,y]=wheelAt(ang+Math.PI*0.35);const [hx,hy]=E(ang+Math.PI*0.35,0.5);hand(hx,hy);
+  }else if(m==='build'){
+    const t1=T(1,0.3),t2=T(2,2.0),t3=T(3,3.6);
+    const sp=t<t1?0:1.5+4.5*ease((t-t1)/1.5)*(t<t2?1:1-0.3*ease((t-t2)/1));stepSim(t,sp);
+    trough(1,1);ripples();hub();
+    if(t>t1){g.fillStyle='#374151';g.beginPath();g.roundRect(CX-46,CY-110,92,64,10);g.fill();g.fillStyle='#9ca3af';g.font=`800 22px ${FONT}`;g.textAlign='center';g.fillText('モーター',CX,CY-72);sfxOnce('m',t1,'motor',Math.max(1,DUR-t1))}
+    const [x,y]=wheelAt(ang+Math.PI*0.35);
+    if(t>t1){const k=eout((t-t1)/0.4);speedo(1110,170,120*k,sp*9,{vmax:30,step:10,plain:true})}
+    if(t>t2){const k=eout((t-t2)/0.35);sfxOnce('sp',t2,'pop');const bx=170,by=170;g.save();g.globalAlpha=k;g.fillStyle='rgba(10,14,20,.88)';g.beginPath();g.roundRect(bx-140,by-140,280,300,20);g.fill();
+      const c=Math.sin((t-t2)*9)*6;g.strokeStyle='#c7ccd3';g.lineWidth=8;g.beginPath();g.moveTo(bx-120,by-60);g.lineTo(bx+20,by+30+c);g.stroke();
+      g.strokeStyle='#e5e7eb';g.lineWidth=5;g.beginPath();for(let i=0;i<=9;i++){g.lineTo(bx+20+(i%2?12:-12),by-100+i*(12+c/9))}g.stroke();g.fillStyle='#9ca3af';g.fillRect(bx-10,by-112,60,10);
+      tire(bx+20,by+60+c,34,t*3);g.fillStyle='#d2ab70';g.fillRect(bx-130,by+94,260,50);arrowLine(bx+80,by-110,bx+80,by-40,'#ffd36a',5);g.restore()}
+    if(t>t3){const k=eout((t-t3)/0.3);const n=Math.floor(laps);if(window._ln!==n){window._ln=n;if(t>t3)window.SFX.push([t,'tick'])}g.globalAlpha=k;g.fillStyle='#0b0f14';g.beginPath();g.roundRect(990,330,240,110,14);g.fill();g.fillStyle='#7dd3fc';g.font=`800 60px ${FONT}`;g.textAlign='center';g.fillText(String(n).padStart(4,'0'),1110,404);g.fillStyle='#e5e7eb';g.font=`800 24px ${FONT}`;g.fillText('回った数',1110,470);g.globalAlpha=1}
+  }else{ // speed
+    const t1=T(1,DUR*0.4),thr=T(2,t1+1.6);
+    const sp=t<t1?0.7:0.7+2.4*ease((t-t1)/Math.max(0.6,thr-t1+0.6));
+    const [da,k]=stepSim(t,sp);
+    if(t<t1)rut=Math.min(1,rut+da*0.12);
+    if(t>thr){ // 1か所で生まれ、走る向き（先）へ広がり、育つ
+      const born=Math.floor(amp.length*0.15),age=t-thr;const spread=Math.min(amp.length,Math.floor(age*14));
+      for(let i=0;i<spread;i++){const j=(born+i)%amp.length;amp[j]=Math.min(1,amp[j]+da*0.25*(1+0.5*Math.sin(j*0.7)))}
+      sfxOnce('w',thr,'pop')}
+    trough(1,1);ripples();hub();g.fillStyle='#374151';g.beginPath();g.roundRect(CX-46,CY-110,92,64,10);g.fill();
+    wheelAt(ang+Math.PI*0.35);sfxOnce('m',0,'motor',DUR);
+    speedo(1110,170,120,sp*9,{vmax:30,step:10,plain:true,mark:(0.7+2.4*ease((thr-t1)/Math.max(0.6,thr-t1+0.6)))*9});
+  }
+};
+</script></body></html>

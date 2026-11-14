@@ -179,8 +179,9 @@ def html_scene(s,dur,out,repo=''):
     page=os.path.join(HERE,'html',s['page']+'.html');params={k:v for k,v in s.items() if k not in('t','page','cam')}
     async def run():
         async with async_playwright() as p:
-            b=await p.chromium.launch();pg=await b.new_page(viewport={'width':W,'height':H});await pg.goto('file://'+page)
+            b=await p.chromium.launch(args=['--allow-file-access-from-files','--disable-web-security']);pg=await b.new_page(viewport={'width':W,'height':H});await pg.goto('file://'+page)
             await pg.evaluate(f"window.setup&&setup({json.dumps(params)},{dur})")
+            await pg.wait_for_function("window.READY!==false",timeout=60000)
             ff=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','image2pipe','-c:v','mjpeg','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE)
             for n in range(max(1,int(round(dur*FPS)))):
                 u=await pg.evaluate(f"(render({n/FPS}),document.getElementById('c').toDataURL('image/jpeg',0.93))");ff.stdin.write(base64.b64decode(u.split(',')[1]))
