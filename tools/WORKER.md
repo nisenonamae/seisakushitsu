@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make と video_fix は 3、draft_all は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make と video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
@@ -179,7 +179,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
    - 声は `projects[].voice`（なければ 2＝四国めたん ノーマル）、速さは `projects[].speed`（なければ 1.1）
    - 肉付けがあればその語り、なければ構成の text を読む。段に `visual`（作った図解の .mp4 か見本の .png のパス）があればそれを映し、なければ「画面の指示」を書いた絵コンテのカードを出す
 3. できた mp4 が 95MB を超えたら、`-crf` を上げて作り直す（GitHub の1ファイルの上限が100MB）
-4. `projects[].video` に `{"path","ver","duration","blocks"（出力と同じ名前の .json の blocks。段ごとの開始・終了秒）,"voice","at","reply"}` を書き、前の `video` は `projects[].videoHistory` に足す。mp4 と json を commit して push
+4. `projects[].video` に `{"path","ver","duration","blocks"（出力と同じ名前の .json の blocks。段ごとの開始・終了秒）,"voice","at","reply"}` を書き、前の `video` は `projects[].videoHistory` に足す。mp4 と json を commit して push。`projects[].builtAt` を今の時刻、`builtLen` を `projects[].len` にする（「前に作ったあとで変わったこと」の起点になる）
 - total は 3（声の用意→組み立て→置く）
 
 ### video_fix（動画の直し）
@@ -189,15 +189,17 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - 直したら video_make と同じやり方で作り直し（ver を1増やす）、`projects[].fixes` の該当する行に `done: true` と `reply`（どう直したか一文）を書く。`video.reply` に全体の一言
 - total は 3（直す→作り直す→置く）
 
-### draft_all（おまかせで一通り作る）
-作り手が「まず一通り作ってみて、あとで直したい」ときの頼み。止まらずに続けて作る。
-- `jobs[].parts`（outline・flesh・visual・title・thumb・video のうち頼まれたもの）を、この順に片づける。`jobs[].mode` が「足りない所だけ」なら、すでにあるものは作り直さずに足りない所だけ（構成があれば構成は飛ばす、肉付けが構成とずれていれば flesh_sync、など）。「全部作り直す」なら、前の版を history に入れてから作り直す
-- 各部分のやり方は、それぞれの手順（outline・flesh・visual_ideas・visual_make・title_ideas・thumb_ideas・video_make）と同じ。決まりごと・`keep`・`edited` は必ず守る
-- visual：案を4〜6個出し（参考動画の実験の再現を含める）、そのうち見せ場になる2〜3個を実際に作り、作った図解は対応する構成の段に `visual`（clip のパス）を付ける。`visuals[]` の `oid` にもその段の id を書く
-- title・thumb：案を出したうえで、Claude がいちばん良いと思うものを仮に `titleId`・`thumbId` にしておき、`result` に「題名とサムネは仮に〇〇にした（変えてよい）」と書く
-- 進み具合：total は「頼まれた部分の数＋1」。部分が一つ終わるごとに push する（作り手は途中の結果から見られる）
-- 1回の作業で終わらないほど重いとき（長い動画など）は、終わった部分まで push して `status` を「待ち」に戻し、`progress.label` に「〇〇まで作りました。続きは次の回」と書く（次の回に続きから）
-- 最後に `result` に、作ったものと、作り手に見てほしい所（要確認の事実、仮に決めたもの）を短く
+### rebuild（情報を変えて作り直す）
+作り手が一度作ったあとに、資料・素材・決まりごと・餌箱・長さなどを変えて、その情報を入れて作り直したいときの頼み。
+- job：`all`（true なら全部作り直す）、`parts`（作り直す部分：outline・flesh・visual・title・thumb・video）、`keepMarks`（true なら `keep`（残す・いい）の段と `edited`（自分で書き換えた）段はそのまま守る）、`notes`（どう良くしたいか）、`changes`（前に作ったあとで変わったことのうち、作り手が入れたいと選んだもの）、`len`
+- まず `changes` と `notes` を読み、それぞれをどの部分のどこに入れるかを決める（例：新しい資料 → 構成の第2章に段を足す、肉付けの数字を差し替える／新しい決まりごと → 全体に当てはめる／長さ → 段の足し引き）
+- `parts` を outline → flesh → visual → title → thumb → video の順に作り直す。どの部分も、作り直す前の版を history に入れてから書く（ver を1増やす）。各段の `change` に「作り直し：〜を入れた」と、何の情報で変わったかを書く
+- `keepMarks` が true なら守る段は中身を変えない（入れたい情報がその段に関わるときは `alts` に案として出す）
+- `all` でないときは、頼まれていない部分には触らない。前の部分を変えたことで後の部分とずれても、アプリがずれとして見せるので、そのままでよい（ただし `video` が頼まれていれば、最後に今の状態で作り直す）
+- visual：今の構成で図解が要る段を見直し、新しい情報で必要になった図解の案を足し、見せ場は作る（visual_ideas・visual_make と同じ）
+- title・thumb：案を足し、いちばん良いと思うものを仮に `titleId`・`thumbId` にする（前の選択は result に書いて残す）
+- 進み具合：total は「部分の数＋1」。部分が一つ終わるごとに push する。重くて1回で終わらないときは、終わった所まで push して `status` を「待ち」に戻し、`progress.label` に「〇〇まで作りました。続きは次の回」と書く
+- 終わったら `projects[].builtAt` を今の時刻、`builtLen` を今の長さにする。`result` に、何の情報をどこに入れたかを短く
 
 ### 話し合い（talk）——チャットで作り手と直接話して磨く
 作り手が「Claude と話し合う」を押し、チャットに依頼文を貼ったときの手順。対象（制作の id と、outline か flesh か）は依頼文に書いてある。
