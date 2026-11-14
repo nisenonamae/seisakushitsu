@@ -78,8 +78,8 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <section data-tab="cand">
 <h2>題材の候補</h2>
 <div class="item" id="autoBox"><div class="q">自動で選んだ題材</div><div class="lead" id="autoMeta" style="margin:2px 0 6px">読み込み中…</div><div id="autoList"></div>
-<div class="row"><button class="b main" id="autoRun">今すぐ選んでもらう</button></div>
-<p class="lead" style="margin:4px 0 0">毎朝、海外の動画と日本語の供給を測って、いい題材を自動で選んでここに置きます。ボタンを押すと、今すぐ選ぶ依頼文がコピーされて Claude が開きます（貼るだけ）。</p></div>
+<div class="row"><select id="autoN" style="width:auto"><option>3</option><option selected>5</option><option>10</option><option>20</option></select><button class="b main" id="autoRun">個 持ってきてもらう</button></div>
+<p class="lead" style="margin:4px 0 0">毎朝、海外の動画と日本語の供給を測って、いい題材を自動で選んでここに置きます。数を選んでボタンを押すと、その数だけ追加で探す依頼文がコピーされて Claude が開きます（貼るだけ）。今ある題材は消えません。</p></div>
 <div class="chips" id="candFilter"></div>
 <div id="candList"></div>
 <details><summary>候補を手で足す</summary>
@@ -160,7 +160,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
 <details><summary>◎ 候補（題材の一覧）</summary><ul>
 <li><b>自動で選んだ題材</b>：毎朝5時41分に、海外の伸びた動画と日本語の供給を測って、Claude が選んで置きます。「作る」「候補に入れる」「いらない」を押すだけ</li>
-<li><b>今すぐ選んでもらう</b>：依頼文がコピーされて Claude が開くので、貼るだけ</li>
+<li><b>〇個 持ってきてもらう</b>：数（3・5・10・20）を選んで押すと、その数だけ追加で探す依頼文がコピーされて Claude が開くので、貼るだけ。今ある題材は消えずに増えます</li>
 <li>候補を押すと、切り口・日本語の供給・元動画が開きます。★は「作りたい度」。★の多い順に並びます</li>
 <li>状態は「候補・作る・保留・作った・捨てる」。「作る」にすると制作の画面に出ます</li></ul></details>
 
@@ -518,7 +518,8 @@ $('autoList').addEventListener('click',e=>{const b=e.target.closest('[data-atake
 const st=b.dataset.atake==='make'?'作る':b.dataset.atake;
 D.candidates.push({id:'auto-'+x.id,q:x.q,pillar:x.pillar||'',entry:'自動',angle:x.angle||'',supply:x.supply||'',demand:x.demand||'',score:x.score||0,links:x.links||[],status:st,like:0,memo:x.cause?'見立て：'+x.cause:'',updatedAt:now()});
 save();renderAll()});
-$('autoRun').onclick=()=>copyOpen(`制作室の題材を今すぐ自動で選んでほしい。\nGitHub の nisenonamae/seisakushitsu を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン）、tools/AUTO_PICK.md の手順どおりに実行し、data/auto.json を更新して push して。終わったら選んだ題材を一行ずつ教えて。`);
+$('autoN').value=LS.get('auto_n','5');$('autoN').onchange=()=>LS.set('auto_n',$('autoN').value);
+$('autoRun').onclick=()=>{const n=$('autoN').value;copyOpen(`制作室の題材を、追加で ${n} 個選んでほしい。\nGitHub の nisenonamae/seisakushitsu を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、tools/AUTO_PICK.md の手順の「数を指定されたとき」に従って、題材を ${n} 個選び、data/auto.json の items に追加して push して（今ある items は残す。history にあるものは選ばない）。終わったら選んだ題材を点数つきで一行ずつ教えて。`)};
 
 function renderAll(){renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
