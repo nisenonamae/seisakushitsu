@@ -58,6 +58,8 @@ table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bott
 .pctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.pctl button,.pctl select{font:inherit;font-size:15px;background:#1e2738;color:#fff;border:1px solid #33405a;border-radius:8px;padding:8px 12px;width:auto}
 .play[hidden],.pflag[hidden]{display:none}
 .pinfo{font-size:12.5px;color:#8a94a8;margin-top:6px}.pflag{margin-top:8px}.pflag textarea{background:#121a28;color:#fff;border-color:#33405a}
+.uses{font-size:12.5px;color:var(--sub);margin:5px 0 0;padding:4px 7px;background:var(--paper);border-radius:6px}.uses a{color:var(--sea)}.uses .uk{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:3px;padding:0 4px;margin-right:4px}.uses.none{color:var(--busy)}
+.usedin{font-size:12px;color:var(--good);margin-top:2px}.usedin.no{color:var(--sub)}
 .msg{font-size:13.5px;color:var(--busy)}.ok{color:var(--good)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
@@ -493,16 +495,16 @@ $('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま�
 ${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const rel=p.related||[];const srcs=p.sources||[];const ast=p.assets||[];
-const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>
+const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${usedIn(p,r.url)}
 <div class="st">${kind==='見せ方'?`<button data-relmemo="${esc(r.url)}">録画したらメモを書く</button>`:`<button data-relmat="${esc(r.url)}" data-reltitle="${esc(r.title)}">文字起こしを貼る</button>`}</div></div>`).join('');
 const gatherHTML=`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">Claude が集めた参考</div>
 ${rel.length||srcs.length||ast.length?`<details ${rel.length?'open':''}><summary>見せ方の参考（${rel.filter(r=>r.kind==='見せ方').length}本）</summary><p class="lead" style="margin:2px 0">同じような題材を、地図やアニメーションで見せて伸びた動画。気に入った場面だけ録画してください。</p>${relHTML('見せ方')}</details>
 <details><summary>中身の参考になる動画（${rel.filter(r=>r.kind==='中身').length}本）</summary><p class="lead" style="margin:2px 0">文字起こしを貼ると、要約して台本の材料にします。</p>${relHTML('中身')}</details>
 <details ${(p.assets||[]).some(a=>a.ok==null)?'open':''}><summary>使えそうな素材（${(p.assets||[]).length}件・未点検${(p.assets||[]).filter(a=>a.ok==null).length}件）</summary><p class="lead" style="margin:2px 0">自由に使えると書かれている画像・地図・データなど。<b>使う前に、利用規約を開いて一つずつ点検してください。</b>点検した結果を押すと、使うものだけが台本と図解づくりに回ります。</p>
 ${(p.assets||[]).map((a,k)=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a><div class="lead" style="margin:0">${esc(a.source||'')}${a.license?'　'+esc(a.license):''}</div>
-<div>${esc(a.note||'')}</div>${a.credit?`<div class="lead" style="margin:0">表記：${esc(a.credit)}</div>`:''}${a.terms_url?`<div><a href="${esc(a.terms_url)}" target="_blank" rel="noopener">利用規約を開く</a>${a.terms?'　'+esc(a.terms):''}</div>`:''}
+<div>${esc(a.note||'')}</div>${usedIn(p,a.url)}${a.credit?`<div class="lead" style="margin:0">表記：${esc(a.credit)}</div>`:''}${a.terms_url?`<div><a href="${esc(a.terms_url)}" target="_blank" rel="noopener">利用規約を開く</a>${a.terms?'　'+esc(a.terms):''}</div>`:''}
 <div class="st"><button data-aok="${k}" class="${a.ok===true?'on':''}">使う</button><button data-ang="${k}" class="${a.ok===false?'on':''}">使わない</button></div></div>`).join('')}</details>
-<details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map(s=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div></div>`).join('')}</details>`
+<details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map(s=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div>${usedIn(p,s.url)}</div>`).join('')}</details>`
 :`<p class="lead">${syncOn()?'まだ集めていません。下で集めたいものに印を付けて頼んでください。':'同期を設定すると、Claude が集めてくれるようになります。'}</p>`}
 ${syncOn()?`<label>何を集めてもらう？（集めたいものだけ印を付ける）</label>
 ${GK.map(([k,nm,u])=>{const g=gSel()[k];return `<label class="chk" style="align-items:center"><input type="checkbox" data-gk="${k}" ${g.on?'checked':''}><span style="flex:1">${nm}</span><select data-gn="${k}" style="width:auto;margin:0">${GN.map(n=>`<option value="${n}" ${n===g.n?'selected':''}>${n}${u}</option>`).join('')}</select></label>`}).join('')}
@@ -690,14 +692,21 @@ const on=(c)=>c?'on':'';
 return `<div class="blk ${cls}" data-bi="${i}"><div class="bh"><span class="bn">${i+1}</span><b>${esc(b.role||'')}</b><span class="lead" style="margin:0">${k==='f'?'約'+secTxt(blkDur(k,b))+'・'+(b.narr||'').length+'字':b.sec?'約'+secTxt(b.sec):''}</span>${b.keep?`<span class="mk good">${k==='o'?'残す':'いい'}</span>`:''}${b.mark?`<span class="mk">${esc(b.mark)}</span>`:''}${b.edited?'<span class="mk">自分で書き換え</span>':''}</div>
 ${b.editing?`<label>${k==='o'?'何を言う・何が起きる':'語り（読み上げる文）'}</label><textarea data-bedit="${k}:${i}:${main}" style="min-height:${k==='o'?60:110}px">${esc(b[main]||'')}</textarea><label>${k==='o'?'画面で見せるもの':'画面の指示'}</label><textarea data-bedit="${k}:${i}:${sub}" style="min-height:50px">${esc(b[sub]||'')}</textarea>`
 :`<div class="bt">${esc(b[main]||'（まだ空です。下の注文に、ここで何をしてほしいか書いてください）')}</div>${b[sub]?`<div class="lead" style="margin:2px 0 0">画面：${esc(b[sub])}</div>`:''}${b.aim?`<div class="lead" style="margin:2px 0 0">ねらい：${esc(b.aim)}</div>`:''}${b.check?`<div class="lead" style="margin:2px 0 0;color:var(--busy)">要確認：${esc(b.check)}</div>`:''}`}
+${usesHTML(b)}
 ${b.change?`<div class="chg">Claude：${esc(b.change)}</div>`:''}
 ${(b.alts||[]).length?`<div class="alts"><div class="lead" style="margin:4px 0 2px">代わりの案（気に入ったものを選ぶ。どれも違えば下の注文に書く）</div>${b.alts.map((a,j)=>`<div class="alt"><div>${esc(a[main]||a.text||a.narr||'')}</div>${a[sub]?`<div class="lead" style="margin:0">画面：${esc(a[sub])}</div>`:''}<div class="st"><button data-balt="${k}:${i}:${j}">これにする</button></div></div>`).join('')}</div>`:''}
 <div class="st bst"><button data-bk="${k}:${i}:keep" class="${on(b.keep)}">${k==='o'?'残す':'いい'}</button>${k==='f'?`<button data-bk="${k}:${i}:fix" class="${on(b.mark==='直す')}">直す</button>`:''}<button data-bk="${k}:${i}:rep" class="${on(b.mark==='差し替え')}">${k==='o'?'差し替え案がほしい':'書き直し案がほしい'}</button><button data-bk="${k}:${i}:del" class="${on(b.mark==='削る')}">削る</button><button data-bk="${k}:${i}:edit" class="${on(b.editing)}">${b.editing?'書き換え終わり':'自分で書き換える'}</button><button data-bk="${k}:${i}:up" ${i===0?'disabled':''}>↑</button><button data-bk="${k}:${i}:down" ${i===n-1?'disabled':''}>↓</button><button data-bk="${k}:${i}:add">＋この下に足す</button>${k==='f'?`<button data-play="${i}">▶ここから聞く</button>`:''}</div>
 <input data-bnote="${k}:${i}" value="${esc(b.note||'')}" placeholder="${b.mark==='追加'?'ここに何を足してほしいか（例：身近な例をひとつ）':'ここへの注文（任意）例：もっと短く／数字を入れて'}" style="margin-top:6px;font-size:14px;padding:6px 8px"></div>`}
-function docHTML(p,k){const d=docOf(p,k);const bl=blsOf(p,k);const live=bl.filter(b=>b.mark!=='削る');
+const UK={source:'資料',asset:'素材',related:'参考動画',material:'文字起こし',rec:'録画',idea:'メモ'};
+function usesHTML(b){if(b.mark==='追加'&&!b.text&&!b.narr)return'';const u=b.uses||[];
+if(!u.length)return `<div class="uses none">使った集めもの：なし（Claude の組み立てだけ。事実が入っていれば要確認）</div>`;
+return `<div class="uses"><div>使った集めもの：</div>${u.map(x=>`<div>・<span class="uk">${esc(UK[x.type]||x.type)}</span>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`:esc(x.title||'')}${x.what?` → ${esc(x.what)}`:''}</div>`).join('')}</div>`}
+function usedIn(p,url){if(!url)return'';const r=[];for(const [k,nm] of [['o','構成'],['f','肉付け']]){const n=blsOf(p,k).map((b,i)=>(b.uses||[]).some(x=>x.url===url)?i+1:0).filter(Boolean);if(n.length)r.push(nm+' '+n.join('・')+'段')}
+return r.length?`<div class="usedin">使っている所：${r.join('　')}</div>`:(blsOf(p,'o').length?`<div class="usedin no">まだどこにも使っていない</div>`:'')}
+function docHTML(p,k){const bl0=blsOf(p,k);const allU=new Set(bl0.flatMap(b=>(b.uses||[]).map(x=>x.url)).filter(Boolean));const pool=[...(p.sources||[]),...(p.related||[]),...(p.assets||[]).filter(a=>a.ok!==false)].map(x=>x.url);const usedN=pool.filter(u=>allU.has(u)).length;const d=docOf(p,k);const bl=blsOf(p,k);const live=bl.filter(b=>b.mark!=='削る');
 const tot=live.reduce((a,b)=>a+blkDur(k,b),0);const work=busyJob(p,k==='o'?['outline','outline_fix']:['flesh','flesh_fix']);
 const marked=bl.filter(b=>b.mark||b.note||b.keep||b.edited).length;
-return `<div class="lead" style="margin:6px 0">${d.ver||1}版　${live.length}段　合計 約${secTxt(tot)}${k==='f'?'（'+live.reduce((a,b)=>a+(b.narr||'').length,0)+'字）':''}</div>
+return `<div class="lead" style="margin:6px 0">${d.ver||1}版　${live.length}段　合計 約${secTxt(tot)}${k==='f'?'（'+live.reduce((a,b)=>a+(b.narr||'').length,0)+'字）':''}　集めたもののうち ${usedN}/${pool.length} を使用</div>
 ${k==='f'?`<div class="row"><button class="b main" data-play="0">▶ 通しで聞く（読み上げ＋画面の指示）</button></div>`:''}
 ${work?`<p class="msg">Claude が作業中か、頼んだ直しの順番待ちです。届くまで印や注文は付けずに待ってください（付けた分が上書きされることがあります）。</p>`:''}
 ${(d.memo||[]).length?`<details ${k==='o'?'':'open'}><summary>話し合いで決めたこと（${d.memo.length}）</summary><ul style="margin:4px 0;padding-left:20px;font-size:14px">${d.memo.map(m=>`<li>${esc(typeof m==='string'?m:m.t)}</li>`).join('')}</ul></details>`:''}
@@ -734,7 +743,7 @@ else if(a==='down'&&+i<bl.length-1){[bl[+i+1],bl[+i]]=[bl[+i],bl[+i+1]];d.moved=
 else if(a==='add'){bl.splice(+i+1,0,{id:uid('b'),role:'追加',mark:'追加',note:'',text:'',show:'',narr:'',screen:''});setTimeout(()=>{const x=document.querySelector(`[data-bnote="${k}:${+i+1}"]`);x&&x.focus()},60)}
 touchP(p);renderMake();return true}
 m=el.closest('[data-balt]');if(m){const [k,i,j]=m.dataset.balt.split(':');const b=docOf(p,k).blocks[+i];const a=b.alts[+j];
-for(const f of ['text','show','aim','narr','screen','sec','role'])if(a[f]!=null&&a[f]!=='')b[f]=a[f];b.alts=[];b.mark=null;b.change='（代わりの案から選んだ）';touchP(p);renderMake();return true}
+for(const f of ['text','show','aim','narr','screen','sec','role','uses','check'])if(a[f]!=null&&a[f]!=='')b[f]=a[f];b.alts=[];b.mark=null;b.change='（代わりの案から選んだ）';touchP(p);renderMake();return true}
 if(el.matches('[data-talk]')){LS.set('talk_until',String(Date.now()+90*60000));copyOpen(talkText(p,el.dataset.talk));return true}
 if(el.matches('[data-hshow]')){const k=el.dataset.hshow;const d=docOf(p,k);const h=d.history[+document.querySelector(`[data-hsel="${k}"]`).value];
 document.querySelector(`[data-hview="${k}"]`).innerHTML=h.blocks.map((b,i)=>`<div style="border-top:1px solid var(--line);padding:4px 0;font-size:13.5px"><b>${i+1}. ${esc(b.role||'')}</b>　${esc(k==='o'?b.text||'':b.narr||'')}</div>`).join('');return true}
