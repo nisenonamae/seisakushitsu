@@ -1,0 +1,30 @@
+{
+  "_説明": "海外の発信元。lang は言語圏。追加・削除は自由。",
+  "channels": [
+    {"name": "RealLifeLore", "id": "UCP5tjEmvPItGyLhmjdwP7Ww", "lang": "en"},
+    {"name": "Atlas Pro", "id": "UCz1oFxMrgrQ82-276UCOU9w", "lang": "en"},
+    {"name": "Map Men", "id": "UCbbQalJ4OaC0oQ0AqRaOJ9g", "lang": "en"},
+    {"name": "Half as Interesting", "id": "UCuCkxoKLYO_EQ2GeFtbM_bw", "lang": "en"},
+    {"name": "Wendover Productions", "id": "UC9RM-iSvTu1uPJb8X5yp3EQ", "lang": "en"},
+    {"name": "Practical Engineering", "id": "UCMOqf8ab-42UUQIdVoKwjlQ", "lang": "en"},
+    {"name": "Real Engineering", "id": "UCR1IuLEqb6UEA_zQ81kwXfg", "lang": "en"},
+    {"name": "Veritasium", "id": "UCHnyfMqiRRG1u-2MsSQLbXA", "lang": "en"},
+    {"name": "Primer", "id": "UCKzJFdi57J53Vr_BkTfN3uQ", "lang": "en"},
+    {"name": "AI Warehouse", "id": "UCMT1Aw4R4nf_sFNDeuJqc6w", "lang": "en"},
+    {"name": "Ze Frank", "id": "UCVpankR4HtoAVtYnFDUieYA", "lang": "en"},
+    {"name": "Langfocus", "id": "UCNhX3WQEkraW3VHPyup8jkQ", "lang": "en"},
+    {"name": "Kings and Generals", "id": "UCMmaBzfCCwZ2KqaBJjkj0fw", "lang": "en"},
+    {"name": "Epic History", "id": "UCvPXiKxH-eH9xq-80vpgmKQ", "lang": "en"},
+    {"name": "CaspianReport", "id": "UCwnKziETDbHJtx78nIkfYug", "lang": "en"},
+    {"name": "Le Dessous des Cartes", "id": "UCHGMBrXUzClgjEzBMei-Jdw", "lang": "fr"},
+    {"name": "Mondegeo", "id": "UC-EvJcRt9vBs1SDHXUL59_w", "lang": "fr"},
+    {"name": "Atlas（خرائط زمنية）", "id": "UCQbN7syDbqsaqGFsqaE3KqA", "lang": "ar"},
+    {"name": "الدحيح", "id": "UCqW7G8SmyeEeQYzLOk5tdSg", "lang": "ar"},
+    {"name": "地球知識局", "id": "UCNkBRyyoGZdLleMRUtQgWTw", "lang": "zh"},
+    {"name": "三維地圖看世界", "id": "UCTFUnDo0FUzli8HUIjvyrZw", "lang": "zh"},
+    {"name": "四方異聞", "id": "UCYA6MeGKKNF9rZVSr3T1_bQ", "lang": "zh"},
+    {"name": "後見之明", "id": "UCJ_wOUU9TudGxSghlKXzRIw", "lang": "zh"},
+    {"name": "小Lin说", "id": "UCilwQlk62k1z7aUEZPOB6yw", "lang": "zh"},
+    {"name": "毕导THU", "id": "UCKJvfb-6icHloy6MBpHg9aw", "lang": "zh"}
+  ]
+}
