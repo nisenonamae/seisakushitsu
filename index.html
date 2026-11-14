@@ -436,7 +436,7 @@ catch(e){$('nmsg').textContent='うまく取れませんでした：'+e.message}
 $('key').value=LS.get('yt_key','');$('gho').value=LS.get('gh_o','');$('ghr').value=LS.get('gh_r','');$('ghp').value=LS.get('gh_p','');$('ght').value=LS.get('gh_t','');$('aiurl').value=LS.get('ai_url','');
 $('key').onchange=()=>LS.set('yt_key',$('key').value.trim());$('aiurl').onchange=()=>LS.set('ai_url',$('aiurl').value.trim());
 $('saveSet').onclick=async()=>{LS.set('yt_key',$('key').value.trim());LS.set('gh_o',$('gho').value.trim());LS.set('gh_r',$('ghr').value.trim());LS.set('gh_p',$('ghp').value.trim());LS.set('gh_t',$('ght').value.trim());LS.set('ai_url',$('aiurl').value.trim());
-$('setmsg').className='msg ok';$('setmsg').textContent='保存しました';await sync()};
+$('setmsg').className='msg ok';$('setmsg').textContent='保存しました';renderAll();await sync();renderAll()};
 $('exp').onclick=async()=>{const t=JSON.stringify(D,null,1);try{await navigator.clipboard.writeText(t);$('exp').textContent='コピーしました'}catch(e){prompt('コピーしてください',t)}setTimeout(()=>$('exp').textContent='全部のデータをコピー',2000)};
 
 
