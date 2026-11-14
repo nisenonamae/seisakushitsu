@@ -350,11 +350,12 @@ function renderMake(){ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
 if(!p){$('makeTop').innerHTML=`<p class="big">いま作っている動画はありません。</p>
-${makeC.length?`<p class="lead">「作る」にした題材から一つ選ぶと、やることが順番に出てきます。</p>${makeC.map(c=>`<div class="item"><div class="q">${esc(c.q)}</div><div class="row"><button class="b main" data-start="${c.id}">これを作る</button></div></div>`).join('')}`
+${makeC.length?`<p class="lead">「作る」にした題材から一つ選ぶと、やることが順番に出てきます。</p>${makeC.map(c=>`<div class="item"><div class="q">${esc(c.q)}</div><div class="row"><button class="b main" data-start="${c.id}">これを作る</button><button class="b" data-unmake="${c.id}">制作から外す</button></div></div>`).join('')}`
 :`<div class="empty">候補の画面で、作りたい題材を「作る」にしてください。</div>`}`;$('makeSteps').innerHTML='';return}
 const s=p.step||0;
 $('makeTop').innerHTML=`<div class="item"><div class="tags">いま作っている動画</div><div class="q">${esc(candQ(p))}</div>
 <div class="big" style="margin-top:8px">次にやること：${s<STEPS.length?esc(STEPS[s].t):'完成'}</div>
+<div class="row"><button class="b" data-quit>この制作をやめる（候補にもどす）</button></div>
 ${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const body=[
@@ -384,7 +385,10 @@ return `地図で「なぜ」を解く YouTube チャンネルの動画を、完
 function fixText(p){return `さっきの動画の直しです。\n${(p.fixes||[]).filter(f=>f.text).map(f=>`・${f.sec?f.sec+' ':''}${f.text}`).join('\n')}\n直した版を書き出してください。`}
 async function copyOpen(text){let ok=true;try{await navigator.clipboard.writeText(text)}catch(e){ok=false;prompt('コピーしてください',text)}window.open(LS.get('ai_url','')||'https://claude.ai/new','_blank')}
 function touchP(p){p.updatedAt=now();save()}
-$('makeTop').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
+$('makeTop').addEventListener('click',e=>{
+const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
+if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
+const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
 const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;save();renderMake();window.scrollTo(0,0)});
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;
