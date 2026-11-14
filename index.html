@@ -762,7 +762,7 @@ setTimeout(()=>{alert('ほかの端末の設定を入れました。同期を始
 const liveStyles=()=>(D.styles||[]).filter(s=>!s.deleted).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 const SMODE={'そのまま':'過去のスタイルをそのまま使う','混ぜる':'過去のスタイルと、今回の参考を混ぜる','新しく':'今回の参考だけで新しく作る'};
 // ===== 構成と肉付け（段ごとに印を付けて磨く）=====
-const LENS=['1分（ショート）','3分','5分','8分','10分'];
+const LENS=['1分（ショート）','3分','5分','8分','10分','12分','15分','20分','25分','30分'];
 const KN={o:'構成',f:'肉付け'};
 const CPS=5.5; // 読み上げの速さの目安（1秒あたりの文字数）
 function secTxt(s){s=Math.round(s||0);return s>=60?Math.floor(s/60)+'分'+(s%60?(s%60)+'秒':''):s+'秒'}
@@ -859,7 +859,7 @@ const bl=blsOf(p,'o');
 if(!bl.length)return styleChooser(p)+`<label>動画の長さ</label><select data-plen>${LENS.map(l=>`<option ${l===(p.len||'10分')?'selected':''}>${l}</option>`).join('')}</select>
 <div class="how"><b>やること</b><ol><li>まず Claude が、集めた参考と資料から<b>構成（骨組み）</b>を段に分けて出す。1段＝「何を言うか」「画面で何を見せるか」「ねらい」「秒数の目安」</li><li>届いたら段ごとに「残す／差し替え案がほしい／削る」の印や注文を付けて、次の版にしてもらう。並べ替えや自分での書き換えもできる</li><li>話して決めたいときは「Claude と話し合う」で、チャットで臨機応変に</li><li>骨組みが固まったら「決まり」→ 肉付けへ</li></ol></div>
 <div class="row"><button class="b main" data-job="outline">構成の案を出してもらう</button></div>${jobLine(p,'outline')}`;
-return `<div class="how"><b>やること</b><p style="margin:4px 0">各段に印を付ける。<b>残す</b>＝このまま守る、<b>差し替え案がほしい</b>＝代わりの案を出してもらう、<b>削る</b>＝なくす。気になる所は段の下の欄に一言。終わったら「次の版にしてもらう」か「話し合う」。</p></div>`+docHTML(p,'o')+(p.kata?`<details><summary>型紙（この動画の作り方の決まり）</summary><div style="white-space:pre-wrap;font-size:14px">${esc(p.kata)}</div><div class="row"><button class="b" data-savestyle>この型紙を編集スタイルとして残す</button></div></details>`:'')}
+return `<label>動画の長さ（変えたら「次の版にしてもらう」で長さに合わせて組み直す）</label><select data-plen>${LENS.map(l=>`<option ${l===(p.len||'10分')?'selected':''}>${l}</option>`).join('')}</select>`+`<div class="how"><b>やること</b><p style="margin:4px 0">各段に印を付ける。<b>残す</b>＝このまま守る、<b>差し替え案がほしい</b>＝代わりの案を出してもらう、<b>削る</b>＝なくす。気になる所は段の下の欄に一言。終わったら「次の版にしてもらう」か「話し合う」。</p></div>`+docHTML(p,'o')+(p.kata?`<details><summary>型紙（この動画の作り方の決まり）</summary><div style="white-space:pre-wrap;font-size:14px">${esc(p.kata)}</div><div class="row"><button class="b" data-savestyle>この型紙を編集スタイルとして残す</button></div></details>`:'')}
 function fleshStep(p){
 if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、肉付けを段ごとに磨けます。今はチャットで続けてください。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
 const bl=blsOf(p,'f');
