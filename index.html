@@ -60,6 +60,10 @@ table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bott
 .pinfo{font-size:12.5px;color:#8a94a8;margin-top:6px}.pflag{margin-top:8px}.pflag textarea{background:#121a28;color:#fff;border-color:#33405a}
 .uses{font-size:12.5px;color:var(--sub);margin:5px 0 0;padding:4px 7px;background:var(--paper);border-radius:6px}.uses a{color:var(--sea)}.uses .uk{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:3px;padding:0 4px;margin-right:4px}.uses.none{color:var(--busy)}
 .usedin{font-size:12px;color:var(--good);margin-top:2px}.usedin.no{color:var(--sub)}
+.blk.miss{border-style:dashed;border-left-color:var(--busy)}.mk.warn{color:var(--busy);border-color:var(--busy)}
+.sync{font-size:13px;color:var(--busy);margin:5px 0 0;padding:4px 7px;border:1px solid var(--busy);border-radius:6px}.syncbox{border-color:var(--busy)}
+.props{border-color:var(--sea)}.prop{border-top:1px solid var(--line);padding:6px 0;font-size:14px}.prop .before{color:var(--sub);text-decoration:line-through}.prop .after{margin-top:2px}
+.useform{margin:6px 0;padding:8px;border:1px solid var(--sea);border-radius:8px;background:var(--row)}
 .msg{font-size:13.5px;color:var(--busy)}.ok{color:var(--good)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
@@ -184,6 +188,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <li><b>図解を選ぶ</b>：Claude が台本に合う図解の案を見本の画像つきで出すので、気に入ったものだけ選んで作ってもらい、直したい所を書いて直してもらう</li>
 <li><b>動画を確かめる</b>：1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて送る</li>
 <li><b>残して終わる</b>：次からも同じにしたい直しに印 → 工夫の棚に入る</li></ol>
+<p><b>手順は行き来できます</b>：参考集め・構成・肉付けは、途中で「あ、これもある」となったらいつでも戻って足せます。足した資料や素材は「これを使って直してもらう」で、使ってほしい段を選んで頼むと、Claude が段ごとの変更案を出し、採用したものだけが入ります。構成を変えると、肉付けのずれた段に印が付き、「構成の変化だけ肉付けに反映してもらう」でそこだけ直せます。</p>
 <p>やめたいときは「この制作をやめる」、まだ始めていない題材は「制作から外す」で候補にもどせます。終わった手順は、押せば開いて「ここからやり直す」もできます。</p></details>
 
 <details open><summary>頼みごと（ほうっておけば片づく）</summary>
@@ -487,7 +492,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){ensureProj();const p=projOf();
@@ -503,17 +508,22 @@ $('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま�
 ${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const rel=p.related||[];const srcs=p.sources||[];const ast=p.assets||[];
-const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${usedIn(p,r.url)}
+const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${usedIn(p,r.url)}${useBtn(p,'related',r.url,r.title,'r'+rel.indexOf(r))}
 <div class="st">${kind==='見せ方'?`<button data-relmemo="${esc(r.url)}">録画したらメモを書く</button>`:`<button data-relmat="${esc(r.url)}" data-reltitle="${esc(r.title)}">文字起こしを貼る</button>`}</div></div>`).join('');
 const gatherHTML=`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">Claude が集めた参考</div>
 ${rel.length||srcs.length||ast.length?`<details ${rel.length?'open':''}><summary>見せ方の参考（${rel.filter(r=>r.kind==='見せ方').length}本）</summary><p class="lead" style="margin:2px 0">同じような題材を、地図やアニメーションで見せて伸びた動画。気に入った場面だけ録画してください。</p>${relHTML('見せ方')}</details>
 <details><summary>中身の参考になる動画（${rel.filter(r=>r.kind==='中身').length}本）</summary><p class="lead" style="margin:2px 0">文字起こしを貼ると、要約して台本の材料にします。</p>${relHTML('中身')}</details>
 <details ${(p.assets||[]).some(a=>a.ok==null)?'open':''}><summary>使えそうな素材（${(p.assets||[]).length}件・未点検${(p.assets||[]).filter(a=>a.ok==null).length}件）</summary><p class="lead" style="margin:2px 0">自由に使えると書かれている画像・地図・データなど。<b>使う前に、利用規約を開いて一つずつ点検してください。</b>点検した結果を押すと、使うものだけが台本と図解づくりに回ります。</p>
 ${(p.assets||[]).map((a,k)=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a><div class="lead" style="margin:0">${esc(a.source||'')}${a.license?'　'+esc(a.license):''}</div>
-<div>${esc(a.note||'')}</div>${usedIn(p,a.url)}${a.credit?`<div class="lead" style="margin:0">表記：${esc(a.credit)}</div>`:''}${a.terms_url?`<div><a href="${esc(a.terms_url)}" target="_blank" rel="noopener">利用規約を開く</a>${a.terms?'　'+esc(a.terms):''}</div>`:''}
+<div>${esc(a.note||'')}</div>${usedIn(p,a.url)}${a.ok!==false?useBtn(p,'asset',a.url,a.title,'a'+k):''}${a.credit?`<div class="lead" style="margin:0">表記：${esc(a.credit)}</div>`:''}${a.terms_url?`<div><a href="${esc(a.terms_url)}" target="_blank" rel="noopener">利用規約を開く</a>${a.terms?'　'+esc(a.terms):''}</div>`:''}
 <div class="st"><button data-aok="${k}" class="${a.ok===true?'on':''}">使う</button><button data-ang="${k}" class="${a.ok===false?'on':''}">使わない</button></div></div>`).join('')}</details>
-<details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map(s=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div>${usedIn(p,s.url)}</div>`).join('')}</details>`
+<details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map((s,si)=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div>${usedIn(p,s.url)}${useBtn(p,'source',s.url,s.title,'s'+si)}</div>`).join('')}</details>`
 :`<p class="lead">${syncOn()?'まだ集めていません。下で集めたいものに印を付けて頼んでください。':'同期を設定すると、Claude が集めてくれるようになります。'}</p>`}
+<details style="margin-top:6px"><summary>自分で見つけたものを足す</summary>
+<label>種類</label><select id="mkKind"><option value="source">調べた資料（記事・論文など）</option><option value="asset">使えそうな素材（画像・地図・データ）</option><option value="見せ方">見せ方の参考動画</option><option value="中身">中身の参考動画</option></select>
+<label>題名か一言</label><input id="mkTitle"><label>URL</label><input id="mkUrl" placeholder="https://…">
+<label>メモ（何が書いてある・どこに使えそうか）</label><input id="mkNote">
+<div class="row"><button class="b" data-mkadd>足す</button></div></details>
 ${syncOn()?`<label>何を集めてもらう？（集めたいものだけ印を付ける）</label>
 ${GK.map(([k,nm,u])=>{const g=gSel()[k];return `<label class="chk" style="align-items:center"><input type="checkbox" data-gk="${k}" ${g.on?'checked':''}><span style="flex:1">${nm}</span><select data-gn="${k}" style="width:auto;margin:0">${GN.map(n=>`<option value="${n}" ${n===g.n?'selected':''}>${n}${u}</option>`).join('')}</select></label>`}).join('')}
 <div class="row"><button class="b" data-job="gather">${rel.length||srcs.length||ast.length?'印を付けたものを、もっと集めてもらう':'印を付けたものを集めてもらう'}</button></div>${jobLine(p,'gather')}`:''}</div>`;
@@ -551,7 +561,9 @@ visualStep(p),
 ${learnList(p).map((f,k)=>`<label class="chk"><input type="checkbox" data-keep="${k}"><span>${f.sec?esc(f.sec)+'　':''}${esc(f.text)}</span></label>`).join('')||'<div class="empty">直しはありませんでした。</div>'}
 ${p.kata?`<div class="item" style="background:var(--paper);margin-top:8px"><label class="chk" style="border:0"><input type="checkbox" id="keepStyle" checked><span>この動画の編集スタイルを残す（次から選べる）</span></label><label>スタイルの名前</label><input id="styleName" value="${esc(candQ(p).slice(0,20))}の型"></div>`:''}
 <div class="row"><button class="b main" data-finish>終わる</button></div>`];
-setTimeout(fillMedia,0);$('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now open':''}" data-k="${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div></div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('')}
+setTimeout(fillMedia,0);const ms=$('makeSteps');const keepOpen=ms.dataset.pid===p.id?new Set([...ms.querySelectorAll('.step.open')].map(x=>x.dataset.k)):null;const keepDet=new Map([...ms.querySelectorAll('details')].map(x=>[(x.querySelector('summary')||{}).textContent,x.open]));ms.dataset.pid=p.id;
+$('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now open':''}" data-k="${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div></div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('');
+if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));if(key!==undefined)x.open=keepDet.get(key)})}
 function orderText(p){const refs=(p.refs||[]).map(id=>D.ideas.find(i=>i.id===id)).filter(Boolean);const c=D.candidates.find(x=>x.id===p.candId)||{};
 const mats=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted);
 const st=(D.styles||[]).find(s=>s.id===(p.styleId||(liveStyles()[0]||{}).id));const smode=p.styleMode||'混ぜる';
@@ -583,7 +595,7 @@ ${v.status==='できた'?`<label>直したいこと</label><textarea data-vfix="
 <div class="row"><button class="b main" data-next>図解はこれでいい</button></div>`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
 if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
-function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&o.type!=='summary'&&o.type!=='pick');
+function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&o.type!=='summary'&&o.type!=='pick'&&o.type!=='use_item');
 if(o.type==='gather'&&old.length){const j=old[0];for(const [k] of GK)j.counts[k]=Math.max(j.counts[k]||0,(o.counts||{})[k]||0);for(const x of old.slice(1)){x.deleted=true;x.updatedAt=now()}j.updatedAt=now();save();return j}
 if(o.type==='visual_make'&&old.length){const j=old[0];j.ids=[...new Set([...(j.ids||[]),...(o.ids||[])])];j.updatedAt=now();save();return j}
 for(const x of old){x.deleted=true;x.updatedAt=now()}
@@ -693,18 +705,57 @@ function docOf(p,k){return k==='o'?p.outline:p.flesh}
 function blsOf(p,k){const d=docOf(p,k);return d&&d.blocks?d.blocks:[]}
 function busyJob(p,types){return (D.jobs||[]).some(j=>!j.deleted&&j.projId===p.id&&types.includes(j.type)&&(j.status==='待ち'||j.status==='作業中'))}
 function blkDur(k,b){return k==='f'?((b.narr||'').length/CPS):(+b.sec||0)}
-function blockHTML(k,b,i,n){
+function blockHTML(k,b,i,n,num,sy){num=num||i+1;
 const main=k==='o'?'text':'narr',sub=k==='o'?'show':'screen';
 const cls=b.mark==='削る'?'del':b.mark==='差し替え'?'rep':b.mark==='直す'?'rep':b.keep?'keep':'';
 const on=(c)=>c?'on':'';
-return `<div class="blk ${cls}" data-bi="${i}"><div class="bh"><span class="bn">${i+1}</span><b>${esc(b.role||'')}</b><span class="lead" style="margin:0">${k==='f'?'約'+secTxt(blkDur(k,b))+'・'+(b.narr||'').length+'字':b.sec?'約'+secTxt(b.sec):''}</span>${b.keep?`<span class="mk good">${k==='o'?'残す':'いい'}</span>`:''}${b.mark?`<span class="mk">${esc(b.mark)}</span>`:''}${b.edited?'<span class="mk">自分で書き換え</span>':''}</div>
+return `<div class="blk ${cls}" data-bi="${i}"><div class="bh"><span class="bn">${num}</span><b>${esc(b.role||'')}</b><span class="lead" style="margin:0">${k==='f'?'約'+secTxt(blkDur(k,b))+'・'+(b.narr||'').length+'字':b.sec?'約'+secTxt(b.sec):''}</span>${b.keep?`<span class="mk good">${k==='o'?'残す':'いい'}</span>`:''}${b.mark?`<span class="mk">${esc(b.mark)}</span>`:''}${b.edited?'<span class="mk">自分で書き換え</span>':''}</div>
 ${b.editing?`<label>${k==='o'?'何を言う・何が起きる':'語り（読み上げる文）'}</label><textarea data-bedit="${k}:${i}:${main}" style="min-height:${k==='o'?60:110}px">${esc(b[main]||'')}</textarea><label>${k==='o'?'画面で見せるもの':'画面の指示'}</label><textarea data-bedit="${k}:${i}:${sub}" style="min-height:50px">${esc(b[sub]||'')}</textarea>`
 :`<div class="bt">${esc(b[main]||'（まだ空です。下の注文に、ここで何をしてほしいか書いてください）')}</div>${b[sub]?`<div class="lead" style="margin:2px 0 0">画面：${esc(b[sub])}</div>`:''}${b.aim?`<div class="lead" style="margin:2px 0 0">ねらい：${esc(b.aim)}</div>`:''}${b.check?`<div class="lead" style="margin:2px 0 0;color:var(--busy)">要確認：${esc(b.check)}</div>`:''}`}
-${usesHTML(b)}
+${sy||''}${usesHTML(b)}
 ${b.change?`<div class="chg">Claude：${esc(b.change)}</div>`:''}
 ${(b.alts||[]).length?`<div class="alts"><div class="lead" style="margin:4px 0 2px">代わりの案（気に入ったものを選ぶ。どれも違えば下の注文に書く）</div>${b.alts.map((a,j)=>`<div class="alt"><div>${esc(a[main]||a.text||a.narr||'')}</div>${a[sub]?`<div class="lead" style="margin:0">画面：${esc(a[sub])}</div>`:''}<div class="st"><button data-balt="${k}:${i}:${j}">これにする</button></div></div>`).join('')}</div>`:''}
-<div class="st bst"><button data-bk="${k}:${i}:keep" class="${on(b.keep)}">${k==='o'?'残す':'いい'}</button>${k==='f'?`<button data-bk="${k}:${i}:fix" class="${on(b.mark==='直す')}">直す</button>`:''}<button data-bk="${k}:${i}:rep" class="${on(b.mark==='差し替え')}">${k==='o'?'差し替え案がほしい':'書き直し案がほしい'}</button><button data-bk="${k}:${i}:del" class="${on(b.mark==='削る')}">削る</button><button data-bk="${k}:${i}:edit" class="${on(b.editing)}">${b.editing?'書き換え終わり':'自分で書き換える'}</button><button data-bk="${k}:${i}:up" ${i===0?'disabled':''}>↑</button><button data-bk="${k}:${i}:down" ${i===n-1?'disabled':''}>↓</button><button data-bk="${k}:${i}:add">＋この下に足す</button>${k==='f'?`<button data-play="${i}">▶ここから聞く</button>`:''}</div>
+<div class="st bst"><button data-bk="${k}:${i}:keep" class="${on(b.keep)}">${k==='o'?'残す':'いい'}</button>${k==='f'?`<button data-bk="${k}:${i}:fix" class="${on(b.mark==='直す')}">直す</button>`:''}<button data-bk="${k}:${i}:rep" class="${on(b.mark==='差し替え')}">${k==='o'?'差し替え案がほしい':'書き直し案がほしい'}</button><button data-bk="${k}:${i}:del" class="${on(b.mark==='削る')}">削る</button><button data-bk="${k}:${i}:edit" class="${on(b.editing)}">${b.editing?'書き換え終わり':'自分で書き換える'}</button>${k==='o'?`<button data-bk="${k}:${i}:up" ${i===0?'disabled':''}>↑</button><button data-bk="${k}:${i}:down" ${i===n-1?'disabled':''}>↓</button>`:''}<button data-bk="${k}:${i}:add">＋この下に足す</button>${k==='f'?`<button data-play="${i}">▶ここから聞く</button>`:''}</div>
 <input data-bnote="${k}:${i}" value="${esc(b.note||'')}" placeholder="${b.mark==='追加'?'ここに何を足してほしいか（例：身近な例をひとつ）':'ここへの注文（任意）例：もっと短く／数字を入れて'}" style="margin-top:6px;font-size:14px;padding:6px 8px"></div>`}
+function fSync(p){const ob=blsOf(p,'o'),fb=blsOf(p,'f');const st=fb.map(f=>{const o=ob.find(x=>x.id===f.oid);if(!o||o.mark==='削る')return'gone';if(f.osnap&&((f.osnap.text||'')!==(o.text||'')||(f.osnap.show||'')!==(o.show||'')))return'changed';return''});
+const missing=ob.filter(o=>o.mark!=='削る'&&(o.text||'').trim()&&!fb.some(f=>f.oid===o.id));return {st,missing}}
+function fOrder(p){const ob=blsOf(p,'o'),fb=blsOf(p,'f');const oi=new Map(ob.map((b,i)=>[b.id,i]));return fb.map((b,i)=>({b,i,o:oi.has(b.oid)?oi.get(b.oid):1e9})).sort((x,y)=>x.o-y.o||x.i-y.i)}
+function fLive(p){const {st}=fSync(p);return fOrder(p).filter(x=>x.b.mark!=='削る'&&st[x.i]!=='gone')}
+function syncBox(p){if(!blsOf(p,'f').length)return'';const {st,missing}=fSync(p);const c=st.filter(x=>x==='changed').length,g=st.filter(x=>x==='gone').length,m=missing.length;
+if(!c&&!g&&!m)return `<p class="lead" style="margin:4px 0;color:var(--good)">構成と肉付けは合っています。</p>`;
+return `<div class="item syncbox"><b>構成が変わったので、肉付けとずれています</b><div class="lead" style="margin:2px 0">${[c?`変わった段 ${c}`:'',m?`肉付けまだ ${m}`:'',g?`構成から消えた段 ${g}`:''].filter(Boolean).join('・')}。ずれている所だけ直してもらえます（「いい」や自分で書き換えた段は、書き直し案として出るだけで中身は守られます）。</div>
+<div class="row"><button class="b main" data-job="flesh_sync">構成の変化だけ肉付けに反映してもらう</button></div>${jobLine(p,'flesh_sync')}</div>`}
+function fleshList(p){const ob=blsOf(p,'o'),fb=blsOf(p,'f');const {st,missing}=fSync(p);const ord=fOrder(p);let h='',num=0;const done=new Set();
+ob.forEach((o,oi)=>{const fs=ord.filter(x=>x.b.oid===o.id);if(!fs.length){if(missing.includes(o))h+=`<div class="blk miss"><div class="bh"><span class="mk warn">肉付けまだ</span><span class="lead" style="margin:0">構成 ${oi+1}段・${esc(o.role||'')}</span></div><div class="lead" style="margin:2px 0 0">${esc(o.text||'')}</div></div>`;return}
+fs.forEach(x=>{done.add(x.i);num++;h+=blockHTML('f',x.b,x.i,fb.length,num,syncNote(st[x.i],o,x.i))})});
+ord.filter(x=>!done.has(x.i)).forEach(x=>{num++;h+=blockHTML('f',x.b,x.i,fb.length,num,syncNote('gone',null,x.i))});return h}
+function syncNote(s,o,i){if(s==='changed')return `<div class="sync">構成が変わりました。今の構成：「${esc(o.text||'')}」${o.show?`（画面：${esc(o.show)}）`:''}<div class="st"><button data-osok="${i}">このままでいい</button></div></div>`;
+if(s==='gone')return `<div class="sync">この段は構成から消えました（反映すると消えます）</div>`;return''}
+function propHTML(p,k){const ps=(p.proposals||[]).filter(x=>x.kind===k&&x.status==='提案');if(!ps.length)return'';
+const bl=blsOf(p,k);const main=k==='o'?'text':'narr',sub=k==='o'?'show':'screen';
+return `<div class="item props"><div class="q" style="font-size:15px">Claude からの変更案（${ps.length}）</div><p class="lead" style="margin:2px 0">集めものを入れるための案です。採用したものだけが${KN[k]}に入り、ほかの段はそのまま残ります。</p>
+${ps.map(x=>{const bi=bl.findIndex(b=>b.id===x.bid);const b=bl[bi];const A=x.after||{};const lab=x.op==='insert'?(bi>=0?`${bi+1}段の下に新しい段`:'先頭に新しい段'):x.op==='delete'?`${bi+1}段を消す`:`${bi+1}段を書き換える`;
+return `<div class="prop"><div class="bh"><span class="mk">${lab}</span>${x.from?`<span class="lead" style="margin:0">${esc(x.from.title||'')} から</span>`:''}</div>
+${x.op!=='insert'&&b?`<div class="before">今：${esc(b[main]||'')}</div>`:''}${x.op!=='delete'?`<div class="after">案：${esc(A[main]||'')}${A[sub]?`<div class="lead" style="margin:0">画面：${esc(A[sub])}</div>`:''}</div>`:''}
+<div class="lead" style="margin:2px 0">${esc(x.why||'')}</div>${b&&(b.keep||b.edited)?'<div class="msg">※「残す・いい」か、自分で書き換えた段への案です</div>':''}
+<div class="st"><button data-pyes="${x.id}">採用</button><button data-pno="${x.id}">見送る</button></div></div>`}).join('')}
+<div class="st" style="margin-top:6px"><button data-pall="${k}">全部採用</button><button data-pnoall="${k}">全部見送る</button></div></div>`}
+function applyProp(p,x){const d=docOf(p,x.kind);if(!d)return;if(d.snapBatch!==x.batch){snap(d);d.snapBatch=x.batch;d.ver=(d.ver||1)+1}
+const bl=d.blocks;const bi=bl.findIndex(b=>b.id===x.bid);const A={...(x.after||{})};delete A.id;
+if(x.op==='change'&&bi>=0){Object.assign(bl[bi],A);bl[bi].change='変更案から：'+(x.why||'')}
+else if(x.op==='insert'){bl.splice(bi+1,0,{...A,id:uid('b'),change:'変更案から：'+(x.why||'')})}
+else if(x.op==='delete'&&bi>=0){bl.splice(bi,1)}
+x.status='採用';x.updatedAt=now()}
+let useSel=null;
+function useBtn(p,type,url,title,key){if(!syncOn()||!blsOf(p,'o').length||!url)return'';
+if(!useSel||useSel.key!==key)return `<div class="st" style="margin-top:3px"><button data-use="${esc(url)}" data-ukey="${key}" data-ut="${type}" data-utitle="${esc(title||'')}">これを使って直してもらう</button></div>`;
+const t=useSel.target||'o';const bl=blsOf(p,t);
+return `<div class="useform"><b>これをどこに入れる？</b><div class="st" style="margin:4px 0"><button data-utarget="o" class="${t==='o'?'on':''}">構成に</button>${blsOf(p,'f').length?`<button data-utarget="f" class="${t==='f'?'on':''}">肉付けに</button>`:''}</div>
+<div class="lead" style="margin:2px 0">使ってほしい段に印（付けなければ、Claude が使える所を探す）</div>
+${(t==='f'?fOrder(p).map(x=>x.b):bl).filter(b=>b.mark!=='削る').map((b,j)=>`<label class="chk" style="padding:3px 0"><input type="checkbox" data-ublk="${b.id}" ${(useSel.blocks||[]).includes(b.id)?'checked':''}><span>${j+1}. ${esc(b.role||'')}　${esc((t==='f'?b.narr:b.text)||'').slice(0,40)}</span></label>`).join('')}
+<input id="uNote" value="${esc(useSel.note||'')}" placeholder="どう使いたいか（任意）例：時速8kmの所の裏付けに" style="margin-top:4px">
+<p class="lead" style="margin:4px 0">Claude は直接書き換えず、段ごとの「変更案」を出します。採用したものだけ入ります。</p>
+<div class="row"><button class="b main" data-usego>変更案を出してもらう</button><button class="b" data-usecancel>やめる</button></div></div>`}
 const UK={source:'資料',asset:'素材',related:'参考動画',material:'文字起こし',rec:'録画',idea:'メモ'};
 function usesHTML(b){if(b.mark==='追加'&&!b.text&&!b.narr)return'';const u=b.uses||[];
 if(!u.length)return `<div class="uses none">使った集めもの：なし（Claude の組み立てだけ。事実が入っていれば要確認）</div>`;
@@ -712,19 +763,19 @@ return `<div class="uses"><div>使った集めもの：</div>${u.map(x=>`<div>�
 function usedIn(p,url){if(!url)return'';const r=[];for(const [k,nm] of [['o','構成'],['f','肉付け']]){const n=blsOf(p,k).map((b,i)=>(b.uses||[]).some(x=>x.url===url)?i+1:0).filter(Boolean);if(n.length)r.push(nm+' '+n.join('・')+'段')}
 return r.length?`<div class="usedin">使っている所：${r.join('　')}</div>`:(blsOf(p,'o').length?`<div class="usedin no">まだどこにも使っていない</div>`:'')}
 function docHTML(p,k){const bl0=blsOf(p,k);const allU=new Set(bl0.flatMap(b=>(b.uses||[]).map(x=>x.url)).filter(Boolean));const pool=[...(p.sources||[]),...(p.related||[]),...(p.assets||[]).filter(a=>a.ok!==false)].map(x=>x.url);const usedN=pool.filter(u=>allU.has(u)).length;const d=docOf(p,k);const bl=blsOf(p,k);const live=bl.filter(b=>b.mark!=='削る');
-const tot=live.reduce((a,b)=>a+blkDur(k,b),0);const work=busyJob(p,k==='o'?['outline','outline_fix']:['flesh','flesh_fix']);
+const tot=live.reduce((a,b)=>a+blkDur(k,b),0);const work=busyJob(p,k==='o'?['outline','outline_fix']:['flesh','flesh_fix','flesh_sync']);
 const marked=bl.filter(b=>b.mark||b.note||b.keep||b.edited).length;
 return `<div class="lead" style="margin:6px 0">${d.ver||1}版　${live.length}段　合計 約${secTxt(tot)}${k==='f'?'（'+live.reduce((a,b)=>a+(b.narr||'').length,0)+'字）':''}　集めたもののうち ${usedN}/${pool.length} を使用</div>
-${k==='f'?`<div class="row"><button class="b main" data-play="0">▶ 通しで聞く（読み上げ＋画面の指示）</button></div>`:''}
+${k==='f'?syncBox(p):''}${propHTML(p,k)}${k==='f'?`<div class="row"><button class="b main" data-play="${(fLive(p)[0]||{}).i||0}">▶ 通しで聞く（読み上げ＋画面の指示）</button></div>`:''}
 ${work?`<p class="msg">Claude が作業中か、頼んだ直しの順番待ちです。届くまで印や注文は付けずに待ってください（付けた分が上書きされることがあります）。</p>`:''}
 ${(d.memo||[]).length?`<details ${k==='o'?'':'open'}><summary>話し合いで決めたこと（${d.memo.length}）</summary><ul style="margin:4px 0;padding-left:20px;font-size:14px">${d.memo.map(m=>`<li>${esc(typeof m==='string'?m:m.t)}</li>`).join('')}</ul></details>`:''}
-${bl.map((b,i)=>blockHTML(k,b,i,bl.length)).join('')}
+${k==='o'?bl.map((b,i)=>blockHTML(k,b,i,bl.length)).join(''):fleshList(p)}
 <label>全体への注文（流れ・順番・雰囲気・長さなど）</label><textarea data-onote="${k}" placeholder="例：前半が説明っぽい。もっと早く「えっ」となる所を出して">${esc(d.overall||'')}</textarea>
 <div class="st" style="margin-top:4px"><button data-torule="${k}">この注文を、これからも守る決まりにする</button></div>
 <div class="row"><button class="b" data-job="${k==='o'?'outline_fix':'flesh_fix'}">印と注文を送って、次の版にしてもらう${marked?'（'+marked+'段）':''}</button></div>${jobLine(p,k==='o'?'outline_fix':'flesh_fix')}
 <div class="how" style="margin-top:8px"><b>話し合いながら磨く（今すぐ・臨機応変に）</b><p style="margin:4px 0">押すと依頼文がコピーされて Claude が開くので、貼るだけ。Claude がこの${KN[k]}と付けた印・注文を読んで次の版をここに書き込み、迷っている所を質問してきます。あとはチャットで自由に話して、決まるたびにここに反映されます（押してから1時間半は、アプリが15秒ごとに読み直します）。</p><div class="row"><button class="b" data-talk="${k}">Claude と話し合う</button></div></div>
 ${(d.history||[]).length?`<details><summary>前の版（${d.history.length}）</summary><select data-hsel="${k}">${d.history.map((h,j)=>`<option value="${j}">${h.ver}版（${h.blocks.length}段）${h.at?'　'+md(h.at):''}</option>`).join('')}</select><div class="row"><button class="b" data-hshow="${k}">中身を見る</button><button class="b" data-hgo="${k}">この版にもどす</button></div><div data-hview="${k}"></div></details>`:''}
-<div class="row"><button class="b main" data-decide="${k}">${k==='o'?'構成はこれで決まり → 肉付けへ':'肉付けはこれで決まり → 図解へ'}</button></div>`}
+<div class="row"><button class="b main" data-decide="${k}">${k==='o'?'構成はひとまずこれで → 肉付けへ':'肉付けはこれで決まり → 図解へ'}</button></div>`}
 function outlineStep(p){
 if(!syncOn())return styleChooser(p)+`<div class="how"><b>やること</b><ol><li>下のボタンを押す（依頼文がコピーされて Claude が開く）</li><li>開いたチャットに貼り、構成→肉付けの順に相談する</li></ol><p class="lead">同期を設定すると、構成を段ごとに印を付けて磨けるようになります。</p></div><div class="row"><button class="b main" data-copy="order">依頼文をコピーして Claude を開く</button></div><div class="row"><button class="b" data-next>送った</button></div>`;
 const bl=blsOf(p,'o');
@@ -735,21 +786,33 @@ return `<div class="how"><b>やること</b><p style="margin:4px 0">各段に印
 function fleshStep(p){
 if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、肉付けを段ごとに磨けます。今はチャットで続けてください。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
 const bl=blsOf(p,'f');
-if(!bl.length)return `<div class="how"><b>やること</b><p style="margin:4px 0">決まった構成の段ごとに、Claude が<b>語り（読み上げる文）</b>と<b>画面の指示</b>を書く。構成で決まりにしたら自動で頼まれます。届いたら「▶通しで聞く」で読み上げを聞きながら、気になる所に印を付けていく。</p></div>
+if(!blsOf(p,'o').length)return `<div class="empty">先に構成の案を出してもらってください。構成ができれば、決まる前でも肉付けを頼めます。</div>`;
+if(!bl.length)return `<div class="how"><b>やること</b><p style="margin:4px 0">今の構成の段ごとに、Claude が<b>語り（読み上げる文）</b>と<b>画面の指示</b>を書く。構成が決まる前でも頼めます（構成をあとで変えたら、ずれた所だけ直せます）。届いたら「▶通しで聞く」で読み上げを聞きながら、気になる所に印を付けていく。</p></div>
 ${busyJob(p,['flesh'])?'':`<div class="row"><button class="b main" data-job="flesh">肉付けしてもらう</button></div>`}${jobLine(p,'flesh')}`;
 return `<div class="how"><b>やること</b><ol><li>「▶通しで聞く」で、読み上げと画面の指示を流して見る。気になったらその場で「ここ気になる」を押して一言</li><li>段ごとに「いい／直す／書き直し案がほしい／削る」の印。自分で書き換えてもよい（書き換えた所は Claude が守る）</li><li>「次の版にしてもらう」か「話し合う」で磨き、満足したら「決まり」</li></ol></div>`+docHTML(p,'f')}
 function learnList(p){const m=d=>((d&&d.memo)||[]).map(x=>({sec:'',text:typeof x==='string'?x:x.t})).filter(x=>!/版の中身にもどした$/.test(x.text));return [...m(p.outline),...m(p.flesh),...(p.scriptNotes||'').split('\n').filter(x=>x.trim()).map(x=>({sec:'',text:x})),...(p.fixes||[]).filter(f=>f.text)]}
-function fleshScript(p){return blsOf(p,'f').filter(b=>b.mark!=='削る').map((b,i)=>`【${i+1}・${b.role||''}】\n【画面】${b.screen||''}\n【語り】${b.narr||''}`).join('\n\n')}
+function fleshScript(p){return fLive(p).map(x=>x.b).map((b,i)=>`【${i+1}・${b.role||''}】\n【画面】${b.screen||''}\n【語り】${b.narr||''}`).join('\n\n')}
 function talkText(p,k){return `制作室の${KN[k]}を一緒に磨きたい。GitHub の nisenonamae/seisakushitsu と nisenonamae/notion-daily を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、seisakushitsu の tools/WORKER.md の「話し合い（talk）」の手順で進めて。\n対象：制作 ${p.id}「${candQ(p)}」の${KN[k]}（${k==='o'?'outline':'flesh'}）`}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function snap(d){d.history=d.history||[];d.history.unshift({ver:d.ver||1,at:now(),blocks:clone(d.blocks)});d.history=d.history.slice(0,15)}
 function blkClick(e,p){const el=e.target;
+if(el.matches('[data-osok]')){const f=blsOf(p,'f')[+el.dataset.osok];const o=blsOf(p,'o').find(x=>x.id===f.oid);if(o)f.osnap={text:o.text||'',show:o.show||''};touchP(p);renderMake();return true}
+if(el.matches('[data-pyes]')||el.matches('[data-pno]')){const x=(p.proposals||[]).find(y=>y.id===(el.dataset.pyes||el.dataset.pno));if(!x)return true;if(el.matches('[data-pyes]'))applyProp(p,x);else{x.status='見送り';x.updatedAt=now()}touchP(p);renderMake();return true}
+if(el.matches('[data-pall]')||el.matches('[data-pnoall]')){const k=el.dataset.pall||el.dataset.pnoall;(p.proposals||[]).filter(x=>x.kind===k&&x.status==='提案').forEach(x=>{if(el.matches('[data-pall]'))applyProp(p,x);else{x.status='見送り';x.updatedAt=now()}});touchP(p);renderMake();return true}
+if(el.matches('[data-use]')){useSel={key:el.dataset.ukey,url:el.dataset.use,type:el.dataset.ut,title:el.dataset.utitle,target:'o',blocks:[],note:''};renderMake();return true}
+if(el.matches('[data-utarget]')){useSel.note=($('uNote')||{}).value||'';useSel.target=el.dataset.utarget;useSel.blocks=[];renderMake();return true}
+if(el.matches('[data-ublk]')){const id=el.dataset.ublk;useSel.blocks=el.checked?[...new Set([...(useSel.blocks||[]),id])]:(useSel.blocks||[]).filter(x=>x!==id);return true}
+if(el.matches('[data-usecancel]')){useSel=null;renderMake();return true}
+if(el.matches('[data-usego]')){queueJob({type:'use_item',projId:p.id,item:{type:useSel.type,url:useSel.url,title:useSel.title},target:useSel.target||'o',blocks:useSel.blocks||[],note:(($('uNote')||{}).value||'').trim()});useSel=null;touchP(p);renderMake();return true}
+if(el.matches('[data-mkadd]')){const t=$('mkTitle').value.trim(),u=$('mkUrl').value.trim(),n=$('mkNote').value.trim(),kd=$('mkKind').value;if(!t&&!u){alert('題名か URL を入れてください');return true}
+const it={title:t||u,url:u,note:n,mine:true,addedAt:now()};if(kd==='source'){p.sources=p.sources||[];p.sources.push(it)}else if(kd==='asset'){p.assets=p.assets||[];p.assets.push({...it,source:'自分で見つけた',license:'',terms:'利用規約は自分で確かめる'})}else{p.related=p.related||[];p.related.push({...it,kind:kd,why:n})}
+touchP(p);renderMake();return true}
 let m=el.closest('[data-bk]');if(m){const [k,i,a]=m.dataset.bk.split(':');const d=docOf(p,k);const bl=d.blocks;const b=bl[+i];const t=x=>{b.mark=b.mark===x?null:x;if(b.mark)b.keep=false};
 if(a==='keep'){b.keep=!b.keep;if(b.keep)b.mark=null}else if(a==='del')t('削る');else if(a==='rep')t('差し替え');else if(a==='fix')t('直す');
 else if(a==='edit'){b.editing=!b.editing}
 else if(a==='up'&&+i>0){[bl[+i-1],bl[+i]]=[bl[+i],bl[+i-1]];d.moved=true}
 else if(a==='down'&&+i<bl.length-1){[bl[+i+1],bl[+i]]=[bl[+i],bl[+i+1]];d.moved=true}
-else if(a==='add'){bl.splice(+i+1,0,{id:uid('b'),role:'追加',mark:'追加',note:'',text:'',show:'',narr:'',screen:''});setTimeout(()=>{const x=document.querySelector(`[data-bnote="${k}:${+i+1}"]`);x&&x.focus()},60)}
+else if(a==='add'){bl.splice(+i+1,0,{id:uid('b'),role:'追加',mark:'追加',note:'',text:'',show:'',narr:'',screen:'',oid:b.oid||undefined});setTimeout(()=>{const x=document.querySelector(`[data-bnote="${k}:${+i+1}"]`);x&&x.focus()},60)}
 touchP(p);renderMake();return true}
 m=el.closest('[data-balt]');if(m){const [k,i,j]=m.dataset.balt.split(':');const b=docOf(p,k).blocks[+i];const a=b.alts[+j];
 for(const f of ['text','show','aim','narr','screen','sec','role','uses','check'])if(a[f]!=null&&a[f]!=='')b[f]=a[f];b.alts=[];b.mark=null;b.change='（代わりの案から選んだ）';touchP(p);renderMake();return true}
@@ -761,9 +824,9 @@ if(el.matches('[data-hgo]')){const k=el.dataset.hgo;const d=docOf(p,k);const j=+
 snap(d);d.blocks=clone(h.blocks);d.ver=(d.ver||1)+1;d.memo=d.memo||[];d.memo.push(h.ver+'版の中身にもどした');touchP(p);renderMake();return true}
 if(el.matches('[data-decide]')){const k=el.dataset.decide;const bl=blsOf(p,k);
 if(bl.some(b=>b.mark&&b.mark!=='削る'||b.note)&&!confirm('まだ送っていない印や注文があります。このまま決まりにしますか？'))return true;
-const d=docOf(p,k);d.blocks=bl.filter(b=>b.mark!=='削る').map(b=>{const c={...b};delete c.mark;delete c.note;delete c.alts;delete c.editing;return c});d.fixed=true;
+const d=docOf(p,k);d.blocks=bl.filter(b=>b.mark!=='削る').map(b=>{const c={...b};delete c.mark;delete c.note;delete c.editing;return c});d.fixed=true;
 (D.jobs||[]).forEach(j=>{if(!j.deleted&&j.status==='待ち'&&j.projId===p.id&&(k==='o'?['outline','outline_fix']:['flesh','flesh_fix']).includes(j.type)){j.deleted=true;j.updatedAt=now()}});
-if(k==='o'){p.step=2;if(syncOn()&&!blsOf(p,'f').length)queueJob({type:'flesh',projId:p.id})}else{p.script=fleshScript(p);p.scriptVer=d.ver;p.step=3}
+if(k==='o'){p.step=Math.max(p.step||0,2);if(syncOn()){if(!blsOf(p,'f').length)queueJob({type:'flesh',projId:p.id});else{const sy=fSync(p);if(sy.missing.length||sy.st.some(Boolean))queueJob({type:'flesh_sync',projId:p.id})}}}else{p.script=fleshScript(p);p.scriptVer=d.ver;p.step=3}
 touchP(p);renderMake();window.scrollTo(0,0);return true}
 return false}
 function blkInput(e,p){const el=e.target;
@@ -774,22 +837,22 @@ return false}
 // ===== 通しで聞く =====
 const PL={i:0,s:0,on:false,parts:[]};
 function plSplit(t){return (t||'').split(/(?<=[。！？!?])/).map(x=>x.trim()).filter(Boolean)}
-function plShow(){const p=projOf();const bl=blsOf(p,'f').filter(b=>b.mark!=='削る');const b=bl[PL.i];if(!b){plClose();return}
+function plShow(){const p=projOf();const bl=fLive(p).map(x=>x.b);const b=bl[PL.i];if(!b){plClose();return}
 PL.parts=plSplit(b.narr);$('pRole').textContent=`${PL.i+1}/${bl.length}　${b.role||''}`;$('pShow').textContent=b.screen||'（画面の指示なし）';
 $('pSub').innerHTML=PL.parts.map((x,j)=>`<span class="${j===PL.s?'cur':''}">${esc(x)}</span>`).join('');
 const done=bl.slice(0,PL.i).reduce((a,x)=>a+(x.narr||'').length,0),all=bl.reduce((a,x)=>a+(x.narr||'').length,0);
 $('pInfo').textContent=`${secTxt(done/CPS)} / 約${secTxt(all/CPS)}（1倍速の目安）`;$('pTog').textContent=PL.on?'⏸':'▶'}
-function plSpeak(){const p=projOf();const bl=blsOf(p,'f').filter(b=>b.mark!=='削る');speechSynthesis.cancel();if(!PL.on)return;
+function plSpeak(){const p=projOf();const bl=fLive(p).map(x=>x.b);speechSynthesis.cancel();if(!PL.on)return;
 if(PL.s>=PL.parts.length){PL.i++;PL.s=0;if(PL.i>=bl.length){PL.on=false;PL.i=bl.length-1;plShow();return}plShow()}
 plShow();const u=new SpeechSynthesisUtterance(PL.parts[PL.s]||' ');u.lang='ja-JP';u.rate=+$('pRate').value;
 const v=speechSynthesis.getVoices().find(v=>/ja/i.test(v.lang));if(v)u.voice=v;
 u.onend=()=>{if(!PL.on)return;PL.s++;plSpeak()};speechSynthesis.speak(u)}
 function plOpen(startBlock){if(!('speechSynthesis' in window)){alert('この端末のブラウザは読み上げに対応していません');return}
-const p=projOf();const all=blsOf(p,'f');const live=all.filter(b=>b.mark!=='削る');const tgt=all[startBlock];
+const p=projOf();const all=blsOf(p,'f');const live=fLive(p).map(x=>x.b);const tgt=all[startBlock];
 PL.i=Math.max(0,live.indexOf(tgt));PL.s=0;PL.on=true;$('play').hidden=false;$('pFlag').hidden=true;document.body.style.overflow='hidden';plShow();plSpeak()}
 function plClose(){PL.on=false;speechSynthesis.cancel();$('play').hidden=true;document.body.style.overflow='';renderMake()}
 document.addEventListener('click',e=>{const pb=e.target.closest('[data-play]');if(pb){plOpen(+pb.dataset.play);return}
-const c=e.target.closest('[data-pc]');if(!c)return;const a=c.dataset.pc;const p=projOf();const live=blsOf(p,'f').filter(b=>b.mark!=='削る');
+const c=e.target.closest('[data-pc]');if(!c)return;const a=c.dataset.pc;const p=projOf();const live=fLive(p).map(x=>x.b);
 if(a==='close'){plClose();return}
 if(a==='toggle'){PL.on=!PL.on;if(PL.on)plSpeak();else speechSynthesis.cancel();plShow();return}
 if(a==='prev'){PL.i=Math.max(0,PL.s>0?PL.i:PL.i-1);PL.s=0;plShow();if(PL.on)plSpeak();return}
