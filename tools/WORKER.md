@@ -19,6 +19,7 @@
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 2. 仕事の種類ごとのやり方
+`candId` がない制作（`trial: true` のお試しなど）は、`projects[].title` を題材として使う。
 JSON の中身はすべて ID でつながっている：`jobs[].projId` → `projects[].id`、`jobs[].matId` → `materials[].id`、`projects[].candId` → `candidates[].id`、`projects[].refs` → `ideas[].id`、`projects[].mats` → `materials[].id`、`projects[].recs[].path` → データのリポジトリの中の録画ファイル。
 
 ### summary（要約）
