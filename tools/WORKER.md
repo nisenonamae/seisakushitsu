@@ -22,9 +22,19 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### pick（題材探し）
 - アプリのリポジトリの `tools/AUTO_PICK.md` の「数を指定されたとき」に従い、`n` 個の題材を `data/auto.json`（**アプリのリポジトリ**の方）に追加して push する
 
+### gather（参考集め）
+制作を始めたときに自動で入る。題材（candidates の q・angle・links）について、次の3つを集めて projects に書く。
+1. **見せ方の参考** `related[]`（kind: "見せ方"）を 5〜8 本：同じか近い題材を、地図・アニメーション・シミュレーションで見せて伸びた動画。日本語・英語・中国語で YouTube を検索する（`tools/yt_common.py` の `search()` が使える。英語は `search(q,'en','US')`）。再生が多く、作りの質が高そうなもの（題名・チャンネル・サムネイルで判断。サムネイルは `https://i.ytimg.com/vi/<id>/hqdefault.jpg` で取れるので見てよい）
+2. **中身の参考** `related[]`（kind: "中身"）を 3〜6 本：題材の中身を詳しく扱っている動画（言語は問わない）
+3. **調べた資料** `sources[]` を 5〜10 件：公的機関・学術・百科事典など、事実を確かめられるウェブの資料。WebSearch と WebFetch で探す。`note` に、台本に使えそうな事実を自分の言葉で1〜2文（数字は出どころの通りに）
+- related の各要素：`{"kind","title","url","channel","views","lang","why"}`（why は、なぜ参考になるかを一文）
+- sources の各要素：`{"title","url","note"}`
+- すでにある related・sources と同じ URL は足さない（もう一度頼まれたら、足りない分を追加する）
+- `result` には「見せ方5本・中身4本・資料7件を集めました」のように書く
+
 ### script（台本づくり）
-1. 題材（candidates の q と angle）、参考メモ（ideas の memo・時間・効く場所）、資料（materials の summary、なければ text）を読む
-2. 録画（recs の path）があれば ffmpeg でコマに分けて見る（例：1秒に1枚、場面の変わり目も拾う）。画面の切り替わる間隔、地図の寄り方と動きの速さ、字幕の位置と大きさ、色、語りのテンポを読み取る
+1. 題材（candidates の q と angle）、参考メモ（ideas の memo・時間・効く場所）、資料（materials の summary、なければ text）、調べた資料（projects の sources）、集めた参考（projects の related）を読む
+2. 録画（recs の path）があれば ffmpeg でコマに分けて見る。録画がないときは、related の「見せ方」のサムネイルと、アプリのリポジトリの `tools/STYLE_DEFAULT.md`（標準の型紙）をもとにする（例：1秒に1枚、場面の変わり目も拾う）。画面の切り替わる間隔、地図の寄り方と動きの速さ、字幕の位置と大きさ、色、語りのテンポを読み取る
 3. 読み取った作り方を `projects[].kata`（型紙）に、箇条書きで書く
 4. 10分ほどの台本を `projects[].script` に書く。形：
    - 冒頭の問い（最初の15秒で問いと、答えの気配を見せる）→ ふつうの答え → 本当の答え → 意外な広がり → 結び

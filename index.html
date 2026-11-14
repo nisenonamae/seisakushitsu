@@ -151,7 +151,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
 <details><summary>▶ 制作（一本の動画を作る）</summary>
 <p>「作る」にした題材が並びます。「これを作る」を押すと、5つの手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
-<li><b>参考と資料を集める</b>：真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
+<li><b>参考と資料を集める</b>：始めると Claude が、同じ題材を地図やアニメで見せて伸びた動画（見せ方の参考）、中身の参考になる動画、調べた資料を自動で集めて置きます。そのうえで、真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
 <li><b>台本づくりを頼む</b>：ボタンを押すだけ。Claude が型紙と台本を作り、アプリに届けて手順3に進める</li>
 <li><b>台本を確かめる</b>：届いた台本を読み、直しを書いて「直しを頼む」</li>
 <li><b>動画を確かめる</b>：1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて送る</li>
@@ -452,7 +452,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',gather:'参考集め'};
 return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.result?'　'+esc(j.result):''}</div>`).join('')}</details>`}
 function renderMake(){ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
@@ -466,9 +466,18 @@ $('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま�
 <div class="row"><button class="b" data-quit>この制作をやめる（候補にもどす）</button></div>
 ${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`;
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
+const rel=p.related||[];const srcs=p.sources||[];
+const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>
+<div class="st">${kind==='見せ方'?`<button data-relmemo="${esc(r.url)}">録画したらメモを書く</button>`:`<button data-relmat="${esc(r.url)}" data-reltitle="${esc(r.title)}">文字起こしを貼る</button>`}</div></div>`).join('');
+const gatherHTML=`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">Claude が集めた参考</div>
+${rel.length||srcs.length?`<details ${rel.length?'open':''}><summary>見せ方の参考（${rel.filter(r=>r.kind==='見せ方').length}本）</summary><p class="lead" style="margin:2px 0">同じような題材を、地図やアニメーションで見せて伸びた動画。気に入った場面だけ録画してください。</p>${relHTML('見せ方')}</details>
+<details><summary>中身の参考になる動画（${rel.filter(r=>r.kind==='中身').length}本）</summary><p class="lead" style="margin:2px 0">文字起こしを貼ると、要約して台本の材料にします。</p>${relHTML('中身')}</details>
+<details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map(s=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div></div>`).join('')}</details>`
+:`<p class="lead">${syncOn()?'まだ集めていません。':'同期を設定すると、Claude が自動で集めます。'}</p>`}
+${syncOn()?`<div class="row"><button class="b" data-job="gather">${rel.length?'もっと集めてもらう':'参考と資料を集めてもらう'}</button></div>${jobLine(p,'gather')}`:''}</div>`;
 const body=[
-`<div class="how"><b>やること</b><ol>
-<li>参考にしたい動画を YouTube で開き、ひらめき帳に「作り方の工夫」として、何分何秒のどこがいいかを書く</li>
+gatherHTML+`<div class="how"><b>やること</b><ol>
+<li>上の「Claude が集めた参考」か、自分で見つけた動画を開き、ひらめき帳に「作り方の工夫」として、何分何秒のどこがいいかを書く</li>
 <li>Mac で、その場面だけを録画する：<b>Command＋Shift＋5</b> → 左から5番目の<b>「录制所选部分」</b>（右下に●の付いたアイコン）→ 動画の画面を囲む → <b>「录制」</b> → 再生 → メニューバーの■で止める</li>
 <li>録画はデスクトップに「屏幕录制…」の名前で保存される。1本の動画から2〜3か所、10〜30秒ずつで十分</li></ol></div>
 <p class="lead" style="margin:8px 0 2px">この動画で参考にするメモに印を付ける（${(p.refs||[]).length}件選択中）</p>
@@ -518,7 +527,7 @@ $('makeTop').addEventListener('click',e=>{
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
 const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
-const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;save();renderMake();window.scrollTo(0,0)});
+const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;if(syncOn())queueJob({type:'gather',projId:p.id});save();renderMake();window.scrollTo(0,0)});
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;
 if(el.closest('.sh')){el.closest('.step').classList.toggle('open');return}
@@ -531,6 +540,8 @@ const m={id:uid('m'),title:$('mTitle').value.trim(),url:urlOf($('mTitle').value)
 p.mats=p.mats||[];p.mats.push(m.id);if(syncOn())queueJob({type:'summary',matId:m.id,projId:p.id});touchP(p);renderMake();return}
 if(el.matches('[data-mdel]')){const m=D.materials.find(x=>x.id===el.dataset.mdel);m.deleted=true;m.updatedAt=now();p.mats=(p.mats||[]).filter(x=>x!==m.id);touchP(p);renderMake();return}
 if(el.matches('[data-mcopy]')){const m=D.materials.find(x=>x.id===el.dataset.mcopy);await copyOpen(`次の動画の文字起こしを、${m.size}要約して。自分の言葉で言い換え、数字や固有名詞は「動画内の主張」として残して。\n動画：${m.title||''}\n\n${m.text}`);return}
+if(el.matches('[data-relmat]')){$('mTitle').value=el.dataset.reltitle+' '+el.dataset.relmat;$('mText').focus();$('mText').scrollIntoView({block:'center'});return}
+if(el.matches('[data-relmemo]')){showTab('idea');$('iv').value=el.dataset.relmemo;document.querySelector('#ikind button[data-k="工夫"]').click();$('it').focus();return}
 if(el.matches('[data-copy]')){const k=el.dataset.copy;await copyOpen(k==='order'?orderText(p):k==='script'?`台本の直しです。\n${p.scriptNotes||''}\n直した台本を見せてください。`:fixText(p));return}
 if(el.matches('[data-fadd]')){p.fixes=p.fixes||[];p.fixes.push({sec:'',text:''});touchP(p);renderMake();const ins=document.querySelectorAll('[data-ftxt]');ins[ins.length-1]?.focus();return}
 if(el.matches('[data-fdel]')){p.fixes.splice(+el.dataset.fdel,1);touchP(p);renderMake();return}
