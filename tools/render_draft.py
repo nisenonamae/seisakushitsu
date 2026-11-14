@@ -29,10 +29,63 @@ ort=Onnxruntime.load_once(filename=f'{V}/ort/voicevox_onnxruntime-linux-x64-1.17
 syn=Synthesizer(ort,OpenJtalk(f'{V}/dict/open_jtalk_dic_utf_8-1.11'))
 for f in sorted(os.listdir(f'{V}/models')):
     with VoiceModelFile.open(f'{V}/models/{f}') as m: syn.load_voice_model(m)
+def _moras(q):
+    """AudioQuery から、モーラごとの終わりの時刻（話す速さ込み）を出す"""
+    t=q.pre_phoneme_length;ends=[]
+    for ap in q.accent_phrases:
+        for m in ap.moras:
+            g=(lambda k:m.get(k)) if isinstance(m,dict) else (lambda k:getattr(m,k))
+            t+=((g('consonant_length') or 0)+g('vowel_length'));ends.append(t)
+        pm=ap.pause_mora
+        if pm:t+=(pm['vowel_length'] if isinstance(pm,dict) else pm.vowel_length)
+    return [e/q.speed_scale for e in ends],(t+q.post_phoneme_length)/q.speed_scale
+def nmora(text):
+    try:return sum(len(ap.moras) for ap in syn.create_audio_query(text,a.voice).accent_phrases)
+    except Exception:return max(1,len(text))
+LAST={}
 def tts(text,path):
     q=syn.create_audio_query(text,a.voice);q.speed_scale=a.speed;q.post_phoneme_length=0.15
     open(path,'wb').write(syn.synthesis(q,a.voice))
-    with wave.open(path) as w: return w.getnframes()/w.getframerate()
+    with wave.open(path) as w: d=w.getnframes()/w.getframerate()
+    ends,tot=_moras(q);k=d/max(0.01,tot);LAST['ends']=[e*k for e in ends]
+    return d
+# ---- 字幕の区切り：語りに合わせて、読みやすい長さ（1行・{MIN}〜{MAX}字）で出す ----
+import fugashi
+_tg=fugashi.Tagger()
+SUB_MAX=21;SUB_MIN=7
+def units(text):
+    """文節くらいの単位に分ける（助詞・助動詞・句読点のあとで切れる）"""
+    ws=list(_tg(text));out=[];cur='';dep=0
+    for i,w in enumerate(ws):
+        dep+=(w.feature.pos2=='括弧開')-(w.feature.pos2=='括弧閉')
+        cur+=w.surface;p=w.feature.pos1;nx=ws[i+1].feature.pos1 if i+1<len(ws) else None;nx2=ws[i+1].feature.pos2 if i+1<len(ws) else None
+        if dep>0 or w.feature.pos2=='括弧開' or nx2=='括弧閉':continue          # 「 のすぐ後・」の前では切らない
+        if nx2=='数詞' and w.surface=='の':continue                     # 「3分の1」を割らない
+        if p in ('助詞','助動詞','補助記号') and nx not in ('助詞','助動詞','補助記号','接尾辞',None):out.append(cur);cur=''
+    if cur:out.append(cur)
+    return out
+def chunks(sent):
+    """一文を字幕の塊に分ける。読点で切り、長い所は文節の切れ目でほぼ等分、短すぎる塊は隣とまとめる"""
+    clauses=[c for c in re.split(r'(?<=[、，])',sent) if c.strip()]
+    out=[]
+    for c in clauses:
+        if len(c)<=SUB_MAX:out.append(c);continue
+        us=units(c);k=math.ceil(len(c)/SUB_MAX);tgt=len(c)/k;cur=''
+        for u in us:
+            if cur and (len(cur)+len(u)>SUB_MAX or len(cur)>=tgt*0.85):out.append(cur);cur=''
+            cur+=u
+        if cur:out.append(cur)
+    m=[]
+    for c in out:
+        if m and (len(c)<SUB_MIN or len(m[-1])<SUB_MIN) and len(m[-1])+len(c)<=SUB_MAX:m[-1]+=c
+        else:m.append(c)
+    return m
+def chunk_times(sent,ends):
+    """各塊が話され始める時刻（モーラの数で、文全体の時刻に合わせる）"""
+    cs=chunks(sent);ns=[nmora(c) for c in cs];tot=sum(ns) or 1;N=len(ends);ts=[];acc=0
+    for c,n in zip(cs,ns):
+        i=int(round(acc/tot*N));ts.append(0 if i<=0 else ends[min(N-1,i-1)]);acc+=n
+    return [(c.rstrip('、。，'),t) for c,t in zip(cs,ts)]
 def wrap(t,n=26):
     out=[];cur=''
     for ch in t:
@@ -53,10 +106,11 @@ def card(b,k,n):
         d.text((W/2,y),line,font=ImageFont.truetype(FB,34),fill=(225,232,242),anchor='ma');y+=50
     return im
 def sub_overlay(text):
-    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im);f=ImageFont.truetype(FB,34)
-    lines=wrap(text,30);y=H-40-46*len(lines)
-    d.rectangle([0,y-14,W,H],fill=(0,0,0,120))
-    for ln in lines: d.text((W/2,y),ln,font=f,fill=(255,255,255),anchor='ma',stroke_width=3,stroke_fill=(0,0,0));y+=46
+    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im);f=ImageFont.truetype(FB,40)
+    if not text:return im
+    tw=d.textlength(text,font=f);y=H-78
+    d.rounded_rectangle([W/2-tw/2-22,y-10,W/2+tw/2+22,y+58],12,fill=(0,0,0,135))
+    d.text((W/2,y),text,font=f,fill=(255,255,255),anchor='ma',stroke_width=3,stroke_fill=(0,0,0))
     return im
 tmp=tempfile.mkdtemp();segs=[];auds=[];tl=[];t0=0.0;n=len(seq);cuts=[];pops=[]
 for k,b in enumerate(seq,1):
@@ -69,9 +123,9 @@ for k,b in enumerate(seq,1):
     clipdur=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',vpath],capture_output=True,text=True).stdout or 10) if vpath and vpath.endswith('.mp4') else 10
     bstart=t0
     # 先に全部の文の声を作る
-    durs=[];pads=[]
+    durs=[];pads=[];cts=[]
     for j,sx in enumerate(sents):
-        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';dur=tts(sx,wp)+(0.25 if j<len(sents)-1 else 0.55)
+        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';dur=tts(sx,wp)+(0.25 if j<len(sents)-1 else 0.55);cts.append(chunk_times(sx,LAST['ends']))
         pad=f'{tmp}/p{k:03d}_{j:02d}.wav';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',wp,'-af',f'apad=whole_dur={dur:.3f}','-ar','24000','-ac','1',pad],check=True);durs.append(dur);pads.append(pad)
     # カット（shots）：文の並びをまとまりに分け、まとまりごとに部品で画面を作る
     groups=[]
@@ -83,23 +137,31 @@ for k,b in enumerate(seq,1):
         if j<len(sents):groups.append((j,len(sents),groups[-1][2] if groups else None))
     else: groups=[(0,len(sents),None)]
     for gi,(j0,j1,sh) in enumerate(groups):
-        gdur=sum(durs[j0:j1]);gpath=None
+        beat=float(sh.get('beat',0)) if sh else 0
+        gdur=sum(durs[j0:j1])+beat;gpath=None
         if sh:
             import scenes
-            gpath=f'{tmp}/shot{k:03d}_{gi:02d}.mp4';scenes.make({x:y for x,y in sh.items() if x!='n'},gdur+0.1,gpath,a.repo);cuts.append(t0)
+            gpath=f'{tmp}/shot{k:03d}_{gi:02d}.mp4';scenes.make({x:y for x,y in sh.items() if x not in('n','beat')},gdur+0.1,gpath,a.repo);cuts.append(t0)
             if os.path.exists(gpath+'.sfx.json'):pops.extend(t0+x for x in json.load(open(gpath+'.sfx.json')))
         elif gi==0 and vpath: cuts.append(t0)
         g0=t0
+        if beat>0 and gpath:
+            sil=f'{tmp}/b{k:03d}_{gi:02d}.wav';subprocess.run(['ffmpeg','-y','-loglevel','error','-f','lavfi','-i','anullsrc=r=24000:cl=mono','-t',f'{beat:.3f}',sil],check=True);auds.append(sil)
+            seg=f'{tmp}/sb{k:03d}_{gi:02d}.mp4';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',gpath,'-t',f'{beat:.3f}','-vf',f'scale={W}:{H},fps={FPS}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True);segs.append(seg);t0+=beat
         for j in range(j0,j1):
             sx=sents[j];dur=durs[j];auds.append(pads[j])
-            ov=f'{tmp}/o{k:03d}_{j:02d}.png';sub_overlay(sx).save(ov);seg=f'{tmp}/s{k:03d}_{j:02d}.mp4'
+            seg=f'{tmp}/s{k:03d}_{j:02d}.mp4';ch=cts[j];ovs=[]
+            for ci,(ct,cs_) in enumerate(ch):
+                ov=f'{tmp}/o{k:03d}_{j:02d}_{ci:02d}.png';sub_overlay(ct).save(ov);ce=ch[ci+1][1] if ci+1<len(ch) else dur+1;ovs.append((ov,cs_,ce))
             src=gpath or vpath
             if src is None:
-                fr=f'{tmp}/f{k:03d}_{j:02d}.png';im=base.copy().convert('RGBA');im.alpha_composite(Image.open(ov));im.convert('RGB').save(fr)
-                subprocess.run(['ffmpeg','-y','-loglevel','error','-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{dur:.3f}','-c:v','libx264','-preset','veryfast','-tune','stillimage','-pix_fmt','yuv420p','-r',str(FPS),seg],check=True)
+                fr=f'{tmp}/f{k:03d}_{j:02d}.png';base.convert('RGB').save(fr);inp=['-loop','1','-framerate',str(FPS),'-i',fr]
             else:
-                cd_=gdur+0.1 if gpath else clipdur;off=((t0-g0) if gpath else (t0-bstart))%max(0.1,cd_)
-                subprocess.run(['ffmpeg','-y','-loglevel','error','-stream_loop','-1','-ss',f'{off:.3f}','-i',src,'-i',ov,'-filter_complex',f'[0:v]scale={W}:{H},fps={FPS}[v];[v][1:v]overlay=0:0','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',seg],check=True)
+                cd_=gdur+0.1 if gpath else clipdur;off=((t0-g0) if gpath else (t0-bstart))%max(0.1,cd_);inp=['-stream_loop','-1','-ss',f'{off:.3f}','-i',src]
+            fc=f'[0:v]scale={W}:{H},fps={FPS}[v0]';last='v0'
+            for oi,(ov,cs_,ce) in enumerate(ovs):
+                inp+=['-i',ov];fc+=f";[{last}][{oi+1}:v]overlay=0:0:enable='between(t,{cs_:.3f},{ce-0.001:.3f})'[v{oi+1}]";last=f'v{oi+1}'
+            subprocess.run(['ffmpeg','-y','-loglevel','error',*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{dur:.3f}','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p','-r',str(FPS),seg],check=True)
             segs.append(seg);t0+=dur
     tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(bstart,2),'end':round(t0,2),'visual':vis or ''})
 open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in segs));open(f'{tmp}/a.txt','w').write(''.join(f"file '{x}'\n" for x in auds))
