@@ -15,12 +15,12 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
 作り手が「こういうときは、こうして」と決めたことが、データの `rules[]` にある。`{"id","scope","when","do","active","from","createdAt","updatedAt"}`
-- 仕事に取りかかる前に、`deleted` でなく `active` が true の決まりのうち、`scope` が「全部」か、その仕事に当たるものを全部読む（gather＝参考集め、pick＝題材探し、thumb_ideas・thumb_fix＝サムネ、outline・outline_fix＝構成、flesh・flesh_fix＝肉付け、visual_ideas・visual_make・visual_fix＝図解、動画の組み立て＝動画。summary は「全部」だけ）
+- 仕事に取りかかる前に、`deleted` でなく `active` が true の決まりのうち、`scope` が「全部」か、その仕事に当たるものを全部読む（gather＝参考集め、pick＝題材探し、thumb_ideas・thumb_fix＝サムネ、title_ideas・title_fix＝題名、outline・outline_fix＝構成、flesh・flesh_fix＝肉付け、visual_ideas・visual_make・visual_fix＝図解、動画の組み立て＝動画。summary は「全部」だけ）
 - 決まりはこの手順書の書き方より優先する。ただし「ほかのアプリのファイルを触らない」「著作権・利用規約」「事実の確かめ」の決まりは決まりごとより優先する（ぶつかるときは、守れなかったことを result に書く）
 - 守った結果が分かるようにする（構成なら `change` や `memo` に「決まり『〜』に合わせた」など）
 - **話し合い（talk）のとき**：作り手が「こういうときは」「毎回」「今後は」「いつも」のように、この制作だけでなくこれからも使う指示を言ったら、`rules` に `{"scope":（当てはまる仕事）,"when","do","from":"話し合い","active":true}` で足して push し、チャットで「決まりごとに入れました：〜」と一行で伝える。この制作だけの話か、これからもの話か迷ったら一言だけ聞く
@@ -138,11 +138,23 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - 実写の場面ごとに、何が写っているか（例：「砂利道を走る白い四駆を後ろから」「研究室の回転する円形の道」）を短く言葉にする。アニメーションや図だけなら `verdict` を「実写なし」にする
 - その言葉で、自由に使える素材のある所を探す：Wikimedia Commons（API が使える）、NASA の画像・映像（images-api.nasa.gov）、Internet Archive のパブリックドメイン、各国の政府や研究機関の公開映像、Pexels・Pixabay・Mixkit・Videvo などの無料素材サイト（WebSearch で「site:pexels.com gravel road car」のように探す。サイトによってはこの環境から開けないので、検索結果の題名・説明・サムネイルで判断する）。説明文やクレジットに出どころ（Pond5・Storyblocks などの有料素材、研究者の名前など）が書かれていれば、それを手がかりにする
 - 見つけた候補は、見られるならサムネイルや見本の画像を取ってきて、元の場面と見比べる。判定（`match`）は正直に：「同じ映像」（構図・動き・写っている物がはっきり一致）／「似た映像」（同じ題材だが別の撮影）。確かめられないのに「同じ」と言わない
-- その related（または recs の要素）に `footage` を書く：`{"checkedAt","note"（全体の一言。例：「冒頭の3場面が実写。2つは似たフリー素材あり、1つは有料素材の可能性」）,"shots":[{"desc","at"（録画なら秒数、分かれば）,"verdict"（「フリー素材で見つかった」「似たフリー素材あり」「見つからない」「実写なし」）,"found":[{"site","title","url","license","terms"（商用・加工・YouTube での利用・表記の要点を一文）,"match"}]}]}`
+- その related（または recs の要素）に `footage` を書く：`{"checkedAt","note"（全体の一言。例：「冒頭の3場面が実写。2つは似たフリー素材あり、1つは有料素材の可能性」）,"shots":[{"desc","at"（録画なら秒数、分かれば）,"verdict"（「フリー素材で見つかった」「似たフリー素材あり」「見つからない」「実写なし」）,"found":[{"site","title","url","license","terms"（商用・加工・YouTube での利用・表記の要点を一文）,"match","free"}]}]}`
+- **`free: true` は「フリー素材と確定」の印**。アプリでは緑の「✓ フリー素材と確定」と目立たせて出す。付けてよいのは、`match` が「同じ映像」で、**かつ**その素材のページ（または規約）で、収益化した YouTube 動画に使ってよい無料のライセンスだと確かめられたときだけ。サイトに複数のライセンスがあって、その素材がどれか確かめられないとき（Mixkit の無料／制限付きなど）や、似た映像のときは付けない（`free` を書かないか false）
 - 見つかったフリー素材は `assets` にも足す（gather の素材と同じ形。`note` に「参考動画『〜』の〇〇の場面と同じ（似た）映像」。`ok` は書かない）。ライセンスがはっきりしないものは「要確認」
 - total は 3（場面を見る→探す→書く）
 
-### thumb_ideas（サムネと題名の案）
+### title_ideas（題名の案）
+- 読むもの：題材と切り口、構成・肉付け（あれば）、`related` の参考動画の題名と再生数（伸びた題名の型を学ぶ。そのまま訳さない）、決まりごとの「題名」、餌箱の学び
+- `n` 個の案を `projects[].titles[]` に `{"id","text"（題名）,"hook"（引きの型：問い／意外な事実／数字／もしも／ひっくり返し など一言）,"why"（なぜ押したくなるか一文）,"uses","updatedAt"}` で足す。型が偏らないようにばらす
+- 日本の YouTube で読まれやすい長さ（30字前後まで。大事な言葉は前半）にする。中身と合わない釣り題名・事実の盛りすぎはしない
+- `jobs[].wish` があれば従う
+
+### title_fix（題名の別案）
+- `jobs[].titleId` の題名を元に、`jobs[].notes`（なければ「同じねらいで言い回しを変える」）の方向で、別案を3〜5個 `titles[]` に足す（各案に `"parent": 元の id`）
+
+### thumb_ideas（サムネの案）
+- 題名が決まっていれば（`projects[].titleId` の titles の text）、**その題名と並べて見たときに押したくなるサムネ**にする。題名と同じ文字をサムネに繰り返さない（題名の続きや、題名にない一言・数字・絵で引く）。`title` には組み合わせる題名を入れる
+
 - 読むもの：題材、構成・肉付け（あれば）、`related` の参考動画のサムネイル（`https://i.ytimg.com/vi/<id>/hqdefault.jpg`。伸びたものほどよく見る）、決まりごとの「サムネ」（`ex` の見本も開く）、餌箱の学びのうち area が「サムネ」のもの
 - `n` 個の案を出す。案ごとに、**題名とサムネを組で**考える：`projects[].thumbs[]` に `{"id","idea"（ねらいを一言）,"title"（動画の題名案）,"text"（サムネに載せる文字。短く）,"desc"（どんな絵か一文）,"preview"（1280×720 の PNG。`roadmap/apps/seisakushitsu/thumbs/<projId>/<id>.png`）,"src"（描いたプログラムのパス）,"uses"（構成の段と同じ形）,"status":"提案","updatedAt"}`
 - 絵はプログラムで描くか、assets のうち `ok` が true のものだけを使う。実在の人物の写真・他人の作品・ロゴは使わない
