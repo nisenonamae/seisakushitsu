@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は 5（見せ方→中身→資料→素材→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix は 2、script は 4（材料を読む→型紙→台本→仕上げ）、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、visual_fix は 2、script は 4（材料を読む→型紙→台本→仕上げ）、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 2. 仕事の種類ごとのやり方
@@ -30,8 +30,8 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - アプリのリポジトリの `tools/AUTO_PICK.md` の「数を指定されたとき」に従い、`n` 個の題材を `data/auto.json`（**アプリのリポジトリ**の方）に追加して push する
 
 ### gather（参考集め）
-制作を始めたときに自動で入る。題材（candidates の q・angle・links）について、次の3つを集めて projects に書く。
-**数は `jobs[].counts`（style＝見せ方、content＝中身、sources＝資料）に従う。** counts がなければ下の数。
+作り手が、集めたい項目に印を付けて頼む。題材（candidates の q・angle・links）について、頼まれた項目だけを集めて projects に書く。
+**項目と数は `jobs[].counts`（style＝見せ方、content＝中身、sources＝資料、assets＝素材）に従う。数が 0 か、キーがない項目は集めない（手をつけない）。** counts そのものがないときだけ、下の4つ全部を下の数で集める。
 1. **見せ方の参考** `related[]`（kind: "見せ方"）を 5〜8 本：同じか近い題材を、地図・アニメーション・シミュレーションで見せて伸びた動画。日本語・英語・中国語で YouTube を検索する（`tools/yt_common.py` の `search()` が使える。英語は `search(q,'en','US')`）。再生が多く、作りの質が高そうなもの（題名・チャンネル・サムネイルで判断。サムネイルは `https://i.ytimg.com/vi/<id>/hqdefault.jpg` で取れるので見てよい）
 2. **中身の参考** `related[]`（kind: "中身"）を 3〜6 本：題材の中身を詳しく扱っている動画（言語は問わない）
 3. **調べた資料** `sources[]` を 5〜10 件：公的機関・学術・百科事典など、事実を確かめられるウェブの資料。WebSearch と WebFetch で探す。`note` に、台本に使えそうな事実を自分の言葉で1〜2文（数字は出どころの通りに）
@@ -42,7 +42,8 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - related の各要素：`{"kind","title","url","channel","views","lang","why"}`（why は、なぜ参考になるかを一文）
 - sources の各要素：`{"title","url","note"}`
 - すでにある related・sources と同じ URL は足さない（もう一度頼まれたら、足りない分を追加する）
-- `result` には「見せ方5本・中身4本・資料7件を集めました」のように書く
+- 2回目以降の依頼は「もっと欲しい」という意味。すでにあるものとは違う切り口・言語・出どころから探す
+- `result` には、頼まれた項目だけ「見せ方5本・素材5件を足しました」のように書く
 
 ### 編集スタイル（script のときに使う）
 - `styles[]` は過去の動画の編集スタイル（型紙）。`{"id","name","origin","kata"}`

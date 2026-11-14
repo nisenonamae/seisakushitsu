@@ -154,7 +154,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
 <details><summary>▶ 制作（一本の動画を作る）</summary>
 <p>「作る」にした題材が並びます。「これを作る」を押すと、5つの手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
-<li><b>参考と資料を集める</b>：始めると Claude が、同じ題材を地図やアニメで見せて伸びた動画（見せ方の参考）、中身の参考になる動画、調べた資料を自動で集めて置きます。そのうえで、真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
+<li><b>参考と資料を集める</b>：集めたいもの（見せ方の参考・中身の参考・調べた資料・使えそうな素材）に印を付けて数を選び、ボタンを押すと Claude が集めて置きます。足りないものだけ、あとから何度でも追加で頼めます。そのうえで、真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
 <li><b>台本づくりを頼む</b>：ボタンを押すだけ。Claude が型紙と台本を作り、アプリに届けて手順3に進める</li>
 <li><b>台本を確かめる</b>：届いた台本を読み、直しを書いて「直しを頼む」</li>
 <li><b>図解を選ぶ</b>：Claude が台本に合う図解の案を見本の画像つきで出すので、気に入ったものだけ選んで作ってもらい、直したい所を書いて直してもらう</li>
@@ -487,9 +487,10 @@ ${(p.assets||[]).map((a,k)=>`<div style="border-top:1px solid var(--line);paddin
 <div>${esc(a.note||'')}</div>${a.credit?`<div class="lead" style="margin:0">表記：${esc(a.credit)}</div>`:''}${a.terms_url?`<div><a href="${esc(a.terms_url)}" target="_blank" rel="noopener">利用規約を開く</a>${a.terms?'　'+esc(a.terms):''}</div>`:''}
 <div class="st"><button data-aok="${k}" class="${a.ok===true?'on':''}">使う</button><button data-ang="${k}" class="${a.ok===false?'on':''}">使わない</button></div></div>`).join('')}</details>
 <details><summary>調べた資料（${srcs.length}件）</summary>${srcs.map(s=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a><div>${esc(s.note||'')}</div></div>`).join('')}</details>`
-:`<p class="lead">${syncOn()?'まだ集めていません。':'同期を設定すると、Claude が自動で集めます。'}</p>`}
-${syncOn()?`<label>集める量</label><select id="gAmt">${Object.entries(GAMT).map(([k,v])=>`<option value="${k}" ${k===(LS.get('g_amt','ふつう'))?'selected':''}>${k}（見せ方${v[0]}本・中身${v[1]}本・資料${v[2]}件・素材${v[3]}件）</option>`).join('')}</select>
-<div class="row"><button class="b" data-job="gather">${rel.length?'もっと集めてもらう':'参考と資料を集めてもらう'}</button></div>${jobLine(p,'gather')}`:''}</div>`;
+:`<p class="lead">${syncOn()?'まだ集めていません。下で集めたいものに印を付けて頼んでください。':'同期を設定すると、Claude が集めてくれるようになります。'}</p>`}
+${syncOn()?`<label>何を集めてもらう？（集めたいものだけ印を付ける）</label>
+${GK.map(([k,nm,u])=>{const g=gSel()[k];return `<label class="chk" style="align-items:center"><input type="checkbox" data-gk="${k}" ${g.on?'checked':''}><span style="flex:1">${nm}</span><select data-gn="${k}" style="width:auto;margin:0">${GN.map(n=>`<option value="${n}" ${n===g.n?'selected':''}>${n}${u}</option>`).join('')}</select></label>`}).join('')}
+<div class="row"><button class="b" data-job="gather">${rel.length||srcs.length||ast.length?'印を付けたものを、もっと集めてもらう':'印を付けたものを集めてもらう'}</button></div>${jobLine(p,'gather')}`:''}</div>`;
 const body=[
 gatherHTML+`<div class="how"><b>やること</b><ol>
 <li>上の「Claude が集めた参考」か、自分で見つけた動画を開き、ひらめき帳に「作り方の工夫」として、何分何秒のどこがいいかを書く</li>
@@ -538,7 +539,11 @@ const st=(D.styles||[]).find(s=>s.id===(p.styleId||(liveStyles()[0]||{}).id));co
 return `地図で「なぜ」を解く YouTube チャンネルの動画を、完全 AI 版で一本作ってほしい。\n\n編集スタイル：${SMODE[smode]}${smode!=='新しく'&&st?'\n使うスタイル「'+st.name+'」：\n'+st.kata:''}\n\n題材：${candQ(p)}\n${c.angle?'切り口：'+c.angle+'\n':''}長さ：10分ほど\n\n参考にしたい見せ方（このあと録画を送ります）：\n${refs.map((i,k)=>`${k+1}. ${i.video||'（動画）'}${i.sec?'（'+toClock(i.sec)+'）':''}\n   ${i.memo}${i.where&&i.where!=='全体'?'（効く場所：'+i.where+'）':''}`).join('\n')||'（なし）'}\n\n中身の資料（動画の要約・文字起こし）：\n${mats.map(m=>`■ ${m.title||m.url||'資料'}\n${m.summary||m.text.slice(0,4000)}`).join('\n\n')||'（なし）'}\n\n進め方：\n1. 送る録画をコマに分けて見て、画面の切り替わる間隔・地図の動き・字幕・色の使い方を型紙にまとめる\n2. 台本を書いて見せる\n3. OK が出たら、声・地図アニメーション・字幕まで入れて、最後まで書き出した動画にする`}
 function fixText(p){return `さっきの動画の直しです。\n${(p.fixes||[]).filter(f=>f.text).map(f=>`・${f.sec?f.sec+' ':''}${f.text}`).join('\n')}\n直した版を書き出してください。`}
 const md=ms=>{const d=new Date(ms);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`};
-const GAMT={'少なめ':[3,2,3,3],'ふつう':[6,4,7,6],'多め':[10,8,12,10],'たくさん':[15,12,20,15]};
+const GK=[['style','見せ方の参考（動画）','本'],['content','中身の参考（動画）','本'],['sources','調べた資料','件'],['assets','使えそうな素材','件']];
+const GN=[2,3,5,8,10,15,20];
+function gSel(){let g={};try{g=JSON.parse(LS.get('g_sel','{}'))||{}}catch(e){}const d={style:5,content:3,sources:5,assets:5};
+const o={};for(const [k] of GK)o[k]={on:g[k]?g[k].on!==false:true,n:g[k]&&GN.includes(+g[k].n)?+g[k].n:d[k]};return o}
+function gSave(g){LS.set('g_sel',JSON.stringify(g))}
 function nextRun(from){const d=new Date(from||Date.now());for(let i=0;i<48;i++){const c=new Date(d);c.setMinutes(17,0,0);c.setHours(d.getHours()+i);if(c>d&&c.getHours()>=7&&c.getHours()<=23)return c}return null}
 const hm=d=>`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 function progHTML(j){const g=j.progress||{};const pct=Math.max(3,Math.min(100,Math.round((g.done||0)/(g.total||1)*100)));return `<div style="margin:6px 0"><div style="height:10px;border-radius:5px;background:var(--line);overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--sea);transition:width .6s"></div></div><div class="lead" style="margin:3px 0 0">${g.done||0}/${g.total||'?'}　${esc(g.label||'取りかかっています')}${j.updatedAt?'　（'+hm(new Date(j.updatedAt))+' 更新）':''}</div></div>`}
@@ -568,14 +573,15 @@ if(e.target.id==='jobsNow'){copyOpen('制作室の頼みごとを今すぐ片づ
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
 const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
-const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;if(syncOn()){const v=GAMT[LS.get('g_amt','ふつう')]||GAMT['ふつう'];queueJob({type:'gather',projId:p.id,counts:{style:v[0],content:v[1],sources:v[2],assets:v[3]}})}save();renderMake();window.scrollTo(0,0)});
+const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;save();renderMake();window.scrollTo(0,0)});
+document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-gk]')||t.matches('[data-gn]')){const g=gSel();const k=t.dataset.gk||t.dataset.gn;if(t.matches('[data-gk]'))g[k].on=t.checked;else g[k].n=+t.value;gSave(g)}});
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;
 if(el.closest('.sh')){el.closest('.step').classList.toggle('open');return}
 if(el.matches('[data-next]')){p.step=(p.step||0)+1;touchP(p);renderMake();window.scrollTo(0,0);return}
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
 if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
-const extra={};if(type==='gather'){const a=$('gAmt')?$('gAmt').value:'ふつう';LS.set('g_amt',a);const v=GAMT[a];extra.counts={style:v[0],content:v[1],sources:v[2],assets:v[3]}}
+const extra={};if(type==='gather'){const g=gSel();if(!GK.some(([k])=>g[k].on)){alert('集めたいものに印を付けてください');return}extra.counts={};for(const [k] of GK)extra.counts[k]=g[k].on?g[k].n:0}
 if(type==='script'){extra.styleMode=p.styleMode||'混ぜる';extra.styleId=extra.styleMode==='新しく'?'':(p.styleId||(liveStyles()[0]||{}).id||'')}
 queueJob({type,projId:p.id,notes:type==='script_fix'?p.scriptNotes:'',...extra});renderMake();return}
 if(el.matches('[data-madd]')){const text=$('mText').value.trim();if(!text){$('mMsg').textContent='文字起こしを貼ってください';return}
