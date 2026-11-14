@@ -9,7 +9,7 @@
 @media (prefers-color-scheme:dark){:root{--ink:#e7ebf2;--sub:#9aa5b8;--paper:#141a26;--row:#1b2232;--line:#2c3547;--sea:#6ea4e6;--seaInk:#0e1420;--good:#5cc28a;--busy:#e57b65}}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6;padding-top:env(safe-area-inset-top);padding-bottom:calc(64px + env(safe-area-inset-bottom))}
-header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 14px 8px;display:flex;align-items:baseline;gap:10px}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 14px 8px;display:flex;align-items:center;gap:10px}
 header h1{font-size:18px;margin:0}header .sync{font-size:12px;color:var(--sub);margin-left:auto}
 main{max-width:820px;margin:0 auto;padding:12px 14px 30px}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--row);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(7,1fr);padding-bottom:env(safe-area-inset-bottom)}
@@ -61,8 +61,12 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .chk{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.chk input{width:auto;margin-top:4px}
 .big{font-size:17px;font-weight:700;margin:4px 0 10px}
 .fix{display:grid;grid-template-columns:70px 1fr auto;gap:6px;margin:4px 0}
+.help details{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px}
+.help summary{font-weight:700;font-size:15.5px;color:var(--ink)}
+.help ol,.help ul{padding-left:20px;margin:6px 0}.help li{margin:3px 0;font-size:14.5px}.help p{font-size:14.5px;margin:6px 0}
+.help code{background:var(--paper);padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-all}
 </style></head><body>
-<header><h1>制作室</h1><span class="sync" id="sync">この端末だけに保存中</span></header>
+<header><h1>制作室</h1><span class="sync" id="sync">この端末だけに保存中</span><button class="b" id="helpBtn" style="padding:4px 10px;font-size:13px">使い方</button></header>
 <main>
 
 <section data-tab="make" class="on">
@@ -133,6 +137,89 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <label>チャンネル ID（UC から始まる）</label><input id="chid">
 <div class="row"><button class="b main" id="loadNum">読み込む</button><span class="msg" id="nmsg"></span></div>
 <div id="numRes"></div>
+</section>
+
+<section data-tab="help" class="help">
+<h2>使い方</h2>
+<p class="lead">制作室は「題材を選ぶ → 作る → 直す → 学ぶ」を、書いてある通りに進めるだけで回すためのアプリです。迷ったら、まず「制作」の画面を開いてください。</p>
+
+<details open><summary>まずこれだけ（毎日の流れ）</summary><ol>
+<li>朝、スマホに「題材を選んだ」通知が来たら、<b>候補</b>の一番上の「自動で選んだ題材」を見て、作りたいものに「作る」を押す</li>
+<li>YouTube を見ていて「これ使える」と思ったら、<b>共有 → 制作室</b>で送って一言書く（ひらめき帳にたまる）</li>
+<li>時間があるときに<b>制作</b>を開き、「次にやること」に書いてある通りに進める</li>
+</ol></details>
+
+<details><summary>▶ 制作（一本の動画を作る）</summary>
+<p>「作る」にした題材が並びます。「これを作る」を押すと、5つの手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
+<li><b>参考を集める</b>：真似たい場面を録画して、ひらめき帳のメモに印を付ける</li>
+<li><b>Claude に頼む</b>：ボタンで依頼文がコピーされ Claude が開く。貼って、録画をドラッグする</li>
+<li><b>台本を確かめる</b>：届いた台本の直しを書いて送る</li>
+<li><b>動画を確かめる</b>：1.5倍速で見て、「2:10 ここをゆっくり」のように一行ずつ書いて送る</li>
+<li><b>残して終わる</b>：次からも同じにしたい直しに印 → 工夫の棚に入る</li></ol>
+<p>やめたいときは「この制作をやめる」、まだ始めていない題材は「制作から外す」で候補にもどせます。終わった手順は、押せば開いて「ここからやり直す」もできます。</p></details>
+
+<details><summary>◎ 候補（題材の一覧）</summary><ul>
+<li><b>自動で選んだ題材</b>：毎朝5時41分に、海外の伸びた動画と日本語の供給を測って、Claude が選んで置きます。「作る」「候補に入れる」「いらない」を押すだけ</li>
+<li><b>今すぐ選んでもらう</b>：依頼文がコピーされて Claude が開くので、貼るだけ</li>
+<li>候補を押すと、切り口・日本語の供給・元動画が開きます。★は「作りたい度」。★の多い順に並びます</li>
+<li>状態は「候補・作る・保留・作った・捨てる」。「作る」にすると制作の画面に出ます</li></ul></details>
+
+<details><summary>✎ ひらめき（見ていた動画から気づいたこと）</summary><ul>
+<li>YouTube の<b>共有</b>から送ると、題名と URL が自動で入ります（時間付きの URL なら、何分何秒も入る）</li>
+<li>種類は2つ。<b>題材の型</b>（「歌詞の地名を確かめる」のような題材の見つけ方）と、<b>作り方の工夫</b>（見せ方・声・字幕など）</li>
+<li>「同じ動画で続けて書く」に印があれば、一本の動画から気づきを続けて書けます。別の動画に移るときは「別の動画にする」</li>
+<li>「AI に聞く」を押すと、型を広げる／工夫を整理する質問がコピーされて Claude が開きます</li>
+<li>一覧の時間（1:35 など）を押すと、その場面から動画が開きます</li></ul></details>
+
+<details><summary>⌕ 検索（その題材がどれだけ作られているか）</summary><ul>
+<li>日本語の言葉で検索すると、上位25本の本数・最多と中央値の再生・10万回超の本数・この1年の本数が出ます。英語・中国語も並べて比べられます</li>
+<li>「題名に入っていれば数える言葉」を入れると、関係ない動画を数えません</li>
+<li>少ないときは、本当に空いているのか、日本の人が興味を持たないのか、すでに知っているのかを考える（自動選びはこれもやります）</li>
+<li>使うには設定で YouTube の API キーが要ります（下の「最初の設定」）</li></ul></details>
+
+<details><summary>▤ 工夫（作り方の棚）</summary><ul>
+<li>「採用」の工夫は、Claude が動画を作るたびに当てはめます</li>
+<li>種類：<b>設定</b>（声や速さなど数字を変えるだけ）、<b>決まり</b>（台本や構成の書き方）、<b>部品</b>（新しい見せ方。作るのに一晩かかる）</li>
+<li>一本で目立たせる工夫は一つまで。採用後に効いたかを「効いたか」の欄に書く</li></ul></details>
+
+<details><summary>▦ 数字（自分のチャンネル）</summary><p>チャンネル ID（UC から始まる）を入れると、最新50本の再生・高評価・コメントが出ます。API キーが要ります。</p></details>
+
+<details><summary>Mac で参考動画の場面を録画する</summary><ol>
+<li>ブラウザで動画を開き、真似たい場面の少し前で止める</li>
+<li><b>Command＋Shift＋5</b> を押す</li>
+<li>下のバーの左から5番目、右下に●の付いた<b>「录制所选部分」</b>を押す（繁体字なら「錄製選取的部分」）</li>
+<li>出た枠を動画の画面に合わせ、右の<b>「录制」</b>を押して再生</li>
+<li>止めるのは、画面上のメニューバーの<b>■の付いた丸</b>（または Command＋Control＋Esc）</li>
+<li>デスクトップに「屏幕录制…」の名前で保存される。それを Claude のチャットにドラッグ</li></ol>
+<p>1本の動画から2〜3か所、10〜30秒ずつで十分です。Mac の標準の収録は動画の音を録れません（見た目の分析には困りません）。</p></details>
+
+<details><summary>最初の設定①　スマホで共有先に出す</summary><ol>
+<li>Android の Chrome で <code>https://nisenonamae.github.io/seisakushitsu/</code> を開く</li>
+<li>右上の︙ →「ホーム画面に追加」（「アプリをインストール」と出ることもある）</li>
+<li>YouTube で動画の「共有」を押すと、一覧に「制作室」が出る。出ないときは一度スマホのアプリを閉じて開き直す</li></ol></details>
+
+<details><summary>最初の設定②　YouTube の API キー（検索と数字に必要）</summary><ol>
+<li>パソコンで Google Cloud のコンソールを開き、新しいプロジェクトを作る</li>
+<li>「API とサービス」→「ライブラリ」で <b>YouTube Data API v3</b> を探して「有効にする」</li>
+<li>「API とサービス」→「認証情報」→「認証情報を作成」→「API キー」</li>
+<li>出てきたキーを、このアプリの<b>設定</b>の「YouTube の API キー」に貼る（各端末で一度ずつ）</li></ol>
+<p>無料で、1日に約30テーマ調べられます。詰まったら画面のスクショを Claude に送ってください。</p></details>
+
+<details><summary>最初の設定③　端末どうしの同期</summary>
+<p>このアプリのリポジトリは公開なので、データは<b>別の private のリポジトリ</b>に置きます。</p><ol>
+<li>Mac の Claude Code に「nisenonamae に private の空のリポジトリ seisakushitsu-data を作って」と頼む</li>
+<li>GitHub の Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token</li>
+<li>Repository access は「Only select repositories」で <b>seisakushitsu-data</b> だけ選び、Permissions の <b>Contents</b> を「Read and write」にして作る</li>
+<li>このアプリの<b>設定</b>で、持ち主 <code>nisenonamae</code>、リポジトリ名 <code>seisakushitsu-data</code>、ファイル名 <code>data/seisakushitsu.json</code>、トークンを入れて「保存して同期」</li>
+<li>ほかの端末でも同じものを入れる。あとは開いたとき・変えたときに自動で合わさる</li></ol></details>
+
+<details><summary>アプリを直したいとき</summary><p>Claude のチャットで「制作室の〇〇を直して」と頼めば、Claude が直接 GitHub に送ります。1〜2分後にアプリを開き直すと変わっています。変わらないときは、ページを下に引っ張って再読み込みしてください。</p></details>
+
+<details><summary>困ったとき</summary><ul>
+<li><b>「同期できません」と出る</b>：トークンの期限切れか、リポジトリ名の打ち間違い。設定を見直す</li>
+<li><b>検索で「うまく取れませんでした」</b>：API キーの入れ忘れか、1日の上限。翌日にもどる</li>
+<li><b>自動で選んだ題材が出ない</b>：公開ページ（github.io）で開いているか確かめる。手元のファイルを直接開くと出ません</li>
+<li><b>データを控えておきたい</b>：設定の「全部のデータをコピー」</li></ul></details>
 </section>
 
 <section data-tab="set">
@@ -206,6 +293,7 @@ const scrollPos={};let curTab='make';
 function showTab(t){scrollPos[curTab]=window.scrollY;curTab=t;document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));
 document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.t===t));window.scrollTo(0,scrollPos[t]||0)}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+$('helpBtn').onclick=()=>showTab('help');
 
 /* ---------- 候補 ---------- */
 let candF='すべて';const CF=['すべて','土地','暮らし','日本','作る','保留'];
