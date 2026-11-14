@@ -135,7 +135,8 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 ### visual_ideas（図解の案）
 - 台本（projects の script）と型紙（kata）、作り手の希望（jobs の wish）を読み、台本の中で「動く図・地図の動き」で見せると分かりやすくなる場面について、`n` 個の案を考える
 - 案ごとに、見本の静止画（1280×720 の PNG。いちばん見せ場になる瞬間を1枚）をプログラムで描き、データのリポジトリの `roadmap/apps/seisakushitsu/visuals/<projId>/<案のid>.png` に置く
-- `projects[].visuals[]` に `{"id","idea"（一言の名前）,"desc"（何をどう動かすか、台本のどこで使うか、二文まで）,"preview"（PNG のパス）,"status":"提案","chosen":false,"updatedAt"}` を足す
+- `projects[].visuals[]` に `{"id","idea"（一言の名前）,"desc"（何をどう動かすか、台本のどこで使うか、二文まで）,"preview"（PNG のパス）,"uses"（構成の段と同じ形。どの集めものから何を使ったか）,"note"（台本がまだないときは「台本がまだないので、題材と集めた資料から考えた案」）,"status":"提案","chosen":false,"updatedAt"}` を足す
+- 台本（script）も構成も肉付けもまだないときは、題材と sources・related から案を考える
 - 型紙の色づかい・文字の決まりに合わせる。使う素材は assets のうち `ok` が true のものだけ
 
 ### visual_make（図解を作る）
