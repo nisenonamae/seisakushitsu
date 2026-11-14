@@ -216,7 +216,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <li>GitHub の Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token</li>
 <li>Repository access は「Only select repositories」で <b>seisakushitsu-data</b> だけ選び、Permissions の <b>Contents</b> を「Read and write」にして作る</li>
 <li>このアプリの<b>設定</b>で、持ち主 <code>nisenonamae</code>、リポジトリ名 <code>seisakushitsu-data</code>、ファイル名 <code>data/seisakushitsu.json</code>、トークンを入れて「保存して同期」</li>
-<li>ほかの端末でも同じものを入れる。あとは開いたとき・変えたときに自動で合わさる</li></ol></details>
+<li>ほかの端末は、設定の「読み取り用のコードを出す」でコードを出し、スマホのカメラで読み取るだけで同じ設定になる（トークンを書き留める必要はない）。あとは開いたとき・変えたときに自動で合わさる</li></ol></details>
 
 <details><summary>アプリを直したいとき</summary><p>Claude のチャットで「制作室の〇〇を直して」と頼めば、Claude が直接 GitHub に送ります。1〜2分後にアプリを開き直すと変わっています。変わらないときは、ページを下に引っ張って再読み込みしてください。</p></details>
 
@@ -237,6 +237,11 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <label>データのファイル名</label><input id="ghp" placeholder="data/seisakushitsu.json">
 <label>トークン（このリポジトリの Contents を読み書きできる fine-grained トークン）</label><input id="ght" type="password" autocomplete="off">
 <div class="row"><button class="b main" id="saveSet">保存して同期</button><span class="msg" id="setmsg"></span></div>
+<div class="item" style="margin-top:10px"><div class="q" style="font-size:15px">ほかの端末に設定を渡す</div>
+<p class="lead" style="margin:2px 0 6px">この端末で一度設定すれば、ほかの端末はカメラで読み取るだけで同じ設定になります。トークンを書き留めておく必要はありません（なくしたら作り直せば大丈夫）。</p>
+<div class="row"><button class="b" id="shareSet">読み取り用のコードを出す</button><button class="b" id="copySetLink">設定のリンクをコピー</button></div>
+<div id="qrBox" style="display:none;background:#fff;padding:12px;border-radius:8px;width:max-content;margin:8px 0"></div>
+<p class="lead" id="qrNote" style="display:none">スマホのカメラでこのコードを読み取り、出てきたリンクを開くと設定が入ります。人に見せないでください（このアプリのデータを読み書きできる鍵が入っています）。</p></div>
 <h2 style="margin-top:20px">AI</h2>
 <label>「AI に聞く」で開く場所</label><input id="aiurl" placeholder="https://claude.ai/new">
 <p class="lead">Claude のプロジェクト「ひらめき相談」の URL を入れると、そこが開きます。</p>
@@ -579,6 +584,19 @@ D.candidates.push({id:'auto-'+x.id,q:x.q,pillar:x.pillar||'',entry:'自動',angl
 save();renderAll()});
 $('autoN').value=LS.get('auto_n','5');$('autoN').onchange=()=>LS.set('auto_n',$('autoN').value);
 $('autoRun').onclick=()=>{const n=$('autoN').value;if(syncOn()){queueJob({type:'pick',n:+n});$('autoMeta').textContent=`${n}個の題材探しを頼みました。1時間以内にここに出ます`;return}copyOpen(`制作室の題材を、追加で ${n} 個選んでほしい。\nGitHub の nisenonamae/seisakushitsu を用意して（このチャットになければ add_repo で push 権限つきで追加してクローン。あれば git pull）、tools/AUTO_PICK.md の手順の「数を指定されたとき」に従って、題材を ${n} 個選び、data/auto.json の items に追加して push して（今ある items は残す。history にあるものは選ばない）。終わったら選んだ題材を点数つきで一行ずつ教えて。`)};
+
+/* ---------- 設定を別の端末へ ---------- */
+const setupPayload=()=>b64e(JSON.stringify({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p',''),t:LS.get('gh_t',''),k:LS.get('yt_key',''),a:LS.get('ai_url','')}));
+const setupLink=()=>location.origin+location.pathname+'#setup='+encodeURIComponent(setupPayload());
+function loadQR(){return new Promise((ok,ng)=>{if(window.QRCode)return ok();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=ok;s.onerror=ng;document.head.appendChild(s)})}
+$('shareSet').onclick=async()=>{if(!LS.get('gh_t','')){$('setmsg').className='msg';$('setmsg').textContent='先にこの端末で設定を保存してください';return}
+try{await loadQR();$('qrBox').innerHTML='';new QRCode($('qrBox'),{text:setupLink(),width:240,height:240,correctLevel:QRCode.CorrectLevel.L});$('qrBox').style.display='block';$('qrNote').style.display='block'}catch(e){$('setmsg').textContent='コードを出せませんでした。リンクをコピーして送ってください'}};
+$('copySetLink').onclick=async()=>{if(!LS.get('gh_t','')){$('setmsg').className='msg';$('setmsg').textContent='先にこの端末で設定を保存してください';return}
+const l=setupLink();try{await navigator.clipboard.writeText(l);$('copySetLink').textContent='コピーしました（自分にだけ送ってください）'}catch(e){prompt('コピーしてください',l)}setTimeout(()=>$('copySetLink').textContent='設定のリンクをコピー',3000)};
+(function(){const m=location.hash.match(/^#setup=(.+)$/);if(!m)return;try{const s=JSON.parse(b64d(decodeURIComponent(m[1])));
+if(s.o)LS.set('gh_o',s.o);if(s.r)LS.set('gh_r',s.r);if(s.p)LS.set('gh_p',s.p);if(s.t)LS.set('gh_t',s.t);if(s.k)LS.set('yt_key',s.k);if(s.a)LS.set('ai_url',s.a);
+history.replaceState(null,'',location.pathname);['gho','ghr','ghp','ght','key','aiurl'].forEach(id=>{const k={gho:'gh_o',ghr:'gh_r',ghp:'gh_p',ght:'gh_t',key:'yt_key',aiurl:'ai_url'}[id];if($(id))$(id).value=LS.get(k,'')});
+setTimeout(()=>{alert('ほかの端末の設定を入れました。同期を始めます。');sync().then(renderAll)},300)}catch(e){alert('設定のリンクを読み取れませんでした')}})();
 
 function renderAll(){renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
