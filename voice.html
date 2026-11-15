@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:40</span>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:50</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -537,7 +537,7 @@ async function recToggle(){if(MR){MR.stop();return}
  MR.onstop=async()=>{st.getTracks().forEach(t=>t.stop());MR=null;clearTimeout(recTimer);$('recBtn').textContent='● 自分の声を録る';$('recMsg').textContent='聞き取っています…';
   try{AC=AC||new AudioContext({sampleRate:SR});const buf=await AC.decodeAudioData(await new Blob(ch).arrayBuffer());RECBUF=buf;cur.rec=await analyzeRec(buf);$('recMsg').textContent='読み方と突き合わせています…';await alignRec();
    const nv=cur.rec.f0.filter(v=>v>0).length;$('recMsg').className='msg ok';$('recMsg').textContent=nv>10?`録れました（${(cur.rec.b-cur.rec.a).toFixed(1)} 秒）`:'声が小さいか、聞き取れませんでした。もう一度';
-   $('recPlay').disabled=false;$('recFit').disabled=nv<=10;draw()}catch(e){$('recMsg').textContent='聞き取れませんでした：'+e.message}};
+   $('recPlay').disabled=false;$('recFit').disabled=nv<=10;draw();const hit=[...new Set((cur.rec.al||[]).filter(g=>g&&!g[0]).map(g=>g.slice(1,4).join('_')))].map(k=>{const [si,pi,mi]=k.split('_').map(Number);return cur.sents[si].q.accent_phrases[pi].moras[mi].text});if(hit.length)$('recMsg').textContent+=`。「${hit.join('')}」の所に重ねました`+(cur.rec.part?'（文の一部として）':'')}catch(e){$('recMsg').textContent='聞き取れませんでした：'+e.message}};
  MR.start();$('recBtn').textContent='■ 止める';$('recMsg').className='msg';$('recMsg').textContent='録音中…セリフを読んで「止める」';recTimer=setTimeout(()=>MR&&MR.stop(),20000)}
 let recTimer=null;
 $('recBtn').onclick=recToggle;
@@ -581,12 +581,21 @@ async function alignRec(){const r=cur.rec;const parts=[];for(const s of cur.sent
  const sx=await to16k(sb);const tl=timeline();const hop=0.01;
  const A=feats(r.x16,16000),B=feats(sx,16000);const ia=Math.max(0,Math.floor(r.a/hop)),ib=Math.min(A.length-1,Math.ceil(r.b/hop)),ja=Math.max(0,Math.floor(tl.s0/hop)),jb=Math.min(B.length-1,Math.ceil(tl.s1/hop));
  const a=A.slice(ia,ib+1),b=B.slice(ja,jb+1),I=a.length,J=b.length;if(I<5||J<5)return;
- const band=Math.max(20,Math.ceil(Math.max(I,J)*0.3)),INF=1e18,C=new Float64Array(I*J).fill(INF),bk=new Int8Array(I*J);
+ // 録ったのが文の一部だけ（話した長さが読ませた長さの7割未満）なら、文の中で一番合う所を探す（始まりと終わりを自由にする）
+ const part=(r.b-r.a)<0.7*(tl.s1-tl.s0);r.part=part;
+ const band=part?J:Math.max(20,Math.ceil(Math.max(I,J)*0.3)),INF=1e18,C=new Float64Array(I*J).fill(INF),bk=new Int8Array(I*J);
  const dist=(p,q)=>{let s=0;for(let d=0;d<p.length;d++){const v=p[d]-q[d];s+=v*v}return Math.sqrt(s)};
+ // 進み方は「1:1・1:2・2:1」だけ（話す速さが半分〜倍の範囲で、ずるずる止まらないように）
  for(let i=0;i<I;i++){const jc=i*J/I;for(let j=Math.max(0,Math.floor(jc-band));j<Math.min(J,Math.ceil(jc+band));j++){const c=dist(a[i],b[j]);let best=INF,w=0;
-  if(i===0&&j===0)best=0;if(i>0&&C[(i-1)*J+j]<best){best=C[(i-1)*J+j];w=1}if(j>0&&C[i*J+j-1]<best){best=C[i*J+j-1];w=2}if(i>0&&j>0&&C[(i-1)*J+j-1]<=best){best=C[(i-1)*J+j-1];w=3}
+  if(i===0&&(j===0||part))best=0;
+  if(i>0&&j>0&&C[(i-1)*J+j-1]<best){best=C[(i-1)*J+j-1];w=3}
+  if(i>0&&j>1&&C[(i-1)*J+j-2]+c*0.5<best){best=C[(i-1)*J+j-2]+c*0.5;w=4}
+  if(i>1&&j>0&&C[(i-2)*J+j-1]+c*0.5<best){best=C[(i-2)*J+j-1]+c*0.5;w=5}
   if(best<INF){C[i*J+j]=best+c;bk[i*J+j]=w}}}
- const map=new Float32Array(I).fill(-1);let i=I-1,j=J-1;while(i>=0&&j>=0){if(map[i]<0)map[i]=j;const w=bk[i*J+j];if(w===1)i--;else if(w===2)j--;else{i--;j--}if(w===0)break}
+ let jEnd=J-1,iEnd=I-1;if(part){let m=INF;for(let j=0;j<J;j++){const v=C[(I-1)*J+j]/(I+0.0);if(v<m){m=v;jEnd=j}}}
+ if(C[iEnd*J+jEnd]>=INF){let m=INF;for(let j=0;j<J;j++)if(C[iEnd*J+j]<m){m=C[iEnd*J+j];jEnd=j}}
+ const map=new Float32Array(I).fill(-1);let i=iEnd,j=jEnd;
+ while(i>=0&&j>=0){map[i]=j;const w=bk[i*J+j];if(w===0)break;if(w===3){i--;j--}else if(w===4){i--;j-=2}else{map[i-1]=j-0.5;i-=2;j--}}
  r.al=Array.from({length:r.f0.length},()=>null);
  for(let k=0;k<I;k++){if(map[k]<0)continue;const ts=(ja+map[k])*hop;const g=tl.segs.find(s=>ts>=s.t0&&ts<s.t1);if(g)r.al[ia+k]=[g.k==='m'?0:1,g.si,g.pi,g.k==='m'?g.mi:-1,+((ts-g.t0)/Math.max(1e-6,g.t1-g.t0)).toFixed(2)]}}
 function recMap(){const r=cur&&cur.rec;if(!r||!r.al)return null;const lf=r.f0.map(v=>v>0?Math.log(v):0);const v=lf.filter(x=>x).sort((p,q)=>p-q);if(!v.length)return null;
@@ -598,11 +607,11 @@ function drawRec(){if(!$('recShow').checked)return;const m=recMap();if(!m)return
 $('recFit').onclick=()=>{const m=recMap();if(!m)return;pushUndo();let n=0,nl=0;const by={};m.pts.forEach(p=>(by[p.key]=by[p.key]||[]).push(p));
  const tl=timeline(),hop=cur.rec.hop;
  // 長さ：録った声の中での割合に合わせ、話す部分の全体の長さはいまのまま（速さはつまみで）
- const keys=tl.segs.map(g=>(g.k==='m'?0:1)+'_'+g.si+'_'+g.pi+'_'+(g.k==='m'?g.mi:-1));const recLen=keys.map(k=>(by[k]||[]).length*hop);const tot=recLen.reduce((a,c)=>a+c,0);const cur0=tl.segs.reduce((a,g)=>a+(g.t1-g.t0),0);
+ const keys=tl.segs.map(g=>(g.k==='m'?0:1)+'_'+g.si+'_'+g.pi+'_'+(g.k==='m'?g.mi:-1));const recLen=keys.map(k=>(by[k]||[]).length*hop);const tot=recLen.reduce((a,c)=>a+c,0);const cov=tl.segs.map((g,ix)=>recLen[ix]>0);const lo=cov.indexOf(true),hi=cov.lastIndexOf(true);const inR=ix=>ix>=lo&&ix<=hi;const cur0=tl.segs.reduce((a,g,ix)=>a+(inR(ix)?g.t1-g.t0:0),0);
  tl.segs.forEach((g,ix)=>{const k=keys[ix];if(g.k==='m'){const mo=cur.sents[g.si].q.accent_phrases[g.pi].moras[g.mi];
    if(mo.pitch>0){const ps=(by[k]||[]).map(p=>p.p).filter(v=>v!=null).sort((p,q)=>p-q);if(ps.length){mo.pitch=ps[ps.length>>1];n++}}
-   if($('recLen').checked&&tot>0&&recLen[ix]>0){const sp=cur.sents[g.si].q.speedScale||1;const L=recLen[ix]/tot*cur0*sp;mo.vowel_length=Math.max(0.02,L-(mo.consonant_length||0));nl++}}
-  else if($('recLen').checked&&tot>0){const sp=cur.sents[g.si].q.speedScale||1;const ap=cur.sents[g.si].q.accent_phrases[g.pi];ap.pause_mora.vowel_length=Math.max(0,recLen[ix]/tot*cur0*sp)}});
+   if($('recLen').checked&&tot>0&&inR(ix)){const sp=cur.sents[g.si].q.speedScale||1;const L=recLen[ix]/tot*cur0*sp;mo.vowel_length=Math.max(0.02,L-(mo.consonant_length||0));nl++}}
+  else if($('recLen').checked&&tot>0&&inR(ix)){const sp=cur.sents[g.si].q.speedScale||1;const ap=cur.sents[g.si].q.accent_phrases[g.pi];ap.pause_mora.vowel_length=Math.max(0,recLen[ix]/tot*cur0*sp)}});
  cur.edited=true;layout();draw();dirtyAudio();updateDiff();$('recMsg').className='msg ok';$('recMsg').textContent=`${n} 音の高さ${nl?`と ${nl} 音の長さ`:''}を、自分の声に合わせました`};
 /* ===== 全体の読み方（決まりの数をつまみで動かす） ===== */
 const ST12=12/LN2;
