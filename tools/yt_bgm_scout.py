@@ -1,5 +1,6 @@
 """伸びている動画の概要欄から、使われている BGM の出どころ（クレジット）を集める。
 使い方: python3 tools/yt_bgm_scout.py "なぜ 解説 アニメ" "地理 なぜ 解説" ... > out.json
+      1本だけ: python3 tools/yt_bgm_scout.py --video <URL> [秒 か 分:秒]
 - YouTube の検索（再生回数順）から動画を拾い、YouTube の公開の情報（innertube の next）で概要欄を読む
 - 「BGM・音楽・Music・素材・♪」を含む行と、音楽サイトへのリンクを抜き出す
 - 出どころ（サイト名）ごとに、使っている動画の数と合計の再生回数でまとめる
@@ -43,6 +44,37 @@ def credits(desc):
             # 見出し（「使用素材」など）のすぐ下の数行も拾う
             if PAT.search(l) and len(l) < 20: out += [x for x in lines[i + 1:i + 6] if x]
     return list(dict.fromkeys(out))
+TS = re.compile(r'(?<![\d:])(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?![\d:])')
+def sec_of(m): return int(m.group(1) or 0) * 3600 + int(m.group(2)) * 60 + int(m.group(3))
+def vid_of(u):
+    m = re.search(r'(?:v=|youtu\.be/|shorts/|live/)([\w-]{11})', u) or re.fullmatch(r'([\w-]{11})', u.strip())
+    return m.group(1) if m else None
+def identify(url, at=None):
+    """1本の動画の概要欄から、使われている音楽の候補を出す。at（秒）があれば、時刻付きの曲の一覧からその時に流れている曲を選ぶ"""
+    v = vid_of(url); x = details(v); cr = credits(x['desc'])
+    cands = []
+    for l in cr:
+        src = next((name for k, name in SITES.items() if k in l), None)
+        links = re.findall(r'https?://[^\s　]+', l)
+        if src or links or (PAT.search(l) and len(l) > 3):
+            cands.append({'line': l, 'source': src, 'links': links})
+    # 時刻付きの一覧（「0:00 曲名」）があれば、at の時刻に当たる行を選ぶ
+    timed = []
+    for l in x['desc'].split('\n'):
+        m = TS.search(l)
+        if m: timed.append((sec_of(m), l.strip()))
+    timed.sort(); now = None
+    if at is not None and timed:
+        for t, l in timed:
+            if t <= at: now = l
+    return {'video': v, 'title': x['title'], 'ch': x['ch'], 'views': x['views'], 'at': at, 'candidates': cands,
+            'timed': [l for t, l in timed][:40], 'at_line': now, 'has_credit': bool(cands)}
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == '--video':
+    at = None
+    if len(sys.argv) > 3:
+        a = sys.argv[3]; m = TS.fullmatch(a) if ':' in a else None
+        at = sec_of(m) if m else int(float(a))
+    json.dump(identify(sys.argv[2], at), sys.stdout, ensure_ascii=False, indent=1); sys.exit()
 if __name__ == '__main__':
     vids = {}
     for q in sys.argv[1:]:
