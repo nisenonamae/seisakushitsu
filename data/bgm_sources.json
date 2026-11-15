@@ -1,0 +1,303 @@
+{
+ "updated": "2026-11-15",
+ "how": "人気の解説動画（再生回数順・8つの探し方で79本）の概要欄のクレジットを tools/yt_bgm_scout.py で集め、出どころごとに数えた。使い方の条件は各サイトの規約ページで確かめた。",
+ "sources": [
+  {
+   "id": "opentracks",
+   "name": "OpenTracks（旧DOVA-SYNDROME）",
+   "url": "https://opentracks.com/",
+   "rules": "https://opentracks.com/",
+   "status": "使える",
+   "credit": "基本は不要（作曲者ごとの条件が優先）",
+   "monetize": "できる",
+   "fetch": "Claude",
+   "note": "国内最大級。曲ごとの「検索タグ」で印象を選べる。「DL数順」の一覧と「YouTube動画内BGM検索」がある（よく使われている曲を探しやすい）。政治・宗教の内容には使えない。Content ID への登録は禁止。",
+   "moods": "タグ（お洒落・怪しい・感動…）",
+   "seen": {
+    "videos": 4,
+    "views": 5280668,
+    "chs": [
+     "地理の雑学ゆっくり解説",
+     "あもとっと",
+     "参考書ソムリエ"
+    ]
+   }
+  },
+  {
+   "id": "maou",
+   "name": "魔王魂",
+   "url": "https://maou.audio/",
+   "rules": "https://maou.audio/rule/",
+   "status": "使える",
+   "credit": "必要（例「音楽：魔王魂」。概要欄でよい）",
+   "monetize": "できる（商用も無料・報告不要）",
+   "fetch": "Claude",
+   "note": "CC BY 4.0。加工は自由（尺・ピッチ・音量など）。ゲーム風・ファンタジー寄りが多い。",
+   "moods": "ジャンル分け",
+   "seen": {
+    "videos": 2,
+    "views": 3266990,
+    "chs": [
+     "あもとっと"
+    ]
+   }
+  },
+  {
+   "id": "amacha",
+   "name": "甘茶の音楽工房",
+   "url": "https://amachamusic.chagasi.com/",
+   "rules": "https://amachamusic.chagasi.com/terms.html",
+   "status": "使える",
+   "credit": "任意（サイト名・作曲者名・URLのどれか1つ）",
+   "monetize": "できる",
+   "fetch": "Claude",
+   "note": "「イメージから探す」（明るい・コミカル・ほのぼの・癒し・幻想的・しみじみ・悲しい・シリアス・不気味・怪しい・雄大・疾走感…）が音楽の棚の印象とほぼ同じ分け方。直リンクで鳴らすのは禁止（ダウンロードして使う）。Content ID 登録は禁止。音楽が主役の動画（作業用BGMなど）は TRACKS 社経由で表記が入ることがある。",
+   "moods": "イメージ別（16種）",
+   "seen": {
+    "videos": 1,
+    "views": 2107775,
+    "chs": [
+     "テイコウペンギン"
+    ]
+   }
+  },
+  {
+   "id": "bgmer",
+   "name": "BGMer",
+   "url": "https://bgmer.net/",
+   "rules": "https://bgmer.net/terms",
+   "status": "使える・自分で落とす",
+   "credit": "任意（例「音楽：BGMer https://bgmer.net」）",
+   "monetize": "できる（権利主張しないと明記）",
+   "fetch": "自分で",
+   "note": "ずんだもん解説でよく使われている。自動ツールでの収集・一括ダウンロードは固く禁止 → Claude は取らない。気に入った曲はブラウザで落として「頼む・足す」→「自分で見つけた曲を足す」から入れる。",
+   "moods": "ジャンル・雰囲気",
+   "seen": {
+    "videos": 4,
+    "views": 8077856,
+    "chs": [
+     "おまめさん",
+     "あもとっと"
+    ]
+   }
+  },
+  {
+   "id": "musmus",
+   "name": "MusMus",
+   "url": "https://musmus.main.jp/",
+   "rules": "https://musmus.main.jp/info.html",
+   "status": "使える・自分で落とす",
+   "credit": "必要（例「BGM:MusMus」）",
+   "monetize": "できる",
+   "fetch": "自分で",
+   "note": "広告ブロック中のダウンロード不可。AIの学習・AIに読み込ませて改変するのは禁止 → Claude は取らず、自分で落として入れる。フェード・ループ・カットはしてよい。曲の中身が変わる改変はだめ。",
+   "moods": "雰囲気別",
+   "seen": {
+    "videos": 1,
+    "views": 2405433,
+    "chs": [
+     "おまめさん"
+    ]
+   }
+  },
+  {
+   "id": "kmacleod",
+   "name": "Kevin MacLeod（incompetech）",
+   "url": "https://incompetech.com/",
+   "rules": "https://incompetech.com/music/royalty-free/licenses/",
+   "status": "使える",
+   "credit": "必要（決まった文言。保管庫に入れると自動で控える）",
+   "monetize": "できる",
+   "fetch": "Claude",
+   "note": "「探す」の目録（1443曲）。海外の解説動画で定番。",
+   "moods": "目録で印象分け済み",
+   "seen": {
+    "videos": 0,
+    "views": 0,
+    "chs": []
+   }
+  },
+  {
+   "id": "nicocommons",
+   "name": "ニコニ・コモンズ",
+   "url": "https://commons.nicovideo.jp/",
+   "rules": "https://commons.nicovideo.jp/",
+   "status": "注意",
+   "credit": "素材ごとに違う",
+   "monetize": "素材ごとに違う（営利利用を認めない素材も多い）",
+   "fetch": "自分で",
+   "note": "ゆっくり解説で一番多く見つかった（ほのぼのワルツ【リコーダー】など）。ただし素材ごとに条件がばらばらで、ニコニコ以外・収益化での利用を認めないものもある。使うなら1曲ずつ条件を確かめる。（未確認：個別の曲の条件）",
+   "moods": "—",
+   "seen": {
+    "videos": 11,
+    "views": 31620116,
+    "chs": [
+     "るーいのゆっくり科学",
+     "【ゆっくり解説】9割が知らない雑学",
+     "ヘンリーのゆっくり解説"
+    ]
+   }
+  },
+  {
+   "id": "peritune",
+   "name": "PeriTune",
+   "url": "https://peritune.com/",
+   "rules": "https://peritune.com/",
+   "status": "注意",
+   "credit": "サイトで確認",
+   "monetize": "サイトで確認",
+   "fetch": "自分で",
+   "note": "2026年8月時点で、一部の曲に TuneCore Japan から Content ID の申し立てが出ているとサイトに告知あり。収益化するチャンネルでは今は避ける。",
+   "moods": "タグ",
+   "seen": {
+    "videos": 0,
+    "views": 0,
+    "chs": []
+   }
+  },
+  {
+   "id": "falcom",
+   "name": "ファルコム音楽フリー宣言",
+   "url": "https://www.falcom.co.jp/music-use",
+   "rules": "https://www.falcom.co.jp/music-use/rules",
+   "status": "使いにくい",
+   "credit": "必要（曲名/アルバム名/Copyright© Nihon Falcom Corporation）",
+   "monetize": "使用料なし",
+   "fetch": "自分で",
+   "note": "ゲーム会社の曲。無料で使ってよいが、曲のファイルは配っていない（CDなどを自分で持っている必要がある）。量産には向かない。",
+   "moods": "—",
+   "seen": {
+    "videos": 1,
+    "views": 15163195,
+    "chs": [
+     "るな"
+    ]
+   }
+  },
+  {
+   "id": "otologic",
+   "name": "OtoLogic",
+   "url": "https://otologic.jp/",
+   "rules": "https://otologic.jp/free/license.html",
+   "status": "未確認",
+   "credit": "未確認",
+   "monetize": "未確認",
+   "fetch": "自分で",
+   "note": "解説動画で見かけた。規約のページがこちらから開けなかったので未確認。",
+   "moods": "—",
+   "seen": {
+    "videos": 2,
+    "views": 4513208,
+    "chs": [
+     "おまめさん",
+     "テイコウペンギン"
+    ]
+   }
+  },
+  {
+   "id": "nakarada",
+   "name": "Alexander Nakarada（Serpent Sound Studios）",
+   "url": "https://www.serpentsoundstudios.com/",
+   "rules": "https://www.serpentsoundstudios.com/",
+   "status": "未確認",
+   "credit": "CC BY 4.0 と書いている動画あり（未確認）",
+   "monetize": "未確認",
+   "fetch": "自分で",
+   "note": "科学解説（750万回）で使われていた。",
+   "moods": "—",
+   "seen": {
+    "videos": 1,
+    "views": 7522586,
+    "chs": [
+     "サイエンスドリーム"
+    ]
+   }
+  },
+  {
+   "id": "ytal",
+   "name": "YouTube オーディオライブラリ",
+   "url": "https://studio.youtube.com/",
+   "rules": "",
+   "status": "使える・自分で落とす",
+   "credit": "曲ごと（「帰属表示は不要」のものが一番安全）",
+   "monetize": "できる",
+   "fetch": "自分で",
+   "note": "YouTube Studio の中にある。Claude は入れないので自分で落として入れる。",
+   "moods": "ムード・ジャンルで絞れる",
+   "seen": {
+    "videos": 0,
+    "views": 0,
+    "chs": []
+   }
+  }
+ ],
+ "tracks": [
+  {
+   "name": "ベラドンナ",
+   "by": "Makoto Hiramatsu",
+   "src": "opentracks",
+   "url": "https://opentracks.com/bgm/detail/4446",
+   "tags": [
+    "お洒落",
+    "渋い",
+    "怪しい",
+    "ジャズ"
+   ],
+   "moods": [
+    "謎・ミステリー",
+    "落ち着いた"
+   ],
+   "len": 134,
+   "seenIn": "地理の雑学ゆっくり解説（220万回・144万回）"
+  },
+  {
+   "name": "Stay on your mind",
+   "by": "（OpenTracks・ページ移動済み）",
+   "src": "opentracks",
+   "url": "",
+   "tags": [],
+   "moods": [],
+   "seenIn": "地理の雑学ゆっくり解説（144万回）",
+   "note": "元のページが無くなっていた（名前で探し直す）"
+  },
+  {
+   "name": "ほのぼのワルツ【リコーダー】",
+   "by": "（ニコニ・コモンズ）",
+   "src": "nicocommons",
+   "url": "https://commons.nicovideo.jp/",
+   "tags": [],
+   "moods": [
+    "弾む・軽快",
+    "コミカル"
+   ],
+   "seenIn": "るーいのゆっくり科学（527万回ほか多数）・9割が知らない雑学（415万回）",
+   "note": "収益化での利用可否は素材ページで確認が必要"
+  },
+  {
+   "name": "Celebration",
+   "by": "Alexander Nakarada",
+   "src": "nakarada",
+   "url": "https://www.serpentsoundstudios.com/",
+   "tags": [],
+   "moods": [
+    "前向き・感動"
+   ],
+   "seenIn": "サイエンスドリーム（752万回）"
+  },
+  {
+   "name": "Ikusa JAPAN",
+   "by": "株式会社ウナシ（未確認）",
+   "src": "",
+   "url": "",
+   "tags": [
+    "和風"
+   ],
+   "moods": [
+    "和風",
+    "勢い・推進力"
+   ],
+   "seenIn": "ゼロカラ（175万回）",
+   "note": "出どころ未確認"
+  }
+ ]
+}

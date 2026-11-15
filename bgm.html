@@ -39,13 +39,15 @@ audio{width:100%;height:34px;margin:5px 0 2px}
 .msg{font-size:13px;color:var(--busy)}.ok{color:var(--good)}
 .empty{color:var(--sub);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;text-align:center}
 .picked{border:2px solid var(--good)}
+.st{display:inline-block;font-size:11.5px;border-radius:999px;padding:0 8px;margin-left:6px;color:#fff;background:var(--good)}.st.w{background:#b58300}.st.x{background:var(--sub)}
+.tr a{color:var(--sea)}
 .job{font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding:5px 0}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 20:40</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 22:10</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
-<div class="tabs" id="tabs"><button data-tab="shelf" aria-pressed="true">保管庫の曲</button><button data-tab="find">探す</button><button data-tab="ask">頼む・足す</button></div>
+<div class="tabs" id="tabs"><button data-tab="shelf" aria-pressed="true">保管庫の曲</button><button data-tab="find">探す</button><button data-tab="ask">頼む・足す</button><button data-tab="src">出どころ</button></div>
 
 <section data-tab="shelf" class="on">
   <p class="hint">保管庫に入っている BGM。印象で絞り込んで聞ける。気に入った曲に「いい」、使わない曲に「使わない」。<b>メイン・重い回・軽い回</b>を決めておくと、Claude が動画に付けるときにまずそれを使う（ポイント帳「BGMは3曲を使い回す」）。</p>
@@ -82,6 +84,14 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
   <label>概要欄に書くクレジット（要らなければ空）</label><input id="upCredit">
   <label>音のファイル（30MBまで）</label><input type="file" id="upFile" accept="audio/*">
   <div class="row"><button class="b main" id="upGo">保管庫に入れる</button><span class="msg" id="upMsg"></span></div>
+</section>
+
+<section data-tab="src">
+  <p class="hint">伸びている解説動画の概要欄から「どこの音楽を使っているか」を Claude が自動で集めたもの。使い方の条件は各サイトの規約で確かめてある。<b>Claude が取れる</b>所は「頼む」で入れてもらえる。<b>自分で落とす</b>所は、サイトの決まりで機械での取得が禁止されているので、ブラウザで落として「頼む・足す」の下から入れる。</p>
+  <div class="row"><button class="b" id="scoutGo">もう一度集めてもらう</button><span class="msg" id="scoutMsg"></span><span class="hint" id="srcUpd"></span></div>
+  <div id="srcList"></div>
+  <h2 style="margin-top:18px">人気の動画で使われていた曲</h2>
+  <div id="trkList"></div>
 </section>
 </main>
 <script>
@@ -162,8 +172,8 @@ $('addJob').onclick=()=>{if(!picks.size)return;const have=new Set(bgms().map(x=>
  for(const id of picks){const t=CAT.find(x=>x.id===id);if(!t||have.has(id))continue;D.sounds.push({id:uid('snd'),kind:'BGM',catId:t.id,name:t.t+'（'+t.src.replace(/（.*$/,'')+'）',moods:t.f,mood:t.f.join('・'),bpm:t.b,len:t.s,url:t.u,source:t.src,license:t.lic,credit:t.credit,desc:t.d,by:'作り手',like:1,createdAt:now(),updatedAt:now()});n++}
  picks.clear();LS.set('bgm_picks','[]');save();$('addMsg').className='msg ok';$('addMsg').textContent=`${n} 曲を保管庫に入れました（「いい」付き）`;renderFind();renderShelf()};
 /* ===== 頼む・足す ===== */
-function renderJobs(){const js=D.jobs.filter(j=>!j.deleted&&(j.type==='sound_add'||j.type==='sound_collect')).sort((a,b)=>b.createdAt-a.createdAt).slice(0,8);
- $('jobList').innerHTML=js.length?'<label>頼んだこと</label>'+js.map(j=>`<div class="job"><b>${j.type==='sound_add'?`入れてもらう（${(j.items||[]).length}曲）`:`探してもらう：${esc(j.wish||'')}`}</b>　${esc(j.status)}${j.result?'<br>'+esc(j.result):''}</div>`).join(''):''}
+function renderJobs(){const js=D.jobs.filter(j=>!j.deleted&&(j.type==='sound_add'||j.type==='sound_collect'||j.type==='sound_scout')).sort((a,b)=>b.createdAt-a.createdAt).slice(0,8);
+ $('jobList').innerHTML=js.length?'<label>頼んだこと</label>'+js.map(j=>`<div class="job"><b>${j.type==='sound_add'?`入れてもらう（${(j.items||[]).length}曲）`:j.type==='sound_scout'?'出どころを集め直してもらう':`探してもらう：${esc(j.wish||'')}`}</b>　${esc(j.status)}${j.result?'<br>'+esc(j.result):''}</div>`).join(''):''}
 $('wishGo').onclick=()=>{const w=$('wish').value.trim();if(!w)return;if(!syncOn()){$('wishMsg').textContent='制作室の設定で同期をつないでください';return}
  D.jobs.push({id:uid('j'),type:'sound_collect',status:'待ち',wish:w,n:+$('wishN').value,createdAt:now(),updatedAt:now()});save();$('wish').value='';$('wishMsg').className='msg ok';$('wishMsg').textContent='頼みました';renderJobs()};
 $('upMoods').innerHTML=MOODS.map(m=>`<button data-um="${esc(m)}">${esc(m)}</button>`).join('');
@@ -175,7 +185,31 @@ $('upGo').onclick=async()=>{const f=$('upFile').files[0],name=$('upName').value.
  D.sounds.push({id:uid('snd'),kind:'BGM',name,moods,mood:moods.join('・'),source:$('upSrc').value.trim(),license:$('upSrc').value.trim(),credit:$('upCredit').value.trim(),file:path,by:'作り手',like:1,createdAt:now(),updatedAt:now()});save();
  $('upMsg').className='msg ok';$('upMsg').textContent='入れました';['upName','upSrc','upCredit'].forEach(i=>$(i).value='');$('upFile').value='';document.querySelectorAll('#upMoods button').forEach(b=>b.removeAttribute('aria-pressed'));renderShelf()};
 
+
+/* ===== 出どころ（人気の動画の概要欄から集めたもの） ===== */
+let SRC=null;
+const ST_ORDER=['使える','使える・自分で落とす','注意','未確認','使いにくい'];
+async function loadSrc(){try{const r=await fetch('data/bgm_sources.json',{cache:'no-cache'});SRC=await r.json();renderSrc()}catch(e){$('srcList').innerHTML='<div class="empty">読めません：'+esc(e.message)+'</div>'}}
+const man=n=>n>=1e4?Math.round(n/1e4).toLocaleString()+'万回':n+'回';
+function renderSrc(){if(!SRC)return;$('srcUpd').textContent='集めた日：'+SRC.updated;
+ const xs=[...SRC.sources].sort((a,b)=>ST_ORDER.indexOf(a.status)-ST_ORDER.indexOf(b.status)||(b.seen.views-a.seen.views));
+ $('srcList').innerHTML=xs.map(x=>{const c=x.status.startsWith('使える')?'':x.status==='使いにくい'||x.status==='未確認'?'x':'w';
+  return `<div class="tr"><div class="t">${esc(x.name)}<span class="st ${c}">${esc(x.status)}</span><span class="tag">${x.fetch==='Claude'?'Claude が取れる':'自分で落とす'}</span></div>
+  ${x.seen.videos?`<div class="m">使っていた人気動画：${x.seen.videos}本（合計 ${man(x.seen.views)}）　${x.seen.chs.map(esc).join('・')}</div>`:''}
+  <div class="m">収益化：${esc(x.monetize)}　クレジット：${esc(x.credit)}${x.moods&&x.moods!=='—'?'　分け方：'+esc(x.moods):''}</div>
+  <div style="font-size:13.5px;margin-top:3px">${esc(x.note)}</div>
+  <div class="m"><a href="${esc(x.url)}" target="_blank" rel="noopener">サイトを開く</a>${x.rules?`　<a href="${esc(x.rules)}" target="_blank" rel="noopener">使い方の条件</a>`:''}</div></div>`}).join('');
+ const sById=Object.fromEntries(SRC.sources.map(x=>[x.id,x]));
+ $('trkList').innerHTML=SRC.tracks.map((t,i)=>{const so=sById[t.src];const can=so&&so.fetch==='Claude'&&t.url;
+  return `<div class="tr" data-trk="${i}"><div class="t">${esc(t.name)}　<span style="font-weight:400;font-size:13px">${esc(t.by)}</span></div>
+  <div>${(t.moods||[]).map(m=>`<span class="tag">${esc(m)}</span>`).join('')}${(t.tags||[]).map(m=>`<span class="tag">${esc(m)}</span>`).join('')}</div>
+  <div class="m">使われていた所：${esc(t.seenIn)}${t.note?'　※'+esc(t.note):''}</div>
+  <div class="row" style="margin:4px 0 0">${t.url?`<a href="${esc(t.url)}" target="_blank" rel="noopener" style="font-size:13px">配布元のページ</a>`:''}${can?'<button class="b" data-tget>棚に入れてもらう</button>':so?'<span class="hint">自分で落として入れる</span>':''}</div></div>`}).join('')}
+$('trkList').onclick=e=>{if(!e.target.matches('[data-tget]'))return;if(!syncOn()){alert('制作室の設定で同期をつないでください');return}const t=SRC.tracks[+e.target.closest('[data-trk]').dataset.trk];
+ D.jobs.push({id:uid('j'),type:'sound_collect',status:'待ち',wish:`この曲を棚に入れて：${t.name}（${t.by}）${t.url}`,n:1,track:t,createdAt:now(),updatedAt:now()});save();e.target.textContent='頼みました';e.target.disabled=true;renderJobs()};
+$('scoutGo').onclick=()=>{if(!syncOn()){$('scoutMsg').textContent='制作室の設定で同期をつないでください';return}
+ D.jobs.push({id:uid('j'),type:'sound_scout',status:'待ち',createdAt:now(),updatedAt:now()});save();$('scoutMsg').className='msg ok';$('scoutMsg').textContent='頼みました（次に Claude が作業するときに集め直します）'};
 function renderAll(){renderShelf();renderJobs();if(CAT.length)renderFind()}
-renderAll();loadCat();sync();
+renderAll();loadCat();loadSrc();sync();
 </script>
 </body></html>
