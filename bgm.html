@@ -45,7 +45,7 @@ audio{width:100%;height:34px;margin:5px 0 2px}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 21:45</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 22:35</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
 <div class="tabs" id="tabs"><button data-tab="shelf" aria-pressed="true">保管庫の曲</button><button data-tab="find">探す</button><button data-tab="ask">頼む・足す</button><button data-tab="src">出どころ</button></div>
 
@@ -87,12 +87,12 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 </section>
 
 <section data-tab="src">
-  <h2>この動画の音楽を調べる</h2>
-  <p class="hint">気になった動画の URL を貼って「調べてもらう」。Claude が概要欄のクレジット（と、時刻付きの曲の一覧）から曲を割り出し、<b>フリー素材かどうか</b>を確かめて下に出す（次に Claude が作業するときに調べる）。</p>
-  <label>動画の URL</label><input id="idUrl" placeholder="https://www.youtube.com/watch?v=…">
+  <h2>曲を調べる・棚に入れる</h2>
+  <p class="hint"><b>Shazam で曲が分かったとき</b>：Shazam の曲の URL（共有で出るもの）をそのまま下の欄に貼って「調べてもらう」。<b>動画の BGM が気になったとき</b>：その動画の YouTube の URL を貼る。どちらも Claude が<b>フリー素材かどうか</b>を確かめて下に出し、使える曲は棚に入れる（次に Claude が作業するときに調べる）。</p>
+  <label>Shazam の曲の URL か、動画の URL</label><input id="idUrl" placeholder="https://www.shazam.com/… または https://www.youtube.com/watch?v=…"><div class="hint" id="idPeek"></div>
   <div class="grid3">
     <div><label>気になった所の時刻（任意）</label><input id="idAt" placeholder="例：1:30"></div>
-    <div style="grid-column:span 2"><label>曲を聞き取りアプリで調べたら、その曲名（任意）</label><input id="idHeard" placeholder="例：Shazam で出た名前"></div>
+    <div style="grid-column:span 2"><label>曲名・作曲者（URL が無いときはここだけでもよい）</label><input id="idHeard" placeholder="例：雑踏と打鍵のリズム / roku"></div>
   </div>
   <details style="margin:6px 0"><summary>時刻の所の曲だけを知りたいとき</summary>
   <p class="hint">Claude は YouTube の動画から音を取り出せない（YouTube の規約で禁止）ので、音そのものから当てるのは手元でやる：<br>
@@ -234,16 +234,22 @@ $('scoutGo').onclick=()=>{if(!syncOn()){$('scoutMsg').textContent='制作室の�
 /* ===== この動画の音楽を調べる（bgm_identify） ===== */
 const VERD={'フリー素材':'','フリー素材（条件に注意）':'w','フリー素材ではない':'x bad','分からない':'x'};
 function renderIdent(){const js=D.jobs.filter(j=>!j.deleted&&j.type==='bgm_identify').sort((a,b)=>b.createdAt-a.createdAt).slice(0,12);
- $('idList').innerHTML=js.map(j=>`<div class="tr" data-idj="${j.id}"><div class="t" style="font-size:14px">${esc(j.title||j.url)}${j.at?'　<span class="tag">'+esc(j.at)+' の所</span>':''}${j.heard?'　<span class="tag">聞き取り：'+esc(j.heard)+'</span>':''}</div>
+ $('idList').innerHTML=js.map(j=>`<div class="tr" data-idj="${j.id}"><div class="t" style="font-size:14px">${esc(j.title||j.url||j.shazam||'')}${j.at?'　<span class="tag">'+esc(j.at)+' の所</span>':''}${j.heard?'　<span class="tag">聞き取り：'+esc(j.heard)+'</span>':''}</div>
  <div class="m">${esc(j.status)}${j.ch?'　'+esc(j.ch):''}</div>${j.result?`<div style="font-size:13.5px;margin-top:3px">${esc(j.result)}</div>`:''}
  ${(j.tracks||[]).map((t,i)=>`<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px"><b>${esc(t.name)}</b>　${esc(t.by||'')}<span class="st ${VERD[t.verdict]??'x'}">${esc(t.verdict||'分からない')}</span>${t.at?'<span class="tag">流れている所：'+esc(t.at)+'</span>':''}
   <div class="m">${esc(t.source||'')}${t.credit?'　クレジット：'+esc(t.credit):''}</div>${t.note?`<div style="font-size:13px">${esc(t.note)}</div>`:''}
   <div class="row" style="margin:3px 0 0">${t.url?`<a href="${esc(t.url)}" target="_blank" rel="noopener" style="font-size:13px">配布元のページ</a>`:''}${t.verdict&&t.verdict.startsWith('フリー素材（')||t.verdict==='フリー素材'?(t.fetch==='自分で'?'<span class="hint">自分で落として入れる</span>':`<button class="b" data-idget="${i}">棚に入れてもらう</button>`):''}</div></div>`).join('')}
  </div>`).join('')}
-$('idGo').onclick=()=>{const u=$('idUrl').value.trim();if(!/youtu/.test(u)){$('idMsg').className='msg';$('idMsg').textContent='YouTube の URL を入れてください';return}
+function shazamOf(u){if(!/shazam\.com/.test(u))return null;let t='',a='';try{const h=decodeURIComponent((u.split('#')[1]||''));const j=JSON.parse(h);t=j.title||'';a=j.artist||''}catch(e){}
+ return {title:t,artist:a,url:u.split('#')[0]}}
+$('idUrl').oninput=()=>{const z=shazamOf($('idUrl').value.trim());$('idPeek').textContent=z?(z.title?'Shazam の曲：'+z.title+(z.artist?' / '+z.artist:''):'Shazam の曲（名前は Claude が調べる）'):''};
+$('idGo').onclick=()=>{const u=$('idUrl').value.trim(),hd=$('idHeard').value.trim();const z=shazamOf(u);
+ if(!z&&!/youtu/.test(u)&&!hd){$('idMsg').className='msg';$('idMsg').textContent='Shazam の URL か、動画の URL か、曲名を入れてください';return}
  if(!syncOn()){$('idMsg').className='msg';$('idMsg').textContent='制作室の設定で同期をつないでください';return}
- D.jobs.push({id:uid('j'),type:'bgm_identify',status:'待ち',url:u,at:$('idAt').value.trim(),heard:$('idHeard').value.trim(),createdAt:now(),updatedAt:now()});save();
- $('idUrl').value='';$('idAt').value='';$('idHeard').value='';$('idMsg').className='msg ok';$('idMsg').textContent='頼みました';renderIdent()};
+ const job={id:uid('j'),type:'bgm_identify',status:'待ち',at:$('idAt').value.trim(),heard:hd,createdAt:now(),updatedAt:now()};
+ if(z){job.shazam=z.url;job.heard=hd||[z.title,z.artist].filter(Boolean).join(' / ');job.title=z.title?'Shazam：'+z.title:'Shazam の曲'}else if(/youtu/.test(u))job.url=u;else job.title='曲名：'+hd;
+ D.jobs.push(job);save();
+ $('idUrl').value='';$('idAt').value='';$('idHeard').value='';$('idPeek').textContent='';$('idMsg').className='msg ok';$('idMsg').textContent='頼みました';renderIdent()};
 $('idList').onclick=e=>{const b=e.target.closest('[data-idget]');if(!b)return;const j=D.jobs.find(x=>x.id===b.closest('[data-idj]').dataset.idj);const t=j.tracks[+b.dataset.idget];
  D.jobs.push({id:uid('j'),type:'sound_collect',status:'待ち',wish:`この曲を棚に入れて：${t.name}（${t.by||''}）${t.url||''}`,n:1,track:t,createdAt:now(),updatedAt:now()});save();b.textContent='頼みました';b.disabled=true;renderJobs()};
 function renderAll(){renderShelf();renderJobs();renderIdent();if(CAT.length)renderFind()}

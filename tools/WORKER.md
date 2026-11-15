@@ -360,6 +360,7 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
   - 注意：ニコニ・コモンズ（素材ごとに条件が違い、営利・ニコニコ外を認めないものも多い。1曲ずつ確かめる）、PeriTune（2026年8月時点で一部の曲に Content ID の申し立てが出ている）
 - **出どころの一覧**：`data/bgm_sources.json`（音楽の棚の「出どころ」タブ）。`sources[]`（status：使える／使える・自分で落とす／注意／未確認／使いにくい、`fetch`：Claude／自分で、`seen`：使っていた人気動画の数と合計再生回数）と `tracks[]`（人気の動画で使われていた曲）
 - **sound_scout（出どころを集め直す）**：`python3 -I tools/yt_bgm_scout.py "<探し方>" ... > out.json`。探し方はチャンネルの題材に合わせて 6〜10 個（例「ゆっくり解説 雑学」「地理 解説 なぜ」「ずんだもん 解説」）。検索は再生回数順、概要欄は innertube の next で読む（player は bot 確認で止められやすい。1本ごとに1秒あける）。結果の `sources`（既知の出どころの集計）と `new_domains`（まだ一覧にないドメイン）を見て、新しい出どころは**規約ページを読んで**から `bgm_sources.json` に足す（読めなければ status「未確認」）。曲名が書いてあるものは `tracks[]` に足す。`updated` を更新してアプリのリポジトリに入れる。`result` に「新しく見つかった出どころ・曲」を一言
+- **bgm_identify で `shazam`（Shazam の曲の URL）か `heard` だけのとき**（動画の URL なし）：曲名・作曲者（`heard`）で配布元を探す（OpenTracks は `https://opentracks.com/bgm?keywords=<曲名>`、ほかは Web 検索）。配布元の曲のページと規約を確かめて `tracks[]` と `verdict` を書く。フリー素材で `fetch` が Claude の所なら、配布元の公式のダウンロードから**その1曲だけ**取って `sounds[]` に入れる（`by:"作り手"`・`like:1`＝作り手が自分で見つけた曲、`moods`・`rms`・`len`・`credit`・`source`）。BGMer・MusMus など自動での取得が禁止の所は入れずに「自分で落として入れる」と書く
 - **bgm_identify（この動画の音楽を調べる）**：`jobs[]` の `url`、`at`（気になった時刻。任意、「1:30」など）、`heard`（作り手が Shazam などの聞き取りアプリで出した曲名。任意）。
   1. `python3 -I tools/yt_bgm_scout.py --video <url> [at]` で題名・チャンネル・概要欄の候補（`candidates`）・時刻付きの一覧（`timed`、`at_line`＝その時刻に当たる行）を出す。**動画から音は取らない**
   2. 曲ごとに出どころと使い方の条件を確かめる（`bgm_sources.json` にあればそれ。無ければ配布元の規約ページを読む。曲名だけなら Web で配布元を探す）
