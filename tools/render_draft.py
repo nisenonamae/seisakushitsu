@@ -158,7 +158,7 @@ for k,b in enumerate(seq,1):
         if si==0:starts.append(0.0)
         elif sh.get('at'):
             ci=full.find(sh['at'],pos)
-            if ci<0:print('見つからない言葉:',k,sh['at'],file=sys.stderr);ci=pos
+            if ci<0:raise SystemExit(f'見つからない言葉：場面 {k} の at「{sh["at"]}」が語りにない（語りを直したら at も直す）')
             pos=ci;starts.append(t_of_char(ci))
         else:starts.append(offs[min(sj,len(sents)-1)])
         sj+=int(sh.get('n',1)) if not sh.get('at') else 0

@@ -15,6 +15,9 @@ for k,b in enumerate(live,1):
     sents=b['narr']
     for i,sh in enumerate(b.get('shots') or []):
         tag=f'{k}-{i+1}';kd=kind(sh)
+        # 場面の切り替えの言葉（at）と、合わせる言葉（ats）が語りにあるか（語りを直したあとにずれやすい）
+        for w in ([sh['at']] if sh.get('at') else [])+list(sh.get('ats') or []):
+            if w not in sents:W.append((tag,f'合わせる言葉「{w}」が語りにない（語りを直したら言葉も直す）'))
         # 文字の優先度は低い：部品に文字を渡していないか
         for key in('text','label','labels','name'):
             v=sh.get(key)
