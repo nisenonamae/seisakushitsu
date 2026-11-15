@@ -1053,7 +1053,7 @@ $('fdTitle').value='';$('fdText').value='';$('fdWhy').value='';$('fdFile').value
 $('feedList').addEventListener('click',e=>{const it=e.target.closest('[data-feed]');if(!it)return;const f=D.feeds.find(x=>x.id===it.dataset.feed);
 if(e.target.matches('[data-fdel]')){if(!confirm('この餌を消しますか？（決まりにした学びは残ります）'))return;f.deleted=true}
 else if(e.target.matches('[data-ldrop]')){const l=f.lessons[+e.target.dataset.ldrop];l.drop=!l.drop}
-else if(e.target.matches('[data-lrule]')){const l=f.lessons[+e.target.dataset.lrule];if(l.rule)return;const t=prompt('決まりとして残す文',l.text);if(!t||!t.trim())return;const sc={'構成':'構成','肉付け':'肉付け','見せ方':'図解','サムネ':'サムネ'}[l.area]||'全部';addRule({scope:sc,do:t.trim(),from:'餌から（'+(f.title||f.kind).slice(0,30)+'）'});l.rule=true;renderRules()}
+else if(e.target.matches('[data-lrule]')){const l=f.lessons[+e.target.dataset.lrule];if(l.rule)return;const t=prompt('決まりとして残す文',l.text);if(!t||!t.trim())return;const sc={'構成':'構成','肉付け':'肉付け','見せ方':'図解','サムネ':'サムネ','声':'音','音':'音'}[l.area]||'全部';addRule({scope:sc,do:t.trim(),from:'餌から（'+(f.title||f.kind).slice(0,30)+'）'});l.rule=true;renderRules()}
 else return;f.updatedAt=now();save();renderFeeds()})}}
 function renderRules(){if(!$('ruleList'))return;const rs=liveRules();
 $('ruleList').innerHTML=rs.length?rs.map(r=>`<div class="item ${r.active?'':'off'}" data-rule="${r.id}"><div class="tags"><span>${esc(r.scope)}</span><span>${esc(r.from||'')}</span>${r.createdAt>1?`<span>${md(r.createdAt)}</span>`:''}</div>

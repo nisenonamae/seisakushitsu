@@ -82,6 +82,18 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
   </div>
 
   <div class="card">
+    <h2>調整のメモ</h2>
+    <p class="hint">声づくりのコツ。Claude が記事などから集めたものと、自分で書いたもの。Claude も声を作るときにこれを読む。</p>
+    <div class="chips" id="noteFilter"></div>
+    <div id="noteList" style="max-height:420px;overflow:auto;margin-top:6px"></div>
+    <details style="margin-top:8px"><summary>自分でメモを足す</summary>
+      <label>見出し</label><input id="nTitle" placeholder="例：数字の前は少し間をあける">
+      <label>中身</label><textarea id="nBody" placeholder="例：「およそ三十センチ」の前に 0.2秒あけると聞き取りやすい"></textarea>
+      <div class="row"><button class="b main" id="nAdd">メモに足す</button><span class="msg" id="nMsg"></span></div>
+    </details>
+  </div>
+
+  <div class="card">
     <h2>練習の文</h2>
     <div class="chips" id="lineFilter"></div>
     <div id="lineList" style="max-height:360px;overflow:auto;margin-top:6px"></div>
@@ -143,8 +155,8 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const LN2=Math.log(2);
 
 /* ===== データ（voice.json。制作室の data.json とは別のファイル） ===== */
-const KEYS=['kata','takes','lines','vrules'];
-const SEED={kata:[{id:'kata-default',name:'はじめの型',speaker:2,speakerName:'四国めたん（ノーマル）',pitch:0,formant:1,mixTo:null,mixRate:0,low:0,mid:0,high:0,reverb:0,reverbLen:0.6,updatedAt:1}],takes:[],lines:[],vrules:[]};
+const KEYS=['kata','takes','lines','vrules','notes'];
+const SEED={notes:[],kata:[{id:'kata-default',name:'はじめの型',speaker:2,speakerName:'四国めたん（ノーマル）',pitch:0,formant:1,mixTo:null,mixRate:0,low:0,mid:0,high:0,reverb:0,reverbLen:0.6,updatedAt:1}],takes:[],lines:[],vrules:[]};
 let V;try{V=JSON.parse(LS.get('vv_data','null'))}catch(e){V=null}
 if(!V)V=clone(SEED);KEYS.forEach(k=>{V[k]=V[k]||[];for(const x of SEED[k])if(!V[k].some(y=>y.id===x.id))V[k].push(clone(x))});
 function save(){LS.set('vv_data',JSON.stringify(V));schedulePush()}
@@ -416,7 +428,18 @@ function renderNarr(){const D=ssData();if(!D||!(D.projects||[]).length){$('projS
  $('narrList').innerHTML=projBlocks(p).map((b,i)=>`<div style="margin-top:6px"><div class="hint"><b>${i+1}</b> ${esc(b.role)}</div>${splitSents(b.text).map(s=>`<div class="line ${done.has(s.replace(/[《》]/g,''))?'done':''}" data-np="${p.id}" data-nb="${b.id}">${esc(s)}</div>`).join('')}</div>`).join('')}
 $('projSel').onchange=()=>{LS.set('vv_proj',$('projSel').value);renderNarr()};
 $('narrList').onclick=e=>{const d=e.target.closest('[data-nb]');if(!d)return;curLineId=null;curSrc={projId:d.dataset.np,blockId:d.dataset.nb};loadLine(d.textContent,curScene)};
-function renderSide(){fillKataSel();renderLines();renderTakes();renderNarr()}
+/* ===== 調整のメモ ===== */
+let noteF='すべて';
+function renderNotes(){const ns=V.notes.filter(n=>!n.deleted).sort((a,b)=>(a.by==='作り手'?0:1)-(b.by==='作り手'?0:1)||(b.updatedAt||0)-(a.updatedAt||0)||(a.order||0)-(b.order||0));
+ const cs=['すべて',...new Set(ns.map(n=>n.cat).filter(Boolean))];$('noteFilter').innerHTML=cs.map(c=>`<button data-nf="${esc(c)}" aria-pressed="${c===noteF}">${esc(c)}</button>`).join('');
+ const xs=ns.filter(n=>noteF==='すべて'||n.cat===noteF);
+ $('noteList').innerHTML=xs.length?xs.map(n=>`<details class="take" data-note="${n.id}"><summary style="color:var(--ink);font-size:14px">${n.cat?`<span class="badge">${esc(n.cat)}</span>`:''}${n.by==='作り手'?'<span class="badge u">自分</span>':''}${esc(n.title)}</summary>
+ <div style="font-size:13.5px;margin:4px 0">${esc(n.body)}</div>${n.claude?`<div class="m" style="color:var(--claude)">Claude の見立て：${esc(n.claude)}</div>`:''}
+ ${n.src?`<div class="hint">出どころ：<a href="${esc(n.src)}" target="_blank" rel="noopener">${esc(n.srcTitle||n.src)}</a></div>`:''}${n.by==='作り手'?'<div class="st"><button class="b" data-ndel>消す</button></div>':''}</details>`).join(''):'<p class="hint">まだありません。</p>'}
+$('noteFilter').onclick=e=>{const b=e.target.closest('[data-nf]');if(b){noteF=b.dataset.nf;renderNotes()}};
+$('noteList').onclick=e=>{if(!e.target.matches('[data-ndel]'))return;const n=V.notes.find(x=>x.id===e.target.closest('[data-note]').dataset.note);if(confirm('このメモを消しますか？')){n.deleted=true;n.updatedAt=now();save();renderNotes()}};
+$('nAdd').onclick=()=>{const t=$('nTitle').value.trim(),b=$('nBody').value.trim();if(!t&&!b)return;V.notes.push({id:uid('vn'),cat:'自分のメモ',title:t||b.slice(0,30),body:b,by:'作り手',updatedAt:now()});save();$('nTitle').value='';$('nBody').value='';flash('nMsg','足しました');renderNotes()};
+function renderSide(){fillKataSel();renderNotes();renderLines();renderTakes();renderNarr()}
 
 /* ===== やり方の切り替え ===== */
 const mode=()=>LS.get('vv_mode','self');
