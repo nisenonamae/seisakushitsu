@@ -18,6 +18,9 @@ ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=flo
 ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない')
 ap.add_argument('--kata',default='',help='声の調整室の型で読む（型のid か名前。main＝チャンネルの声）。エンジン（tools/setup_engine.sh）が要る')
 ap.add_argument('--vrules',action='store_true',help='声の調整室の決まり（読み方）を当てはめる')
+ap.add_argument('--lead',type=float,default=0.0,help='動画のいちばん頭の無音（秒）。--kata のとき')
+ap.add_argument('--bgm',default='',help='BGM の指定（JSON のファイル）：[{"from":段の番号(1から),"file":音のファイル,"vol":声に対する大きさ(既定0.12)}]')
+ap.add_argument('--lufs',type=float,default=-14.0,help='仕上げの大きさ（LUFS）。--bgm のとき')
 ap.add_argument('--subfont',type=int,default=1,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
 D=json.load(open(a.data,encoding='utf-8'));P=[p for p in D['projects'] if p['id']==a.proj][0]
 ob=(P.get('outline') or {}).get('blocks',[]);fb=(P.get('flesh') or {}).get('blocks',[])
@@ -79,6 +82,7 @@ def tts(text,path):
                 if abs(d1-d0)>0.3 or abs(d1-d0)>0.15*d0:LAST.setdefault('tchk',[]).append((plain,d0,d1))
             except Exception:pass
         else:(s0,q),=VR.queries_for(text,VK,VRULES)[:1] or [(text,None)]
+        if a.lead and not LAST.get('led'):q=json.loads(json.dumps(q));q['prePhonemeLength']=max(q.get('prePhonemeLength',0.1),a.lead);LAST['led']=1
         y=VR.finish(VR.synth_sent(q,VK),VK,tail=False)
         from scipy.signal import resample_poly
         y=resample_poly(y,SR,VR.SR) if SR!=VR.SR else y
@@ -298,7 +302,44 @@ for e in sfx:
     w_=snd_long(kd,e[2],e[3] if len(e)>3 else None) if len(e)>2 else snd(kd);i=int(max(0,tt-(0.08 if kd=='whoosh' else 0))*SR);mix[i:i+len(w_)]+=w_[:max(0,len(mix)-i)]
 mix=np.clip(mix,-1,1)
 with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(SR);wv.writeframes((mix*32767).astype(np.int16).tobytes())
-subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)
+if a.bgm:
+    # 8) BGM：段ごとに曲を決め、つなぎ目はゆっくり入れ替える。声のある間は小さく、間では少し上げる。最後に大きさをそろえる
+    import pyloudnorm
+    from scipy.signal import resample_poly
+    SR2=48000;v48=resample_poly(mix,2,1) if SR==24000 else resample_poly(mix,SR2,SR);N=len(v48)
+    def load(f):
+        r=subprocess.run(['ffmpeg','-loglevel','error','-i',f,'-f','f32le','-ac','2','-ar',str(SR2),'-'],capture_output=True,check=True);return np.frombuffer(r.stdout,np.float32).reshape(-1,2).astype(np.float64)
+    spec=json.load(open(a.bgm,encoding='utf-8'));spec.sort(key=lambda x:x['from'])
+    starts=[tl[min(len(tl),max(1,x['from']))-1]['start'] for x in spec]
+    bg=np.zeros((N,2));XF=int(2.0*SR2)
+    for i,x in enumerate(spec):
+        s0=int(starts[i]*SR2);s1=int(starts[i+1]*SR2) if i+1<len(spec) else N;L=min(N,s1+XF)-s0
+        y=load(os.path.join(a.repo,x['file']) if a.repo and not os.path.isabs(x['file']) else x['file'])
+        y=y/max(1e-9,np.sqrt((y**2).mean()))   # 曲ごとの大きさをそろえる
+        seg=np.zeros((L,2));pos=[0]
+        while pos[-1]+len(y)<L:pos.append(pos[-1]+len(y)-XF)   # 曲が短ければ、つなぎ目を重ねてくり返す
+        for ci,k in enumerate(pos):
+            n=min(len(y),L-k);c=y[:n].copy();r=min(XF,n)
+            if ci>0:c[:r]*=np.linspace(0,1,r)[:,None]
+            if ci+1<len(pos):c[-XF:]*=np.linspace(1,0,XF)[:,None]
+            seg[k:k+n]+=c
+        fi=np.ones(L);fa=min(XF if i>0 else int(1.0*SR2),L);fi[:fa]=np.linspace(0,1,fa)
+        fo=min(XF if i+1<len(spec) else int(3*SR2),L);fi[-fo:]*=np.linspace(1,0,fo)
+        bg[s0:s0+L]+=seg*fi[:,None]*float(x.get('vol',0.12))
+    # 声のある間は下げ、0.6秒以上の間では少し上げる（なめらかに）
+    hop=int(0.05*SR2);fr=np.sqrt(np.convolve(v48**2,np.ones(hop)/hop,'same')[::hop]);vref=np.percentile(fr[fr>1e-4],60) if (fr>1e-4).any() else 1
+    talk=(fr>vref*0.08).astype(float);w=int(0.6/0.05)
+    talk=np.convolve(talk,np.ones(2*w+1),'same')>0   # 間が短ければ話している扱い
+    gain=np.where(talk,1.0,1.6);a_=0.15
+    for j in range(1,len(gain)):gain[j]=gain[j-1]+a_*(gain[j]-gain[j-1])
+    gain=np.interp(np.arange(N),np.arange(len(gain))*hop,gain)
+    vr=np.sqrt((v48**2)[v48**2>1e-8].mean()) if (v48**2>1e-8).any() else 0.1
+    out=np.stack([v48,v48],1)+bg*gain[:,None]*vr
+    meter=pyloudnorm.Meter(SR2);lo=meter.integrated_loudness(out);out=pyloudnorm.normalize.loudness(out,lo,a.lufs)
+    pk=np.abs(out).max();out=np.tanh(out/0.89)*0.89 if pk>0.89 else out   # 割れないように
+    with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(2);wv.setsampwidth(2);wv.setframerate(SR2);wv.writeframes((np.clip(out,-1,1)*32767).astype(np.int16).tobytes())
+    print(f'BGM：{len(spec)} 曲、仕上げの大きさ {a.lufs} LUFS（元 {lo:.1f}）',file=sys.stderr)
+subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','192k' if a.bgm else '128k','-shortest',a.out],check=True)
 json.dump({'duration':round(T,2),'voice':a.voice,'speed':a.speed,'blocks':tl,'shots':allshots},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
 for _p,_d0,_d1 in LAST.get('tchk',[]):print(f'［点検］調整した文の長さが変わった：「{_p[:24]}」 {_d0:.1f}秒 → {_d1:.1f}秒。カットの切り替わりと字幕は語りに合わせて自動で動くが、その段の動きが急ぎすぎ・間延びしていないか見る',file=sys.stderr)
 print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB',(f"／調整室で調整した文 {LAST.get('tuned',0)} 文" if VK else ''))

@@ -97,6 +97,20 @@ def apply_rules(q, text, emk, rules, scene=''):
                         if m['pitch'] > 0: m['pitch'] += p.get('up', 0.15)
                         m['vowel_length'] *= p.get('stretch', 1.1)
                     pos += len(m['text'])
+        elif op == 'emph_pause':   # 《》の言葉の直前に間を置く（1本に1〜2回まで）
+            aps = q['accent_phrases']; kana = ''.join(m['text'] for ap in aps for m in ap['moras'])
+            for k in emk:
+                at = kana.find(k)
+                if at < 0: continue
+                pos = 0; hit = None
+                for pi, ap in enumerate(aps):
+                    L = sum(len(m['text']) for m in ap['moras'])
+                    if pos <= at < pos + L: hit = pi; break
+                    pos += L
+                if hit and hit > 0:
+                    prev = aps[hit - 1]; sec = p.get('sec', 0.45)
+                    if prev.get('pause_mora'): prev['pause_mora']['vowel_length'] = max(prev['pause_mora']['vowel_length'], sec)
+                    else: prev['pause_mora'] = {'text': '、', 'consonant': None, 'consonant_length': None, 'vowel': 'pau', 'vowel_length': sec, 'pitch': 0}
         elif op == 'first_up':
             if q['accent_phrases']:
                 for m in q['accent_phrases'][0]['moras']:

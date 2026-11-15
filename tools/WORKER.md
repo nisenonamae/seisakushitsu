@@ -311,3 +311,10 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - **Claude 用**：`rules`（決まりごと）・`feeds`（餌箱）・`sounds`・`kufu`・`voice.json` の `vrules`。作業で読む・守るもの。アプリの「工夫」タブ
 - **作り手用**：`points`（ポイント帳。アプリの「ポイント」タブ。「声」の分野は声の調整室にも出る）。作り手が読んで動画づくり・声の調整に使うコツ。`{"id","area"(声・語り・構成・見せ方・サムネ・題名・音・進め方),"tag","title","body","example","claude"(見立て),"src","srcTitle","srcOrder","order","by":"Claude"|"作り手","star","updatedAt"}`
 - 作り手が記事・動画を貼って「読み込んで」と言ったら：全部読み（動画は文字起こし・画面）、①作り手が読む `points` に、やさしい言葉で一項目ずつ（見出し＋中身＋例＋Claude の見立て。裏付けがない主張はそう書く。文章の丸写しはしない）、②Claude が使えるものは `feeds` に学びとして残し、作り手の了承があるもの・はっきり効くものは `rules`（声の読み方は `vrules`）へ
+
+## 音を付けて書き出す（声の型＋BGM）
+- `python3 tools/render_draft.py --data … --proj … --repo <notion-daily> --out … --kata main --vrules --lead 0.3 --bgm <bgm.json>`（先に `bash tools/setup_engine.sh`）
+- `--lead 0.3`：動画のいちばん頭に 0.3 秒の無音（ポイント帳「冒頭に 0.3秒の無音」）
+- `--bgm`：`[{"from":段の番号(1から),"file":"roadmap/apps/seisakushitsu/sounds/BGM/…","vol":0.12}]`。段ごとに曲を切り替え（つなぎ目は2秒で入れ替え）、曲が短ければ重ねてくり返す。声の RMS の 0.12 倍（約 -18dB）、1.2 秒以上の間では 1.6 倍に上げる。最後に -14 LUFS にそろえ、48kHz ステレオで書き出す
+- BGM は音の保管庫（data.json の `sounds[]`、kind「BGM」）から選ぶ。使った曲は `usedIn` に足し、概要欄のクレジット（`credit`）を必ず入れる
+- 語りの《》は強調の印：`vrules` の `emph`（少し高く・ゆっくり）と `emph_pause`（直前に 0.45 秒の間）が効く。1本に1〜2か所まで

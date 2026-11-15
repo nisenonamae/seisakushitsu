@@ -278,6 +278,9 @@ for(const r of rules){const p=r.p||{};
  else if(r.op==='comma_pause'){for(const ap of q.accent_phrases)if(ap.pause_mora)ap.pause_mora.vowel_length+=(p.add||0.05)}
  else if(r.op==='emph'){const fm=flatMoras(q);const kana=fm.map(x=>x.m.text).join('');
   for(const k of s.emk||[]){let at=kana.indexOf(k);if(at<0)continue;let pos=0;fm.forEach(x=>{const L=x.m.text.length;if(pos>=at&&pos<at+k.length){if(x.m.pitch>0)x.m.pitch+=(p.up||0.15);x.m.vowel_length*=(p.stretch||1.1)}pos+=L})}}
+ else if(r.op==='emph_pause'){const aps=q.accent_phrases;const kana=aps.map(ap=>ap.moras.map(m=>m.text).join('')).join('');
+  for(const k of s.emk||[]){const at=kana.indexOf(k);if(at<0)continue;let pos=0,hit=-1;for(let pi=0;pi<aps.length;pi++){const L=aps[pi].moras.reduce((a,m)=>a+m.text.length,0);if(at>=pos&&at<pos+L){hit=pi;break}pos+=L}
+  if(hit>0){const prev=aps[hit-1],sec=p.sec||0.45;if(prev.pause_mora)prev.pause_mora.vowel_length=Math.max(prev.pause_mora.vowel_length,sec);else prev.pause_mora={text:'、',consonant:null,consonant_length:null,vowel:'pau',vowel_length:sec,pitch:0}}}}
  else if(r.op==='first_up'){const ap=q.accent_phrases[0];if(ap)for(const m of ap.moras)if(m.pitch>0)m.pitch+=(p.amt||0.05)}
 }return q}
 
