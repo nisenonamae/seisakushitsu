@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 舗装の費用。文字なし（お金は硬貨の山、交通量は車の数で見せる）。
+ paved … 舗装の道：造る時に硬貨がどっと積み上がり、そのあと長い年月（太陽が何度も回る）でも、手入れの硬貨はたまにしか増えない
+ dirt  … 未舗装の道：造る時の硬貨は少し。times[1] から車がどんどん増え、そのたびに重機やトラックが来て硬貨が積み上がっていく
+ cross … 2本の線のグラフ（横＝車の数、縦＝お金）。舗装の線は高く平ら、未舗装の線は低く始まって急に上がる。times[1] で交点より左（車が少ない側）を塗る
+ area  … 真上から見た細長い道。times[1] で道が小さな床のタイルに切り分けられ、何百枚もの台所の床として並ぶ */
+window.DEF={mode:'paved'};
+function coin(x,y,col='#e8b923'){g.fillStyle='#a77d12';g.beginPath();g.ellipse(x,y+6,58,16,0,0,7);g.fill();g.fillRect(x-58,y,116,6);g.fillStyle=col;g.beginPath();g.ellipse(x,y,58,16,0,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=2;g.beginPath();g.ellipse(x,y,40,10,0,0,7);g.stroke()}
+function stack(x,base,n,frac=0){g.save();g.translate(x,base);g.scale(1.35,1.35);g.translate(-x,-base);stack0(x,base,n,frac);g.restore()}
+function stack0(x,base,n,frac=0){const N=Math.floor(n);for(let i=0;i<N;i++)coin(x,base-i*13);if(frac>0){const y=lerp(base-N*13-160,base-N*13,eout(frac));g.globalAlpha=clamp(frac*3);coin(x,y);g.globalAlpha=1}}
+function sun(cx,cy,a){const x=cx+150*Math.cos(a),y=cy-90*Math.sin(a);if(y>cy+10)return;g.fillStyle='#ffd36a';g.shadowColor='#ffd36a';g.shadowBlur=30;g.beginPath();g.arc(x,y,24,0,7);g.fill();g.shadowBlur=0}
+function scene(paved){sky('#9cc3e6','#f1dcb5');hills(0,[['#c9b28c',430,28,0]]);g.fillStyle='#8a7350';g.fillRect(0,520,W,H-520);
+  g.fillStyle=paved?'#3d4148':'#cfa86c';g.fillRect(0,500,W,70);if(paved){g.fillStyle='#f3f4f6';for(let x=20;x<W;x+=110)g.fillRect(x,532,56,6)}else{const r2=R(2);for(let i=0;i<260;i++){g.fillStyle='rgba(120,90,55,.6)';g.fillRect(r2()*W,500+r2()*68,4,3)}}}
+function smallCar(x,col,dir=1){g.save();g.translate(x,520);g.scale(dir*0.62,0.62);car(0,-34,1,{col,wheelR:34,wheelAng:x/34});g.restore()}
+function grader(x){g.save();g.translate(x,500);g.fillStyle='#e0a526';g.beginPath();g.roundRect(-80,-70,160,44,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(20,-110,40,36);g.fillStyle='#e0a526';g.fillRect(14,-114,52,6);g.fillStyle='#333';g.fillRect(-40,-22,90,8);tire(-60,-18,18,x/18);tire(60,-18,18,x/18);g.restore()}
+function truck(x){g.save();g.translate(x,500);g.fillStyle='#64748b';g.beginPath();g.moveTo(-90,-24);g.lineTo(-90,-70);g.lineTo(30,-80);g.lineTo(30,-24);g.fill();g.fillStyle='#8a6a46';g.beginPath();g.ellipse(-30,-74,56,14,0,Math.PI,0);g.fill();g.fillStyle='#c0392b';g.beginPath();g.roundRect(34,-74,56,50,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(56,-66,26,20);tire(-60,-18,18,x/18);tire(60,-18,18,x/18);g.restore()}
+window.render=function(t){const m=P.mode;
+ if(m==='paved'||m==='dirt'){
+   const paved=m==='paved';scene(paved);const t1=T(1,DUR*0.3);
+   // 年月：太陽が回る（造ったあと）
+   const yrs=Math.max(0,t-0.9)*(paved?2.4:1.6);sun(640,380,Math.PI-yrs*Math.PI%(Math.PI*2));
+   const sx=1110,base=680;
+   // 造る時の硬貨
+   const build=paved?14:3;const kb=clamp(t/0.9);let n=build*kb;
+   if(Math.floor(n)!==window._n){window._n=Math.floor(n);if(n>0.5)window.SFX.push([t,'tick'])}
+   // 手入れ
+   if(paved){const up=Math.max(0,Math.floor((t-1.4)/1.6));n=build*kb+Math.min(up,3)}
+   else{const tt=Math.max(0,t-t1);const traffic=clamp(tt/(DUR-t1));const up=Math.floor(tt*(0.6+2.4*traffic));n=build*kb+Math.min(up,24);
+     if(up!==window._u){window._u=up;if(up>0)window.SFX.push([t,'pop'])}
+     const cars=t<t1?1:1+Math.floor(7*traffic);for(let i=0;i<cars;i++){const q=((t*0.25+i/cars)%1);smallCar(lerp(-120,900,q),['#c0392b','#2f5d9f','#e6e2d8','#3b3b3b','#7a8f3c','#d97706','#9333ea','#0f766e'][i%8],1)}
+     if(tt>0.6){const q=((tt*0.18)%1);if(Math.floor(tt*0.18)%2===0)grader(lerp(-160,900,q));else truck(lerp(-160,900,q))}}
+   if(paved){for(let i=0;i<2;i++){const q=((t*0.22+i/2)%1);smallCar(lerp(-120,900,q),['#c0392b','#2f5d9f'][i],1)}if(t<0.9){g.fillStyle='#4b5563';g.beginPath();g.roundRect(lerp(-200,700,t/0.9)-90,430,180,70,12);g.fill();tire(lerp(-200,700,t/0.9)-50,478,22,t*9);tire(lerp(-200,700,t/0.9)+50,478,22,t*9)}}
+   g.fillStyle='rgba(20,15,10,.35)';g.beginPath();g.ellipse(sx,base+14,90,22,0,0,7);g.fill();stack(sx,base,n,n%1);
+ }
+ else if(m==='cross'){
+   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#1e2833');bg.addColorStop(1,'#10151b');g.fillStyle=bg;g.fillRect(0,0,W,H);
+   const x0=170,y0=600,x1=1150,y1=90;const t1=T(1,DUR*0.65);
+   // 軸：横は車の数（車の絵がだんだん増える）、縦はお金（硬貨）
+   g.strokeStyle='#cbd5e1';g.lineWidth=5;arrowLine(x0,y0,x1,y0,'#cbd5e1',5);arrowLine(x0,y0,x0,y1,'#cbd5e1',5);
+   const r2=R(4);for(let i=0;i<5;i++){const cx=lerp(x0+80,x1-80,i/4);const n=[1,2,4,7,11][i];for(let j=0;j<n;j++){g.fillStyle='#94a3b8';const xx=cx+(j%4-1.5)*20,yy=y0+30+Math.floor(j/4)*14;g.beginPath();g.roundRect(xx-8,yy-5,16,10,3);g.fill()}}
+   g.save();g.translate(x0-60,y1+40);g.scale(0.55,0.55);coin(0,0);coin(0,-13);coin(0,-26);g.restore();
+   const X=u=>lerp(x0,x1-40,u),pv=u=>lerp(y0-330,y0-360,u),dt=u=>y0-40-430*Math.pow(u,1.6);
+   const k=ease((t-0.3)/Math.max(1,t1-0.6));
+   const uc=(()=>{let lo=0,hi=1;for(let i=0;i<30;i++){const mid=(lo+hi)/2;if(dt(mid)>pv(mid))lo=mid;else hi=mid}return lo})();
+   // 塗り（交点の左：未舗装の方が安い）
+   if(t>t1){const f=ease((t-t1)/0.8);sfxOnce('f',t1,'pop');g.fillStyle=`rgba(74,222,128,${0.22*f})`;g.beginPath();g.moveTo(X(0),pv(0));for(let u=0;u<=uc;u+=0.01)g.lineTo(X(u),pv(u));for(let u=uc;u>=0;u-=0.01)g.lineTo(X(u),dt(u));g.closePath();g.fill();
+     g.strokeStyle=`rgba(74,222,128,${0.8*f})`;g.lineWidth=3;g.beginPath();g.moveTo(X(uc),y0);g.lineTo(X(uc),pv(uc));g.stroke()}
+   for(const [fn,col,w] of [[pv,'#9ca3af',10],[dt,'#e2b878',10]]){g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.beginPath();for(let u=0;u<=k;u+=0.005){const p=[X(u),fn(u)];u===0?g.moveTo(...p):g.lineTo(...p)}g.stroke()}
+   // 線の先の目印（道の切れ端）
+   const tag=(x,y,paved)=>{g.fillStyle=paved?'#3d4148':'#cfa86c';g.beginPath();g.roundRect(x+16,y-16,56,32,8);g.fill();if(paved){g.fillStyle='#f3f4f6';g.fillRect(x+30,y-2,28,4)}else{g.fillStyle='rgba(120,90,55,.8)';for(let i=0;i<6;i++)g.fillRect(x+22+i*8,y-6+(i%2)*8,3,3)}};
+   if(k>0.02){tag(X(k),pv(k),1);tag(X(k),dt(k),0)}
+   if(k>=uc&&!window._c){window._c=1;window.SFX.push([t,'tick'])}
+   if(k>uc){const p=back((k-uc)/0.08);g.fillStyle='#fff';g.beginPath();g.arc(X(uc),pv(uc),9*p,0,7);g.fill()}
+ }
+ else if(m==='area'){
+   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#6f8f4e');bg.addColorStop(1,'#56743c');g.fillStyle=bg;g.fillRect(0,0,W,H);
+   const t1=T(1,DUR*0.45);const zo=ease(t/Math.max(0.8,t1*0.8));
+   // 道：最初は太く寄っていて、引いていくと細長い
+   const hh=lerp(220,22,zo);g.fillStyle='#3d4148';if(t<t1+0.4){g.globalAlpha=1-clamp((t-t1)/0.4);g.fillRect(-20,360-hh/2,W+40,hh);g.fillStyle='#f3f4f6';for(let x=-((t*40)%120);x<W;x+=120)g.fillRect(x,360-hh*0.03,60,Math.max(1,hh*0.06));g.globalAlpha=1}
+   // 台所の床のタイル（何百枚）
+   if(t>t1){const cols=36,rows=20,sz=26,gap=5,gx=(W-cols*(sz+gap))/2,gy=(H-rows*(sz+gap))/2+10;const r2=R(6);
+     for(let i=0;i<cols*rows;i++){const c=i%cols,rw=Math.floor(i/cols);const d=t-t1-r2()*1.6;if(d<0)continue;const q=eout(d/0.6);const sx=r2()*W,sy=360;const x=lerp(sx,gx+c*(sz+gap),q),y=lerp(sy,gy+rw*(sz+gap),q);
+       g.fillStyle='#e9dcc3';g.fillRect(x,y,sz,sz);g.fillStyle='#c9b48f';g.fillRect(x,y,sz/2,sz/2);g.fillRect(x+sz/2,y+sz/2,sz/2,sz/2)}
+     const n=Math.floor((t-t1)*14);if(n!==window._k&&t-t1<2){window._k=n;window.SFX.push([t,'tick'])}}
+ }
+};
+</script></body></html>

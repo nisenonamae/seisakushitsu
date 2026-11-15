@@ -3,9 +3,14 @@
 <script src="lib.js"></script>
 <script>
 /* 人物の紹介（似顔絵ではない絵の人物）。すっきりした名札：丸い枠の人物＋名前＋細い線＋肩書き。times[1]＝名札を出す瞬間 */
-window.DEF={name:'',role:''};
+window.DEF={name:'',role:''};   // paper:true＝人物の絵の代わりに論文の紙（何人かの共同研究のとき）
 window.render=function(t){const bg=g.createRadialGradient(420,360,60,640,360,900);bg.addColorStop(0,'#2c3a4b');bg.addColorStop(1,'#0f141b');g.fillStyle=bg;g.fillRect(0,0,W,H);
   const k=eout(t/0.6);const cx=400,cy=360,R0=170;
+  if(P.paper){g.save();g.translate(cx,cy);g.rotate(-0.06);g.scale(k,k);g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.roundRect(-118,-150,250,320,10);g.fill();g.fillStyle='#f8fafc';g.beginPath();g.roundRect(-128,-160,250,320,10);g.fill();
+    g.fillStyle='#334155';g.fillRect(-100,-130,190,14);g.fillStyle='#94a3b8';for(let i=0;i<4;i++)g.fillRect(-100,-100+i*16,i===3?120:190,7);
+    g.strokeStyle='#c2410c';g.lineWidth=4;g.beginPath();for(let x=-100;x<=90;x+=3)g.lineTo(x,-6-14*Math.max(0,Math.sin(x/10))*(x+100)/190);g.stroke();g.strokeStyle='#64748b';g.lineWidth=2;g.beginPath();g.moveTo(-100,10);g.lineTo(90,10);g.stroke();
+    g.fillStyle='#94a3b8';for(let i=0;i<6;i++)g.fillRect(-100,34+i*16,i%3===2?140:190,7);g.restore();g.strokeStyle='rgba(255,211,106,.9)';g.lineWidth=5;g.beginPath();g.arc(cx,cy,R0*1.15*k,-Math.PI/2,-Math.PI/2+Math.PI*2*k);g.stroke()}
+  else{
   g.save();g.beginPath();g.arc(cx,cy,R0*k,0,7);g.clip();const sk=g.createLinearGradient(0,cy-R0,0,cy+R0);sk.addColorStop(0,'#d9b98a');sk.addColorStop(1,'#a8764a');g.fillStyle=sk;g.fillRect(cx-R0,cy-R0,2*R0,2*R0);
   g.fillStyle='#8a5a34';g.fillRect(cx-R0,cy+70,2*R0,R0);
   // 人物（白衣・めがね）
@@ -13,9 +18,9 @@ window.render=function(t){const bg=g.createRadialGradient(420,360,60,640,360,900
   g.fillStyle='#3b4a5c';g.beginPath();g.moveTo(cx-22,cy+20);g.lineTo(cx,cy+90);g.lineTo(cx+22,cy+20);g.fill();
   g.fillStyle='#e4b694';g.beginPath();g.ellipse(cx,cy-40,52,62,0,0,7);g.fill();g.fillStyle='#5a4535';g.beginPath();g.ellipse(cx,cy-82,56,30,0,Math.PI,0);g.fill();g.fillRect(cx-56,cy-84,12,30);g.fillRect(cx+44,cy-84,12,30);
   g.strokeStyle='#1f2937';g.lineWidth=4;g.beginPath();g.arc(cx-20,cy-38,14,0,7);g.moveTo(cx+34,cy-38);g.arc(cx+20,cy-38,14,0,7);g.moveTo(cx-6,cy-38);g.lineTo(cx+6,cy-38);g.stroke();
-  g.restore();g.strokeStyle='rgba(255,211,106,.9)';g.lineWidth=5;g.beginPath();g.arc(cx,cy,R0*k,-Math.PI/2,-Math.PI/2+Math.PI*2*k);g.stroke();
+  g.restore();g.strokeStyle='rgba(255,211,106,.9)';g.lineWidth=5;g.beginPath();g.arc(cx,cy,R0*k,-Math.PI/2,-Math.PI/2+Math.PI*2*k);g.stroke();}
   const t1=T(1,0.5),n=eout((t-t1)/0.5);if(n>0&&P.name){sfxOnce('n',t1,'pop');g.save();g.globalAlpha=n;g.translate((1-n)*40,0);
-    g.fillStyle='#fff';g.font=`900 64px ${FONT}`;g.textAlign='left';g.textBaseline='alphabetic';g.fillText(P.name,640,350);
+    g.fillStyle='#fff';let fs=64;g.font=`900 ${fs}px ${FONT}`;while(g.measureText(P.name).width>W-680&&fs>30){fs-=2;g.font=`900 ${fs}px ${FONT}`}g.textAlign='left';g.textBaseline='alphabetic';g.fillText(P.name,640,350);
     g.fillStyle='#ffd36a';g.fillRect(642,372,380*n,4);g.fillStyle='#cbd5e1';g.font=`700 30px ${FONT}`;g.fillText(P.role,642,420);g.restore()}
 };
 </script></body></html>
