@@ -61,11 +61,18 @@ if a.kata:
     vj=os.path.join(a.repo,'roadmap/apps/seisakushitsu/voice.json')
     if not os.path.exists(vj):raise SystemExit('voice.json がない：'+vj)
     VV=VR.load_voice(vj);VK=VR.pick_kata(VV,None if a.kata=='main' else a.kata);VRULES=VV.get('vrules') if a.vrules else None
+    # 作り手が調整室で調整して保存した文は、その読み方をそのまま使う（同じ元の声のときだけ）
+    TUNED={}
+    for t in sorted([t for t in VV.get('takes',[]) if not t.get('deleted')],key=lambda t:t.get('createdAt',0)):
+        if (t.get('kata') or {}).get('speaker')!=VK['speaker']:continue
+        for x in t.get('sents',[]):TUNED[(x.get('plain') or x['text']).strip()]=x['q']
     try:VR.eng('/version')
     except Exception:raise SystemExit('VOICEVOX エンジンが動いていない（bash tools/setup_engine.sh）')
 def tts(text,path):
     if VK:
-        (s0,q),=VR.queries_for(text,VK,VRULES)[:1] or [(text,None)]
+        plain=text.replace('《','').replace('》','').strip()
+        if plain in TUNED:q=TUNED[plain];LAST['tuned']=LAST.get('tuned',0)+1
+        else:(s0,q),=VR.queries_for(text,VK,VRULES)[:1] or [(text,None)]
         y=VR.finish(VR.synth_sent(q,VK),VK,tail=False)
         from scipy.signal import resample_poly
         y=resample_poly(y,SR,VR.SR) if SR!=VR.SR else y
@@ -287,4 +294,4 @@ mix=np.clip(mix,-1,1)
 with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(SR);wv.writeframes((mix*32767).astype(np.int16).tobytes())
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)
 json.dump({'duration':round(T,2),'voice':a.voice,'speed':a.speed,'blocks':tl,'shots':allshots},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
-print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB')
+print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB',(f"／調整室で調整した文 {LAST.get('tuned',0)} 文" if VK else ''))

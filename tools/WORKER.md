@@ -303,3 +303,4 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - 型（kata）の直しは作り手が決めるもの。Claude は型を勝手に変えない
 - 本番の動画の声：`python3 tools/render_draft.py ... --kata main --vrules`（先に `bash tools/setup_engine.sh`）。調整室で聞いた音と同じ手順で作る（tools/voice_render.py）
 - 「Claude の案から」の take の `fromClaude`（直した量）が 0.1 を切るのが続いたら、作り手に「声は Claude だけで作れそう」と伝える
+- 動画の語りの文を調整室で調整して保存したもの（take の `src` に projId・blockId）は、`render_draft.py --kata` のとき、同じ文（《》を除いた文字が同じ、元の声も同じ）ならその読み方（`q`）をそのまま使う。語りの文を書き換えたら、その文の調整は使われなくなる（作り手に一言伝える）

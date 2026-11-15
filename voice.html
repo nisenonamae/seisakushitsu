@@ -86,6 +86,13 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
     <div class="chips" id="lineFilter"></div>
     <div id="lineList" style="max-height:360px;overflow:auto;margin-top:6px"></div>
   </div>
+
+  <div class="card">
+    <h2>動画の語り</h2>
+    <p class="hint">制作室の動画の語りを、一文ずつ選んで調整できる。ここで調整して保存した文は、<b>本番の動画でもその読み方がそのまま使われる</b>。</p>
+    <select id="projSel"></select>
+    <div id="narrList" style="max-height:420px;overflow:auto;margin-top:6px"></div>
+  </div>
 </div>
 
 <div>
@@ -229,14 +236,14 @@ async function loadLine(text,scene){if(!SPK.length&&!(await checkEngine()))retur
 const sents=[];for(const s of splitSents(text)){const{plain,em}=stripEmph(s);const q=await eng('/audio_query',{text:plain,speaker:K.speaker},{});
 const emk=[];for(const [a,b] of em){const k=await kanaOf(plain.slice(a,b));if(k)emk.push(k)}
 sents.push({text:s,plain,emk,base:clone(q),q:null,claude:null})}
-cur={text,sents,scene:scene||'',edited:false,lineId:curLineId};
+cur={text,sents,scene:scene||'',edited:false,lineId:curLineId,src:curSrc};
 const cl=sents.map(s=>applyRules(clone(s.base),s,scene||''));sents.forEach((s,i)=>{s.claude=cl[i]});
 sents.forEach((s,i)=>{s.q=clone(mode()==='claude'?s.claude:s.base)});
 undoStack=[];if(scene)setScene(scene);$('txt').value=text;afterLoad()}
 async function reloadForSpeaker(){if(!cur)return;const t=cur.text,sc=cur.scene;await loadLine(t,sc)}
 function afterLoad(){['playNow','playBase','undo','resetRead','saveTake'].forEach(i=>$(i).disabled=false);$('playClaude').hidden=mode()!=='claude';$('playClaude').disabled=false;
 showRead();layout();draw();dirtyAudio();updateDiff()}
-$('load').onclick=()=>{const t=$('txt').value.trim();if(t){curLineId=null;loadLine(t,curScene)}};
+$('load').onclick=()=>{const t=$('txt').value.trim();if(t){curLineId=null;curSrc=null;loadLine(t,curScene)}};
 $('txt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('load').click()}});
 
 /* ===== 読み方（文全体）のつまみ：全部の文に同じ値をかける ===== */
@@ -365,13 +372,13 @@ function updateDiff(){if(!cur){$('diffInfo').textContent='';return}const qs=cur.
 
 /* ===== 場面とメモと保存 ===== */
 const SCENES=['ふつうの説明','問いかけ','答え・結論','数字','驚き・意外','並べて言う','引用・人の言葉','冒頭のつかみ','結び','強調'];
-let curScene='',curLineId=null;
+let curScene='',curLineId=null,curSrc=null;
 function setScene(s){curScene=s;if(cur)cur.scene=s;document.querySelectorAll('#sceneChips button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s))}
 $('sceneChips').innerHTML=SCENES.map(s=>`<button data-s="${s}">${s}</button>`).join('');
 $('sceneChips').onclick=e=>{const b=e.target.closest('button');if(b){setScene(curScene===b.dataset.s?'':b.dataset.s);if(cur&&mode()==='claude'){/* 場面ごとの決まりがあるので案を作り直す */const keepEdited=cur.edited;cur.sents.forEach(s=>{s.claude=applyRules(clone(s.base),s,curScene);if(!keepEdited)s.q=clone(s.claude)});draw();dirtyAudio();updateDiff()}}};
 $('saveTake').onclick=()=>{if(!cur)return;const memo=$('memo').value.trim();
  if(!curScene&&!memo&&!confirm('場面もメモもないまま保存しますか？（メモがあると Claude が学びやすい）'))return;
- const qs=cur.sents.map(s=>s.q);const t={id:uid('vt'),text:cur.text,lineId:cur.lineId||null,scene:curScene,memo,mode:mode(),kataId:K.id,kata:clone(K),
+ const qs=cur.sents.map(s=>s.q);const t={id:uid('vt'),text:cur.text,lineId:cur.lineId||null,src:cur.src||null,scene:curScene,memo,mode:mode(),kataId:K.id,kata:clone(K),
   sents:cur.sents.map(s=>({text:s.text,plain:s.plain,emk:s.emk,base:s.base,claude:mode()==='claude'?s.claude:null,q:s.q})),
   fromBase:diffAmount(qs,cur.sents.map(s=>s.base)),fromClaude:mode()==='claude'?diffAmount(qs,cur.sents.map(s=>s.claude)):null,
   rulesUsed:mode()==='claude'?V.vrules.filter(r=>r.active!==false&&!r.deleted).map(r=>r.id):[],status:'Claude まだ',createdAt:now(),updatedAt:now()};
@@ -384,7 +391,7 @@ function renderLines(){const ls=V.lines.filter(l=>!l.deleted).sort((a,b)=>(a.ord
  const xs=ls.filter(l=>lineF==='すべて'||l.scene===lineF);
  $('lineList').innerHTML=xs.length?xs.map(l=>`<div class="line ${done.has(l.id)?'done':''}" data-line="${l.id}"><span class="sc">${esc(l.scene||'')}</span>${esc(l.text)}</div>`).join(''):'<p class="hint">Claude が用意した文がここに出ます（まだ同期されていなければ、少し待つ）。</p>'}
 $('lineFilter').onclick=e=>{const b=e.target.closest('[data-lf]');if(b){lineF=b.dataset.lf;renderLines()}};
-$('lineList').onclick=e=>{const d=e.target.closest('[data-line]');if(!d)return;const l=V.lines.find(x=>x.id===d.dataset.line);curLineId=l.id;setScene(l.scene||'');loadLine(l.text,l.scene||'')};
+$('lineList').onclick=e=>{const d=e.target.closest('[data-line]');if(!d)return;const l=V.lines.find(x=>x.id===d.dataset.line);curLineId=l.id;curSrc=null;setScene(l.scene||'');loadLine(l.text,l.scene||'')};
 function renderTakes(){const ts=V.takes.filter(t=>!t.deleted).sort((a,b)=>b.createdAt-a.createdAt);
  const cl=ts.filter(t=>t.mode==='claude'&&t.fromClaude!=null).slice(0,10);
  $('progress').innerHTML=cl.length?`<p>Claude の案から直した量（最近 ${cl.length} 本の平均）：<span class="big">${(cl.reduce((a,t)=>a+t.fromClaude,0)/cl.length).toFixed(2)}</span>　<span class="hint">0.1 を切るのが続けば、Claude だけで作れる目安</span></p>`:'<p class="hint">「Claude の案から」で保存すると、直した量の移り変わりがここに出ます。</p>';
@@ -396,7 +403,20 @@ $('takeList').onclick=async e=>{const d=e.target.closest('[data-take]');if(!d)re
  if(e.target.matches('[data-tl]')||e.target.matches('[data-tp]')){const k=V.kata.find(x=>x.id===t.kataId);if(k){LS.set('vv_kata',k.id);fillKataSel()}K=clone(t.kata);showKata();
   cur={text:t.text,scene:t.scene,edited:false,lineId:t.lineId,sents:t.sents.map(s=>({...clone(s),claude:s.claude||clone(s.base)}))};$('txt').value=t.text;setScene(t.scene||'');$('memo').value=t.memo||'';afterLoad();
   if(e.target.matches('[data-tp]'))play('now')}};
-function renderSide(){fillKataSel();renderLines();renderTakes()}
+/* ===== 動画の語り（制作室のデータ。同じサイトなのでこの Mac の制作室が持っているものを読む） ===== */
+function ssData(){try{return JSON.parse(localStorage.getItem('ss_data')||'null')}catch(e){return null}}
+function projBlocks(p){const ob=(p.outline&&p.outline.blocks)||[],fb=(p.flesh&&p.flesh.blocks)||[];const oi={};ob.forEach((b,i)=>oi[b.id]=i);
+ if(fb.length)return fb.filter(b=>b.mark!=='削る'&&b.oid in oi&&ob[oi[b.oid]].mark!=='削る').sort((a,b)=>(oi[a.oid]-oi[b.oid])||(fb.indexOf(a)-fb.indexOf(b))).map(b=>({id:b.id,role:b.role||'',text:b.narr||''}));
+ return ob.filter(b=>b.mark!=='削る').map(b=>({id:b.id,role:b.role||'',text:b.text||''}))}
+function projName(p,D){const c=(D.candidates||[]).find(c=>c.id===p.candId);return p.title||(c&&c.q)||p.id}
+function renderNarr(){const D=ssData();if(!D||!(D.projects||[]).length){$('projSel').innerHTML='';$('narrList').innerHTML='<p class="hint">この Mac で制作室を一度開いて同期すると、ここに動画の語りが出ます。</p>';return}
+ const ps=D.projects.filter(p=>!p.deleted&&((p.flesh&&p.flesh.blocks||[]).length||(p.outline&&p.outline.blocks||[]).length)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+ const pid=LS.get('vv_proj',ps[0]&&ps[0].id);$('projSel').innerHTML=ps.map(p=>`<option value="${p.id}">${esc(projName(p,D))}</option>`).join('');$('projSel').value=pid;
+ const p=ps.find(x=>x.id===$('projSel').value)||ps[0];if(!p)return;const done=new Set(V.takes.filter(t=>!t.deleted&&t.src&&t.src.projId===p.id).map(t=>t.text.replace(/[《》]/g,'')));
+ $('narrList').innerHTML=projBlocks(p).map((b,i)=>`<div style="margin-top:6px"><div class="hint"><b>${i+1}</b> ${esc(b.role)}</div>${splitSents(b.text).map(s=>`<div class="line ${done.has(s.replace(/[《》]/g,''))?'done':''}" data-np="${p.id}" data-nb="${b.id}">${esc(s)}</div>`).join('')}</div>`).join('')}
+$('projSel').onchange=()=>{LS.set('vv_proj',$('projSel').value);renderNarr()};
+$('narrList').onclick=e=>{const d=e.target.closest('[data-nb]');if(!d)return;curLineId=null;curSrc={projId:d.dataset.np,blockId:d.dataset.nb};loadLine(d.textContent,curScene)};
+function renderSide(){fillKataSel();renderLines();renderTakes();renderNarr()}
 
 /* ===== やり方の切り替え ===== */
 const mode=()=>LS.get('vv_mode','self');
