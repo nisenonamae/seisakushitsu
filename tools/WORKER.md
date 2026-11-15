@@ -292,3 +292,14 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 
 ## 4. 報告
 片づけた仕事を一行ずつ、短く報告する。
+
+## 声の調整室（voice.html ／ データは `roadmap/apps/seisakushitsu/voice.json`）
+作り手が Mac で声を調整して残したものを読み、声の作り方を育てる。作り手に「声の調整を見て」と言われたとき、または頼みごとの片づけのついでに行う。
+- `voice.json` の中身：`kata[]`（声の型。`main: true` がチャンネルの声）、`takes[]`（保存した調整）、`lines[]`（練習の文）、`vrules[]`（読み方の決まり＝Claude の案の作り方）
+- `takes[]` の `status` が「Claude まだ」のものを古い順に読む。各 take には文ごとに `base`（エンジンのまま）・`claude`（決まりを当てはめた案。自分で調整のときは null）・`q`（作り手が仕上げたもの）、`scene`（場面）、`memo`、`kata`（そのときの型）が入っている
+- 読み方：`q` と `claude`（なければ `base`）を一音ずつ比べ、どこを・どれだけ・どの向きに直したかを数字で出す（高さは半音＝ln2/12、長さは比、間は秒）。メモと場面を合わせて、**同じ場面で何本か同じ向きの直しが続いたら** `vrules` に決まりとして足すか、数を直す（1本だけで決めない。1本だけのときは take の `reply` に「〜と読みました。もう1〜2本同じ直しがあれば決まりにします」と書く）
+- 決まりの種類（voice.html の applyRules と tools/voice_render.py の apply_rules に同じものがある。新しい種類を足すときは両方に足す）：`global`（速さ・抑揚・音量・前後の間）、`end_fall`（文末を下げる：n 音・amt）、`question`（？の文末を上げる：amt）、`comma_pause`（読点の間を足す：add）、`emph`（《》の所を上げて伸ばす：up・stretch）、`first_up`（最初の句を上げる：amt）。`scene` を入れるとその場面だけに効く
+- 仕上げ：読んだ take は `status` を「読んだ」、`reply` に一言（何を学んだか・決まりをどう変えたか）。決まりを足したら `vrules[].from` に元にした take の id、`memo` に作り手のメモの言葉。文章で残すべき学び（「問いかけのときは〜」）は data.json の `rules` に scope「音」で足す
+- 型（kata）の直しは作り手が決めるもの。Claude は型を勝手に変えない
+- 本番の動画の声：`python3 tools/render_draft.py ... --kata main --vrules`（先に `bash tools/setup_engine.sh`）。調整室で聞いた音と同じ手順で作る（tools/voice_render.py）
+- 「Claude の案から」の take の `fromClaude`（直した量）が 0.1 を切るのが続いたら、作り手に「声は Claude だけで作れそう」と伝える

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2f6db0">
+<link rel="icon" href="icon-192.png">
+<title>声の調整室</title>
+<style>
+:root{--ink:#1d2433;--sub:#5b6577;--paper:#f6f7f9;--row:#fff;--line:#d6dbe4;--sea:#2f6db0;--seaInk:#fff;--yel:#f2c230;--good:#2e8b57;--busy:#c0503a;--grid:#eef1f5;--dot:#2f6db0;--claude:#c47a1a}
+@media (prefers-color-scheme:dark){:root{--ink:#e7ebf2;--sub:#9aa5b8;--paper:#141a26;--row:#1b2232;--line:#2c3547;--sea:#6ea4e6;--seaInk:#0e1420;--good:#5cc28a;--busy:#e57b65;--grid:#222b3c;--dot:#6ea4e6;--claude:#e5a54b}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 18px 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}header a{color:var(--sea);font-size:13px}
+.stat{font-size:12.5px;color:var(--sub)}.stat.bad{color:var(--busy)}.stat.okk{color:var(--good)}
+main{max-width:1180px;margin:0 auto;padding:14px 18px 60px;display:grid;grid-template-columns:330px 1fr;gap:18px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+h2{font-size:16px;margin:4px 0 8px}h3{font-size:14px;margin:12px 0 4px;color:var(--sub)}
+.card{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 14px}
+label{display:block;font-size:12.5px;color:var(--sub);margin:8px 0 3px}
+input,select,textarea{width:100%;font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--row);color:var(--ink)}
+textarea{min-height:60px}
+button.b{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+button.main{background:var(--sea);color:var(--seaInk);border-color:var(--sea);font-weight:700}
+button.b:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{font:inherit;font-size:13.5px;border:0;background:var(--row);color:var(--ink);padding:5px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--sea);color:var(--seaInk);border-color:var(--sea)}
+.sl{display:grid;grid-template-columns:110px 1fr 54px 22px;gap:6px;align-items:center;margin:5px 0}
+.sl span{font-size:13px}.sl output{font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;color:var(--sub)}
+.sl input{padding:0}.sl .r{background:none;border:0;color:var(--sub);cursor:pointer;font-size:14px;padding:0}
+.ex{font-size:11.5px;color:var(--sub);margin:-3px 0 4px 116px;line-height:1.45}
+.hint{font-size:12.5px;color:var(--sub)}
+.msg{font-size:13px;color:var(--busy)}.ok{color:var(--good)}
+.line{padding:5px 8px;border-top:1px solid var(--line);font-size:14px;cursor:pointer}.line:hover{background:var(--grid)}
+.line .sc{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--sub);margin-right:5px}
+.line.done{color:var(--sub)}.line.done::after{content:" ✓";color:var(--good)}
+#ed{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--row)}
+#ed canvas{display:block}
+.take{border-top:1px solid var(--line);padding:7px 0;font-size:14px}
+.take .t{font-weight:700}.take .m{color:var(--sub);font-size:13px;white-space:pre-wrap}
+.take .st{display:flex;gap:6px;margin-top:4px}
+.badge{display:inline-block;font-size:11.5px;border-radius:999px;padding:0 8px;border:1px solid var(--line);color:var(--sub);margin-right:4px}
+.badge.c{border-color:var(--claude);color:var(--claude)}.badge.u{border-color:var(--sea);color:var(--sea)}
+.big{font-size:22px;font-weight:700}
+details summary{cursor:pointer;color:var(--sub);font-size:14px}
+.help ol{padding-left:20px;margin:6px 0}.help li{margin:3px 0;font-size:14px}.help code{background:var(--paper);padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-all}
+.legend{font-size:12px;color:var(--sub);display:flex;gap:14px;flex-wrap:wrap;margin:4px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+</style></head><body>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a>
+<span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
+<span class="stat" id="syncStat">同期：—</span>
+<span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
+</header>
+<main>
+<div>
+  <div class="card help" id="setupCard">
+    <h2>はじめに（一度だけ）</h2>
+    <ol>
+      <li>Mac に VOICEVOX（無料）を入れて起動しておく</li>
+      <li>Chrome で <a href="http://127.0.0.1:50021/setting" target="_blank">http://127.0.0.1:50021/setting</a> を開き、「Allow Origin」に <code>https://nisenonamae.github.io</code> と入れて保存</li>
+      <li>VOICEVOX を一度終了して、起動し直す</li>
+      <li>このページを Chrome で開き直す。「ローカル ネットワークへのアクセス」を聞かれたら「許可」</li>
+    </ol>
+    <p class="hint">この Mac の Chrome で制作室の同期をまだつないでいなければ、制作室の「設定」でつないでおく（保存した調整がクラウドに上がり、Claude が読めるようになる）。</p>
+    <div class="row"><button class="b main" id="engCheck">つながるか確かめる</button><span class="msg" id="engMsg"></span></div>
+    <details><summary>VOICEVOX の場所を変える</summary><label>エンジンの URL</label><input id="engUrl"></details>
+  </div>
+
+  <div class="card">
+    <h2>声の型</h2>
+    <p class="hint">チャンネルの「声そのもの」。ここで決めた型は、どの文にも同じようにかかる。</p>
+    <label>使う型</label><select id="kataSel"></select>
+    <label>元の声</label><select id="spkSel"></select>
+    <div id="kataSl"></div>
+    <div class="row"><button class="b" id="kataSave">この型を上書き保存</button><button class="b" id="kataNew">新しい型として保存</button><span class="msg" id="kataMsg"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>練習の文</h2>
+    <div class="chips" id="lineFilter"></div>
+    <div id="lineList" style="max-height:360px;overflow:auto;margin-top:6px"></div>
+  </div>
+</div>
+
+<div>
+  <div class="card">
+    <h2>セリフ</h2>
+    <div class="row" style="margin-top:0"><input id="txt" placeholder="例：りんごは、おいしい。" style="flex:1"><button class="b main" id="load">読み込む</button></div>
+    <p class="hint" style="margin:0">強めたい所は《》で囲む（例：道は《しま模様》になる）。「。」「？」で文を分けて読む。</p>
+    <div class="row">
+      <button class="b main" id="playNow" disabled>▶ いまの声</button>
+      <button class="b" id="playBase" disabled>▶ 調整前</button>
+      <button class="b" id="playClaude" disabled hidden>▶ Claude の案</button>
+      <button class="b" id="stop">■</button>
+      <button class="b" id="undo" disabled>ひとつ戻す</button>
+      <button class="b" id="resetRead" disabled>読み方を最初に戻す</button>
+      <span class="msg" id="playMsg"></span>
+    </div>
+    <div class="legend"><span><i style="background:var(--dot)"></i>いまの高さ（上下にドラッグ）</span><span><i style="background:var(--claude)"></i>Claude の案</span><span><i style="background:var(--line)"></i>調整前</span><span>下の棒＝音の長さ（ドラッグ）</span><span>｜＝間（左右の棒をドラッグ）</span><span>文字をダブルクリック＝そこをアクセントの山にする</span></div>
+    <div id="ed"><canvas id="cv" height="330"></canvas></div>
+    <p class="hint">音をクリックして選ぶと、キーボードでも動かせる：↑↓ 高さ／Shift＋↑↓ 長さ／←→ となりの音へ／スペース 再生</p>
+    <h3>読み方（この文の全体）</h3>
+    <div id="readSl"></div>
+  </div>
+
+  <div class="card">
+    <h2>メモを付けて保存</h2>
+    <label>どんな場面の文か</label><div class="chips" id="sceneChips"></div>
+    <label>メモ（「こういうときは声は〜」）</label>
+    <textarea id="memo" placeholder="例：問いかけのときは、文の終わりを持ち上げて、少し間をあけてから次へ"></textarea>
+    <div class="row"><button class="b main" id="saveTake" disabled>保存する</button><span class="msg" id="saveMsg"></span></div>
+    <p class="hint" id="diffInfo"></p>
+  </div>
+
+  <div class="card">
+    <h2>保存した調整</h2>
+    <div id="progress"></div>
+    <div id="takeList"></div>
+  </div>
+</div>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const now=()=>Date.now();
+const uid=p=>p+now().toString(36)+Math.random().toString(36).slice(2,6);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const LN2=Math.log(2);
+
+/* ===== データ（voice.json。制作室の data.json とは別のファイル） ===== */
+const KEYS=['kata','takes','lines','vrules'];
+const SEED={kata:[{id:'kata-default',name:'はじめの型',speaker:2,speakerName:'四国めたん（ノーマル）',pitch:0,formant:1,mixTo:null,mixRate:0,low:0,mid:0,high:0,reverb:0,reverbLen:0.6,updatedAt:1}],takes:[],lines:[],vrules:[]};
+let V;try{V=JSON.parse(LS.get('vv_data','null'))}catch(e){V=null}
+if(!V)V=clone(SEED);KEYS.forEach(k=>{V[k]=V[k]||[];for(const x of SEED[k])if(!V[k].some(y=>y.id===x.id))V[k].push(clone(x))});
+function save(){LS.set('vv_data',JSON.stringify(V));schedulePush()}
+const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),t:LS.get('gh_t',''),p:'roadmap/apps/seisakushitsu/voice.json'});
+const syncOn=()=>{const s=S();return !!(s.o&&s.r&&s.t)};
+const b64e=s=>{const u=new TextEncoder().encode(s);let t='';for(let i=0;i<u.length;i+=0x8000)t+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(t)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+function merge(a,b){const out={};for(const k of KEYS){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+async function ghGet(){const s=S();const h={Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'};const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:h,cache:'no-store'});
+if(r.status===404)return{data:null,sha:null};if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();let txt=j.content?b64d(j.content):'';
+if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{...h,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}
+return{data:JSON.parse(txt),sha:j.sha}}
+async function ghPut(data,sha){const s=S();const body={message:'声の調整室 '+new Date().toISOString(),content:b64e(JSON.stringify(data))};if(sha)body.sha=sha;
+const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify(body)});
+if(r.status===409||r.status===422)return false;if(!r.ok)throw new Error('GitHub '+r.status);return true}
+let busy=false,pushTimer=null;
+function syncLabel(t,cls){const e=$('syncStat');e.textContent='同期：'+t;e.className='stat '+(cls||'')}
+async function sync(){if(!syncOn()){syncLabel('この Mac だけに保存中（制作室の設定で同期をつなぐ）','bad');return}
+if(busy)return;busy=true;syncLabel('同期中…');
+try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();const m=data?merge(data,V):V;const ch=JSON.stringify(m)!==JSON.stringify(V);
+if(ch){V=m;LS.set('vv_data',JSON.stringify(V));renderSide()}
+if(data&&JSON.stringify(merge(data,{}))===JSON.stringify(merge(V,{})))break;if(await ghPut(V,sha))break}
+syncLabel('済み '+new Date().toTimeString().slice(0,5),'okk')}catch(e){syncLabel('できません：'+e.message,'bad')}busy=false}
+function schedulePush(){clearTimeout(pushTimer);pushTimer=setTimeout(sync,1200)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
+
+/* ===== VOICEVOX ===== */
+const E=()=>(LS.get('vv_eng','http://127.0.0.1:50021')||'http://127.0.0.1:50021').replace(/\/$/,'');
+async function eng(path,params,body,raw){const qs=new URLSearchParams(params||{}).toString();
+const r=await fetch(`${E()}${path}${qs?'?'+qs:''}`,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+if(!r.ok)throw new Error(path+' '+r.status+' '+(await r.text()).slice(0,120));return raw?r.arrayBuffer():r.json()}
+let SPK=[],STYLE={};const isTalk=s=>!/sing|frame/.test(s.type||'');
+const dstr=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`};// STYLE[id]={name,style,char}
+async function checkEngine(){const st=$('engStat');try{const v=await eng('/version');SPK=await eng('/speakers');STYLE={};
+for(const c of SPK)for(const s of c.styles)if(isTalk(s))STYLE[s.id]={name:c.name,style:s.name,char:c.speaker_uuid};
+st.textContent='VOICEVOX：つながっています（'+v+'）';st.className='stat okk';$('engMsg').textContent='';$('engMsg').className='msg ok';$('engMsg').textContent='つながりました';
+$('setupCard').open=false;SPK=SPK.map(c=>({...c,styles:c.styles.filter(isTalk)})).filter(c=>c.styles.length);fillSpk();return true}
+catch(e){st.textContent='VOICEVOX：つながりません';st.className='stat bad';
+$('engMsg').innerHTML='つながりません。VOICEVOX が起動しているか、上の 2〜4 をしたかを確かめてください。<br><span class="hint">（'+esc(e.message)+'）</span>';return false}}
+
+/* ===== 声の型・読み方のつまみ ===== */
+const KS=[
+ ['pitch','声の高さ',-6,6,0.1,0,'半音','全体を上げ下げする。±1〜2 で印象が変わる。上げすぎると子ども、下げすぎるとこもる'],
+ ['formant','声の太さ',0.8,1.25,0.01,1,'倍','のどと口の大きさ。小さい値＝体が大きく太い声、大きい値＝細く若い声。高さと一緒に動かすと「別人」になる。0.9〜1.1 が安全'],
+ ['mixRate','混ぜる量',0,1,0.05,0,'','下で選んだ声と混ぜる。ささやき声と混ぜると息っぽく柔らかくなる'],
+ ['low','低音',-8,8,0.5,0,'dB','200Hz あたり。上げると厚く落ち着いた声、下げると軽く'],
+ ['mid','通り',-8,8,0.5,0,'dB','3kHz あたり。上げると言葉がはっきり前に出る。上げすぎるときつい'],
+ ['high','明るさ',-10,6,0.5,0,'dB','8kHz より上。下げると柔らかく、上げるとシャキッと（サ行が刺さりやすい）'],
+ ['reverb','響き',0,0.5,0.01,0,'','部屋の響き。0.05〜0.15 で録音した声らしくなる。多いとお風呂場'],
+ ['reverbLen','響きの長さ',0.2,2,0.05,0.6,'秒','響きが消えるまでの時間。短い＝小さい部屋'],
+];
+const RS=[
+ ['speedScale','話す速さ',0.6,1.6,0.01,1,'倍','このチャンネルはふだん 1.1'],
+ ['intonationScale','抑揚',0,2,0.01,1,'倍','高さの上下の大きさ。小さいと平ら・冷静、大きいと表情豊か・大げさ'],
+ ['volumeScale','音量',0.3,2,0.01,1,'倍',''],
+ ['prePhonemeLength','文の前の間',0,1,0.01,0.1,'秒',''],
+ ['postPhonemeLength','文の後の間',0,1.5,0.01,0.1,'秒','次の文までの間。考えさせたい所は長く'],
+];
+function slHTML(list,pre){return list.map(([k,n,mn,mx,st,df,u,ex])=>`<div class="sl"><span>${n}</span><input type="range" id="${pre}_${k}" min="${mn}" max="${mx}" step="${st}"><output id="${pre}_${k}_o"></output><button class="r" title="元に戻す" data-r="${pre}:${k}:${df}">↺</button></div>${ex?`<div class="ex">${ex}</div>`:''}`).join('')}
+$('kataSl').innerHTML=slHTML(KS.slice(0,2),'k')+`<label>混ぜる相手（同じキャラのささやき声など。混ぜられる声だけ出ます）</label><select id="mixSel"><option value="">混ぜない</option></select>`+slHTML(KS.slice(2),'k');
+$('readSl').innerHTML=slHTML(RS,'r');
+const fmtv=(v,u)=>(+v).toFixed(Math.abs(v)<10?2:1).replace(/\.?0+$/,'')+(u||'');
+function kata(){return V.kata.find(k=>k.id===LS.get('vv_kata','kata-default')&&!k.deleted)||V.kata.find(k=>!k.deleted)}
+let K=clone(kata());// 編集中の型
+function showKata(){for(const [k,,,,,,u] of KS){$('k_'+k).value=K[k]??0;$('k_'+k+'_o').textContent=fmtv(K[k]??0,u)}$('spkSel').value=K.speaker;fillMix()}
+for(const [k,,,,,,u] of KS)$('k_'+k).addEventListener('input',e=>{K[k]=+e.target.value;$('k_'+k+'_o').textContent=fmtv(K[k],u);dirtyAudio()});
+function fillKataSel(){$('kataSel').innerHTML=V.kata.filter(k=>!k.deleted).map(k=>`<option value="${k.id}">${esc(k.name)}</option>`).join('');$('kataSel').value=kata().id}
+$('kataSel').onchange=()=>{LS.set('vv_kata',$('kataSel').value);const old=K.speaker;K=clone(kata());showKata();if(K.speaker!==old&&cur)reloadForSpeaker();dirtyAudio()};
+function fillSpk(){$('spkSel').innerHTML=SPK.map(c=>`<optgroup label="${esc(c.name)}">${c.styles.filter(isTalk).map(s=>`<option value="${s.id}">${esc(c.name)}（${esc(s.name)}）</option>`).join('')}</optgroup>`).join('');$('spkSel').value=K.speaker;fillMix()}
+async function fillMix(){const sel=$('mixSel');if(!SPK.length){sel.innerHTML='<option value="">（VOICEVOX につなぐと選べます）</option>';return}
+try{const t=(await eng('/morphable_targets',{},[K.speaker]))[0]||{};const ids=Object.keys(t).filter(i=>t[i].is_morphable&&+i!==K.speaker&&STYLE[i]);
+sel.innerHTML='<option value="">混ぜない</option>'+ids.map(i=>`<option value="${i}">${esc(STYLE[i].name)}（${esc(STYLE[i].style)}）</option>`).join('');sel.value=K.mixTo??''}catch(e){sel.innerHTML='<option value="">混ぜない</option>'}}
+$('mixSel').onchange=()=>{K.mixTo=$('mixSel').value?+$('mixSel').value:null;dirtyAudio()};
+$('spkSel').onchange=async()=>{const id=+$('spkSel').value;if(cur&&cur.edited&&!confirm('元の声を変えると、この文の読み方の調整は最初からになります。いいですか？')){$('spkSel').value=K.speaker;return}
+K.speaker=id;K.speakerName=STYLE[id]?STYLE[id].name+'（'+STYLE[id].style+'）':'';K.mixTo=null;await fillMix();if(cur)reloadForSpeaker();dirtyAudio()};
+$('kataSave').onclick=()=>{const k=V.kata.find(x=>x.id===K.id);Object.assign(k,clone(K),{updatedAt:now()});save();fillKataSel();flash('kataMsg','保存しました')};
+$('kataNew').onclick=()=>{const n=prompt('型の名前（例：落ち着いた語り／明るい解説）');if(!n)return;const k=clone(K);k.id=uid('kata');k.name=n;k.updatedAt=now();V.kata.push(k);LS.set('vv_kata',k.id);K=clone(k);save();fillKataSel();flash('kataMsg','保存しました')};
+function flash(id,t){const e=$(id);e.textContent=t;e.className='msg ok';setTimeout(()=>{e.textContent=''},2500)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;const [p,k,d]=b.dataset.r.split(':');
+if(p==='k'){K[k]=+d;showKata();dirtyAudio()}else if(cur){pushUndo();setRead(k,+d)}});
+
+/* ===== 文（セリフ）の読み込み ===== */
+// cur = {text, sents:[{text, plain, emph:[[a,b]], q(いま), base(調整前), claude(案)}], scene, edited}
+let cur=null,undoStack=[];
+function splitSents(t){const out=[];let b='';for(const ch of t.trim()){b+=ch;if('。！？!?'.includes(ch)){if(b.trim())out.push(b.trim());b=''}}if(b.trim())out.push(b.trim());return out}
+function stripEmph(s){let plain='',em=[],st=-1;for(const ch of s){if(ch==='《'){st=plain.length;continue}if(ch==='》'){if(st>=0)em.push([st,plain.length]);st=-1;continue}plain+=ch}return{plain,em}}
+async function kanaOf(text){try{const ap=await eng('/accent_phrases',{text,speaker:K.speaker},{});return ap.map(p=>p.moras.map(m=>m.text).join('')).join('')}catch(e){return ''}}
+async function loadLine(text,scene){if(!SPK.length&&!(await checkEngine()))return;
+const sents=[];for(const s of splitSents(text)){const{plain,em}=stripEmph(s);const q=await eng('/audio_query',{text:plain,speaker:K.speaker},{});
+const emk=[];for(const [a,b] of em){const k=await kanaOf(plain.slice(a,b));if(k)emk.push(k)}
+sents.push({text:s,plain,emk,base:clone(q),q:null,claude:null})}
+cur={text,sents,scene:scene||'',edited:false,lineId:curLineId};
+const cl=sents.map(s=>applyRules(clone(s.base),s,scene||''));sents.forEach((s,i)=>{s.claude=cl[i]});
+sents.forEach((s,i)=>{s.q=clone(mode()==='claude'?s.claude:s.base)});
+undoStack=[];if(scene)setScene(scene);$('txt').value=text;afterLoad()}
+async function reloadForSpeaker(){if(!cur)return;const t=cur.text,sc=cur.scene;await loadLine(t,sc)}
+function afterLoad(){['playNow','playBase','undo','resetRead','saveTake'].forEach(i=>$(i).disabled=false);$('playClaude').hidden=mode()!=='claude';$('playClaude').disabled=false;
+showRead();layout();draw();dirtyAudio();updateDiff()}
+$('load').onclick=()=>{const t=$('txt').value.trim();if(t){curLineId=null;loadLine(t,curScene)}};
+$('txt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('load').click()}});
+
+/* ===== 読み方（文全体）のつまみ：全部の文に同じ値をかける ===== */
+function showRead(){if(!cur)return;const q=cur.sents[0].q;for(const [k,,,,,,u] of RS){$('r_'+k).value=q[k];$('r_'+k+'_o').textContent=fmtv(q[k],u)}}
+function setRead(k,v){for(const s of cur.sents)s.q[k]=v;cur.edited=true;showRead();draw();dirtyAudio();updateDiff()}
+for(const [k] of RS){const el=$('r_'+k);el.addEventListener('pointerdown',()=>{if(cur)pushUndo()});el.addEventListener('input',e=>{if(cur)setRead(k,+e.target.value)})}
+function pushUndo(){undoStack.push(clone(cur.sents.map(s=>s.q)));if(undoStack.length>80)undoStack.shift();$('undo').disabled=false}
+$('undo').onclick=()=>{const u=undoStack.pop();if(!u)return;cur.sents.forEach((s,i)=>{s.q=u[i]});showRead();draw();dirtyAudio();updateDiff()};
+$('resetRead').onclick=()=>{if(!cur)return;pushUndo();cur.sents.forEach(s=>{s.q=clone(mode()==='claude'?s.claude:s.base)});showRead();draw();dirtyAudio();updateDiff()};
+
+/* ===== Claude の案（決まりを当てはめる） ===== */
+// vrules: {id, op, p:{...}, scene:'' (空=どの場面にも), memo, active, updatedAt}
+function voicedIdx(ms){const r=[];ms.forEach((m,i)=>{if(m.pitch>0)r.push(i)});return r}
+function flatMoras(q){const r=[];q.accent_phrases.forEach((ap,pi)=>ap.moras.forEach((m,mi)=>r.push({m,pi,mi})));return r}
+function applyRules(q,s,sc){sc=sc??(curScene||'');const rules=V.vrules.filter(r=>r.active!==false&&!r.deleted&&(!r.scene||r.scene===sc));
+for(const r of rules){const p=r.p||{};
+ if(r.op==='global'){for(const k of ['speedScale','intonationScale','volumeScale','prePhonemeLength','postPhonemeLength'])if(p[k]!=null)q[k]=p[k]}
+ else if(r.op==='end_fall'){const fm=flatMoras(q).filter(x=>x.m.pitch>0);const n=Math.min(p.n||2,fm.length);for(let i=0;i<n;i++){const x=fm[fm.length-1-i];x.m.pitch-=(p.amt||0.1)*(n-i)/n}}
+ else if(r.op==='question'){if(/[？?]$/.test(s.text)){const fm=flatMoras(q).filter(x=>x.m.pitch>0);if(fm.length)fm[fm.length-1].m.pitch+=(p.amt||0.2)}}
+ else if(r.op==='comma_pause'){for(const ap of q.accent_phrases)if(ap.pause_mora)ap.pause_mora.vowel_length+=(p.add||0.05)}
+ else if(r.op==='emph'){const fm=flatMoras(q);const kana=fm.map(x=>x.m.text).join('');
+  for(const k of s.emk||[]){let at=kana.indexOf(k);if(at<0)continue;let pos=0;fm.forEach(x=>{const L=x.m.text.length;if(pos>=at&&pos<at+k.length){if(x.m.pitch>0)x.m.pitch+=(p.up||0.15);x.m.vowel_length*=(p.stretch||1.1)}pos+=L})}}
+ else if(r.op==='first_up'){const ap=q.accent_phrases[0];if(ap)for(const m of ap.moras)if(m.pitch>0)m.pitch+=(p.amt||0.05)}
+}return q}
+
+/* ===== 書き出し（エンジン → 声の太さ → 混ぜる → 低音・通り・明るさ → 響き） =====
+   本番の動画は tools/voice_render.py が同じ手順で作るので、ここで聞いた音と同じになる */
+const SR=48000;
+function prepQuery(q){const x=clone(q);const r=K.formant||1;const sh=(K.pitch||0)*LN2/12-Math.log(r);
+for(const ap of x.accent_phrases)for(const m of ap.moras)if(m.pitch>0)m.pitch+=sh;
+x.speedScale=q.speedScale/r;x.outputSamplingRate=24000;x.outputStereo=false;return x}
+function setWavRate(buf,rate){const v=new DataView(buf);rate=Math.round(rate);v.setUint32(24,rate,true);v.setUint32(28,rate*v.getUint16(32,true),true);return buf}
+function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeIR(ctx,len){const n=Math.max(1,Math.round(len*SR));const b=ctx.createBuffer(1,n,SR);const d=b.getChannelData(0);const rnd=mulberry32(7);
+for(let i=0;i<n;i++){const t=i/SR;d[i]=(rnd()*2-1)*Math.exp(-6.9*t/len)*(t<0.004?t/0.004:1)}let e=0;for(let i=0;i<n;i++)e+=d[i]*d[i];const g=1/Math.sqrt(e);for(let i=0;i<n;i++)d[i]*=g;return b}
+async function synthSent(q){const x=prepQuery(q);let wav;
+if(K.mixTo!=null&&K.mixRate>0)wav=await eng('/synthesis_morphing',{base_speaker:K.speaker,target_speaker:K.mixTo,morph_rate:K.mixRate},x,true);
+else wav=await eng('/synthesis',{speaker:K.speaker},x,true);
+setWavRate(wav,24000*(K.formant||1));const oc=new OfflineAudioContext(1,SR,SR);return await oc.decodeAudioData(wav)}
+async function renderQs(qs){const parts=[];for(const q of qs)parts.push(await synthSent(q));
+let n=0;for(const p of parts)n+=p.length;const tail=Math.round((K.reverb>0?K.reverbLen:0)*SR);
+const oc=new OfflineAudioContext(1,n+tail+1,SR);const src=oc.createBuffer(1,n+tail+1,SR);const d=src.getChannelData(0);let o=0;for(const p of parts){d.set(p.getChannelData(0),o);o+=p.length}
+const s=oc.createBufferSource();s.buffer=src;
+const lo=oc.createBiquadFilter();lo.type='lowshelf';lo.frequency.value=200;lo.gain.value=K.low||0;
+const mi=oc.createBiquadFilter();mi.type='peaking';mi.frequency.value=3000;mi.Q.value=1;mi.gain.value=K.mid||0;
+const hi=oc.createBiquadFilter();hi.type='highshelf';hi.frequency.value=8000;hi.gain.value=K.high||0;
+s.connect(lo);lo.connect(mi);mi.connect(hi);hi.connect(oc.destination);
+if(K.reverb>0){const cv=oc.createConvolver();cv.normalize=false;cv.buffer=makeIR(oc,K.reverbLen||0.6);const g=oc.createGain();g.gain.value=K.reverb;hi.connect(cv);cv.connect(g);g.connect(oc.destination)}
+s.start();const out=await oc.startRendering();const od=out.getChannelData(0);let pk=0;for(let i=0;i<od.length;i++)pk=Math.max(pk,Math.abs(od[i]));if(pk>0){const g=0.89/pk;for(let i=0;i<od.length;i++)od[i]*=g}return out}
+let AC=null,playing=null,cache={};
+function dirtyAudio(){cache={}}
+async function play(which){if(!cur)return;stopPlay();$('playMsg').textContent='作っています…';$('playMsg').className='msg';
+try{const key=which;let buf=cache[key];if(!buf){const qs=cur.sents.map(s=>which==='now'?s.q:which==='claude'?s.claude:keepRead(s.base,s.q));buf=await renderQs(qs);cache[key]=buf}
+AC=AC||new AudioContext({sampleRate:SR});const src=AC.createBufferSource();src.buffer=buf;src.connect(AC.destination);src.start();playing=src;$('playMsg').textContent=''}
+catch(e){$('playMsg').textContent='鳴らせません：'+e.message}}
+// 「調整前」は、一音ずつの直しだけを外して聞く（速さなどはいまと同じ）
+function keepRead(base,q){const x=clone(base);for(const [k] of RS)x[k]=q[k];return x}
+function stopPlay(){try{playing&&playing.stop()}catch(e){}playing=null}
+$('playNow').onclick=()=>play('now');$('playBase').onclick=()=>play('base');$('playClaude').onclick=()=>play('claude');$('stop').onclick=stopPlay;
+
+/* ===== 一音ずつの編集（キャンバス） ===== */
+const cv=$('cv'),cx=cv.getContext('2d');const COL=38,PAD=46,TOP=26,PH=170,LBL=28,LENH=70,GAP=18;
+let cols=[],sel=-1,drag=null,yr=[5,6.5];
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function layout(){cols=[];let x=PAD;if(!cur)return;
+cur.sents.forEach((s,si)=>{s.q.accent_phrases.forEach((ap,pi)=>{ap.moras.forEach((m,mi)=>{cols.push({k:'m',si,pi,mi,x});x+=COL});cols.push({k:'p',si,pi,x});x+=GAP});x+=GAP*1.5});
+let lo=9,hi=0;for(const s of cur.sents)for(const q of [s.base,s.q,s.claude])for(const ap of q.accent_phrases)for(const m of ap.moras)if(m.pitch>0){lo=Math.min(lo,m.pitch);hi=Math.max(hi,m.pitch)}
+if(hi<lo){lo=5;hi=6}const c=(lo+hi)/2,h=Math.max(0.5,(hi-lo)*0.8+0.25);yr=[c-h,c+h];
+const w=Math.max(x+PAD,$('ed').clientWidth-2);const dpr=window.devicePixelRatio||1;cv.style.width=w+'px';cv.style.height='330px';cv.width=w*dpr;cv.height=330*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}
+const pY=p=>TOP+PH-(p-yr[0])/(yr[1]-yr[0])*PH;const yP=y=>yr[0]+(TOP+PH-y)/PH*(yr[1]-yr[0]);
+const LY0=TOP+PH+LBL+8;const lenY=L=>LY0+LENH-Math.min(1,L/0.35)*LENH;const yLen=y=>Math.max(0.01,(LY0+LENH-y)/LENH*0.35);
+function mOf(c,which){const s=cur.sents[c.si];const q=which==='q'?s.q:which==='b'?s.base:s.claude;const ap=q.accent_phrases[c.pi];return c.k==='m'?ap.moras[c.mi]:ap}
+function draw(){const W=cv.width/(window.devicePixelRatio||1);cx.clearRect(0,0,W,330);if(!cur){cx.fillStyle=css('--sub');cx.font='14px sans-serif';cx.fillText('セリフを読み込むと、ここに一音ずつの高さと長さが出ます',20,60);return}
+cx.fillStyle=css('--grid');cx.fillRect(0,TOP,W,PH);cx.fillRect(0,LY0,W,LENH);
+cx.fillStyle=css('--sub');cx.font='11px sans-serif';cx.fillText('高さ',6,TOP+12);cx.fillText('長さ',6,LY0+12);
+// 半音ごとの目盛り
+cx.strokeStyle=css('--line');cx.lineWidth=1;const st=LN2/12;for(let p=Math.ceil(yr[0]/st)*st;p<yr[1];p+=st){const y=pY(p);cx.globalAlpha=.5;cx.beginPath();cx.moveTo(PAD-10,y);cx.lineTo(W,y);cx.stroke()}cx.globalAlpha=1;
+const line=(which,color,wid,dot)=>{let prev=null;for(const c of cols){if(c.k!=='m'){prev=null;continue}const m=mOf(c,which);const X=c.x+COL/2;if(!(m.pitch>0)){prev=null;continue}const Y=pY(m.pitch);
+ cx.strokeStyle=color;cx.lineWidth=wid;if(prev){cx.beginPath();cx.moveTo(prev[0],prev[1]);cx.lineTo(X,Y);cx.stroke()}if(dot){cx.fillStyle=color;cx.beginPath();cx.arc(X,Y,dot,0,7);cx.fill()}prev=[X,Y]}};
+line('b',css('--line'),2,3);if(mode()==='claude')line('c',css('--claude'),1.5,3);line('q',css('--dot'),2.5,0);
+for(const [i,c] of cols.entries()){const X=c.x;
+ if(c.k==='m'){const m=mOf(c,'q');const ap=mOf({...c,k:'p'},'q');
+  if(i===sel){cx.fillStyle='rgba(242,194,48,.25)';cx.fillRect(X,TOP,COL,330-TOP)}
+  if(m.pitch>0){cx.fillStyle=css('--dot');cx.beginPath();cx.arc(X+COL/2,pY(m.pitch),i===sel?7:5.5,0,7);cx.fill()}else{cx.fillStyle=css('--sub');cx.font='10px sans-serif';cx.fillText('無声',X+6,TOP+PH-6)}
+  cx.fillStyle=css('--ink');cx.font='bold 15px sans-serif';cx.textAlign='center';cx.fillText(m.text,X+COL/2,TOP+PH+19);cx.textAlign='left';
+  if(ap.accent===c.mi+1){cx.fillStyle=css('--busy');cx.font='11px sans-serif';cx.textAlign='center';cx.fillText('▼山',X+COL/2,TOP-8);cx.textAlign='left'}
+  const L=(m.consonant_length||0)+m.vowel_length;const B=(mOf(c,'b').consonant_length||0)+mOf(c,'b').vowel_length;
+  cx.fillStyle=css('--line');cx.fillRect(X+6,lenY(B),COL-12,2);cx.fillStyle=css('--sea');cx.globalAlpha=.75;cx.fillRect(X+9,lenY(L),COL-18,LY0+LENH-lenY(L));cx.globalAlpha=1}
+ else{const ap=mOf(c,'q');const L=ap.pause_mora?ap.pause_mora.vowel_length:0;const last=c.pi===cur.sents[c.si].q.accent_phrases.length-1;
+  cx.strokeStyle=css('--line');cx.lineWidth=1;cx.beginPath();cx.moveTo(X+GAP/2,TOP);cx.lineTo(X+GAP/2,LY0+LENH);cx.stroke();
+  if(!last){cx.fillStyle=L>0?css('--busy'):css('--line');cx.fillRect(X+GAP/2-4,lenY(L),8,LY0+LENH-lenY(L)+(L>0?0:0));cx.fillStyle=css('--sub');cx.font='10px sans-serif';cx.textAlign='center';cx.fillText(L>0?L.toFixed(2):'間',X+GAP/2,LY0+LENH+12);cx.textAlign='left'}
+  else{cx.fillStyle=css('--sub');cx.font='10px sans-serif';cx.textAlign='center';cx.fillText('文末',X+GAP/2,LY0+LENH+12);cx.textAlign='left'}}}
+if(sel>=0&&cols[sel]){const m=mOf(cols[sel],'q'),b=mOf(cols[sel],'b');const d=m.pitch>0&&b.pitch>0?(m.pitch-b.pitch)*12/LN2:0;cx.fillStyle=css('--ink');cx.font='12px sans-serif';
+ cx.fillText(`「${m.text}」 高さ ${d>=0?'+':''}${d.toFixed(1)} 半音（調整前から）　長さ ${((m.consonant_length||0)+m.vowel_length).toFixed(3)} 秒`,PAD,TOP+PH+LBL+LENH+30)}}
+function hit(x,y){for(const [i,c] of cols.entries()){if(c.k==='m'&&x>=c.x&&x<c.x+COL)return{i,c,zone:y<TOP+PH+4?'pitch':y<LY0?'label':'len'};if(c.k==='p'&&x>=c.x&&x<c.x+GAP)return{i,c,zone:'pause'}}return null}
+function pt(e){const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
+cv.addEventListener('pointerdown',e=>{if(!cur)return;const [x,y]=pt(e);const h=hit(x,y);if(!h)return;
+ if(h.c.k==='m'){sel=h.i;if(h.zone==='pitch'&&mOf(h.c,'q').pitch>0){pushUndo();drag={...h};cv.setPointerCapture(e.pointerId)}else if(h.zone==='len'){pushUndo();drag={...h};cv.setPointerCapture(e.pointerId)}}
+ else if(h.zone==='pause'&&h.c.pi<cur.sents[h.c.si].q.accent_phrases.length-1){pushUndo();drag={...h};cv.setPointerCapture(e.pointerId)}draw()});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const [x,y]=pt(e);const c=drag.c;
+ if(drag.zone==='pitch'){mOf(c,'q').pitch=Math.max(3,Math.min(7,yP(y)))}
+ else if(drag.zone==='len'){const m=mOf(c,'q');m.vowel_length=Math.max(0.01,yLen(y)-(m.consonant_length||0))}
+ else if(drag.zone==='pause'){const ap=mOf(c,'q');const L=Math.max(0,yLen(y));if(L<0.02){ap.pause_mora=null}else{ap.pause_mora=ap.pause_mora||{text:'、',consonant:null,consonant_length:null,vowel:'pau',vowel_length:L,pitch:0};ap.pause_mora.vowel_length=L}}
+ cur.edited=true;draw()});
+cv.addEventListener('pointerup',()=>{if(drag){drag=null;dirtyAudio();updateDiff()}});
+cv.addEventListener('dblclick',async e=>{if(!cur)return;const [x,y]=pt(e);const h=hit(x,y);if(!h||h.c.k!=='m'||h.zone!=='label')return;pushUndo();await setAccent(h.c,h.c.mi+1)});
+async function setAccent(c,acc){const s=cur.sents[c.si];const ap=s.q.accent_phrases[c.pi];const nap=clone(ap);nap.accent=acc;
+ try{const r=await eng('/mora_data',{speaker:K.speaker},[nap]);ap.accent=acc;r[0].moras.forEach((m,i)=>{ap.moras[i].pitch=m.pitch;ap.moras[i].vowel_length=m.vowel_length;ap.moras[i].consonant_length=m.consonant_length});
+ cur.edited=true;layout();draw();dirtyAudio();updateDiff()}catch(err){$('playMsg').textContent='アクセントを変えられません：'+err.message}}
+document.addEventListener('keydown',e=>{if(!cur||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;
+ if(e.key===' '){e.preventDefault();play('now');return}if(sel<0)return;const c=cols[sel];
+ if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();let i=sel;do{i+=e.key==='ArrowLeft'?-1:1}while(cols[i]&&cols[i].k!=='m');if(cols[i])sel=i;draw();return}
+ if((e.key==='ArrowUp'||e.key==='ArrowDown')&&c.k==='m'){e.preventDefault();pushUndo();const m=mOf(c,'q');const d=e.key==='ArrowUp'?1:-1;
+  if(e.shiftKey)m.vowel_length=Math.max(0.01,m.vowel_length+d*0.01);else if(m.pitch>0)m.pitch+=d*LN2/24;cur.edited=true;draw();dirtyAudio();updateDiff()}});
+window.addEventListener('resize',()=>{if(cur){layout();draw()}});
+
+/* ===== 直した量（Claude の案や調整前から、どれだけ変えたか） ===== */
+function diffAmount(a,b){let p=0,np=0,l=0,nl=0,pa=0;for(let si=0;si<a.length;si++){const A=a[si],B=b[si];
+ A.accent_phrases.forEach((ap,pi)=>{const bp=B.accent_phrases[pi];if(!bp)return;ap.moras.forEach((m,mi)=>{const n=bp.moras[mi];if(!n)return;if(m.pitch>0&&n.pitch>0){p+=Math.abs(m.pitch-n.pitch)*12/LN2;np++}l+=Math.abs(Math.log(((m.consonant_length||0)+m.vowel_length)/((n.consonant_length||0)+n.vowel_length)));nl++});
+ pa+=Math.abs((ap.pause_mora?ap.pause_mora.vowel_length:0)-(bp.pause_mora?bp.pause_mora.vowel_length:0))})}
+ let g=0;for(const [k] of RS)g+=Math.abs(a[0][k]-b[0][k])/(k==='speedScale'||k==='intonationScale'||k==='volumeScale'?1:2);
+ // 1 ≒ 平均で半音ずれ。ほぼ直していなければ 0.1 以下
+ return +(p/Math.max(1,np)+3*l/Math.max(1,nl)+4*pa+2*g).toFixed(2)}
+function updateDiff(){if(!cur){$('diffInfo').textContent='';return}const qs=cur.sents.map(s=>s.q);const vb=diffAmount(qs,cur.sents.map(s=>s.base));
+ $('diffInfo').textContent=mode()==='claude'?`Claude の案から直した量：${diffAmount(qs,cur.sents.map(s=>s.claude))}（調整前からは ${vb}）。0 に近いほど、Claude の案のままで良かったということ`:`調整前から変えた量：${vb}`}
+
+/* ===== 場面とメモと保存 ===== */
+const SCENES=['ふつうの説明','問いかけ','答え・結論','数字','驚き・意外','並べて言う','引用・人の言葉','冒頭のつかみ','結び','強調'];
+let curScene='',curLineId=null;
+function setScene(s){curScene=s;if(cur)cur.scene=s;document.querySelectorAll('#sceneChips button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s))}
+$('sceneChips').innerHTML=SCENES.map(s=>`<button data-s="${s}">${s}</button>`).join('');
+$('sceneChips').onclick=e=>{const b=e.target.closest('button');if(b){setScene(curScene===b.dataset.s?'':b.dataset.s);if(cur&&mode()==='claude'){/* 場面ごとの決まりがあるので案を作り直す */const keepEdited=cur.edited;cur.sents.forEach(s=>{s.claude=applyRules(clone(s.base),s,curScene);if(!keepEdited)s.q=clone(s.claude)});draw();dirtyAudio();updateDiff()}}};
+$('saveTake').onclick=()=>{if(!cur)return;const memo=$('memo').value.trim();
+ if(!curScene&&!memo&&!confirm('場面もメモもないまま保存しますか？（メモがあると Claude が学びやすい）'))return;
+ const qs=cur.sents.map(s=>s.q);const t={id:uid('vt'),text:cur.text,lineId:cur.lineId||null,scene:curScene,memo,mode:mode(),kataId:K.id,kata:clone(K),
+  sents:cur.sents.map(s=>({text:s.text,plain:s.plain,emk:s.emk,base:s.base,claude:mode()==='claude'?s.claude:null,q:s.q})),
+  fromBase:diffAmount(qs,cur.sents.map(s=>s.base)),fromClaude:mode()==='claude'?diffAmount(qs,cur.sents.map(s=>s.claude)):null,
+  rulesUsed:mode()==='claude'?V.vrules.filter(r=>r.active!==false&&!r.deleted).map(r=>r.id):[],status:'Claude まだ',createdAt:now(),updatedAt:now()};
+ V.takes.push(t);save();$('memo').value='';flash('saveMsg','保存しました。Claude に「声の調整を見て」と言えば読みます');renderSide()};
+
+/* ===== 横の一覧 ===== */
+let lineF='すべて';
+function renderLines(){const ls=V.lines.filter(l=>!l.deleted).sort((a,b)=>(a.order||0)-(b.order||0));const done=new Set(V.takes.filter(t=>!t.deleted&&t.lineId).map(t=>t.lineId));
+ const sc=['すべて',...new Set(ls.map(l=>l.scene).filter(Boolean))];$('lineFilter').innerHTML=sc.map(s=>`<button data-lf="${s}" aria-pressed="${s===lineF}">${s}</button>`).join('');
+ const xs=ls.filter(l=>lineF==='すべて'||l.scene===lineF);
+ $('lineList').innerHTML=xs.length?xs.map(l=>`<div class="line ${done.has(l.id)?'done':''}" data-line="${l.id}"><span class="sc">${esc(l.scene||'')}</span>${esc(l.text)}</div>`).join(''):'<p class="hint">Claude が用意した文がここに出ます（まだ同期されていなければ、少し待つ）。</p>'}
+$('lineFilter').onclick=e=>{const b=e.target.closest('[data-lf]');if(b){lineF=b.dataset.lf;renderLines()}};
+$('lineList').onclick=e=>{const d=e.target.closest('[data-line]');if(!d)return;const l=V.lines.find(x=>x.id===d.dataset.line);curLineId=l.id;setScene(l.scene||'');loadLine(l.text,l.scene||'')};
+function renderTakes(){const ts=V.takes.filter(t=>!t.deleted).sort((a,b)=>b.createdAt-a.createdAt);
+ const cl=ts.filter(t=>t.mode==='claude'&&t.fromClaude!=null).slice(0,10);
+ $('progress').innerHTML=cl.length?`<p>Claude の案から直した量（最近 ${cl.length} 本の平均）：<span class="big">${(cl.reduce((a,t)=>a+t.fromClaude,0)/cl.length).toFixed(2)}</span>　<span class="hint">0.1 を切るのが続けば、Claude だけで作れる目安</span></p>`:'<p class="hint">「Claude の案から」で保存すると、直した量の移り変わりがここに出ます。</p>';
+ $('takeList').innerHTML=ts.length?ts.slice(0,40).map(t=>`<div class="take" data-take="${t.id}"><div><span class="badge ${t.mode==='claude'?'c':'u'}">${t.mode==='claude'?'Claude の案から':'自分で'}</span>${t.scene?`<span class="badge">${esc(t.scene)}</span>`:''}<span class="badge">${esc(t.status||'')}</span><span class="hint">${dstr(t.createdAt)}　直した量 ${t.mode==='claude'?t.fromClaude:t.fromBase}</span></div>
+ <div class="t">${esc(t.text)}</div>${t.memo?`<div class="m">${esc(t.memo)}</div>`:''}${t.reply?`<div class="m" style="color:var(--claude)">Claude：${esc(t.reply)}</div>`:''}
+ <div class="st"><button class="b" data-tp>▶</button><button class="b" data-tl>開いて直す</button><button class="b" data-td>消す</button></div></div>`).join(''):'<p class="hint">まだありません。</p>'}
+$('takeList').onclick=async e=>{const d=e.target.closest('[data-take]');if(!d)return;const t=V.takes.find(x=>x.id===d.dataset.take);
+ if(e.target.matches('[data-td]')){if(confirm('消しますか？')){t.deleted=true;t.updatedAt=now();save();renderTakes()}return}
+ if(e.target.matches('[data-tl]')||e.target.matches('[data-tp]')){const k=V.kata.find(x=>x.id===t.kataId);if(k){LS.set('vv_kata',k.id);fillKataSel()}K=clone(t.kata);showKata();
+  cur={text:t.text,scene:t.scene,edited:false,lineId:t.lineId,sents:t.sents.map(s=>({...clone(s),claude:s.claude||clone(s.base)}))};$('txt').value=t.text;setScene(t.scene||'');$('memo').value=t.memo||'';afterLoad();
+  if(e.target.matches('[data-tp]'))play('now')}};
+function renderSide(){fillKataSel();renderLines();renderTakes()}
+
+/* ===== やり方の切り替え ===== */
+const mode=()=>LS.get('vv_mode','self');
+function showMode(){document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode()));$('playClaude').hidden=mode()!=='claude'}
+$('modeSeg').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;LS.set('vv_mode',b.dataset.mode);showMode();
+ if(cur&&!cur.edited)cur.sents.forEach(s=>{s.q=clone(mode()==='claude'?s.claude:s.base)});if(cur){showRead();draw();dirtyAudio();updateDiff()}};
+
+/* ===== はじめ ===== */
+$('engUrl').value=E();$('engUrl').onchange=()=>{LS.set('vv_eng',$('engUrl').value.trim());checkEngine()};
+$('engCheck').onclick=checkEngine;
+showMode();showKata();renderSide();layout();draw();
+checkEngine().then(ok=>{if(ok)$('setupCard').querySelector('ol').style.display='none'});sync();
+</script>
+</body></html>

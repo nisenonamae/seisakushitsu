@@ -16,6 +16,8 @@ V='/home/claude/vv'
 ap=argparse.ArgumentParser();ap.add_argument('--data');ap.add_argument('--proj');ap.add_argument('--repo',default='');ap.add_argument('--out')
 ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=float,default=1.1)
 ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない')
+ap.add_argument('--kata',default='',help='声の調整室の型で読む（型のid か名前。main＝チャンネルの声）。エンジン（tools/setup_engine.sh）が要る')
+ap.add_argument('--vrules',action='store_true',help='声の調整室の決まり（読み方）を当てはめる')
 ap.add_argument('--subfont',type=int,default=1,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
 D=json.load(open(a.data,encoding='utf-8'));P=[p for p in D['projects'] if p['id']==a.proj][0]
 ob=(P.get('outline') or {}).get('blocks',[]);fb=(P.get('flesh') or {}).get('blocks',[])
@@ -30,10 +32,11 @@ from voicevox_core.blocking import Onnxruntime, OpenJtalk, Synthesizer, VoiceMod
 ort=Onnxruntime.load_once(filename=f'{V}/ort/voicevox_onnxruntime-linux-x64-1.17.3/lib/libvoicevox_onnxruntime.so.1.17.3')
 syn=Synthesizer(ort,OpenJtalk(f'{V}/dict/open_jtalk_dic_utf_8-1.11'))
 # 声の型（.vvm）は全部読むとメモリが足りないので、使う声が入っているものだけ読む
-for f in sorted(os.listdir(f'{V}/models')):
+for f in ([] if a.kata else sorted(os.listdir(f'{V}/models'))):
     with VoiceModelFile.open(f'{V}/models/{f}') as m:
         if any(s.id==a.voice for c in m.metas for s in c.styles): syn.load_voice_model(m);break
-else: raise SystemExit(f'声 {a.voice} の型が {V}/models にない（bash tools/setup_voice.sh を見直す）')
+else:
+  if not a.kata: raise SystemExit(f'声 {a.voice} の型が {V}/models にない（bash tools/setup_voice.sh を見直す）')
 def _moras(q):
     """AudioQuery から、モーラごとの終わりの時刻（話す速さ込み）を出す"""
     t=q.pre_phoneme_length;ends=[]
@@ -45,10 +48,28 @@ def _moras(q):
         if pm:t+=(pm['vowel_length'] if isinstance(pm,dict) else pm.vowel_length)
     return [e/q.speed_scale for e in ends],(t+q.post_phoneme_length)/q.speed_scale
 def nmora(text):
+    if VK:
+        try:return sum(len(ap['moras']) for ap in VR.eng('/accent_phrases',{'text':text,'speaker':VK['speaker']},{}))
+        except Exception:return max(1,len(text))
     try:return sum(len(ap.moras) for ap in syn.create_audio_query(text,a.voice).accent_phrases)
     except Exception:return max(1,len(text))
 LAST={}
+# ---- 声の調整室の型で読む（--kata）：調整室で聞いたのと同じ手順（tools/voice_render.py）----
+VK=None;VRULES=None
+if a.kata:
+    import voice_render as VR
+    vj=os.path.join(a.repo,'roadmap/apps/seisakushitsu/voice.json')
+    if not os.path.exists(vj):raise SystemExit('voice.json がない：'+vj)
+    VV=VR.load_voice(vj);VK=VR.pick_kata(VV,None if a.kata=='main' else a.kata);VRULES=VV.get('vrules') if a.vrules else None
+    try:VR.eng('/version')
+    except Exception:raise SystemExit('VOICEVOX エンジンが動いていない（bash tools/setup_engine.sh）')
 def tts(text,path):
+    if VK:
+        (s0,q),=VR.queries_for(text,VK,VRULES)[:1] or [(text,None)]
+        y=VR.finish(VR.synth_sent(q,VK),VK,tail=False)
+        from scipy.signal import resample_poly
+        y=resample_poly(y,SR,VR.SR) if SR!=VR.SR else y
+        VR.write_wav(path,y,SR);LAST['ends']=VR.mora_ends(q);return len(y)/SR
     q=syn.create_audio_query(text,a.voice);q.speed_scale=a.speed;q.post_phoneme_length=0.15
     open(path,'wb').write(syn.synthesis(q,a.voice))
     with wave.open(path) as w: d=w.getnframes()/w.getframerate()
@@ -142,13 +163,14 @@ def char_time(sx,i,ends):
     tot=nmora(sx) or 1;m=int(round(nmora(sx[:i])/tot*len(ends)));return 0.0 if m<=0 else ends[min(len(ends)-1,m-1)]
 tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[]
 for k,b in enumerate(seq,1):
-    sents=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
+    raw=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
+    sents=[s.replace('《','').replace('》','') for s in raw]   # 《》は強調の印（声だけに効く）
     vis=b.get('visual');vpath=os.path.join(a.repo,vis) if vis and a.repo else None
     if not (vpath and os.path.exists(vpath)): vpath=None
     # 1) 声：文ごとに作り、文の間に少し間を置いてつなぐ
     arrs=[];offs=[];endsL=[];vend=[];t=0.0
     for j,sx in enumerate(sents):
-        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';d0=tts(sx,wp);x=wav_np(wp);gap=0.25 if j<len(sents)-1 else 0.55
+        wp=f'{tmp}/a{k:03d}_{j:02d}.wav';d0=tts(raw[j],wp);x=wav_np(wp);gap=0.25 if j<len(sents)-1 else 0.55
         arrs.append(np.concatenate([x,np.zeros(int(gap*SR),np.float32)]));offs.append(t);endsL.append(LAST['ends']);vend.append(t+d0);t+=len(arrs[-1])/SR
     A=np.concatenate(arrs)
     # 2) カットの始まり：shots[].at（語りの中の言葉）が話され始める瞬間。at がなければ n（文の数）で区切る
