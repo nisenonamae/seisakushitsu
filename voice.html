@@ -37,7 +37,7 @@ button.b:disabled{opacity:.4;cursor:default}
 .msg{font-size:13px;color:var(--busy)}.ok{color:var(--good)}
 .line{padding:5px 8px;border-top:1px solid var(--line);font-size:14px;cursor:pointer}.line:hover{background:var(--grid)}
 .line .sc{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--sub);margin-right:5px}
-.line.done{color:var(--sub)}.line.done::after{content:" ✓";color:var(--good)}
+.line.playing{background:rgba(242,194,48,.35);color:var(--ink)}.line.done{color:var(--sub)}.line.done::after{content:" ✓";color:var(--good)}
 #ed{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--row)}
 #ed canvas{display:block}
 .take{border-top:1px solid var(--line);padding:7px 0;font-size:14px}
@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:00</span>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:10</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -114,6 +114,8 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
     <h2>動画の語り</h2>
     <p class="hint">制作室の動画の語りを、一文ずつ選んで調整できる。ここで調整して保存した文は、<b>本番の動画でもその読み方がそのまま使われる</b>。</p>
     <select id="projSel"></select>
+    <div class="row"><button class="b main" id="flowPlay">▶ 通して聞く</button><button class="b" id="flowStop">■</button><button class="b" id="flowFix" disabled>この文を直す</button><span class="msg" id="flowMsg"></span></div>
+    <p class="hint" style="margin:0">段の番号の横の ▶ で、そこから聞ける。気になった所で「この文を直す」を押すと、その文が上に読み込まれる。</p>
     <div id="narrList" style="max-height:420px;overflow:auto;margin-top:6px"></div>
   </div>
 </div>
@@ -452,9 +454,30 @@ function renderNarr(){const D=ssData();if(!D||!(D.projects||[]).length){$('projS
  const ps=D.projects.filter(p=>!p.deleted&&((p.flesh&&p.flesh.blocks||[]).length||(p.outline&&p.outline.blocks||[]).length)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
  const pid=LS.get('vv_proj',ps[0]&&ps[0].id);$('projSel').innerHTML=ps.map(p=>`<option value="${p.id}">${esc(projName(p,D))}</option>`).join('');$('projSel').value=pid;
  const p=ps.find(x=>x.id===$('projSel').value)||ps[0];if(!p)return;const done=new Set(V.takes.filter(t=>!t.deleted&&t.src&&t.src.projId===p.id).map(t=>t.text.replace(/[《》]/g,'')));
- $('narrList').innerHTML=projBlocks(p).map((b,i)=>`<div style="margin-top:6px"><div class="hint"><b>${i+1}</b> ${esc(b.role)}</div>${splitSents(b.text).map(s=>`<div class="line ${done.has(s.replace(/[《》]/g,''))?'done':''}" data-np="${p.id}" data-nb="${b.id}">${esc(s)}</div>`).join('')}</div>`).join('')}
+ $('narrList').innerHTML=projBlocks(p).map((b,i)=>`<div style="margin-top:6px"><div class="hint"><button class="b" data-from="${i}" style="padding:0 7px;font-size:12px">▶</button> <b>${i+1}</b> ${esc(b.role)}</div>${splitSents(b.text).map(s=>`<div class="line ${done.has(s.replace(/[《》]/g,''))?'done':''}" data-np="${p.id}" data-nb="${b.id}" data-bi="${i}">${esc(s)}</div>`).join('')}</div>`).join('')}
 $('projSel').onchange=()=>{LS.set('vv_proj',$('projSel').value);renderNarr()};
-$('narrList').onclick=e=>{const d=e.target.closest('[data-nb]');if(!d)return;curLineId=null;curSrc={projId:d.dataset.np,blockId:d.dataset.nb};loadLine(d.textContent,curScene)};
+$('narrList').onclick=e=>{const fb=e.target.closest('[data-from]');if(fb){flowStart(+fb.dataset.from);return}const d=e.target.closest('[data-nb]');if(!d)return;flowStopFn();curLineId=null;curSrc={projId:d.dataset.np,blockId:d.dataset.nb};loadLine(d.textContent,curScene)};
+/* ===== 動画の語りを通して聞く（本番と同じ読み方：保存した調整があればそれ、なければ決まりを当てはめたもの） ===== */
+let FLOW=null;
+function tunedQ(plain){const ts=V.takes.filter(t=>!t.deleted&&(t.kata||{}).speaker===K.speaker).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));let q=null;for(const t of ts)for(const x of t.sents||[])if((x.plain||x.text).trim()===plain.trim())q=x.q;return q}
+async function flowQ(text){const{plain,em}=stripEmph(text);const tq=tunedQ(plain);if(tq)return{q:clone(tq),tuned:true};
+ const q=await eng('/audio_query',{text:plain,speaker:K.speaker},{});const emk=[];for(const [a,b] of em){const k=await kanaOf(plain.slice(a,b));if(k)emk.push(k)}return{q:applyRules(q,{text,emk},''),tuned:false}}
+function flowItems(){return [...document.querySelectorAll('#narrList .line')]}
+async function flowStart(fromBlock){flowStopFn();const els=flowItems().filter(el=>+el.dataset.bi>=(fromBlock||0));if(!els.length)return;if(!SPK.length&&!(await checkEngine()))return;
+ AC=AC||new AudioContext({sampleRate:SR});const me={stop:false,idx:0,els,buf:{}};FLOW=me;$('flowFix').disabled=false;
+ const prep=i=>{if(i>=els.length||me.buf[i])return;me.buf[i]=flowQ(els[i].textContent).then(async r=>({...r,b:await renderQs([r.q])}))};
+ let t=AC.currentTime+0.15;
+ for(let i=0;i<els.length&&!me.stop;i++){prep(i);prep(i+1);prep(i+2);$('flowMsg').className='msg';$('flowMsg').textContent=`${i+1} / ${els.length}`;
+  let r;try{r=await me.buf[i]}catch(e){$('flowMsg').textContent='鳴らせません：'+e.message;break}if(me.stop)break;
+  const now0=AC.currentTime;if(t<now0)t=now0+0.05;const src=AC.createBufferSource();src.buffer=r.b;src.connect(AC.destination);src.start(t);me.src=src;
+  const startAt=t;const el=els[i];setTimeout(()=>{if(me.stop)return;flowItems().forEach(x=>x.classList.remove('playing'));el.classList.add('playing');me.idx=i;el.scrollIntoView({block:'nearest'})},Math.max(0,(startAt-AC.currentTime)*1000));
+  const next=els[i+1];const gap=next&&next.dataset.nb===el.dataset.nb?0.25:0.55;t=startAt+r.b.duration-(K.reverb>0?K.reverbLen:0)+gap;
+  // 鳴り終わる少し前まで待ってから次へ（先読みは並行）
+  await new Promise(res=>{const w=()=>{if(me.stop||AC.currentTime>t-0.8)res();else setTimeout(w,100)};w()})}
+ if(!me.stop){await new Promise(res=>setTimeout(res,Math.max(0,(t-AC.currentTime)*1000)));if(FLOW===me){flowItems().forEach(x=>x.classList.remove('playing'));$('flowMsg').className='msg ok';$('flowMsg').textContent='最後まで聞きました';FLOW=null}}}
+function flowStopFn(){if(!FLOW)return;FLOW.stop=true;try{FLOW.src&&FLOW.src.stop()}catch(e){}FLOW=null;stopPlay();try{AC&&AC.close()}catch(e){}AC=null;flowItems().forEach(x=>x.classList.remove('playing'))}
+$('flowPlay').onclick=()=>flowStart(0);$('flowStop').onclick=()=>{flowStopFn();$('flowMsg').textContent=''};
+$('flowFix').onclick=()=>{const el=document.querySelector('#narrList .line.playing')||(FLOW&&FLOW.els[FLOW.idx]);flowStopFn();if(el)el.click()};
 /* ===== 調整のメモ ===== */
 let noteF='すべて';
 let PTS=[];// 制作室のポイント帳（data.json の points）のうち「声」
