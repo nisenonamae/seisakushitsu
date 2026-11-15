@@ -71,7 +71,13 @@ if a.kata:
 def tts(text,path):
     if VK:
         plain=text.replace('《','').replace('》','').strip()
-        if plain in TUNED:q=TUNED[plain];LAST['tuned']=LAST.get('tuned',0)+1
+        if plain in TUNED:
+            q=TUNED[plain];LAST['tuned']=LAST.get('tuned',0)+1
+            # 点検：調整で長さが大きく変わった文は、画面（動き・カットの長さ）が合っているか見直す
+            try:
+                (_,q0),=VR.queries_for(text,VK,VRULES)[:1];d1=VR.mora_ends(q)[-1];d0=VR.mora_ends(q0)[-1]
+                if abs(d1-d0)>0.3 or abs(d1-d0)>0.15*d0:LAST.setdefault('tchk',[]).append((plain,d0,d1))
+            except Exception:pass
         else:(s0,q),=VR.queries_for(text,VK,VRULES)[:1] or [(text,None)]
         y=VR.finish(VR.synth_sent(q,VK),VK,tail=False)
         from scipy.signal import resample_poly
@@ -294,4 +300,5 @@ mix=np.clip(mix,-1,1)
 with wave.open(f'{tmp}/m.wav','wb') as wv: wv.setnchannels(1);wv.setsampwidth(2);wv.setframerate(SR);wv.writeframes((mix*32767).astype(np.int16).tobytes())
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','128k','-shortest',a.out],check=True)
 json.dump({'duration':round(T,2),'voice':a.voice,'speed':a.speed,'blocks':tl,'shots':allshots},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
+for _p,_d0,_d1 in LAST.get('tchk',[]):print(f'［点検］調整した文の長さが変わった：「{_p[:24]}」 {_d0:.1f}秒 → {_d1:.1f}秒。カットの切り替わりと字幕は語りに合わせて自動で動くが、その段の動きが急ぎすぎ・間延びしていないか見る',file=sys.stderr)
 print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB',(f"／調整室で調整した文 {LAST.get('tuned',0)} 文" if VK else ''))
