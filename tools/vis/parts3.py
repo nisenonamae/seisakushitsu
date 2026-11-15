@@ -178,7 +178,7 @@ def find_pops(TR,edge=4):
     """一コマごとの四角の並びから、画面の内側で（ふちに触れずに）急に出てくる・消えるものを探す。うすい（透明に近い）ものは除く"""
     def inside(b):return b[0]>edge and b[1]>edge and b[2]<W-edge and b[3]<H-edge and b[4]>0.35
     def near(a,b):
-        w=a[2]-a[0];return abs((a[0]+a[2])/2-(b[0]+b[2])/2)<max(60,w*0.6) and abs((a[1]+a[3])/2-(b[1]+b[3])/2)<max(60,(a[3]-a[1])*0.8) and 0.6<(w+1)/(b[2]-b[0]+1)<1.6
+        w=a[2]-a[0];return abs((a[0]+a[2])/2-(b[0]+b[2])/2)<max(110,w*0.8) and abs((a[1]+a[3])/2-(b[1]+b[3])/2)<max(60,(a[3]-a[1])*0.8) and 0.6<(w+1)/(b[2]-b[0]+1)<1.6
     out=[]
     for n in range(1,len(TR)):
         A,B=TR[n-1],TR[n]

@@ -115,14 +115,14 @@ window.render=function(t){const m=P.mode;const S=window._st;
  }
  else if(m==='arcs'){
    sky2();const top=x=>BASE-38*gauss(x,300,70);layers(top);
-   for(const [t0,dist,col,h] of [[0.2,260,'#7dd3fc',80],[DUR*0.5,620,'#ffd36a',150]]){const tt=t-t0;if(tt<0)continue;const q=clamp(tt/0.9);const x=lerp(300,300+dist,q),y=lerp(top(300)-74,BASE-74,q)-h*4*q*(1-q);
+   for(const [t0,dist,col,h] of [[0.7,260,'#7dd3fc',80],[DUR*0.5,620,'#ffd36a',150]]){const tt=t-t0;if(tt<0){const a=clamp(1+tt/0.7);if(a>0)tire(lerp(-90,300,a),top(lerp(-90,300,a))-74,74,a*6);continue}const q=clamp(tt/0.9);const x=lerp(300,300+dist,q),y=lerp(top(300)-74,BASE-74,q)-h*4*q*(1-q);
      for(let k=1;k<=6;k++){const qq=clamp((tt-k*0.08)/0.9);if(qq<=0||qq>=1)continue;g.globalAlpha=0.12*(7-k);tire(lerp(300,300+dist,qq),lerp(top(300)-74,BASE-74,qq)-h*4*qq*(1-qq),74,0);g.globalAlpha=1}
      tire(x,y,74,tt*6);if(q>=1){sfxOnce('l'+t0,t0+0.9,'thump');g.fillStyle=col;g.beginPath();g.ellipse(300+dist,BASE+4,50,9,0,0,7);g.fill()}}
  }
  else if(m==='same'){
    const u=ease((t-0.4)/(DUR*0.8));const top=x=>BASE-38*gauss(x,300,70)-46*u*gauss(x,820,80);sky2();layers(top);
    const cols=['#7dd3fc','#ffd36a','#f87171','#a7f3d0','#c4b5fd'];
-   const NW=Math.max(5,Math.floor((DUR-1.2)/0.75));Array.from({length:NW},(_,i)=>cols[i%5]).forEach((c,i)=>{const t0=0.2+i*(DUR-1.6)/NW;const tt=t-t0;if(tt<0)return;const q=clamp(tt/0.8);const dist=500+(i%2?24:-20)+i*5;const x=lerp(300,300+dist,q),y=lerp(top(300)-70,top(300+dist)-70,q)-130*4*q*(1-q);
+   const NW=Math.max(5,Math.floor((DUR-1.2)/0.75));Array.from({length:NW},(_,i)=>cols[i%5]).forEach((c,i)=>{const t0=0.6+i*(DUR-2.0)/NW;const tt=t-t0;if(tt<0){const a=clamp(1+tt/0.55);if(a>0){tire(lerp(-80,300,a),top(lerp(-80,300,a))-70,70,a*6);g.fillStyle=c;g.beginPath();g.arc(lerp(-80,300,a),top(lerp(-80,300,a))-70,14,0,7);g.fill()}return}const q=clamp(tt/0.8);const dist=500+(i%2?24:-20)+i*5;const x=lerp(300,300+dist,q),y=lerp(top(300)-70,top(300+dist)-70,q)-130*4*q*(1-q);
      g.globalAlpha=q>=1?Math.max(0,1-(tt-0.8)/0.6):1;if(g.globalAlpha>0){tire(x,y,70,tt*6);g.fillStyle=c;g.beginPath();g.arc(x,y,14,0,7);g.fill()}g.globalAlpha=1;if(q>=1)sfxOnce('s'+i,t0+0.8,'thump')});
  }
  else if(m==='repose'){
