@@ -15,12 +15,12 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、sound_ideas は 3、sound_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
 作り手が「こういうときは、こうして」と決めたことが、データの `rules[]` にある。`{"id","scope","when","do","active","from","createdAt","updatedAt"}`
-- 仕事に取りかかる前に、`deleted` でなく `active` が true の決まりのうち、`scope` が「全部」か、その仕事に当たるものを全部読む（gather＝参考集め、pick＝題材探し、thumb_ideas・thumb_fix＝サムネ、title_ideas・title_fix＝題名、outline・outline_fix＝構成、flesh・flesh_fix＝肉付け、visual_ideas・visual_make・visual_fix＝図解、動画の組み立て＝動画。summary は「全部」だけ）
+- 仕事に取りかかる前に、`deleted` でなく `active` が true の決まりのうち、`scope` が「全部」か、その仕事に当たるものを全部読む（gather＝参考集め、pick＝題材探し、thumb_ideas・thumb_fix＝サムネ、sound_ideas・sound_fix＝音、title_ideas・title_fix＝題名、outline・outline_fix＝構成、flesh・flesh_fix＝肉付け、visual_ideas・visual_make・visual_fix＝図解、動画の組み立て＝動画。summary は「全部」だけ）
 - 決まりはこの手順書の書き方より優先する。ただし「ほかのアプリのファイルを触らない」「著作権・利用規約」「事実の確かめ」の決まりは決まりごとより優先する（ぶつかるときは、守れなかったことを result に書く）
 - 守った結果が分かるようにする（構成なら `change` や `memo` に「決まり『〜』に合わせた」など）
 - **話し合い（talk）のとき**：作り手が「こういうときは」「毎回」「今後は」「いつも」のように、この制作だけでなくこれからも使う指示を言ったら、`rules` に `{"scope":（当てはまる仕事）,"when","do","from":"話し合い","active":true}` で足して push し、チャットで「決まりごとに入れました：〜」と一行で伝える。この制作だけの話か、これからもの話か迷ったら一言だけ聞く
@@ -160,6 +160,20 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - 絵はプログラムで描くか、assets のうち `ok` が true のものだけを使う。実在の人物の写真・他人の作品・ロゴは使わない
 - 参考動画のサムネをそのまま真似ない（構図や色の考え方を学ぶだけ）。題名で事実を盛らない（動画の中身と合っていること）
 - `jobs[].wish` があれば従う。total は 3
+
+### 音の保管庫（データの `sounds[]`）
+BGM・効果音・始まりの音・環境音をためておく所。音のファイルはデータのリポジトリの `roadmap/apps/seisakushitsu/sounds/<種類>/` に置く。
+- 形：`{"id","kind"（BGM／効果音／始まりの音／環境音）,"name","mood"（雰囲気・使いどころ）,"tags":[],"source"（出どころ）,"license"（使い方の条件）,"credit"（概要欄に書く表記。要らなければ空）,"file"（パス）,"len"（秒）,"usedIn":[{"projId","where"}],"by"（作り手／Claude）,"createdAt","updatedAt"}`
+- 音を付けるときは**まず保管庫から選ぶ**。同じチャンネルで同じ音が続くのは個性になるので、むしろ使い回してよい（とくに始まりの音・決まった効果音）
+- 足りない音は、自由に使えるもの（パブリックドメイン・CC0・クレジット表記で使えるもの・商用可の無料素材）を探すか、プログラムで作る。使う前に利用規約を読んで `license`・`credit` に書く。YouTube の収益化で問題になる条件（収益化不可・要申請など）のものは使わない
+- 使った音は、その動画を `usedIn` に足す。新しく入れた音は保管庫に残す（消さない）
+
+### sound_ideas（音を付ける）
+- 読むもの：決まりごとの「音」、保管庫、肉付けの段ごとの語りと役割（序・章・見せ場・結び）、仮の動画、job の `wish`
+- 段（章）ごとに BGM を決め、見せ場や切り替わりの効果音、冒頭の始まりの音を決める。語りの声より目立たせない（BGM は声の下で −20dB 前後、声のない間だけ少し上げる）
+- `projects[].sound`＝`{"cues":[{"soundId","where"（「序の頭」「第2章の全体」「2-3 の車が止まる所」など）,"block","at"（秒・任意）,"vol"（dB）}],"note"（ねらいを一言）,"video"（音を入れた動画のパス）}` を書き、音を入れた動画を書き出して `video` に置く。total は 3
+### sound_fix（音の直し）
+- `jobs[].notes` に従って `projects[].sound` を直し、動画を書き出し直す。直しのうち「次の動画でも同じように」と読めるものは、決まりごと（scope：音）に足す。total は 2
 
 ### thumb_fix（サムネの直し）
 - `jobs[].thumbId` のサムネを `jobs[].notes` に従って直す。題名・文字・絵・色・配置のどれでも。新しい画像は `<id>_p<番号>.png`、`preview` を更新し、古いパスは `previews` に残す

@@ -150,7 +150,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <p class="lead">「こういうときは、こうして」という頼み方の決まり。Claude は頼みごとや話し合いのたびに、ここにある「使う」の決まりを全部読んで守ります。話し合いの中で言った決まりも、Claude がここに足します。</p>
 <div id="ruleList"></div>
 <details><summary>決まりを足す</summary>
-<label>どの仕事で</label><select id="rs"><option>全部</option><option>題材探し</option><option>参考集め</option><option>構成</option><option>肉付け</option><option>図解</option><option>題名</option><option>サムネ</option><option>動画</option></select>
+<label>どの仕事で</label><select id="rs"><option>全部</option><option>題材探し</option><option>参考集め</option><option>構成</option><option>肉付け</option><option>図解</option><option>題名</option><option>サムネ</option><option>動画</option><option>音</option></select>
 <label>こういうとき（任意）</label><input id="rw" placeholder="例：数字を出すとき">
 <label>こうする</label><textarea id="rd" placeholder="例：出どころを段のそばに書く。1段に数字は1つまで"></textarea>
 <div class="row"><button class="b main" id="addRule">決まりに足す</button></div></details>
@@ -165,6 +165,16 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <label>どこがいいと思った？（任意。あると的が絞れる）</label><input id="fdWhy" placeholder="例：最初の15秒の引きが強い／数字の出し方がうまい">
 <div class="row"><button class="b main" id="addFeed">餌をあげる</button><span class="lead" id="fdMsg"></span></div></details>
 <div id="feedList"></div>
+<h2 style="margin-top:22px">音の保管庫</h2>
+<p class="lead">BGM・効果音・始まりの音をためておく所。動画で使った音は自動でここに残り、次の動画ですぐ使えます。Claude は音を付けるとき、まずここから選びます。自分で見つけた音（自由に使えるもの）も足せます。</p>
+<div class="chips" id="sndFilter"></div><div id="sndList"></div>
+<details><summary>音を足す</summary>
+<label>種類</label><select id="sdKind"><option>BGM</option><option>効果音</option><option>始まりの音</option><option>環境音</option></select>
+<label>名前</label><input id="sdName" placeholder="例：静かなピアノ（考えごと）">
+<label>雰囲気・使いどころ（任意）</label><input id="sdMood" placeholder="例：落ち着いた／謎解きの場面">
+<label>出どころと使い方の条件</label><input id="sdSrc" placeholder="例：DOVA-SYNDROME 作者名（クレジット不要）">
+<label>音のファイル（20MBまで）</label><input type="file" id="sdFile" accept="audio/*">
+<div class="row"><button class="b main" id="addSnd">保管庫に入れる</button><span class="lead" id="sdMsg"></span></div></details>
 <h2 style="margin-top:22px">編集スタイル</h2>
 <p class="lead">作った動画の編集スタイル（型紙）がたまっていきます。制作のときに「そのまま使う」「混ぜる」「新しく作る」を選べます。</p>
 <div id="styleList"></div>
@@ -325,7 +335,7 @@ const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'億':n>=1e4?Math.round(n/1e4).toLocaleSt
 /* ---------- データ ---------- */
 let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}
 if(!D)D=JSON.parse(JSON.stringify(SEED));
-['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
+['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
 function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
 function touch(o){o.updatedAt=now();save()}
 
@@ -334,7 +344,7 @@ const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','roadmap/a
 const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
-function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
 let pushTimer=null,busy=false;
 function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
 async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
@@ -509,13 +519,14 @@ const STEPS=[
 {t:'題名',s:'人を惹きつける題名の案を出してもらい、選んで磨く'},
 {t:'サムネ',s:'題名に合うサムネを見本で出してもらい、選んで直す'},
 {t:'動画を確かめる',s:'1.5倍速で見て、直す所を書く'},
+{t:'音',s:'BGM・効果音・始まりの音を付け、通しで聞いて直す'},
 {t:'残して終わる',s:'次からも使う直しを工夫の棚へ'}];
 let curProj=null;
 const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){ensureProj();const p=projOf();
@@ -580,6 +591,7 @@ visualStep(p),
 titleStep(p),
 thumbStep(p),
 videoStep(p),
+soundStep(p),
 `<div class="how"><b>やること</b><p style="margin:4px 0">構成・肉付けの話し合いで決めたことや動画の直しのうち、次の動画でも同じようにしてほしいものに印を付けて、「終わる」を押す。印を付けたものは工夫の棚に「採用」で入る。</p></div>
 ${learnList(p).map((f,k)=>`<label class="chk"><input type="checkbox" data-keep="${k}"><span>${f.sec?esc(f.sec)+'　':''}${esc(f.text)}</span></label>`).join('')||'<div class="empty">直しはありませんでした。</div>'}
 ${p.kata?`<div class="item" style="background:var(--paper);margin-top:8px"><label class="chk" style="border:0"><input type="checkbox" id="keepStyle" checked><span>この動画の編集スタイルを残す（次から選べる）</span></label><label>スタイルの名前</label><input id="styleName" value="${esc(candQ(p).slice(0,20))}の型"></div>`:''}
@@ -665,6 +677,20 @@ return out}
 function secOf(t){t=String(t||'').trim();const m=t.match(/^(\d+):(\d{1,2})$/);return m?+m[1]*60+ +m[2]:(/^\d+(\.\d+)?$/.test(t)?+t:null)}
 function blockAt(p,t){const bl=((p.video||{}).blocks)||[];return bl.find(b=>t>=b.start&&t<b.end)}
 function shotOf(p,txt){const m=String(txt||'').trim().match(/^(?:場面\s*)?(\d+)-(\d+)$/);if(!m)return null;const sh=(((p.video||{}).shots)||[]).find(x=>x.tag===m[1]+'-'+m[2]);if(sh)return sh;const bl=((p.video||{}).blocks)||[];const b=bl[+m[1]-1];return b?{tag:m[1]+'-'+m[2],role:b.role,start:b.start}:null}
+const SKIND=['BGM','効果音','始まりの音','環境音'];
+function sndRow(x,extra=''){return `<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><div><b>${esc(x.name||'')}</b>　<span class="lead">${esc(x.kind||'')}${x.mood?'・'+esc(x.mood):''}${(x.tags||[]).length?'・'+esc(x.tags.join('・')):''}</span></div>
+${x.file?`<audio controls preload="none" data-gh="${esc(x.file)}" style="width:100%;height:34px;margin:4px 0"></audio>`:''}<div class="lead" style="margin:0">${esc(x.source||'')}${x.license?'　'+esc(x.license):''}${(x.usedIn||[]).length?'　使った動画：'+x.usedIn.map(u=>esc((D.projects.find(p=>p.id===u.projId)||{}).title||candQ(D.projects.find(p=>p.id===u.projId)||{})||u.projId)).join('、'):''}</div>${extra}</div>`}
+function soundStep(p){const sp=p.sound||{};const lib=(D.sounds||[]).filter(x=>!x.deleted);const used=(sp.cues||[]).map(c=>({c,x:lib.find(x=>x.id===c.soundId)})).filter(o=>o.x);
+if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、音の案を出してもらい、保管庫の音を使えます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
+return `<div class="how"><b>やること</b><ol><li>Claude が場面に合う BGM・効果音・始まりの音を、<b>まず音の保管庫から</b>選び、足りなければ自由に使える音を探して保管庫に足す</li><li>音を入れた動画を通しで聞いて、気になる所を書いて直してもらう</li><li>気に入った音は保管庫に残り、次の動画ですぐ使える</li></ol></div>
+<label>こういう音にしたい（任意）</label><input id="sWish" placeholder="例：静かなピアノで、山場だけ少し盛り上げる／始まりに短い決まった音">
+<div class="row"><button class="b" data-sjob="sound_ideas">${used.length?'音を選び直してもらう':'音を付けてもらう'}</button></div>${jobLine(p,'sound_ideas')}
+${sp.note?`<p class="lead">${esc(sp.note)}</p>`:''}
+${used.length?`<details open><summary>この動画で使う音（${used.length}）</summary>${used.map(o=>sndRow(o.x,`<div class="lead" style="margin:0">使う所：${esc(o.c.where||'')}</div>`)).join('')}</details>`:''}
+${sp.video?`<video controls preload="metadata" data-gh="${esc(sp.video)}" style="width:100%;margin:6px 0"></video>`:''}
+<label>直したいこと（音量・曲の雰囲気・入る所・効果音など）</label><textarea id="sFix" placeholder="例：2章のBGMが明るすぎる／ブレーキの所の効果音がうるさい"></textarea>
+<div class="row"><button class="b" data-sjob="sound_fix">直してもらう</button></div>${jobLine(p,'sound_fix')}
+<div class="row"><button class="b main" data-next>音はこれでいい</button></div>`}
 function videoStep(p){const v=p.video;const open=(p.fixes||[]).filter(f=>f.text&&!f.done);
 return `<div class="how"><b>やること</b><ol><li>仮の動画を 1.5倍速で見る（声・図解・字幕まで入った下書き。図解がまだの所は「画面の指示」を書いた絵コンテになる）</li><li>直したい所を、時間（1:23）か画面の左上に出る場面の番号（3-4）と一緒に一行ずつ書く。どの段の話かが自動で出る。これからの動画でも同じにしてほしいことは「毎回そうする」に印（印がなくても、Claude が「これは毎回のことだ」と思ったら決まりに入れて知らせます）</li><li>「直しを頼む」で、Claude がその段の語り・構成・図解を直して動画を作り直す。気が済んだら「完成」</li></ol></div>
 ${v&&v.path?`<div class="item"><div class="tags"><span>${v.ver||1}版</span><span>${secTxt(v.duration||0)}</span>${v.at?`<span>${md(v.at)}</span>`:''}</div><video data-gh="${esc(v.path)}" controls playsinline preload="metadata" style="width:100%;border-radius:6px;background:#000;margin-top:6px"></video>${v.reply?`<div class="chg">Claude：${esc(v.reply)}</div>`:''}</div>`:'<div class="empty">仮の動画はまだありません。下のボタンか、上の「情報を変えて作り直す」で作れます。</div>'}
@@ -913,6 +939,10 @@ function talkText(p,k){return `制作室の${KN[k]}を一緒に磨きたい。Gi
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function snap(d){d.history=d.history||[];d.history.unshift({ver:d.ver||1,at:now(),blocks:clone(d.blocks)});d.history=d.history.slice(0,15)}
 function blkClick(e,p){const el=e.target;
+if(el.matches('[data-sjob]')){const type=el.dataset.sjob;const extra={};
+if(type==='sound_ideas')extra.wish=($('sWish')?$('sWish').value.trim():'');
+if(type==='sound_fix'){const v=$('sFix')?$('sFix').value.trim():'';if(!v){alert('直したいことを書いてください');return true}extra.notes=v}
+queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return true}
 if(el.matches('[data-tjob]')){const type=el.dataset.tjob;const extra={};
 if(type==='thumb_ideas'){extra.n=+($('tN')?$('tN').value:5);extra.wish=($('tWish')?$('tWish').value.trim():'')}
 if(type==='thumb_fix'){const t=(p.thumbs||[]).find(x=>x.id===el.dataset.tid);const ta=document.querySelector(`[data-tfix="${t.id}"]`);if(!ta||!ta.value.trim()){alert('直したいことを書いてください');return true}
@@ -1041,7 +1071,19 @@ if(!$('styleList').dataset.on){$('styleList').dataset.on=1;$('styleList').addEve
 if(e.target.matches('[data-srename]')){const n=prompt('新しい名前',s.name);if(n&&n.trim()){s.name=n.trim();s.updatedAt=now();save();renderAll()}}
 if(e.target.matches('[data-sdel]')&&confirm(`「${s.name}」を消しますか？`)){s.deleted=true;s.updatedAt=now();save();renderAll()}});}
 
-function renderAll(){renderRules();renderFeeds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
+let sndF='すべて';
+function renderSounds(){if(!$('sndList'))return;const lib=(D.sounds||[]).filter(x=>!x.deleted).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+$('sndFilter').innerHTML=['すべて',...SKIND].map(k=>`<button data-sf="${k}" aria-pressed="${sndF===k}">${k}（${k==='すべて'?lib.length:lib.filter(x=>x.kind===k).length}）</button>`).join('');
+const xs=lib.filter(x=>sndF==='すべて'||x.kind===sndF);$('sndList').innerHTML=xs.length?xs.map(x=>`<div data-snd="${x.id}">${sndRow(x,'<div class="st"><button data-sdel>消す</button></div>')}</div>`).join(''):'<div class="empty">まだ音はありません。</div>';setTimeout(fillMedia,0);
+if(!$('sndList').dataset.on){$('sndList').dataset.on=1;
+$('sndFilter').onclick=e=>{const b=e.target.closest('[data-sf]');if(!b)return;sndF=b.dataset.sf;renderSounds()};
+$('sndList').onclick=e=>{if(!e.target.matches('[data-sdel]'))return;const x=D.sounds.find(y=>y.id===e.target.closest('[data-snd]').dataset.snd);if(!confirm('この音を保管庫から消しますか？'))return;x.deleted=true;x.updatedAt=now();save();renderSounds()};
+$('addSnd').onclick=async()=>{const file=$('sdFile').files[0];if(!file){alert('音のファイルを選んでください');return}if(!syncOn()){alert('音を入れるには同期の設定が要ります');return}if(file.size>20e6){alert('大きすぎます（20MBまで）');return}
+const kind=$('sdKind').value;$('sdMsg').textContent='送っています…';const path=`roadmap/apps/seisakushitsu/sounds/${kind}/${Date.now()}_${file.name.replace(/[^\w.\-]/g,'_')}`;
+try{await ghPutFile(path,await fileToB64(file),'音を保管庫に追加')}catch(err){$('sdMsg').textContent='送れませんでした：'+err.message;return}
+D.sounds=D.sounds||[];D.sounds.push({id:uid('s'),kind,name:$('sdName').value.trim()||file.name,mood:$('sdMood').value.trim(),tags:[],source:$('sdSrc').value.trim(),license:'',file:path,usedIn:[],by:'作り手',createdAt:now(),updatedAt:now()});save();
+$('sdName').value='';$('sdMood').value='';$('sdSrc').value='';$('sdFile').value='';$('sdMsg').textContent='入れました';renderSounds()}}}
+function renderAll(){renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script><div id="play" class="play" hidden><div class="pscr"><div class="prole" id="pRole"></div><div class="pshow" id="pShow"></div></div>
