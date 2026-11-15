@@ -83,7 +83,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
   <div class="card">
     <h2>調整のメモ</h2>
-    <p class="hint">声づくりのコツ。Claude が記事などから集めたものと、自分で書いたもの。Claude も声を作るときにこれを読む。</p>
+    <p class="hint">声づくりのコツ。制作室の「ポイント」タブの「声」と同じもの（★ を付けるのはポイントタブで）。ここで足したメモも Claude が読む。</p>
     <div class="chips" id="noteFilter"></div>
     <div id="noteList" style="max-height:420px;overflow:auto;margin-top:6px"></div>
     <details style="margin-top:8px"><summary>自分でメモを足す</summary>
@@ -430,11 +430,16 @@ $('projSel').onchange=()=>{LS.set('vv_proj',$('projSel').value);renderNarr()};
 $('narrList').onclick=e=>{const d=e.target.closest('[data-nb]');if(!d)return;curLineId=null;curSrc={projId:d.dataset.np,blockId:d.dataset.nb};loadLine(d.textContent,curScene)};
 /* ===== 調整のメモ ===== */
 let noteF='すべて';
-function renderNotes(){const ns=V.notes.filter(n=>!n.deleted).sort((a,b)=>(a.by==='作り手'?0:1)-(b.by==='作り手'?0:1)||(b.updatedAt||0)-(a.updatedAt||0)||(a.order||0)-(b.order||0));
+let PTS=[];// 制作室のポイント帳（data.json の points）のうち「声」
+function ptsFromLocal(){try{const D=JSON.parse(localStorage.getItem('ss_data')||'null');return(D&&D.points)||[]}catch(e){return[]}}
+async function loadPoints(){PTS=ptsFromLocal();renderNotes();if(!syncOn())return;try{const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/roadmap/apps/seisakushitsu/data.json`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});
+ if(r.ok){const D=await r.json();PTS=D.points||[];renderNotes()}}catch(e){}}
+function noteItems(){return [...PTS.filter(x=>!x.deleted&&x.area==='声').map(x=>({id:x.id,cat:x.tag||'声',title:x.title,body:x.body+(x.example?'\n例：'+x.example:''),claude:x.claude,src:x.src,srcTitle:x.srcTitle,by:x.by==='作り手'?'作り手(帳)':'Claude',star:x.star,order:x.order,srcOrder:x.srcOrder,updatedAt:x.updatedAt})),...V.notes.filter(n=>!n.deleted)]}
+function renderNotes(){const ns=noteItems().sort((a,b)=>(b.star?1:0)-(a.star?1:0)||(a.by==='作り手'?0:1)-(b.by==='作り手'?0:1)||(b.srcOrder||0)-(a.srcOrder||0)||(a.order||0)-(b.order||0));
  const cs=['すべて',...new Set(ns.map(n=>n.cat).filter(Boolean))];$('noteFilter').innerHTML=cs.map(c=>`<button data-nf="${esc(c)}" aria-pressed="${c===noteF}">${esc(c)}</button>`).join('');
  const xs=ns.filter(n=>noteF==='すべて'||n.cat===noteF);
- $('noteList').innerHTML=xs.length?xs.map(n=>`<details class="take" data-note="${n.id}"><summary style="color:var(--ink);font-size:14px">${n.cat?`<span class="badge">${esc(n.cat)}</span>`:''}${n.by==='作り手'?'<span class="badge u">自分</span>':''}${esc(n.title)}</summary>
- <div style="font-size:13.5px;margin:4px 0">${esc(n.body)}</div>${n.claude?`<div class="m" style="color:var(--claude)">Claude の見立て：${esc(n.claude)}</div>`:''}
+ $('noteList').innerHTML=xs.length?xs.map(n=>`<details class="take" data-note="${n.id}"><summary style="color:var(--ink);font-size:14px">${n.cat?`<span class="badge">${esc(n.cat)}</span>`:''}${n.star?'<span style="color:var(--yel)">★</span> ':''}${n.by==='作り手'||n.by==='作り手(帳)'?'<span class="badge u">自分</span>':''}${esc(n.title)}</summary>
+ <div style="font-size:13.5px;margin:4px 0;white-space:pre-wrap">${esc(n.body)}</div>${n.claude?`<div class="m" style="color:var(--claude)">Claude の見立て：${esc(n.claude)}</div>`:''}
  ${n.src?`<div class="hint">出どころ：<a href="${esc(n.src)}" target="_blank" rel="noopener">${esc(n.srcTitle||n.src)}</a></div>`:''}${n.by==='作り手'?'<div class="st"><button class="b" data-ndel>消す</button></div>':''}</details>`).join(''):'<p class="hint">まだありません。</p>'}
 $('noteFilter').onclick=e=>{const b=e.target.closest('[data-nf]');if(b){noteF=b.dataset.nf;renderNotes()}};
 $('noteList').onclick=e=>{if(!e.target.matches('[data-ndel]'))return;const n=V.notes.find(x=>x.id===e.target.closest('[data-note]').dataset.note);if(confirm('このメモを消しますか？')){n.deleted=true;n.updatedAt=now();save();renderNotes()}};
@@ -451,6 +456,6 @@ $('modeSeg').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;LS
 $('engUrl').value=E();$('engUrl').onchange=()=>{LS.set('vv_eng',$('engUrl').value.trim());checkEngine()};
 $('engCheck').onclick=checkEngine;
 showMode();showKata();renderSide();layout();draw();
-checkEngine().then(ok=>{if(ok)$('setupCard').querySelector('ol').style.display='none'});sync();
+loadPoints();checkEngine().then(ok=>{if(ok)$('setupCard').querySelector('ol').style.display='none'});sync();
 </script>
 </body></html>
