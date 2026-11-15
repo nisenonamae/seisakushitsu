@@ -1,0 +1,207 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 第3章：速さ・重さ・しぶとさ・フィードバック・ジレンマ・対策。第2章と同じ絵柄（空・遠くの丘・砂の断面）。文字なし。
+ three     … 波を決める三つ：転がる車輪（速さ）・重りを載せた車輪を正面から（幅あたりの重さ）・詰まった砂粒（密度）。times[1..3] で一つずつ
+ below     … 速度計と下の道。最初は速くて小さな山が育つ → times[1] で針が下がると、山はそれ以上育たない
+ heavy     … 思い込み（セピア）：重い車輪ほど大きな波 → times[1] で本当の結果：上＝軽い車輪（大きく跳ねて山が大きい）、下＝重い車輪（ほとんど跳ねず山が小さい）
+ springs   … 同じ台の上の、ばねに載った軽い箱と重い箱。台が突き上げられると、軽い箱は大きく跳ね、重い箱はほとんど動かない
+ push2     … 上下2段。軽い車輪は地面を押す光が強弱に大きくゆれ、重い車輪はほぼ一定
+ updown    … 車輪の上の重りが薄れて消え、上下の揺れ（両向きの矢印）が光る。下の山が育つ
+ rice      … 砂粒を大きく見せた断面。times[1] で粒が細長い米粒に変わっても、車輪は跳ねて山ができる
+ plow      … 回らない斜めの板を引きずる。遅いうちは平らな跡 → times[1] で速くなると板が跳ね、後ろに波
+ loop      … 波 → 揺れ → 波 の輪。times[1] 波から車へ、[2] 車から波へ、[3] もう一周（太く）、[4] ぐるぐる回り続ける
+ twospeeds … 上は遅い車（大きく揺れる）、下は速い車（山のてっぺんをなぞる）。times[1] で下の道の山が着地のたびに高くなる
+ advice    … 速度計の針が下がって、ゆっくりの範囲（緑）に入る
+ seesaw    … シーソー：片方に車、もう片方に道。車が楽になるほど道の波が大きくなり、逆も同じ
+ crawl     … 波打った道を、車がそっと這うように越えていく。揺れない
+ delay     … 上は粗い道、下は滑らかな道。同じように車が通っても、下の道は波が出るのが遅い
+ active    … 波の上を走る車。最初は車体が揺れる → times[1] で車輪のまわりが光り、車輪だけが上下して車体は揺れない
+ deflate   … 大きなタイヤ。times[1] で空気が抜けて少しつぶれ、接地が広がり、跳ね方が小さくなる */
+window.DEF={mode:'three'};
+const BASE=520;
+const gauss=(x,c,w)=>Math.exp(-Math.pow((x-c)/w,2));
+function sky2(){sky('#8fbbe0','#efdcbc');hills(0,[['#cdb48c',420,24,0]])}
+function layers(top,x0=-20,x1=W+20){ground(top,x0,x1);for(const [y,c] of [[560,'rgba(150,110,70,.30)'],[620,'rgba(120,85,55,.35)'],[680,'rgba(95,65,42,.40)']]){g.save();g.beginPath();g.moveTo(x0,H);for(let x=x0;x<=x1;x+=6)g.lineTo(x,Math.max(top(x)+6,y));g.lineTo(x1,H);g.closePath();g.fillStyle=c;g.fill();g.restore()}}
+// 上下2段のうちの1段（y0〜y0+h）。top は画面の座標
+function lane(y0,h,top,fn,dim=0){g.save();g.beginPath();g.rect(0,y0,W,h);g.clip();const s=g.createLinearGradient(0,y0,0,y0+h);s.addColorStop(0,'#8fbbe0');s.addColorStop(1,'#efdcbc');g.fillStyle=s;g.fillRect(0,y0,W,h);
+  g.fillStyle='#cdb48c';g.beginPath();g.moveTo(0,y0+h);for(let x=0;x<=W;x+=16)g.lineTo(x,y0+h*0.5-14*(0.5+0.5*Math.sin(x/170)));g.lineTo(W,y0+h);g.fill();
+  ground(top,-20,W+20,'#c9a46a',y0+h);if(fn)fn();if(dim>0){g.fillStyle=`rgba(15,20,28,${0.55*dim})`;g.fillRect(0,y0,W,h)}g.restore()}
+function weight(x,y,s=1,a=1){g.save();g.globalAlpha=a;g.translate(x,y);g.scale(s,s);g.fillStyle='#3b4250';g.beginPath();g.moveTo(-46,0);g.lineTo(46,0);g.lineTo(34,-62);g.lineTo(-34,-62);g.closePath();g.fill();g.fillStyle='#596273';g.fillRect(-30,-58,60,8);g.strokeStyle='#3b4250';g.lineWidth=9;g.beginPath();g.arc(0,-70,14,Math.PI,0);g.stroke();g.restore()}
+function glowAt(x,y,f){const gr=g.createRadialGradient(x,y,4,x,y,120*f+20);gr.addColorStop(0,`rgba(255,170,60,${0.9*f})`);gr.addColorStop(1,'rgba(255,170,60,0)');g.fillStyle=gr;g.beginPath();g.ellipse(x,y+30,150*f+24,90*f+16,0,0,7);g.fill()}
+function dblArrow(x,y1,y2,col,w=7){arrowLine(x,(y1+y2)/2,x,y1,col,w);arrowLine(x,(y1+y2)/2,x,y2,col,w)}
+function dash(){const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#2b3440');bg.addColorStop(1,'#10151b');g.fillStyle=bg;g.fillRect(0,0,W,H)}
+// 走る車輪の跳ね方（山と山の間を弧で跳ぶ）。xs＝山の位置、A＝跳ねる高さ
+function hopY(x,xs,A){for(let i=0;i<xs.length-1;i++){if(x>=xs[i]&&x<xs[i+1]){const q=(x-xs[i])/(xs[i+1]-xs[i]);return A*4*q*(1-q)}}return 0}
+function init(){window._st={}}
+window.render=function(t){const m=P.mode;const S=window._st;
+ if(m==='three'){
+   sky2();const top=x=>BASE-1.2*Math.sin(x/9);layers(top);
+   const t1=T(1,0.4),t2=T(2,DUR*0.4),t3=T(3,DUR*0.7);
+   // ① 速さ：転がる車輪と、うしろの速さの筋
+   {const k=back((t-t1)/0.4);if(k>0){sfxOnce('a',t1,'pop');const x=250,r=130*k;tire(x,BASE-r,r,t*7);for(let i=0;i<6;i++){const a=((t*2.2+i*0.21)%1);g.strokeStyle=`rgba(255,255,255,${0.75*(1-a)})`;g.lineWidth=7;g.beginPath();g.moveTo(x-150-a*90,BASE-230+i*34);g.lineTo(x-100-a*90,BASE-230+i*34);g.stroke()}}}
+   // ② 幅あたりの重さ：正面から見た車輪と重り、下向きの矢印、幅の両矢印
+   {const k=back((t-t2)/0.4);if(k>0){sfxOnce('b',t2,'pop');const x=640;g.save();g.translate(x,BASE);g.scale(1.45*k,1.45*k);
+     g.fillStyle='#1b1d22';g.beginPath();g.roundRect(-42,-176,84,176,26);g.fill();g.fillStyle='#2c2f36';for(let i=0;i<7;i++)g.fillRect(-42,-160+i*24,84,8);
+     g.fillStyle='#8f98a4';g.fillRect(-60,-100,120,14);weight(0,-186,1.1);
+     const pr=0.5+0.5*Math.sin(t*5);arrowLine(110,-250,110,-150+pr*10,'#f87171',8);
+     g.strokeStyle='#ffd36a';g.fillStyle='#ffd36a';arrowLine(0,22,-56,22,'#ffd36a',5);arrowLine(0,22,56,22,'#ffd36a',5);g.restore()}}
+   // ③ 密度：ぎゅっと詰まった砂粒の山（断面）
+   {const k=back((t-t3)/0.4);if(k>0){sfxOnce('c',t3,'pop');const x=1030;g.save();g.translate(x,BASE);g.scale(1.5*k,1.5*k);const r2=R(5);
+     g.fillStyle='rgba(60,40,20,.25)';g.beginPath();g.ellipse(0,4,150,14,0,0,7);g.fill();
+     const sq=0.5+0.5*Math.sin(t*2.4);const rr=11-2.2*sq;
+     for(let row=0;row<8;row++){const n=10-row;for(let i=0;i<n;i++){const gx=(i-(n-1)/2)*rr*2.05,gy=-rr-row*rr*1.75;const l=r2();g.fillStyle=l<.5?'#b8915a':'#e2c48c';g.beginPath();g.arc(gx,gy,rr,0,7);g.fill();g.strokeStyle='rgba(90,60,30,.5)';g.lineWidth=1.5;g.stroke()}}
+     arrowLine(-130,-200,-130+0,-150+sq*14,'#ffd36a',6);arrowLine(130,-200,130,-150+sq*14,'#ffd36a',6);g.restore()}}
+ }
+ else if(m==='below'){
+   dash();const t1=T(1,DUR*0.35);const v=t<t1?20+1.5*Math.sin(t*4):lerp(20,6,ease((t-t1)/0.9))+0.6*Math.sin(t*3);
+   g.fillStyle='#1a1f26';g.beginPath();g.roundRect(380,20,520,360,50);g.fill();g.strokeStyle='#3a414c';g.lineWidth=6;g.stroke();
+   speedo(640,200,160,v,{vmax:40,step:10,mark:8});
+   // 下の道：速いうちは山が育ち、遅くなると育たない
+   const grow=clamp(t/Math.max(0.5,t1+0.6));const A=30*grow;
+   g.fillStyle='#8fbbe0';const sg=g.createLinearGradient(0,400,0,600);sg.addColorStop(0,'#8fbbe0');sg.addColorStop(1,'#efdcbc');g.fillStyle=sg;g.fillRect(0,400,W,H-400);
+   const off=t*(v*16);const top=x=>620-A*Math.max(0,Math.sin(2*Math.PI*(x+off)/170));ground(top,-20,W+20,'#c9a46a',H);
+   const wx=640;const ph=((wx+off)%170)/170;const wy=top(wx)-70-(v>8?A*1.2*4*ph*(1-ph):0);tire(wx,wy,70,off/70);
+   if(v>8&&!S.r){S.r=1;sfxOnce('r',0.05,'rattle',t1)}
+ }
+ else if(m==='heavy'){
+   const t1=T(1,DUR*0.45);const wipe=ease((t-t1)/0.6);
+   // 思い込み（セピア）：重りを載せた車輪が通ったあとに大きな波
+   if(wipe<1){g.save();g.filter='sepia(1) saturate(0.7)';sky2();const wx=lerp(160,1100,clamp(t/(t1+0.6)));const top=x=>BASE-(x<wx-60?60*Math.max(0,Math.sin(2*Math.PI*x/200)):0);layers(top);tire(wx,top(wx)-90,90,wx/90);weight(wx,top(wx)-186,1.2);g.restore();g.fillStyle='rgba(60,40,20,.12)';g.fillRect(0,0,W,H)}
+   if(wipe>0){sfxOnce('w',t1,'whoosh');g.save();g.beginPath();g.rect(0,0,W*wipe,H);g.clip();
+     const tt=Math.max(0,t-t1);const xs=[];for(let x=140;x<W+300;x+=200)xs.push(x);
+     for(const [y0,A,heavyW] of [[0,90,0],[360,14,1]]){const wx=lerp(40,W+120,clamp(tt/Math.max(2,DUR-t1-0.3)));const gy=y0+300;
+       const top=x=>gy-6-xs.reduce((s,c)=>s+(x<wx-40&&c<wx?(heavyW?6:26):3)*gauss(x,c,46),0);
+       lane(y0,360,top,()=>{const r=heavyW?60:54;const y=top(wx)-r-hopY(wx,xs,A);tire(wx,y,r,wx/r);if(heavyW)weight(wx,y-r-8,1.15);else{g.fillStyle='#8f98a4';g.fillRect(wx-8,y-r-24,16,16)}});}
+     g.fillStyle='#10151b';g.fillRect(0,357,W,6);g.restore()}
+ }
+ else if(m==='springs'){
+   sky2();layers(x=>BASE);const per=Math.max(1.4,(DUR-0.6)/3);const jolts=[0.5,0.5+per,0.5+2*per];
+   let pl=0,lt=0,hv=0;for(const j of jolts){const d=t-j;if(d<0)continue;if(d<0.12)pl+=-26*Math.sin(Math.PI*d/0.12);lt+=-110*Math.exp(-d*1.6)*Math.sin(d*2*Math.PI*1.6);hv+=-9*Math.exp(-d*2.5)*Math.sin(d*2*Math.PI*1.1);sfxOnce('j'+j,j,'thump');sfxOnce('b'+j,j+0.05,'boing')}
+   const py=BASE-60+pl;g.fillStyle='#6b5b4a';g.beginPath();g.roundRect(170,py,940,26,8);g.fill();g.fillStyle='#4a3e33';g.fillRect(200,py+26,30,BASE-py-26);g.fillRect(1050,py+26,30,BASE-py-26);
+   // ばねと箱
+   const spring=(x,y0,y1,w)=>{g.strokeStyle='#d1d5db';g.lineWidth=5;g.beginPath();g.moveTo(x,y0);const n=8;for(let i=1;i<n;i++)g.lineTo(x+(i%2?w:-w),y0+(y1-y0)*i/n);g.lineTo(x,y1);g.stroke()};
+   const lx=420,hx=860;const ly=py-130+lt,hy=py-130+hv;
+   spring(lx,py,ly+0,22);g.fillStyle='#e7c38a';g.beginPath();g.roundRect(lx-50,ly-90,100,90,10);g.fill();g.strokeStyle='#b48a52';g.lineWidth=4;g.stroke();
+   spring(hx,py,hy+0,30);g.fillStyle='#3b4250';g.beginPath();g.roundRect(hx-110,hy-190,220,190,14);g.fill();g.fillStyle='#596273';g.fillRect(hx-96,hy-176,192,12);
+ }
+ else if(m==='push2'){
+   const off=t*260;const xs=[];for(let x=-400;x<W+600;x+=200)xs.push(x);
+   for(const [y0,A,hv] of [[0,70,0],[360,10,1]]){const gy=y0+300;const top=x=>gy-6-xs.reduce((s,c)=>s+(hv?8:30)*gauss(x+off%200,c,50),0);
+     lane(y0,360,top,()=>{const wx=640,r=hv?80:72;const ph=((wx+off)%200)/200;const lift=A*4*ph*(1-ph);const f=hv?0.5+0.08*Math.sin(t*9):(ph<0.12?1:ph>0.9?0.7:0.12);
+       if(lift<10||hv)glowAt(wx,top(wx)+4,f);tire(wx,top(wx)-r-lift,r,off/r);if(hv)weight(wx,top(wx)-2*r-lift-8,1.15)})}
+   g.fillStyle='#10151b';g.fillRect(0,357,W,6);
+ }
+ else if(m==='updown'){
+   sky2();const fade=clamp(1-(t-0.4)/(DUR*0.35));const grow=ease(t/(DUR*0.9));const xs=[];for(let x=-300;x<W+600;x+=210)xs.push(x);const off=t*230;
+   const top=x=>BASE-xs.reduce((s,c)=>s+(8+30*grow)*gauss(x+off%210,c,52),0);layers(top);
+   const wx=600,r=90;const ph=((wx+off)%210)/210;const lift=(30+60*grow)*4*ph*(1-ph);const y=top(wx)-r-lift;tire(wx,y,r,off/r);
+   if(fade>0)weight(wx,y-r-10,1.3,fade);
+   const k=ease((t-DUR*0.3)/0.6);if(k>0){const a=0.5+0.5*Math.sin(t*9);dblArrow(wx+170,y-60-30*a,y+60+30*a,`rgba(255,211,106,${k})`,9)}
+   if(ph<0.05&&t-(S.l||-9)>0.4){S.l=t;window.SFX.push([t,'thump'])}
+ }
+ else if(m==='rice'){
+   sky2();const t1=T(1,DUR*0.4);const u=ease((t-t1)/0.8);if(u>0)sfxOnce('m',t1,'puff');const off=t*120;
+   const top=x=>BASE-60-28*Math.max(0,Math.sin(2*Math.PI*(x+off)/260))-6;
+   g.fillStyle='#8a6a46';g.fillRect(0,BASE-120,W,H);
+   // 粒（大きく見せる）
+   const r2=R(3);const sp=16;for(let gx=-40;gx<W+40;gx+=sp){for(let gy=BASE-140;gy<H+20;gy+=sp*0.9){const jx=(r2()-0.5)*8,jy=(r2()-0.5)*6;const X=gx+jx-(off%sp),Y=gy+jy;if(Y<top(X))continue;const l=r2(),ang=r2()*3.1;
+     g.save();g.translate(X,Y);g.rotate(ang*u);g.fillStyle=u<0.5?(l<.5?'#b38a55':'#e2c48c'):(l<.5?'#efe7d6':'#fffaf0');g.globalAlpha=1;g.beginPath();g.ellipse(0,0,lerp(7.5,11,u),lerp(7.5,4.2,u),0,0,7);g.fill();g.strokeStyle='rgba(90,60,30,.35)';g.lineWidth=1.2;g.stroke();g.restore()}}
+   const wx=640,r=210;const ph=((wx+off)%260)/260;const lift=30*4*ph*(1-ph);tire(wx,top(wx)-r-lift+6,r,off/r);
+ }
+ else if(m==='plow'){
+   sky2();const t1=T(1,DUR*0.45);const v=t<t1?60:lerp(60,320,ease((t-t1)/0.8));
+   S.X=S.X||0;S.lt=S.lt==null?0:S.lt;S.X+=v*Math.max(0,t-S.lt);S.lt=t;if(t>=t1&&S.Xs==null)S.Xs=S.X+640;
+   const X0=S.X;const lam=180;const top=x=>{const X=x+X0;if(x>640)return BASE-1.5*Math.sin(X/7);const rip=(S.Xs!=null&&X>S.Xs)?40*clamp((X-S.Xs)/200)*Math.max(0,Math.sin(2*Math.PI*X/lam)):0;return BASE+8-rip};
+   layers(top);
+   const bob=S.Xs!=null?30*clamp((X0+640-S.Xs)/200)*Math.max(0,Math.sin(2*Math.PI*(X0+640)/lam)):0;const px=640,py=BASE+6-bob;
+   // 上のレールと腕
+   g.fillStyle='#4b5563';g.fillRect(0,110,W,14);g.fillStyle='#9aa3ae';g.beginPath();g.roundRect(px-60,96,120,40,8);g.fill();
+   g.strokeStyle='#9aa3ae';g.lineWidth=12;g.beginPath();g.moveTo(px,130);g.lineTo(px-34,py-150);g.stroke();
+   g.save();g.translate(px-34,py-70);g.rotate(-0.55);g.fillStyle='#374151';g.beginPath();g.roundRect(-22,-110,44,220,8);g.fill();g.fillStyle='#596273';g.fillRect(-22,-110,10,220);g.restore();
+   if(S.Xs!=null&&bob<1&&t-(S.k||-9)>0.25){S.k=t;window.SFX.push([t,'tick'])}
+   if(t<t1)sfxOnce('s',0,'rattle',Math.max(0.2,t1-0.1));
+ }
+ else if(m==='loop'){
+   const bg=g.createRadialGradient(640,360,50,640,360,800);bg.addColorStop(0,'#2a3644');bg.addColorStop(1,'#11161d');g.fillStyle=bg;g.fillRect(0,0,W,H);
+   const t1=T(1,DUR*0.15),t2=T(2,DUR*0.35),t3=T(3,DUR*0.55),t4=T(4,DUR*0.75);
+   const stage=t<t1?0:t<t2?1:t<t3?2:t<t4?3:4;const big=stage<2?1:stage<3?1.5:stage<4?2:2+clamp((t-t4)/2)*1.2;
+   const shakeAmp=stage===0?0:stage<3?4:stage<4?9:9+6*clamp((t-t4)/2);
+   const L=[380,360],Rr=[900,360],rad=185;
+   // ① 波の断面（左の丸）
+   g.save();g.beginPath();g.arc(...L,rad,0,7);g.clip();sky('#8fbbe0','#efdcbc');const amp=8*big;const top=x=>420-amp*Math.max(0,Math.sin(2*Math.PI*(x-L[0])/70+t*(stage>=4?3:0)));ground(top,L[0]-rad,L[0]+rad,'#c9a46a',L[1]+rad);g.restore();
+   g.strokeStyle='#e5e7eb';g.lineWidth=6;g.beginPath();g.arc(...L,rad,0,7);g.stroke();
+   // ② 揺れる車（右の丸）
+   g.save();g.beginPath();g.arc(...Rr,rad,0,7);g.clip();sky('#8fbbe0','#efdcbc');const off=t*90;const top2=x=>440-amp*0.8*Math.max(0,Math.sin(2*Math.PI*(x+off)/70));ground(top2,Rr[0]-rad,Rr[0]+rad,'#c9a46a',Rr[1]+rad);const [sx,sy]=shake(t,shakeAmp);car(Rr[0]+sx,top2(Rr[0])-22+sy,0.62,{heads:shakeAmp*0.6,t,wheelR:21,wheelAng:off/21});g.restore();
+   g.strokeStyle='#e5e7eb';g.lineWidth=6;g.beginPath();g.arc(...Rr,rad,0,7);g.stroke();
+   // 矢印：上の弧（波→車）と下の弧（車→波）
+   const arc=(a0,a1,on,w)=>{const cx=640,cy=360,rr=300;g.strokeStyle=on?'#ffd36a':'rgba(255,255,255,.22)';g.lineWidth=w;g.lineCap='round';g.beginPath();g.ellipse(cx,cy,rr,200,0,a0,a1);g.stroke();const a=a1;const x=cx+rr*Math.cos(a),y=cy+200*Math.sin(a);const tx=-rr*Math.sin(a),ty=200*Math.cos(a);const n=Math.hypot(tx,ty);const ux=tx/n,uy=ty/n;g.fillStyle=g.strokeStyle;g.beginPath();g.moveTo(x+ux*w*2.2,y+uy*w*2.2);g.lineTo(x-uy*w*1.6,y+ux*w*1.6);g.lineTo(x+uy*w*1.6,y-ux*w*1.6);g.fill()};
+   const w=6+4*big;arc(Math.PI*1.25,Math.PI*1.75,stage===1||stage===3||stage>=4,w);arc(Math.PI*0.25,Math.PI*0.75,stage===2||stage>=4,w);
+   if(stage>=4){const sp=0.9+1.6*clamp((t-t4)/2);for(let i=0;i<3;i++){const a=(t-t4)*sp*2*Math.PI/2.4+i*2*Math.PI/3-Math.PI/2;g.fillStyle='rgba(255,236,170,.95)';g.shadowColor='#ffe08a';g.shadowBlur=20;g.beginPath();g.arc(640+300*Math.cos(a),360+200*Math.sin(a),9+big*2,0,7);g.fill();g.shadowBlur=0}}
+   for(const [k,tt] of [['a',t1],['b',t2],['c',t3],['d',t4]])if(t>=tt)sfxOnce(k,tt,'whoosh');
+   if(stage>=1)sfxOnce('r',t1,'rattle',DUR-t1);
+ }
+ else if(m==='twospeeds'){
+   const t1=T(1,DUR*0.5);const lam=200;
+   const offA=t*90,offB=t*520;const growB=t>t1?clamp((t-t1)/(DUR-t1)):0;
+   // 上：遅い車（谷に落ちて大きく揺れる）
+   {const topA=x=>300-20*Math.max(0,Math.sin(2*Math.PI*(x+offA)/lam));lane(0,360,topA,()=>{const cx=640;const fy=topA(cx+112),ry=topA(cx-110);const bob=((fy+ry)/2-300)*1.3;car(cx,300-34+bob,1,{heads:5,t,wheelR:34,wheelAng:offA/34,wheelLift:[300-ry,300-fy].map(v=>v*0.4)})},t>t1?ease((t-t1)/0.5):0)}
+   // 下：速い車（てっぺんをなぞる）。後半は着地のたびに山が高くなる
+   {const A=20+16*growB;const topB=x=>660-A*Math.max(0,Math.sin(2*Math.PI*(x+offB)/lam));lane(360,360,topB,()=>{const cx=640;car(cx,660-A-34+1.5*Math.sin(t*20),1,{heads:0.6,t,col:'#2f5d9f',wheelR:34,wheelAng:offB/34});
+       if(growB>0){const ph=((cx+112+offB)%lam)/lam;const f=Math.max(0,1-Math.abs(ph-0.25)/0.12);if(f>0)glowAt(cx+112,660-A,f*0.8);const f2=Math.max(0,1-Math.abs((((cx-110+offB)%lam)/lam)-0.25)/0.12);if(f2>0)glowAt(cx-110,660-A,f2*0.8)}})}
+   g.fillStyle='#10151b';g.fillRect(0,357,W,6);sfxOnce('r',0,'rattle',DUR);
+ }
+ else if(m==='advice'){
+   dash();const v=t<0.4?34:lerp(34,13,ease((t-0.4)/1.6))+0.5*Math.sin(t*2.5);
+   g.fillStyle='#1a1f26';g.beginPath();g.roundRect(240,60,800,600,60);g.fill();g.strokeStyle='#3a414c';g.lineWidth=6;g.stroke();
+   const cx=640,cy=360,Rr=250,a0=Math.PI*0.75,a1=Math.PI*2.25,ang=v=>a0+(a1-a0)*clamp(v/40);
+   speedo(cx,cy,Rr,v,{vmax:40,step:10});
+   const k=ease((t-1.6)/0.6);if(k>0){g.strokeStyle=`rgba(74,222,128,${0.9*k})`;g.lineWidth=Rr*0.07;g.beginPath();g.arc(cx,cy,Rr*0.95,ang(0),ang(16));g.stroke();sfxOnce('g',1.6,'pop')}
+ }
+ else if(m==='seesaw'){
+   sky2();layers(x=>BASE+60);const th=0.2*Math.sin(2*Math.PI*(t/DUR*1.5)-Math.PI/2);   // th>0：左（車）が上がる
+   const comfy=clamp(0.5+th/0.4),rough=comfy;const px=640,py=BASE-10;
+   g.fillStyle='#6b5b4a';g.beginPath();g.moveTo(px,py-30);g.lineTo(px-60,BASE+62);g.lineTo(px+60,BASE+62);g.closePath();g.fill();
+   g.save();g.translate(px,py-30);g.rotate(-th);g.fillStyle='#8a6a46';g.beginPath();g.roundRect(-470,-12,940,24,10);g.fill();
+   // 左：車（楽なほど揺れない）
+   const sh=6*(1-comfy);const [sx,sy]=shake(t,sh);car(-330+sx,-12-34+sy,0.75,{heads:sh*0.8,t,wheelR:25,wheelAng:0});
+   // 右：道の切れ端（車が楽なほど、波が大きい）
+   g.save();g.translate(330,-12);const A=4+28*rough;g.beginPath();g.moveTo(-130,0);for(let x=-130;x<=130;x+=4)g.lineTo(x,-40-A*Math.max(0,Math.sin(2*Math.PI*x/65)));g.lineTo(130,0);g.closePath();g.fillStyle=sandPat();g.fill();g.strokeStyle='rgba(255,236,200,.85)';g.lineWidth=3;g.stroke();g.restore();
+   g.restore();
+   const q=Math.floor(t/(DUR/3));if(q!==S.q){S.q=q;window.SFX.push([t,'thump'])}
+ }
+ else if(m==='crawl'){
+   sky2();const lam=170,A=26;const top=x=>BASE-A*Math.max(0,Math.sin(2*Math.PI*x/lam));layers(top);
+   const cx=lerp(-120,W+60,clamp(t/DUR));const fy=top(cx+112),ry=top(cx-110);const bob=((fy+ry)/2-BASE)*0.5;
+   car(cx,BASE-34+bob,1,{heads:0,t,wheelR:34,wheelAng:cx/34,wheelLift:[BASE-ry,BASE-fy]});
+   sfxOnce('e',0,'engine',DUR);
+ }
+ else if(m==='delay'){
+   const per=2.4;
+   for(const [y0,rough,start] of [[0,1,0.15],[360,0,0.62]]){const gy=y0+300;const g0=clamp((t/DUR-start)/0.3);const A=40*ease(g0);
+     const top=x=>gy-(rough?3*Math.sin(x/6)+2*Math.sin(x/2.3):0)-A*Math.max(0,Math.sin(2*Math.PI*x/180));
+     lane(y0,360,top,()=>{if(!rough){g.fillStyle='rgba(255,250,235,.35)';g.fillRect(0,gy-6,W,10)}
+       for(let i=0;i<3;i++){const q=((t/per)+i/3)%1;const cx=lerp(-200,W+200,q);car(cx,gy-34*0.7-A*0.5,0.7,{heads:A/8,t,wheelR:24,wheelAng:cx/24,col:['#c0392b','#2f5d9f','#e6e2d8','#7a8f3c'][i]})}})}
+   g.fillStyle='#10151b';g.fillRect(0,357,W,6);sfxOnce('c',0,'car',DUR);
+ }
+ else if(m==='active'){
+   const t1=T(1,DUR*0.4);const on=ease((t-t1)/0.6);sky2();const lam=200,A=24;const off=t*300;const top=x=>BASE-A*Math.max(0,Math.sin(2*Math.PI*(x+off)/lam));layers(top);
+   const cx=640;const fy=top(cx+112),ry=top(cx-110);const bob=((fy+ry)/2-BASE+A/2)*1.4*(1-on);const [sx,sy]=shake(t,5*(1-on));
+   car(cx+sx,BASE-A/2-34+bob+sy,1,{heads:5*(1-on),t,wheelR:34,wheelAng:off/34,noWheels:true});
+   tire(cx-110,ry-34,34,off/34);tire(cx+112,fy-34,34,off/34);
+   if(on>0){sfxOnce('o',t1,'pop');for(const wx of [cx-110,cx+112]){const wy=(wx<cx?ry:fy)-34;const p=0.5+0.5*Math.sin(t*8);g.strokeStyle=`rgba(125,211,252,${on*(0.55+0.4*p)})`;g.lineWidth=6;g.shadowColor='#7dd3fc';g.shadowBlur=18;g.beginPath();g.arc(wx,wy,46+4*p,0,7);g.stroke();g.shadowBlur=0}}
+   sfxOnce('r',0,'rattle',t1);sfxOnce('e',t1,'engine',DUR-t1);
+ }
+ else if(m==='deflate'){
+   const t1=T(1,DUR*0.35);const sq=ease((t-t1)/1.0);sky2();const off=t*140;const lam=240;
+   const top=x=>BASE-10*Math.max(0,Math.sin(2*Math.PI*(x+off)/lam));layers(top);
+   const wx=640,r=180;const ph=((wx+off)%lam)/lam;const lift=lerp(26,6,sq)*4*ph*(1-ph);const flat=34*sq;const cy=top(wx)-r-lift+flat;
+   g.save();g.beginPath();g.rect(0,0,W,top(wx)-lift+2);g.clip();tire(wx,cy,r,off/r);g.restore();
+   // つぶれて広がった接地（ふくらみ）
+   if(sq>0){const yb=top(wx)-lift;const half=Math.sqrt(Math.max(0,r*r-(r-flat)*(r-flat)));g.fillStyle='#1b1d22';g.beginPath();g.ellipse(wx,yb-2,half+10*sq,10*sq+3,0,Math.PI,0);g.fill();g.fillRect(wx-half-10*sq,yb-4,2*(half+10*sq),6)}
+   // バルブから空気
+   if(t>t1&&t<t1+1.4){sfxOnce('p',t1,'puff');const r2=R(8);const a=off/r-Math.PI/3;const vx=wx+r*0.62*Math.cos(a),vy=cy+r*0.62*Math.sin(a);for(let i=0;i<14;i++){const d=((t-t1)*1.4+r2())%1;g.fillStyle=`rgba(255,255,255,${0.6*(1-d)})`;g.beginPath();g.arc(vx+(r2()-0.3)*80*d+30*d,vy-60*d+(r2()-0.5)*30,4+10*d,0,7);g.fill()}}
+ }
+};
+</script></body></html>

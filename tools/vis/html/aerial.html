@@ -2,13 +2,20 @@
 <canvas id="c" width="1280" height="720"></canvas>
 <script src="lib.js"></script>
 <script>
-/* 上から見た道。mode：stream（たくさんの車が行き交い、道を横切る波の縞がだんだん濃くなる）／speeds（何台もの車が並んで走る。それぞれの上の小さなメーターが、似た速さを指す） */
+/* 上から見た道。mode：stream（たくさんの車が行き交い、道を横切る波の縞がだんだん濃くなる）／speeds（何台もの車が並んで走る。それぞれの上の小さなメーターが、似た速さを指す）／mixed（大きさも速さもばらばらの車・トラック・バイクが行き交っても、波の縞は消えない） */
 window.DEF={mode:'stream'};
 function carTop(x,y,col,dir=1,s=1){g.save();g.translate(x,y);g.scale(dir*s,s);g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect(-46,-20,96,44,10);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(-48,-22,96,44,12);g.fill();g.fillStyle='#bfe0f2';g.beginPath();g.roundRect(10,-17,20,34,5);g.fill();g.fillStyle='rgba(0,0,0,.22)';g.beginPath();g.roundRect(-26,-18,30,36,6);g.fill();g.restore()}
 function mini(x,y,v){g.fillStyle='rgba(10,14,20,.85)';g.beginPath();g.arc(x,y,30,Math.PI,0);g.lineTo(x+30,y+6);g.lineTo(x-30,y+6);g.fill();g.strokeStyle='#6b7280';g.lineWidth=3;g.beginPath();g.arc(x,y,24,Math.PI,0);g.stroke();const a=Math.PI+v*Math.PI;g.strokeStyle='#ff5a36';g.lineWidth=4;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*22,y+Math.sin(a)*22);g.stroke()}
 window.render=function(t){g.fillStyle='#c8a875';g.fillRect(0,0,W,H);const r2=R(4);for(let i=0;i<60;i++){g.fillStyle='rgba(150,120,75,.25)';g.beginPath();g.ellipse(r2()*W,r2()*H,40+r2()*100,20+r2()*50,r2()*3,0,7);g.fill()}
   if(P.mode==='stream'){const A=ease(t/(DUR*0.9));g.fillStyle='#d6b886';g.fillRect(0,250,W,220);for(let x=0;x<W;x+=26){g.fillStyle=`rgba(120,88,52,${0.55*A})`;g.fillRect(x,252,11,216)}
     const cols=['#c0392b','#2f5d9f','#e6e2d8','#3b3b3b','#7a8f3c','#d97706'];for(let i=0;i<6;i++){const q=((t*0.5+i/6)%1);const right=i%2===0;const x=right?lerp(-120,W+120,q):lerp(W+120,-120,q);carTop(x,right?410:310,cols[i],right?1:-1)}
+    sfxOnce('c',0,'car',DUR)}
+  else if(P.mode==='mixed'){g.fillStyle='#d6b886';g.fillRect(0,230,W,260);for(let x=0;x<W;x+=26){g.fillStyle='rgba(120,88,52,.55)';g.fillRect(x,232,11,256)}
+    const V=[[1,0.22,'#c0392b',1.0,0],[0,0.3,'#e6e2d8',1.9,0.2],[1,0.45,'#3b3b3b',0.45,0.5],[0,0.18,'#d97706',2.4,0.7],[1,0.35,'#2f5d9f',1.2,0.35],[0,0.4,'#7a8f3c',0.9,0.85]];
+    for(const [right,sp,col,len,ph] of V){const q=((t*sp+ph)%1);const x=right?lerp(-260,W+260,q):lerp(W+260,-260,q);const y=right?(len<0.6?440:420):(len>2?290:300);
+      if(len<0.6){g.save();g.translate(x,y);g.scale(right?1:-1,1);g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect(-30,-6,64,16,6);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(-32,-8,64,16,7);g.fill();g.fillStyle='#2e3440';g.beginPath();g.arc(-2,0,9,0,7);g.fill();g.restore()}
+      else if(len>1.5){g.save();g.translate(x,y);g.scale(right?1:-1,1);g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect(-96*len/2+4,-28,96*len,62,8);g.fill();g.fillStyle='#9aa3ae';g.beginPath();g.roundRect(-96*len/2,-30,96*len-60,60,6);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(96*len/2-56,-28,56,56,10);g.fill();g.fillStyle='#bfe0f2';g.fillRect(96*len/2-22,-22,12,44);g.restore()}
+      else carTop(x,y,col,right?1:-1,len)}
     sfxOnce('c',0,'car',DUR)}
   else{const vs=[0.52,0.48,0.55,0.5,0.46];vs.forEach((v,i)=>{const y=140+i*110;g.fillStyle='#d6b886';g.fillRect(0,y-40,W,80);const x=lerp(-140,W+140,(t*(0.22+v*0.04)+i*0.07)%1);carTop(x,y,['#c0392b','#2f5d9f','#e6e2d8','#3b3b3b','#7a8f3c'][i]);mini(x,y-44,v+0.03*Math.sin(t*3+i))});sfxOnce('c',0,'car',DUR)}
 };
