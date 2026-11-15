@@ -193,6 +193,9 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <h2 style="margin-top:22px">音楽の棚</h2>
 <p class="lead">BGM を印象で探して試聴し、保管庫に入れる所。「〇〇な雰囲気の曲が欲しい」と頼むこともできる（スマホ・Chromebook でも使える）。</p>
 <div class="row"><a class="b main" href="bgm.html" style="text-decoration:none">音楽の棚を開く</a></div>
+<h2 style="margin-top:22px">音の調整室</h2>
+<p class="lead">動画を流しながら BGM を置き、大きさ・入る所・止める所をその場で聞いて直す所。直しとメモから Claude が BGM の付け方を覚える。</p>
+<div class="row"><a class="b main" href="sound.html" style="text-decoration:none">音の調整室を開く</a></div>
 <h2 style="margin-top:22px">音の保管庫</h2>
 <p class="lead">BGM・効果音・始まりの音をためておく所。動画で使った音は自動でここに残り、次の動画ですぐ使えます。Claude は音を付けるとき、まずここから選びます。自分で見つけた音（自由に使えるもの）も足せます。</p>
 <div class="chips" id="sndFilter"></div><div id="sndList"></div>
@@ -727,6 +730,7 @@ ${x.file?`<audio controls preload="none" data-gh="${esc(x.file)}" style="width:1
 function soundStep(p){const sp=p.sound||{};const lib=(D.sounds||[]).filter(x=>!x.deleted);const used=(sp.cues||[]).map(c=>({c,x:lib.find(x=>x.id===c.soundId)})).filter(o=>o.x);
 if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、音の案を出してもらい、保管庫の音を使えます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
 return `<div class="how"><b>やること</b><ol><li>Claude が場面に合う BGM・効果音・始まりの音を、<b>まず音の保管庫から</b>選び、足りなければ自由に使える音を探して保管庫に足す</li><li>音を入れた動画を通しで聞いて、気になる所を書いて直してもらう</li><li>気に入った音は保管庫に残り、次の動画ですぐ使える</li></ol></div>
+<div class="row"><a class="b main" href="sound.html?p=${p.id}" style="text-decoration:none">音の調整室で、動画を見ながら BGM を置く・直す</a></div>
 <label>こういう音にしたい（任意）</label><input id="sWish" placeholder="例：静かなピアノで、山場だけ少し盛り上げる／始まりに短い決まった音">
 <div class="row"><button class="b" data-sjob="sound_ideas">${used.length?'音を選び直してもらう':'音を付けてもらう'}</button></div>${jobLine(p,'sound_ideas')}
 ${sp.note?`<p class="lead">${esc(sp.note)}</p>`:''}

@@ -331,6 +331,16 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - **読み方の辞書**：`voice.json` の `dict[]`（`surface` 書き方、`yomi` カタカナ、`accent`）。調整室で作り手が登録すると、その Mac の VOICEVOX のユーザー辞書に入る。書き出し（`render_draft.py --kata`）のときは `voice_render.sync_dict` でクラウドのエンジンにも入れるので、同じ読みになる。読み間違いを見つけたら Claude もここに足してよい（作り手に一言伝える）
 - take に `recPath` があれば、作り手が録った声そのもの（`roadmap/apps/seisakushitsu/voice_rec/<id>.webm`）。録音の合わせ方（高さの測り方 YIN・時間の突き合わせ DTW）の精度を確かめ、直すときに使う
 
+## 音の調整室（sound.html）
+作り手が動画を流しながら BGM を置き・直し、メモを付けて残す所（声の調整室と同じく、直しから Claude が BGM の付け方を覚える）。
+- `projects[].sound.base`＝`{"video":"…/videos/<id>/base_vN.mp4","json":"…/base_vN.json"}`：BGM なし（声と効果音だけ）の軽い動画（960x540）と、段の時刻・声の有無（`talk`、0.05秒ごと）・声の大きさ（`vr`）。`render_draft.py … --base-out <base.mp4>` で本番と同時に作れる
+- `projects[].sound.bgm`＝`{"duck":間で上げる倍率(1.6),"cues":[{"id","at":秒,"soundId"（音の保管庫の id）,"vol":声に対する大きさ(標準0.12),"off":曲のどこから(秒),"fadeIn","fadeOut","none":true＝ここから音楽なし,"why":Claude のねらい},…],"by":"Claude"|"作り手","updatedAt"}`。**Claude が案を作るときは `why`（なぜこの曲・この位置か）を必ず一言入れる**。作り手が直すと `sound.claude` に Claude の元の案が残る（聞き比べ用）
+- 書き出し：`render_draft.py … --bgm proj`（`sound.bgm` をそのまま使う）。調整室での聞こえ方と同じ計算（曲ごとの大きさをそろえ、声の大きさ×vol、声のない所で duck 倍、つなぎ目2秒）。`sounds[].rms` があると調整室の音量が正確になる（BGM を入れたら `rms`＝ステレオ 48kHz の二乗平均の平方根、`len`＝秒 を入れておく）
+- **sound_base**（調整室用の動画を作って）：`--base-out` 付きで書き出し、`base_vN.mp4`・`.json` を `videos/<projId>/` に置いて `sound.base` を書く。まだ `sound.bgm` が無ければ Claude の案も作る（音楽の棚の role → like=1 → 印象の順、`why` 付き）。total は 2
+- **sound_render**（この音で書き出して）：`--bgm proj --base-out` で書き出し、`project.video`（と `videoHistory`）を新しい版にする。`sound.base` も新しい版に。total は 2
+- **学び**：`projects[].soundTakes[]`＝`{before, after, memo, learned}`。作業のはじめに `learned:false` を読み、before と after の差（曲を変えた・位置をずらした・大きさを何 dB・止めた所）とメモから、「こういう所ではこうする」を言葉にする。**同じ向きの直しが2〜3回そろったら** `rules`（scope「音」、from「音の調整室」）に足す。1回だけのものは `points`（作り手が見る）に「調整から」で残すだけ。読んだら `learned:true`、`lesson` に一言（調整室に「Claude が読んだ：〜」と出る）
+- 次に BGM の案を作るときは、`rules` の scope「音」と、これまでの `soundTakes` の after を手本にする
+
 ## 音楽の棚（bgm.html）
 作り手が BGM を印象で探して試聴し、保管庫（data.json の `sounds[]`、kind「BGM」）に入れる所。
 - 印象（`moods[]`）の言葉：落ち着いた・穏やか・癒し・謎・ミステリー・緊張・ハラハラ・不穏・不気味・明るい・前向き・感動・壮大・弾む・軽快・ノリがいい・コミカル・しんみり・重い・暗い・神秘・幻想・勢い・推進力・アクション・激しい・荒々しい・和風（bgm.html の MOODS と同じ。足すときは両方に）

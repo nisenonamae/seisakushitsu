@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2f6db0">
+<link rel="icon" href="icon-192.png">
+<title>音の調整室</title>
+<style>
+:root{--ink:#1d2433;--sub:#5b6577;--paper:#f6f7f9;--row:#fff;--line:#d6dbe4;--sea:#2f6db0;--seaInk:#fff;--yel:#f2c230;--good:#2e8b57;--busy:#c0503a;--grid:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--ink:#e7ebf2;--sub:#9aa5b8;--paper:#141a26;--row:#1b2232;--line:#2c3547;--sea:#6ea4e6;--seaInk:#0e1420;--good:#5cc28a;--busy:#e57b65;--grid:#222b3c}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 16px 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}header a{color:var(--sea);font-size:13px}
+.stat{font-size:12.5px;color:var(--sub)}.stat.bad{color:var(--busy)}.stat.okk{color:var(--good)}
+main{max-width:900px;margin:0 auto;padding:12px 16px 60px}
+.tabs{display:flex;gap:6px;margin:4px 0 12px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:14.5px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:6px 16px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+section{display:none}section.on{display:block}
+h2{font-size:16px;margin:6px 0 8px}
+.hint{font-size:12.5px;color:var(--sub);margin:4px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chips button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--sea);color:var(--seaInk);border-color:var(--sea)}
+.chips button .n{font-size:11px;opacity:.7;margin-left:3px}
+input,select,textarea{font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--row);color:var(--ink)}
+input,textarea,select{width:100%}
+label{display:block;font-size:12.5px;color:var(--sub);margin:8px 0 3px}
+button.b{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:8px;padding:5px 12px;cursor:pointer}
+button.main{background:var(--sea);color:var(--seaInk);border-color:var(--sea);font-weight:700}
+button.on{background:var(--good);color:#fff;border-color:var(--good)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}@media(max-width:600px){.grid3{grid-template-columns:1fr}}
+.tr{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:0 0 8px}
+.tr .t{font-weight:700;font-size:15px}.tr .m{font-size:12.5px;color:var(--sub)}
+.tag{display:inline-block;font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:0 8px;margin:2px 4px 0 0;color:var(--ink)}
+.tag.role{border-color:var(--sea);color:var(--sea)}
+audio{width:100%;height:34px;margin:5px 0 2px}
+.msg{font-size:13px;color:var(--busy)}.ok{color:var(--good)}
+.empty{color:var(--sub);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;text-align:center}
+.picked{border:2px solid var(--good)}
+.st{display:inline-block;font-size:11.5px;border-radius:999px;padding:0 8px;margin-left:6px;color:#fff;background:var(--good)}.st.w{background:#b58300}.st.x{background:var(--sub)}.st.bad{background:var(--busy)}
+.tr a{color:var(--sea)}
+.job{font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding:5px 0}
+details summary{cursor:pointer;color:var(--sub);font-size:14px}
+
+.vwrap{position:relative;background:#000;border-radius:10px;overflow:hidden}
+video{width:100%;display:block;max-height:42vh;background:#000}
+#stick{position:sticky;top:46px;z-index:4;background:var(--paper);padding:4px 0 2px;border-bottom:1px solid var(--line)}
+.vload[hidden]{display:none}
+.vload{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;background:rgba(0,0,0,.6)}
+#tl{width:100%;height:74px;display:block;margin-top:6px;cursor:pointer;border:1px solid var(--line);border-radius:6px;background:var(--row)}
+button.b.sm{font-size:12.5px;padding:2px 8px}
+button.b.del{color:var(--busy)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}@media(max-width:600px){.g2{grid-template-columns:1fr}}
+.g2 input[type=range]{padding:0}
+.box{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin:10px 0}
+.ab{display:inline-flex;gap:4px;flex-wrap:wrap}.ab button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cue select{margin-top:6px}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+</style></head><body>
+<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><span class="stat">版 11/15 21:40</span><span class="stat" id="syncStat">同期：—</span></header>
+<main>
+<p class="hint">動画を流しながら BGM を置いて、その場で聞いて直す所。ここでの直しとメモを Claude が読んで、BGM の付け方を覚えていく（声の調整室と同じやり方）。</p>
+<div class="row"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="msg" id="projMsg"></span></div>
+<div id="noBase" class="empty" hidden></div>
+<div id="room" hidden>
+  <div id="stick"><div class="vwrap"><video id="vid" controls playsinline preload="auto"></video><div class="vload" id="vload">動画を読み込み中…</div></div>
+  <canvas id="tl" height="74"></canvas>
+  <div class="row" style="margin-top:4px">
+    <span class="ab"><button class="b" data-ab="mine" aria-pressed="true">自分の調整で聞く</button><button class="b" data-ab="claude">Claude の案で聞く</button><button class="b" data-ab="none">音楽なしで聞く</button></span>
+    <span class="hint" id="nowAt"></span>
+  </div>
+  <div class="row"><button class="b main" id="addHere">＋ 今の位置から曲を入れる</button><button class="b" id="stopHere">今の位置で音楽を止める</button><span class="hint">下の帯：上の段＝語りの段（押すとその頭へ）、灰色＝声のある所、色＝置いた曲</span></div></div>
+
+  <h2>置いた曲</h2>
+  <div id="cues"></div>
+
+  <details class="box"><summary>全体の調整</summary>
+    <label>声がないとき、BGM をどれだけ上げるか（<span id="duckV"></span>倍）</label><input type="range" id="duck" min="1" max="2.5" step="0.1">
+    <p class="hint">1.0＝いつも同じ大きさ。上げるほど、語りの切れ目で音楽が前に出る。</p>
+  </details>
+
+  <h2>メモを付けて残す</h2>
+  <p class="hint">「なぜこう直したか」を一言。例：オチの前は音楽を止めたほうが言葉が入る／この曲は暗すぎる／章の切り替わりで曲を変える。Claude はこのメモと直した所を見て、次から最初からそうする。</p>
+  <textarea id="memo" rows="2" placeholder="例：結論の段は音楽を消して、最後の一言のあとにだけ戻す"></textarea>
+  <div class="row"><button class="b main" id="saveBtn">メモを付けて保存</button><button class="b" id="renderBtn">この音で書き出してもらう</button><button class="b" id="resetBtn">Claude の案に戻す</button><span class="msg" id="saveMsg"></span></div>
+  <div id="takes"></div>
+</div>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const now=()=>Date.now();const uid=p=>p+now().toString(36)+Math.random().toString(36).slice(2,6);
+let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}D=D||{};D.sounds=D.sounds||[];D.jobs=D.jobs||[];D.projects=D.projects||[];
+const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),t:LS.get('gh_t',''),p:LS.get('gh_p','roadmap/apps/seisakushitsu/data.json')||'roadmap/apps/seisakushitsu/data.json'});
+const syncOn=()=>{const s=S();return !!(s.o&&s.r&&s.t)};
+const b64e=s=>{const u=new TextEncoder().encode(s);let t='';for(let i=0;i<u.length;i+=0x8000)t+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(t)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+function merge(a,b){const out={...a,...b};for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})])){const x=(a||{})[k],y=(b||{})[k];if(Array.isArray(x)||Array.isArray(y)){if([...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)){out[k]=y||x;continue}const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w||(v.updatedAt||0)>(w.updatedAt||0))m.set(v.id,v)}out[k]=[...m.values()]}}return out}
+async function ghGet(){const s=S();const h={Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'};const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:h,cache:'no-store'});
+ if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();let txt=j.content?b64d(j.content):'';if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{...h,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}return{data:JSON.parse(txt),sha:j.sha}}
+async function ghPut(data,sha){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:'音の調整室 '+new Date().toISOString(),content:b64e(JSON.stringify(data)),sha})});
+ if(r.status===409||r.status===422)return false;if(!r.ok)throw new Error('GitHub '+r.status);return true}
+let busy=false,timer=null,dirty=false;
+function lab(t,c){const e=$('syncStat');e.textContent='同期：'+t;e.className='stat '+(c||'')}
+async function sync(){if(!syncOn()){lab('制作室の設定で同期をつなぐと使える','bad');return}if(busy)return;busy=true;lab('同期中…');
+ try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();const m=merge(data,D);D=m;LS.set('ss_data',JSON.stringify(D));renderAll();if(!dirty)break;if(await ghPut(D,sha)){dirty=false;break}}lab('済み '+new Date().toTimeString().slice(0,5),'okk')}catch(e){lab('できません：'+e.message,'bad')}busy=false}
+function save(){dirty=true;LS.set('ss_data',JSON.stringify(D));clearTimeout(timer);timer=setTimeout(sync,1200)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
+async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{headers:{Authorization:'Bearer '+s.t},cache:'no-store'});if(g.ok)sha=(await g.json()).sha;
+ const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:msg,content:b64,...(sha?{sha}:{})})});if(!r.ok)throw new Error('GitHub '+r.status)}
+const blobUrl={};
+async function ghAudio(path){if(blobUrl[path])return blobUrl[path];const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'force-cache'});if(!r.ok)throw new Error('GitHub '+r.status);return blobUrl[path]=URL.createObjectURL(await r.blob())}
+const fmt=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1)};
+const STD=0.12;   // 書き出しの標準の大きさ（声の大きさに対する倍率。約 −18dB）
+const XF=2.0;     // 曲と曲のつなぎ目（秒）
+const dbOf=v=>Math.round(20*Math.log10(Math.max(1e-6,v/STD))*2)/2, volOf=db=>STD*Math.pow(10,db/20);
+
+/* ===== 状態 ===== */
+let P=null, BASE=null, W=null, AB=LS.get('snd_ab','mine'), DUCKG=null;   // W＝いま編集中の BGM（保存前）
+const bgms=()=>D.sounds.filter(x=>!x.deleted&&x.kind==='BGM');
+const projs=()=>D.projects.filter(p=>!p.deleted&&p.sound&&p.sound.base);
+const draftKey=()=>'snd_draft_'+(P&&P.id);
+function plan(p){const b=(p.sound||{}).bgm;return b?JSON.parse(JSON.stringify(b)):{duck:1.6,cues:[]}}
+function claudePlan(p){const b=(p.sound||{}).claude||(p.sound||{}).bgm;return b?JSON.parse(JSON.stringify(b)):{duck:1.6,cues:[]}}
+function cur(){return AB==='claude'?claudePlan(P):AB==='none'?{duck:1,cues:[]}:W}
+
+/* ===== 動画を選ぶ ===== */
+function renderProj(){const ps=D.projects.filter(p=>!p.deleted&&(p.video||p.sound));const keep=LS.get('snd_proj','');
+ $('proj').innerHTML=ps.length?ps.map(p=>`<option value="${p.id}" ${p.id===keep?'selected':''}>${esc(p.title||projTitle(p))}${p.sound&&p.sound.base?'':'（まだ調整室用の動画なし）'}</option>`).join(''):'<option value="">制作中の動画がありません</option>'}
+function projTitle(p){const c=(D.candidates||[]).find(c=>c.id===p.candId);return c?c.q:p.id}
+async function openProj(id){LS.set('snd_proj',id);P=D.projects.find(p=>p.id===id);stopAll();if(!P){$('room').hidden=true;return}
+ if(!P.sound||!P.sound.base){$('room').hidden=true;$('noBase').hidden=false;
+  const j=D.jobs.find(j=>!j.deleted&&j.type==='sound_base'&&j.projId===P.id&&j.status!=='できた');
+  $('noBase').innerHTML=`この動画はまだ音の調整室用の動画（BGM なしの軽い版）がありません。<br><button class="b main" id="askBase" style="margin-top:8px" ${j?'disabled':''}>${j?'頼みました（'+esc(j.status)+'）':'作ってもらう'}</button>`;
+  const ab=$('askBase');if(ab&&!j)ab.onclick=()=>{D.jobs.push({id:uid('j'),type:'sound_base',projId:P.id,status:'待ち',createdAt:now(),updatedAt:now()});save();openProj(P.id)};return}
+ $('noBase').hidden=true;$('room').hidden=false;
+ let d=null;try{d=JSON.parse(LS.get(draftKey(),'null'))}catch(e){}
+ W=d&&d.from===(P.sound.bgm||{}).updatedAt?d.w:plan(P);W.cues=W.cues||[];W.cues.forEach(c=>c.id=c.id||uid('c'));
+ $('vload').hidden=false;$('vload').textContent='動画を読み込み中…（初回は数十秒）';
+ try{const [v,j]=await Promise.all([ghAudio(P.sound.base.video),ghText(P.sound.base.json)]);BASE=JSON.parse(j);$('vid').src=v;$('vload').hidden=true;mkDuck();renderAll2()}
+ catch(e){$('vload').textContent='読み込めません：'+e.message}}
+async function ghText(path){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});if(!r.ok)throw new Error('GitHub '+r.status);return r.text()}
+$('proj').onchange=e=>openProj(e.target.value);
+
+/* ===== 声の大きさの曲線 → BGM を下げる・上げる（書き出しと同じ計算） ===== */
+function mkDuck(){if(!BASE)return;const t=BASE.talk,du=(cur()||{}).duck??1.6,g=new Float32Array(t.length);let v=t[0]==='1'?1:du;for(let i=0;i<t.length;i++){const tg=t[i]==='1'?1:du;v=i?v+0.15*(tg-v):tg;g[i]=v}DUCKG=g}
+function duckAt(t){if(!DUCKG)return 1;const i=t/BASE.hop,i0=Math.floor(i);if(i0<0)return DUCKG[0];if(i0>=DUCKG.length-1)return DUCKG[DUCKG.length-1];return DUCKG[i0]+(DUCKG[i0+1]-DUCKG[i0])*(i-i0)}
+
+/* ===== 鳴らす（<audio> を動画の時刻に合わせて動かす） ===== */
+const EL={};   // key（区間×くり返し）→ audio
+const META={}; // soundId → {src, rms, len}
+async function meta(sid){if(META[sid])return META[sid];const x=D.sounds.find(y=>y.id===sid);if(!x)return null;
+ const m={src:x.url||null,rms:x.rms||0,len:x.len||0,name:x.name};
+ if(!m.src&&x.file){m.src=await ghAudio(x.file)}
+ if(!m.rms&&x.file){try{const ac=new (window.AudioContext||window.webkitAudioContext)();const buf=await ac.decodeAudioData(await (await fetch(m.src)).arrayBuffer());let s=0,n=0;for(let c=0;c<buf.numberOfChannels;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i+=4){s+=d[i]*d[i];n++}}m.rms=Math.sqrt(s/n);m.len=buf.duration;ac.close()}catch(e){m.rms=0.15}}
+ if(!m.rms)m.rms=0.15;return META[sid]=m}
+function segs(pl){const cs=(pl.cues||[]).slice().sort((a,b)=>a.at-b.at);const T=BASE?BASE.duration:0;
+ return cs.map((c,i)=>{const nx=cs[i+1];return {c,t0:c.at,t1:nx?Math.min(T,nx.at+XF):T,last:!nx,first:i===0}}).filter(s=>!s.c.none&&s.c.soundId&&s.t1>s.t0)}
+function envAt(s,t){const L=s.t1-s.t0,u=t-s.t0;const fin=s.c.fadeIn??(s.first?1:XF),fout=s.c.fadeOut??(s.last?3:XF);let g=1;if(fin>0&&u<fin)g*=u/fin;if(fout>0&&L-u<fout)g*=Math.max(0,(L-u)/fout);return Math.max(0,Math.min(1,g))}
+let raf=0,ready=new Set();
+async function tick(){const v=$('vid'),t=v.currentTime,on=!v.paused&&!v.ended;const pl=cur();if(!pl||!BASE){return}
+ const want=new Set();
+ for(const s of segs(pl)){if(t<s.t0-0.05||t>s.t1)continue;const m=META[s.c.soundId];if(!m){meta(s.c.soundId);continue}
+  const off=s.c.off||0,len=Math.max(4,(m.len||9999)-off),L=s.t1-s.t0;const pos=[0];while(pos[pos.length-1]+len<L)pos.push(pos[pos.length-1]+len-XF);
+  pos.forEach((p,k)=>{const u=t-s.t0-p;if(u<0||u>len)return;const key=s.c.id+':'+k;want.add(key);
+   let a=EL[key];if(!a){a=EL[key]=new Audio();a.preload='auto';a.src=m.src}
+   let g=envAt(s,t);if(k>0&&u<XF)g*=u/XF;if(k+1<pos.length&&len-u<XF)g*=(len-u)/XF;
+   a.volume=Math.max(0,Math.min(1,(s.c.vol??STD)*BASE.vr/m.rms*duckAt(t)*g*v.volume*(v.muted?0:1)));
+   const want_t=off+u;if(on){if(a.paused||Math.abs(a.currentTime-want_t)>0.25){try{a.currentTime=want_t}catch(e){}a.play().catch(()=>{})}}else{if(!a.paused)a.pause()}})}
+ for(const k in EL)if(!want.has(k)){EL[k].pause()}
+ drawTl();$('nowAt').textContent='今 '+fmt(t)+'　'+(blockAt(t)?.label||'')}
+function loop(){tick();raf=requestAnimationFrame(loop)}
+function stopAll(){for(const k in EL){EL[k].pause();delete EL[k]}}
+['play','seeked','pause','volumechange'].forEach(ev=>$('vid').addEventListener(ev,()=>{if(ev==='seeked')for(const k in EL)EL[k].pause();tick()}));
+$('vid').addEventListener('play',()=>{cancelAnimationFrame(raf);loop()});$('vid').addEventListener('pause',()=>cancelAnimationFrame(raf));
+
+/* ===== 段と時刻の帯 ===== */
+function blockAt(t){if(!BASE)return null;const i=BASE.blocks.findIndex(b=>t>=b.start&&t<b.end);return i<0?null:{i,b:BASE.blocks[i],label:(i+1)+'. '+BASE.blocks[i].role}}
+const COL=['#3b82c4','#d08a2c','#4a9e6b','#a55ab8','#c4503b','#2f9fa8','#8a7d2c','#5560c8'];
+function colOf(sid){const ids=[...new Set(bgms().map(x=>x.id))];const i=ids.indexOf(sid);return COL[(i<0?7:i)%COL.length]}
+function drawTl(){const c=$('tl');if(!BASE)return;const w=c.clientWidth;if(c.width!==w*2){c.width=w*2;c.height=148}const g=c.getContext('2d');g.setTransform(2,0,0,2,0,0);const T=BASE.duration,X=t=>t/T*w;
+ const css=getComputedStyle(document.documentElement);g.clearRect(0,0,w,74);
+ BASE.blocks.forEach((b,i)=>{g.fillStyle=i%2?css.getPropertyValue('--grid'):css.getPropertyValue('--row');g.fillRect(X(b.start),0,X(b.end)-X(b.start),28);g.fillStyle=css.getPropertyValue('--sub');g.font='10px sans-serif';if(X(b.end)-X(b.start)>14)g.fillText(String(i+1),X(b.start)+3,12)});
+ // 声のある所
+ g.fillStyle='rgba(120,130,150,.35)';const t_=BASE.talk;for(let i=0;i<t_.length;i++)if(t_[i]==='1')g.fillRect(X(i*BASE.hop),20,Math.max(1,X(BASE.hop)),6);
+ const pl=cur();const ss=(pl&&pl.cues||[]).slice().sort((a,b)=>a.at-b.at);
+ ss.forEach((cq,i)=>{const t1=ss[i+1]?ss[i+1].at:T;const y=34;if(cq.none||!cq.soundId){g.strokeStyle=css.getPropertyValue('--sub');g.setLineDash([3,3]);g.strokeRect(X(cq.at),y,X(t1)-X(cq.at),18);g.setLineDash([])}else{g.fillStyle=colOf(cq.soundId);g.globalAlpha=.75;g.fillRect(X(cq.at),y,X(t1)-X(cq.at),18);g.globalAlpha=1;
+  const nm=(D.sounds.find(x=>x.id===cq.soundId)||{}).name||'';g.fillStyle='#fff';g.font='11px sans-serif';g.save();g.beginPath();g.rect(X(cq.at),y,X(t1)-X(cq.at)-2,18);g.clip();g.fillText(nm.replace(/（.*$/,''),X(cq.at)+4,y+13);g.restore()}
+  g.fillStyle=css.getPropertyValue('--ink');g.fillRect(X(cq.at)-1,y-3,2,24)});
+ const t=$('vid').currentTime;g.fillStyle=css.getPropertyValue('--busy');g.fillRect(X(t)-1,0,2,74);
+ g.fillStyle=css.getPropertyValue('--sub');g.font='10px sans-serif';g.fillText(AB==='claude'?'Claude の案':AB==='none'?'音楽なし':'自分の調整',2,68)}
+$('tl').onclick=e=>{if(!BASE)return;const r=e.target.getBoundingClientRect(),t=(e.clientX-r.left)/r.width*BASE.duration;const b=blockAt(t);$('vid').currentTime=e.clientY-r.top<28&&b?b.b.start:t;tick()};
+window.addEventListener('resize',drawTl);
+
+/* ===== 置いた曲の一覧（編集） ===== */
+function trackOpts(sel){const xs=bgms().filter(x=>x.like!==-1).sort((a,b)=>(b.role?1:0)-(a.role?1:0)||(b.like||0)-(a.like||0));
+ return `<option value="">（曲を選ぶ）</option>${xs.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc((x.role?'【'+x.role+'】':'')+x.name)}${x.moods&&x.moods.length?'　'+esc(x.moods.join('・')):''}</option>`).join('')}`}
+function renderCues(){const y=window.scrollY;const cs=W.cues.slice().sort((a,b)=>a.at-b.at);const mine=AB==='mine';
+ $('cues').innerHTML=(mine?'':`<p class="hint" style="color:var(--busy)">いまは「${AB==='claude'?'Claude の案':'音楽なし'}」で聞いています。直すときは「自分の調整で聞く」に戻してください。</p>`)+(cs.length?cs.map((c,i)=>{const bk=blockAt(c.at);const nx=cs[i+1];return `<div class="tr cue" data-c="${c.id}" style="border-left:6px solid ${c.none?'var(--sub)':colOf(c.soundId)}">
+ <div class="row" style="margin:0"><b>${fmt(c.at)}〜${nx?fmt(nx.at):'終わり'}</b><span class="hint">${esc(bk?bk.label:'')}</span>
+ <button class="b sm" data-k="go">ここから再生</button><button class="b sm" data-k="-">−0.5秒</button><button class="b sm" data-k="+">＋0.5秒</button><button class="b sm" data-k="here">今の位置に動かす</button><button class="b sm del" data-k="del">消す</button></div>
+ ${c.none?'<div class="hint" style="margin-top:4px">ここから音楽なし</div>':`
+ <select data-f="soundId">${trackOpts(c.soundId)}</select>
+ <div class="g2"><div><label>大きさ：<b>${dbOf(c.vol??STD)>0?'+':''}${dbOf(c.vol??STD)} dB</b>（0＝いつもの大きさ）</label><input type="range" data-f="vol" min="-15" max="12" step="0.5" value="${dbOf(c.vol??STD)}"></div>
+ <div><label>曲のどこから流すか：<b>${fmt(c.off||0)}</b></label><input type="range" data-f="off" min="0" max="${Math.max(10,Math.floor((META[c.soundId]||{}).len||180)-5)}" step="0.5" value="${c.off||0}"></div>
+ <div><label>入りのフェード：<b>${(c.fadeIn??(i===0?1:XF)).toFixed(1)}秒</b></label><input type="range" data-f="fadeIn" min="0" max="8" step="0.5" value="${c.fadeIn??(i===0?1:XF)}"></div>
+ <div><label>終わりのフェード：<b>${(c.fadeOut??(nx?XF:3)).toFixed(1)}秒</b></label><input type="range" data-f="fadeOut" min="0" max="8" step="0.5" value="${c.fadeOut??(nx?XF:3)}"></div></div>`}
+ ${c.why?`<div class="m">Claude のねらい：${esc(c.why)}</div>`:''}</div>`}).join(''):'<div class="empty">まだ曲を置いていません。動画を流して「＋ 今の位置から曲を入れる」。</div>');
+ $('cues').querySelectorAll('input,select').forEach(e=>e.disabled=!mine);
+ $('duck').value=W.duck??1.6;$('duckV').textContent=(+$('duck').value).toFixed(1);window.scrollTo(0,y);drawTl()}
+function changed(){LS.set(draftKey(),JSON.stringify({from:(P.sound.bgm||{}).updatedAt,w:W}));$('saveMsg').className='msg';$('saveMsg').textContent='まだ保存していません';mkDuck();for(const k in EL)EL[k].pause();tick()}
+$('cues').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const c=W.cues.find(x=>x.id===b.closest('[data-c]').dataset.c);const k=b.dataset.k,v=$('vid');
+ if(k==='go'){v.currentTime=Math.max(0,c.at-1);v.play();return}
+ if(AB!=='mine')return;
+ if(k==='-')c.at=Math.max(0,+(c.at-0.5).toFixed(2));if(k==='+')c.at=Math.min(BASE.duration-1,+(c.at+0.5).toFixed(2));if(k==='here')c.at=+v.currentTime.toFixed(2);
+ if(k==='del'){if(!confirm('この曲を消しますか？'))return;W.cues=W.cues.filter(x=>x!==c)}
+ changed();renderCues()};
+$('cues').oninput=e=>{const f=e.target.dataset.f;if(!f||AB!=='mine')return;const c=W.cues.find(x=>x.id===e.target.closest('[data-c]').dataset.c);
+ if(f==='soundId'){c.soundId=e.target.value;meta(c.soundId).then(()=>{changed();renderCues()});return}
+ const val=+e.target.value;if(f==='vol')c.vol=+volOf(val).toFixed(4);else c[f]=val;
+ const lab=e.target.previousElementSibling.querySelector('b');if(lab)lab.textContent=f==='vol'?(val>0?'+':'')+val+' dB':f==='off'?fmt(val):val.toFixed(1)+'秒';changed()};
+$('cues').onchange=e=>{if(e.target.dataset.f&&e.target.dataset.f!=='soundId')renderCues()};
+$('addHere').onclick=()=>{if(AB!=='mine'){setAB('mine')}const t=+$('vid').currentTime.toFixed(2);const prev=W.cues.slice().sort((a,b)=>a.at-b.at).filter(c=>c.at<=t&&!c.none).pop();
+ W.cues.push({id:uid('c'),at:t,soundId:prev?prev.soundId:'',vol:prev?prev.vol:STD,off:0});changed();renderCues();setTimeout(()=>{const el=[...document.querySelectorAll('.cue')].find(x=>x.querySelector('b').textContent.startsWith(fmt(t)));if(el)el.scrollIntoView({block:'nearest'})},50)};
+$('stopHere').onclick=()=>{if(AB!=='mine')setAB('mine');W.cues.push({id:uid('c'),at:+$('vid').currentTime.toFixed(2),none:true});changed();renderCues()};
+$('duck').oninput=e=>{if(AB!=='mine')return;W.duck=+e.target.value;$('duckV').textContent=W.duck.toFixed(1);changed()};
+function setAB(m){AB=m;LS.set('snd_ab',m);document.querySelectorAll('[data-ab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ab===m));stopAll();mkDuck();renderCues();tick()}
+document.querySelector('.ab').onclick=e=>{const b=e.target.closest('[data-ab]');if(b)setAB(b.dataset.ab)};
+
+/* ===== 保存・書き出し・学び ===== */
+const clean=pl=>({duck:pl.duck??1.6,cues:pl.cues.slice().sort((a,b)=>a.at-b.at).map(c=>{const o={id:c.id,at:c.at};for(const k of ['soundId','none','vol','off','fadeIn','fadeOut','why'])if(c[k]!=null&&c[k]!=='')o[k]=c[k];return o})});
+$('saveBtn').onclick=()=>{if(!syncOn()){$('saveMsg').textContent='制作室の設定で同期をつないでください';return}const memo=$('memo').value.trim();
+ const before=plan(P),after=clean(W);if(JSON.stringify(clean(before))===JSON.stringify(after)&&!memo){$('saveMsg').textContent='変わっていません';return}
+ P.sound.claude=P.sound.claude||before;after.by='作り手';after.updatedAt=now();P.sound.bgm=after;
+ P.soundTakes=P.soundTakes||[];P.soundTakes.push({id:uid('st'),at:now(),before:clean(before),after,memo,learned:false});P.updatedAt=now();
+ LS.set(draftKey(),'null');W=plan(P);save();$('memo').value='';$('saveMsg').className='msg ok';$('saveMsg').textContent='保存しました。Claude が次に読みます';renderTakes();renderCues()};
+$('renderBtn').onclick=()=>{if(!syncOn())return;const dirty=LS.get(draftKey(),'null')!=='null';if(dirty&&!confirm('まだ保存していない直しがあります。保存した所までで書き出しますか？'))return;
+ D.jobs.push({id:uid('j'),type:'sound_render',projId:P.id,status:'待ち',createdAt:now(),updatedAt:now()});save();$('saveMsg').className='msg ok';$('saveMsg').textContent='頼みました（制作タブの動画が新しくなります）'};
+$('resetBtn').onclick=()=>{if(!confirm('いまの直しを捨てて、Claude の案に戻しますか？（保存するまでは残りません）'))return;W=claudePlan(P);W.cues.forEach(c=>c.id=c.id||uid('c'));changed();renderCues()};
+function renderTakes(){const ts=(P.soundTakes||[]).slice().reverse();$('takes').innerHTML=ts.length?'<label>残した直し</label>'+ts.map(t=>`<div class="job">${new Date(t.at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}　曲 ${t.before.cues.length}→${t.after.cues.length} か所　${esc(t.memo||'（メモなし）')}${t.learned?'　<span class="ok">Claude が読んだ'+(t.lesson?'：'+esc(t.lesson):'')+'</span>':''}</div>`).join(''):''}
+function renderAll2(){renderCues();renderTakes();drawTl()}
+function renderAll(){renderProj();if(!P&&$('proj').value)openProj($('proj').value);else if(P){const np=D.projects.find(p=>p.id===P.id)||P;const hadBase=!!BASE;P=np;if(!hadBase&&P.sound&&P.sound.base)openProj(P.id);else if(BASE)renderTakes()}}
+{const q=new URLSearchParams(location.search).get('p');if(q)LS.set('snd_proj',q)}
+renderProj();if($('proj').value)openProj($('proj').value);sync();
+</script>
+</body></html>
