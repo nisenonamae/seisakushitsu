@@ -50,5 +50,9 @@ for k,b in enumerate(live,1):
     # 読み間違えやすい漢字
     for w in ['何なのか','何故','一日','今日は']:
         if w in sents:W.append((f'{k}-語り',f'読み間違えやすい「{w}」はひらがなに'))
+    # 章の名前を言う／前の内容を覚えている前提で話す（動画はつなげて見る）
+    for pat,why in [(r'第[0-9０-９一二三四五六七八九十]+章','「第○章」と言わない'),(r'冒頭の|先ほど|さっきの|前にお話し|覚えて(い|ま)','視聴者が前の内容を覚えている前提の言い方。中身をもう一度言う')]:
+        m_=re.search(pat,sents)
+        if m_:W.append((f'{k}-語り',f'「{m_.group(0)}」：{why}'))
 for tag,msg in W:print(f'場面 {tag}: {msg}')
 print(f'— 指摘 {len(W)} 件')
