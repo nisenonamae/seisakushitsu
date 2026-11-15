@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 結び：自然の模様と、全体のふり返り。文字なし。
+ river    … 川の底を横から。水が右へ流れ、砂の波（ゆるい上り・急な下り）がゆっくり右へ進む。山の頭から粒が転がる
+ feedback … 流れ（白い筋）が平らな砂の上を流れ、粒を運んで小さな山ができる → times[1] で流れの筋が山に沿って曲がり、山の後ろに渦、その先に次の山
+ family   … 上から 川の底・風の砂丘・洗濯板道路 の3段。それぞれの力（水・風・車）で波が動く。最後に3段の表面を同じ金色の線がなぞる
+ recap    … ふり返り（断面1枚）：小さなでこぼこ（寄り）→ times[1] 速い車輪が来て [2] 出っ張りで跳ね [3] 落ちて先に山 → times[4] 同じ速さの車輪が次々に同じ所へ着地して山が育つ → times[5] 等間隔にそろった山に、白い目盛りが一つずつ立つ */
+window.DEF={mode:'river'};
+const gauss=(x,c,w)=>Math.exp(-Math.pow((x-c)/w,2));
+// 非対称の砂の波（左がゆるい上り、右が急な下り）
+function ripple(x,lam,A,shift){let p=((x-shift)/lam)%1;if(p<0)p+=1;const y=p<0.72?ease(p/0.72):1-ease((p-0.72)/0.28);return A*y}
+function water(y0,y1){const gr=g.createLinearGradient(0,y0,0,y1);gr.addColorStop(0,'#5fa8c9');gr.addColorStop(1,'#1f5f7f');g.fillStyle=gr;g.fillRect(0,y0,W,y1-y0)}
+function streaks(y0,y1,t,sp,n=40,col='rgba(255,255,255,.35)',len=60,seed=3){const r2=R(seed);g.strokeStyle=col;g.lineWidth=2;for(let i=0;i<n;i++){const y=lerp(y0,y1,r2());const x=((r2()*W+t*sp*(0.7+0.6*r2()))%(W+200))-100;g.beginPath();g.moveTo(x,y);g.lineTo(x+len,y);g.stroke()}}
+function sandFill(top,y1,base='#d2b07a'){ground(top,-20,W+20,base,y1)}
+window.render=function(t){const m=P.mode;
+ if(m==='river'){
+   const BASE=520;water(0,H);for(let i=0;i<6;i++){const x=(i*260+t*30)%(W+300)-150;const gr=g.createLinearGradient(x,0,x+120,BASE);gr.addColorStop(0,'rgba(255,255,255,.10)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.beginPath();g.moveTo(x,0);g.lineTo(x+60,0);g.lineTo(x+200,BASE);g.lineTo(x+120,BASE);g.fill()}
+   streaks(40,BASE-60,t,260,46);const sh=t*22;const top=x=>BASE-ripple(x,150,30,sh);sandFill(top,H,'#c9a873');
+   // 山の頭から下流へ転がる粒
+   const r2=R(5);for(let i=0;i<40;i++){const ph=(t*0.9+r2())%1;const c0=Math.floor(r2()*9)*150+sh%150+0.72*150-150;const x=c0+ph*60,y=top(x)-4-10*Math.sin(Math.PI*ph);g.fillStyle='rgba(240,220,180,.9)';g.beginPath();g.arc(x,y,3,0,7);g.fill()}
+ }
+ else if(m==='feedback'){
+   const BASE=540,t1=T(1,DUR*0.45);sky('#5e93c2','#c9dcea');
+   const A1=lerp(4,48,ease(t/Math.max(0.8,t1))),bend=ease((t-t1)/0.8),A2=42*ease((t-t1-0.6)/1.4),A3=34*ease((t-t1-1.6)/1.4);
+   const top=x=>BASE-A1*gauss(x,520,90)-A2*gauss(x,820,85)-A3*gauss(x,1110,80);sandFill(top,H);
+   // 流れの筋：平らな所ではまっすぐ、山ができると山に沿って持ち上がる（bend）。筋の上を光の点が流れる
+   for(let k=0;k<6;k++){const y0=BASE-60-k*62;const lift=x=>(BASE-top(x))*(0.4+1.6*bend)*Math.exp(-k*0.3);const yy=x=>y0-lift(x);
+     g.strokeStyle=`rgba(255,255,255,${0.9-k*0.09})`;g.lineWidth=4;g.beginPath();for(let x=-20;x<=W+20;x+=8)x===-20?g.moveTo(x,yy(x)):g.lineTo(x,yy(x));g.stroke();
+     for(let j=0;j<4;j++){const x=((t*220+j*340+k*90)%(W+100))-50;g.fillStyle='rgba(255,255,255,.95)';g.beginPath();g.arc(x,yy(x),5,0,7);g.fill()}}
+   // 運ばれる粒
+   const r2=R(9);for(let i=0;i<50;i++){const ph=(t*0.6+r2())%1;const x=lerp(80,520,ph)+ (bend>0?ph*300:0),y=top(x)-3-6*Math.abs(Math.sin(ph*20));g.fillStyle='#e9cf9a';g.beginPath();g.arc(x,y,3,0,7);g.fill()}
+   // 山の後ろの渦
+   if(bend>0){const cx=620,cy=BASE-28;g.strokeStyle=`rgba(255,211,106,${0.9*bend})`;g.lineWidth=5;g.beginPath();g.arc(cx,cy,26,t*4,t*4+Math.PI*1.5);g.stroke();sfxOnce('b',t1,'whoosh')}
+ }
+ else if(m==='family'){
+   const hh=240,tl=DUR*0.6;
+   // 1段目：川の底
+   g.save();g.beginPath();g.rect(0,0,W,hh);g.clip();water(0,hh);streaks(10,hh-60,t,260,20,'rgba(255,255,255,.35)',50,4);const y1=hh-40;const top1=x=>y1-ripple(x,120,18,t*20);sandFill(top1,hh,'#c9a873');g.restore();
+   // 2段目：風の砂丘
+   g.save();g.beginPath();g.rect(0,hh,W,hh);g.clip();sky('#f3c58a','#f7e1b8');streaks(hh+10,2*hh-70,t,420,22,'rgba(255,255,255,.55)',70,6);const y2=2*hh-40;const top2=x=>y2-ripple(x,120,18,t*16);sandFill(top2,2*hh,'#e0b070');g.restore();
+   // 3段目：洗濯板道路
+   g.save();g.beginPath();g.rect(0,2*hh,W,hh);g.clip();sky('#8fbbe0','#efdcbc');const y3=3*hh-40;const top3=x=>y3-18*Math.max(0,Math.sin(2*Math.PI*(x-t*14)/120));sandFill(top3,3*hh);
+     const q=((t*0.28)%1);const cx=lerp(-260,W+260,q);car(cx,y3-18-22,0.6,{heads:3,t,wheelR:20,wheelAng:cx/20});g.restore();
+   g.fillStyle='#10151b';g.fillRect(0,hh-3,W,6);g.fillRect(0,2*hh-3,W,6);
+   // 同じ金色の線が3段の表面をなぞる
+   if(t>tl){const k=ease((t-tl)/1.2);sfxOnce('g',tl,'whoosh');g.strokeStyle='#ffd36a';g.lineWidth=5;g.shadowColor='#ffd36a';g.shadowBlur=14;
+     for(const top of [top1,top2,top3]){g.beginPath();for(let x=0;x<=W*k;x+=4)x===0?g.moveTo(x,top(x)):g.lineTo(x,top(x));g.stroke()}g.shadowBlur=0}
+   sfxOnce('c',0,'car',DUR);
+ }
+ else if(m==='recap'){
+   const BASE=520,t1=T(1,DUR*0.12),th=T(2,DUR*0.2),tl=T(3,DUR*0.3),t2=T(4,DUR*0.45),t3=T(5,DUR*0.75);   // 1台目は言葉に合わせて：times[2]＝出っ張りで跳ねる、[3]＝落ちる
+   // はじめは出っ張りに大きく寄っていて、車輪が来る前に引く
+   const zz=lerp(3.2,1,ease((t-t1+0.2)/0.9));g.save();g.translate(400,BASE);g.scale(zz,zz);g.translate(-400,-BASE);
+   sky('#8fbbe0','#efdcbc');hills(0,[['#cdb48c',420,24,0]]);
+   const xs=[400,620,840,1060,1280];const V0=560,V=820;   // 車輪の速さ（画面の点／秒）
+   // 走る順番：1台目は times[1]、そのあと times[2] から同じ速さで次々に
+   const passes=[t1];for(let s=t2;s<t3-0.6;s+=0.75)passes.push(s);
+   const xAt=s=>t=>{if(s!==t1)return -120+V*(t-s);if(t<th)return lerp(-120,400,clamp((t-t1)/Math.max(0.3,th-t1)));if(t<tl)return lerp(400,620,(t-th)/Math.max(0.2,tl-th));return 620+V*(t-tl)};const tAt=(s,x)=>s===t1?(x<=620?tl:tl+(x-620)/V):s+(x+120)/V;
+   // 山の高さ：その山に着地した回数ぶん育つ（k 番目の山には、k 回目以降の車輪から着地する）
+   const hk=xs.map((x,k)=>{if(k===0)return 7;let h=0;passes.forEach((s,i)=>{if(i+1>=k){const tl=tAt(s,x);h+=(i===0?24:14)*ease((t-tl)/0.3)}});return Math.min(h,52)});
+   const top=x=>BASE-1.2*Math.sin(x/5)-xs.reduce((s,c,k)=>s+hk[k]*gauss(x,c,k===0?40:62),0);
+   ground(top,-20,W+20);for(const [y,c] of [[560,'rgba(150,110,70,.30)'],[620,'rgba(120,85,55,.35)'],[680,'rgba(95,65,42,.40)']]){g.save();g.beginPath();g.moveTo(-20,H);for(let x=-20;x<=W+20;x+=6)g.lineTo(x,Math.max(top(x)+6,y));g.lineTo(W+20,H);g.closePath();g.fillStyle=c;g.fill();g.restore()}
+   // はじめ：小さなでこぼこが光る
+   if(t<t1+0.3){const k=Math.min(ease(t/0.6),1-ease((t-t1)/0.3));g.strokeStyle=`rgba(255,236,170,${0.8*k})`;g.lineWidth=4;g.beginPath();for(let x=330;x<=470;x+=4)x===330?g.moveTo(x,top(x)):g.lineTo(x,top(x));g.stroke()}
+   // 車輪：出っ張りで跳ねて、次の山の手前に落ちる。それをくり返して画面の外へ
+   const cols=['#7dd3fc','#ffd36a','#f87171','#a7f3d0','#c4b5fd','#fdba74'];
+   passes.forEach((s,i)=>{const x=xAt(s)(t);if(x<-150||x>W+150)return;const r=60;let y=top(x)-r;for(let k=0;k<xs.length-1;k++){if(x>=xs[k]&&x<xs[k+1]){const q=(x-xs[k])/(xs[k+1]-xs[k]);y=lerp(top(xs[k]),top(xs[k+1]),q)-r-120*4*q*(1-q)}}
+     for(let j=1;j<=4;j++){g.globalAlpha=0.08*(5-j);tire(x-j*26,y,r,0);g.globalAlpha=1}tire(x,y,r,x/r);g.fillStyle=cols[i%cols.length];g.beginPath();g.arc(x,y,12,0,7);g.fill();
+     xs.slice(1).forEach((c,k)=>{if(i+1>=k+1)sfxOnce('l'+i+'_'+k,tAt(s,c),'thump')})});
+   g.restore();
+   // 最後：そろった山に白い目盛り
+   if(t>t3){const crest=xs.slice(1,4);crest.forEach((c,k)=>{const kk=back((t-t3-k*0.35)/0.35);if(kk<=0)return;sfxOnce('tk'+k,t3+k*0.35,'tick');const y=top(c)-26;g.strokeStyle='#fff';g.lineWidth=5;g.beginPath();g.moveTo(c,y-18*kk);g.lineTo(c,y+18*kk);g.stroke()});
+     const kl=ease((t-t3-0.35)/0.8);if(kl>0){g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;g.beginPath();g.moveTo(crest[0],top(crest[0])-26);g.lineTo(lerp(crest[0],crest[2],kl),top(crest[0])-26);g.stroke()}}
+ }
+};
+</script></body></html>

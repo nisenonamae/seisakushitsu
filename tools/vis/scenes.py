@@ -47,6 +47,8 @@ def photo(s,dur,c,repo):
         u=n/max(1,N-1);im=(fit if s.get('punch') else kenburns(img,u,1.0,s.get('zoom',1.05),s.get('cx',0.5),s.get('cy',0.55))).convert('RGBA')
         if s.get('fadein'):
             k=ease(n/(FPS*0.8));im=Image.blend(Image.new('RGBA',(W,H),(0,0,0,255)),im,k)
+        if s.get('fadeout'):   # 動画の終わり：最後の何秒かで黒へ
+            k=ease((dur-n/FPS)/float(s['fadeout']));im=Image.blend(Image.new('RGBA',(W,H),(0,0,0,255)),im,k)
         d=ImageDraw.Draw(im,'RGBA');t=n/FPS
         if s.get('ticks'):
             a=1-ease((t-dur+2.2)/1.5) if s['ticks']=='fadeout' else 1
