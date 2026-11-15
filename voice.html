@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:30</span>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:40</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -455,7 +455,8 @@ $('takeList').onclick=async e=>{const d=e.target.closest('[data-take]');if(!d)re
   cur={text:t.text,scene:t.scene,edited:false,lineId:t.lineId,src:t.src||null,rec:t.ref||null,sents:t.sents.map(s=>({...clone(s),claude:s.claude||clone(s.base)}))};RECBUF=null;$('recPlay').disabled=true;$('recFit').disabled=!t.ref;$('txt').value=t.text;setScene(t.scene||'');$('memo').value=t.memo||'';afterLoad();
   if(e.target.matches('[data-tp]'))play('now')}};
 /* ===== 動画の語り（制作室のデータ。同じサイトなのでこの Mac の制作室が持っているものを読む） ===== */
-function ssData(){try{return JSON.parse(localStorage.getItem('ss_data')||'null')}catch(e){return null}}
+let REMOTE_D=null;// クラウドから読んだ制作室のデータ（あればこちらを使う。制作室をこの Mac で開いていなくても最新になる）
+function ssData(){if(REMOTE_D)return REMOTE_D;try{return JSON.parse(localStorage.getItem('ss_data')||'null')}catch(e){return null}}
 function projBlocks(p){const ob=(p.outline&&p.outline.blocks)||[],fb=(p.flesh&&p.flesh.blocks)||[];const oi={};ob.forEach((b,i)=>oi[b.id]=i);
  if(fb.length)return fb.filter(b=>b.mark!=='削る'&&b.oid in oi&&ob[oi[b.oid]].mark!=='削る').sort((a,b)=>(oi[a.oid]-oi[b.oid])||(fb.indexOf(a)-fb.indexOf(b))).map(b=>({id:b.id,role:b.role||'',text:b.narr||''}));
  return ob.filter(b=>b.mark!=='削る').map(b=>({id:b.id,role:b.role||'',text:b.text||''}))}
@@ -517,7 +518,7 @@ let noteF='すべて';
 let PTS=[];// 制作室のポイント帳（data.json の points）のうち「声」
 function ptsFromLocal(){try{const D=JSON.parse(localStorage.getItem('ss_data')||'null');return(D&&D.points)||[]}catch(e){return[]}}
 async function loadPoints(){PTS=ptsFromLocal();renderNotes();if(!syncOn())return;try{const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/roadmap/apps/seisakushitsu/data.json`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});
- if(r.ok){const D=await r.json();PTS=D.points||[];renderNotes()}}catch(e){}}
+ if(r.ok){const D=await r.json();REMOTE_D=D;PTS=D.points||[];renderNotes();renderNarr()}}catch(e){}}
 function noteItems(){return [...PTS.filter(x=>!x.deleted&&x.area==='声').map(x=>({id:x.id,cat:x.tag||'声',title:x.title,body:x.body+(x.example?'\n例：'+x.example:''),claude:x.claude,src:x.src,srcTitle:x.srcTitle,by:x.by==='作り手'?'作り手(帳)':'Claude',star:x.star,order:x.order,srcOrder:x.srcOrder,updatedAt:x.updatedAt})),...V.notes.filter(n=>!n.deleted&&n.cat!=='全体への注文')]}
 function renderNotes(){const ns=noteItems().sort((a,b)=>(b.star?1:0)-(a.star?1:0)||(a.by==='作り手'?0:1)-(b.by==='作り手'?0:1)||(b.srcOrder||0)-(a.srcOrder||0)||(a.order||0)-(b.order||0));
  const cs=['すべて',...new Set(ns.map(n=>n.cat).filter(Boolean))];$('noteFilter').innerHTML=cs.map(c=>`<button data-nf="${esc(c)}" aria-pressed="${c===noteF}">${esc(c)}</button>`).join('');
