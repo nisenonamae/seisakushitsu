@@ -81,7 +81,11 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .step .num{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;border:2px solid var(--line);color:var(--sub)}
 .step.done .num{background:var(--good);border-color:var(--good);color:#fff}
 .step.now{border:2px solid var(--sea)}.step.now .num{background:var(--sea);border-color:var(--sea);color:var(--seaInk)}
-.step .st1{font-weight:700;font-size:15.5px}.step .st2{font-size:12.5px;color:var(--sub)}
+.step .st1{font-weight:700;font-size:15.5px}.step .st2{font-size:12.5px;color:var(--sub)}.step .st3{font-size:13px;color:var(--good);margin-top:2px}.step .st3 img{height:44px;border-radius:4px;vertical-align:middle;margin-right:6px}.step.open .st3{display:none}
+#stepNav{position:fixed;right:6px;top:50%;transform:translateY(-50%);z-index:7;display:none;flex-direction:column;gap:5px}body[data-tab="make"] #stepNav.on{display:flex}
+#stepNav button{font:inherit;font-size:12px;min-width:34px;height:34px;border-radius:17px;border:1px solid var(--line);background:var(--row);color:var(--sub);cursor:pointer;padding:0 9px;box-shadow:0 1px 3px rgba(0,0,0,.12);text-align:left}
+#stepNav button.done{color:var(--good);border-color:var(--good)}#stepNav button.now{background:var(--sea);color:var(--seaInk);border-color:var(--sea)}#stepNav .lb{display:none}@media(min-width:1100px){#stepNav .lb{display:inline;margin-left:4px}}
+.others summary{font-size:13.5px}
 .step .sb{display:none;padding:0 12px 12px;font-size:14.5px}.step.open .sb{display:block}
 .how{background:var(--paper);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px}
 .how ol{margin:4px 0;padding-left:20px}.how li{margin:2px 0}
@@ -100,6 +104,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <h2>制作</h2>
 <div id="makeTop"></div>
 <div id="makeSteps"></div>
+<div id="stepNav"></div>
 </section>
 
 <section data-tab="cand">
@@ -395,9 +400,9 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 /* ---------- タブ（スクロール位置を保つ） ---------- */
 const scrollPos={};let curTab='make';
-function showTab(t){scrollPos[curTab]=window.scrollY;curTab=t;document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));
+function showTab(t){scrollPos[curTab]=window.scrollY;curTab=t;document.body.dataset.tab=t;document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));
 document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.t===t));window.scrollTo(0,scrollPos[t]||0)}
-document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));document.body.dataset.tab=curTab;
 $('helpBtn').onclick=()=>showTab('help');
 
 /* ---------- 候補 ---------- */
@@ -550,12 +555,14 @@ function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.c
 const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
-function renderMake(){ensureProj();const p=projOf();
+function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
+function renderMake0(){const mt=$('makeTop');const topDet=new Map([...mt.querySelectorAll('details')].map(x=>[(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent,x.open]));renderMake1();mt.querySelectorAll('details').forEach(x=>{const k=(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent;if(topDet.has(k))x.open=topDet.get(k)})}
+function renderMake1(){ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
 if(!p){$('makeTop').innerHTML=jobsPanel()+`<p class="big">いま作っている動画はありません。</p>
 ${makeC.length?`<p class="lead">「作る」にした題材から一つ選ぶと、やることが順番に出てきます。</p>${makeC.map(c=>`<div class="item"><div class="q">${esc(c.q)}</div><div class="row"><button class="b main" data-start="${c.id}">これを作る</button><button class="b" data-unmake="${c.id}">制作から外す</button></div></div>`).join('')}`
-:`<div class="empty">候補の画面で、作りたい題材を「作る」にしてください。</div>`}`;$('makeSteps').innerHTML='';return}
+:`<div class="empty">候補の画面で、作りたい題材を「作る」にしてください。</div>`}`;$('makeSteps').innerHTML='';renderStepNav(null);return}
 const s=p.step||0;
 $('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま作っている動画</div><div class="q">${esc(candQ(p))}</div>
 <div class="big" style="margin-top:8px">次にやること：${s<STEPS.length?esc(STEPS[s].t):'完成'}</div>
@@ -618,8 +625,21 @@ ${learnList(p).map((f,k)=>`<label class="chk"><input type="checkbox" data-keep="
 ${p.kata?`<div class="item" style="background:var(--paper);margin-top:8px"><label class="chk" style="border:0"><input type="checkbox" id="keepStyle" checked><span>この動画の編集スタイルを残す（次から選べる）</span></label><label>スタイルの名前</label><input id="styleName" value="${esc(candQ(p).slice(0,20))}の型"></div>`:''}
 <div class="row"><button class="b main" data-finish>終わる</button></div>`];
 setTimeout(fillMedia,0);const ms=$('makeSteps');const keepOpen=ms.dataset.pid===p.id?new Set([...ms.querySelectorAll('.step.open')].map(x=>x.dataset.k)):null;const keepDet=new Map([...ms.querySelectorAll('details')].map(x=>[(x.querySelector('summary')||{}).textContent,x.open]));ms.dataset.pid=p.id;
-$('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now open':''}" data-k="${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div></div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('');
-if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));if(key!==undefined)x.open=keepDet.get(key)})}
+$('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now':''}" data-k="${k}" id="step${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div>${stepSum(p,k)?`<div class="st3">${stepSum(p,k)}</div>`:''}</div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('');
+if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));x.open=key!==undefined?keepDet.get(key):false});
+renderStepNav(p,s)}
+function renderStepNav(p,s){const n=$('stepNav');if(!p){n.classList.remove('on');return}n.classList.add('on');const SH=['参考','構成','肉付け','図解','題名','サムネ','動画','音','残す'];
+ n.innerHTML=STEPS.map((st,k)=>`<button class="${k<s?'done':''} ${k===s?'now':''}" data-jump="${k}" title="${st.t}">${k<s?'✓':k+1}<span class="lb">${SH[k]}</span></button>`).join('')+`<button data-jump="top" title="いちばん上へ">▲</button>`}
+$('stepNav').addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(!b)return;if(b.dataset.jump==='top'){window.scrollTo({top:0,behavior:'smooth'});return}const el=$('step'+b.dataset.jump);if(!el)return;el.classList.add('open');const y=el.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top:y,behavior:'smooth'})});
+// 畳んだときに見える「決まったこと」
+function stepSum(p,k){try{const ob=(p.outline&&p.outline.blocks||[]).filter(b=>b.mark!=='削る'),fb=(p.flesh&&p.flesh.blocks||[]).filter(b=>b.mark!=='削る');
+ if(k===0){const n=(p.refs||[]).length,m=(p.mats||[]).length;return n||m?`参考 ${n}・資料 ${m}`:''}
+ if(k===1)return ob.length?`${ob.length} 段`:'';
+ if(k===2)return fb.length?`${fb.length} 段・${fb.reduce((a,b)=>a+(b.narr||'').length,0)} 字`:'';
+ if(k===3){const v=(p.visuals||[]).filter(v=>v.status==='決定'||v.status==='できた'||v.chosen).length;return v?`図解 ${v}`:''}
+ if(k===4){const t=(p.titles||[]).find(t=>t.id===p.titleId);return t?'決定：'+esc(t.text):''}
+ if(k===5){const t=(p.thumbs||[]).find(t=>t.id===p.thumbId);return t?`${t.preview?`<img data-gh="${esc(t.preview)}" alt="">`:''}決定：${esc(t.title||t.text||t.id)}`:''}
+ return ''}catch(e){return ''}}
 function orderText(p){const refs=(p.refs||[]).map(id=>D.ideas.find(i=>i.id===id)).filter(Boolean);const c=D.candidates.find(x=>x.id===p.candId)||{};
 const mats=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted);
 const st=(D.styles||[]).find(s=>s.id===(p.styleId||(liveStyles()[0]||{}).id));const smode=p.styleMode||'混ぜる';
@@ -652,14 +672,14 @@ ${v.status==='できた'||v.status==='直し待ち'?vfixHTML(p,v,'動画'):''}</
 function titleStep(p){if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、題名の案を出してもらえます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
 const ts=(p.titles||[]).filter(t=>!t.deleted);const cur=ts.find(t=>t.id===p.titleId);
 return `<div class="how"><b>やること</b><ol><li>Claude が、見た人が思わず押したくなる題名の案を、ねらい（どう惹きつけるか）つきで出す</li><li>気に入ったものを「これにする」。「この方向で別案」を頼むと、そこから枝分かれした案が届く</li><li>直しの中で、これからも守りたいものは「決まりにする」</li></ol></div>
-${cur?`<div class="item picked"><div class="lead" style="margin:0">いまの題名</div><div class="q" style="font-size:17px">${esc(cur.text)}</div></div>`:''}
+
 <label>案の数</label><select id="ttN">${[5,10,20].map(n=>`<option ${n===10?'selected':''}>${n}</option>`).join('')}</select>
 <label>こういう題名にしたい（任意）</label><input id="ttWish" placeholder="例：問いの形で／数字を入れて／30字以内">
 <div class="row"><button class="b" data-ttjob="title_ideas">${ts.length?'もっと案を出してもらう':'題名の案を出してもらう'}</button></div>${jobLine(p,'title_ideas')}
-${ts.map(t=>`<div class="item ${p.titleId===t.id?'picked':''}" style="margin:6px 0"><div class="q" style="font-size:16px">${esc(t.text)}</div>
+${(()=>{const card=t=>`<div class="item ${p.titleId===t.id?'picked':''}" style="margin:6px 0"><div class="q" style="font-size:16px">${esc(t.text)}</div>
 <div class="tags">${t.hook?`<span>${esc(t.hook)}</span>`:''}<span>${(t.text||'').length}字</span>${t.parent?'<span>別案</span>':''}</div>${t.why?`<div class="lead" style="margin:2px 0">${esc(t.why)}</div>`:''}${usesHTML(t)}
-<div class="st" style="margin-top:4px"><button data-ttpick="${t.id}" class="${p.titleId===t.id?'on':''}">${p.titleId===t.id?'これに決めた':'これにする'}</button><button data-ttdel="${t.id}">消す</button></div>
-<input data-ttnote="${t.id}" placeholder="この方向で別案を頼むときの一言（例：もっと短く／意外さを前に）" style="margin-top:6px;font-size:14px;padding:6px 8px"><div class="st" style="margin-top:4px"><button data-ttjob="title_fix" data-ttid="${t.id}">この方向で別案を出してもらう</button><button data-ttrule="${t.id}">この一言を、これからも守る決まりにする</button></div></div>`).join('')}${jobLine(p,'title_fix')}
+<div class="st" style="margin-top:4px"><button data-ttpick="${t.id}" class="${p.titleId===t.id?'on':''}">${p.titleId===t.id?'✓ これに決めた':'これにする'}</button>${p.titleId===t.id?'<button data-ttunpick>決定を取り消す</button>':''}<button data-ttdel="${t.id}">消す</button></div>
+<input data-ttnote="${t.id}" placeholder="この方向で別案を頼むときの一言（例：もっと短く／意外さを前に）" style="margin-top:6px;font-size:14px;padding:6px 8px"><div class="st" style="margin-top:4px"><button data-ttjob="title_fix" data-ttid="${t.id}">この方向で別案を出してもらう</button><button data-ttrule="${t.id}">この一言を、これからも守る決まりにする</button></div></div>`;const pk=ts.find(t=>t.id===p.titleId),rest=ts.filter(t=>t.id!==p.titleId);return pk?`${card(pk)}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'title_fix')}
 <div class="row"><button class="b main" data-next>題名はこれでいい</button></div>`}
 function ytThumbs(p){return (p.related||[]).filter(r=>r.kind==='見せ方'||r.kind==='中身').map(r=>{const m=/[?&]v=([\w-]{11})/.exec(r.url||'');return m?{id:m[1],r}:null}).filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.id===x.id)===i).slice(0,8)}
 function thumbStep(p){if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、サムネの案を見本つきで出してもらえます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
@@ -670,11 +690,11 @@ ${yt.length?`<details><summary>参考動画のサムネ（${yt.length}）</summa
 <label>案の数</label><select id="tN">${[3,5,8].map(n=>`<option ${n===5?'selected':''}>${n}</option>`).join('')}</select>
 <label>こういうサムネにしたい（任意）</label><input id="tWish" placeholder="例：地図を大きく、文字は5字以内／驚きの数字を前に">
 <div class="row"><button class="b" data-tjob="thumb_ideas">${ts.length?'もっと案を出してもらう':'サムネの案を出してもらう'}</button></div>${jobLine(p,'thumb_ideas')}
-${ts.map(t=>`<div class="item ${p.thumbId===t.id?'picked':''}" style="margin:8px 0">${t.title?`<div class="q" style="font-size:15.5px">${esc(t.title)}</div>`:''}<div class="lead" style="margin:2px 0">${esc(t.idea||'')}${t.text?'　サムネの文字：「'+esc(t.text)+'」':''}</div>
+${(()=>{const card=t=>`<div class="item ${p.thumbId===t.id?'picked':''}" style="margin:8px 0">${t.title?`<div class="q" style="font-size:15.5px">${esc(t.title)}</div>`:''}<div class="lead" style="margin:2px 0">${esc(t.idea||'')}${t.text?'　サムネの文字：「'+esc(t.text)+'」':''}</div>
 ${t.preview?`<img data-gh="${esc(t.preview)}" style="width:100%;border-radius:6px;background:var(--line);min-height:60px">`:''}
 ${t.desc?`<div style="font-size:14px">${esc(t.desc)}</div>`:''}${usesHTML(t)}
-<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'これに決めた':'これにする'}</button></div>
-${tfixHTML(p,t)}</div>`).join('')}${jobLine(p,'thumb_fix')}
+<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'✓ これに決めた':'これにする'}</button>${p.thumbId===t.id?'<button data-tunpick>決定を取り消す</button>':''}</div>
+${tfixHTML(p,t)}</div>`;const pk=ts.find(t=>t.id===p.thumbId),rest=ts.filter(t=>t.id!==p.thumbId);return pk?`<h3 style="font-size:15px;margin:12px 0 4px">決めたサムネ</h3>${card(pk)}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'thumb_fix')}
 <div class="row"><button class="b main" data-next>サムネはこれでいい</button></div>`}
 function tfixHTML(p,t){const log=t.fixlog||[];const wait=log.some(f=>f.status==='待ち');
 return `${log.length?`<details ${wait?'open':''}><summary>直しの記録（${log.length}）</summary>${log.map(f=>`<div class="fixrec"><div>${esc(f.text)}　<span class="lead" style="margin:0">${f.at?md(f.at):''}　${esc(f.status||'')}</span></div>${f.reply?`<div class="chg">Claude：${esc(f.reply)}</div>`:''}
@@ -723,7 +743,7 @@ ${syncOn()?`<div class="row"><button class="b" data-job="video_make">${v&&v.path
 function omakaseHTML(p){if(!syncOn())return'';let sel={};try{sel=JSON.parse(LS.get('om_sel','{}'))||{}}catch(e){}
 const busy=(D.jobs||[]).some(j=>!j.deleted&&j.projId===p.id&&j.type==='rebuild'&&(j.status==='待ち'||j.status==='作業中'));
 const ch=changesSince(p);const mode=LS.get('om_mode','選んだ部分');
-return `<details class="item omk" ${busy||ch.length?'open':''}><summary><b>情報を変えて作り直す</b>${ch.length?`（前に作ったあとで変わったこと ${ch.length}件）`:''}</summary>
+return `<details class="item omk" ${busy?'open':''}><summary><b>情報を変えて作り直す</b>${ch.length?`（前に作ったあとで変わったこと ${ch.length}件）`:''}</summary>
 <p class="lead" style="margin:4px 0">資料や素材を足した・決まりごとや餌箱が増えた・長さや編集スタイルを変えた、などのあとで、その情報を入れて作り直してもらいます。前の版は全部残ります。</p>
 ${ch.length?`<label>前に作ったあと（${md(p.builtAt)}）で変わったこと（入れるものに印）</label>${ch.map(c=>`<label class="chk" style="padding:3px 0"><input type="checkbox" data-omch="${esc(c.k)}" checked><span>${esc(c.t)}</span></label>`).join('')}`:(p.builtAt?'':'<p class="lead" style="margin:4px 0">まだ一度も作っていないので、ここで頼むと最初から作ります。</p>')}
 <label>どう良くしたいか・何を変えたか（任意）</label><textarea id="omNote" placeholder="例：新しく入れた資料で第2章を厚くしたい／全体をもっとテンポよく"></textarea>
@@ -973,10 +993,12 @@ if(el.matches('[data-ttjob]')){const type=el.dataset.ttjob;const extra={};
 if(type==='title_ideas'){extra.n=+($('ttN')?$('ttN').value:10);extra.wish=($('ttWish')?$('ttWish').value.trim():'')}
 if(type==='title_fix'){const inp=document.querySelector(`[data-ttnote="${el.dataset.ttid}"]`);extra.titleId=el.dataset.ttid;extra.notes=inp?inp.value.trim():''}
 queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return true}
-if(el.matches('[data-ttpick]')){p.titleId=p.titleId===el.dataset.ttpick?'':el.dataset.ttpick;touchP(p);renderMake();return true}
+if(el.matches('[data-ttpick]')){if(p.titleId===el.dataset.ttpick)return true;p.titleId=el.dataset.ttpick;touchP(p);renderMake();return true}
+if(el.matches('[data-ttunpick]')){if(!confirm('題名の決定を取り消しますか？'))return true;p.titleId='';touchP(p);renderMake();return true}
 if(el.matches('[data-ttdel]')){const t=p.titles.find(x=>x.id===el.dataset.ttdel);t.deleted=true;if(p.titleId===t.id)p.titleId='';touchP(p);renderMake();return true}
 if(el.matches('[data-ttrule]')){const inp=document.querySelector(`[data-ttnote="${el.dataset.ttrule}"]`);const v=inp?inp.value.trim():'';if(!v){alert('先に一言を書いてください');return true}const tx=prompt('決まりとして残す文（これからの題名で毎回守ります）',v);if(!tx||!tx.trim())return true;addRule({scope:'題名',do:tx.trim(),from:'題名の直しから'});alert('決まりごとに入れました');renderAll();return true}
-if(el.matches('[data-tpick]')){p.thumbId=p.thumbId===el.dataset.tpick?'':el.dataset.tpick;touchP(p);renderMake();return true}
+if(el.matches('[data-tpick]')){if(p.thumbId===el.dataset.tpick)return true;p.thumbId=el.dataset.tpick;touchP(p);renderMake();return true}
+if(el.matches('[data-tunpick]')){if(!confirm('サムネの決定を取り消しますか？'))return true;p.thumbId='';touchP(p);renderMake();return true}
 if(el.matches('[data-trule]')){const [tid,fid]=el.dataset.trule.split(':');const t=p.thumbs.find(x=>x.id===tid);const f=(t.fixlog||[]).find(x=>x.id===fid);if(!f||f.rule)return true;const tx=prompt('決まりとして残す文（これからのサムネで毎回守ります）',f.text);if(!tx||!tx.trim())return true;addRule({scope:'サムネ',do:tx.trim(),from:'サムネの直しから',ex:{before:f.before||'',after:f.after||'',idea:t.idea}});f.rule=true;touchP(p);renderAll();return true}
 if(el.matches('[data-osok]')){const f=blsOf(p,'f')[+el.dataset.osok];const o=blsOf(p,'o').find(x=>x.id===f.oid);if(o)f.osnap={text:o.text||'',show:o.show||''};touchP(p);renderMake();return true}
 if(el.matches('[data-pyes]')||el.matches('[data-pno]')){const x=(p.proposals||[]).find(y=>y.id===(el.dataset.pyes||el.dataset.pno));if(!x)return true;if(el.matches('[data-pyes]'))applyProp(p,x);else{x.status='見送り';x.updatedAt=now()}touchP(p);renderMake();return true}
