@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 19:00</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -79,6 +79,17 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
     <label>元の声</label><select id="spkSel"></select>
     <div id="kataSl"></div>
     <div class="row"><button class="b" id="kataSave">この型を上書き保存</button><button class="b" id="kataNew">新しい型として保存</button><span class="msg" id="kataMsg"></span></div>
+  </div>
+
+  <div class="card" id="allCard">
+    <h2>全体の読み方（すべての文にかかる）</h2>
+    <p class="hint">一文ずつ直さなくても、ここを動かせば全部の文の読み方が変わる。動画を作るときもこの読み方が使われる。読み込んだ文ですぐ聞いて確かめられる。（一文ずつ調整して保存した文は、その調整のまま）</p>
+    <div id="allSl"></div>
+    <div class="row"><span class="msg" id="allMsg"></span></div>
+    <label>言葉での注文（Claude が読んで、つまみや決まりに直す）</label>
+    <textarea id="allReq" placeholder="例：全体的にもう少し落ち着いた感じに。数字のところはゆっくり。文の終わりが急ぎすぎ"></textarea>
+    <div class="row"><button class="b" id="allReqAdd">注文を送る</button><span class="msg" id="allReqMsg"></span></div>
+    <div id="allReqList"></div>
   </div>
 
   <div class="card">
@@ -450,7 +461,7 @@ let PTS=[];// 制作室のポイント帳（data.json の points）のうち「�
 function ptsFromLocal(){try{const D=JSON.parse(localStorage.getItem('ss_data')||'null');return(D&&D.points)||[]}catch(e){return[]}}
 async function loadPoints(){PTS=ptsFromLocal();renderNotes();if(!syncOn())return;try{const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/roadmap/apps/seisakushitsu/data.json`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});
  if(r.ok){const D=await r.json();PTS=D.points||[];renderNotes()}}catch(e){}}
-function noteItems(){return [...PTS.filter(x=>!x.deleted&&x.area==='声').map(x=>({id:x.id,cat:x.tag||'声',title:x.title,body:x.body+(x.example?'\n例：'+x.example:''),claude:x.claude,src:x.src,srcTitle:x.srcTitle,by:x.by==='作り手'?'作り手(帳)':'Claude',star:x.star,order:x.order,srcOrder:x.srcOrder,updatedAt:x.updatedAt})),...V.notes.filter(n=>!n.deleted)]}
+function noteItems(){return [...PTS.filter(x=>!x.deleted&&x.area==='声').map(x=>({id:x.id,cat:x.tag||'声',title:x.title,body:x.body+(x.example?'\n例：'+x.example:''),claude:x.claude,src:x.src,srcTitle:x.srcTitle,by:x.by==='作り手'?'作り手(帳)':'Claude',star:x.star,order:x.order,srcOrder:x.srcOrder,updatedAt:x.updatedAt})),...V.notes.filter(n=>!n.deleted&&n.cat!=='全体への注文')]}
 function renderNotes(){const ns=noteItems().sort((a,b)=>(b.star?1:0)-(a.star?1:0)||(a.by==='作り手'?0:1)-(b.by==='作り手'?0:1)||(b.srcOrder||0)-(a.srcOrder||0)||(a.order||0)-(b.order||0));
  const cs=['すべて',...new Set(ns.map(n=>n.cat).filter(Boolean))];$('noteFilter').innerHTML=cs.map(c=>`<button data-nf="${esc(c)}" aria-pressed="${c===noteF}">${esc(c)}</button>`).join('');
  const xs=ns.filter(n=>noteF==='すべて'||n.cat===noteF);
@@ -535,7 +546,32 @@ $('recFit').onclick=()=>{const m=recMap();if(!m)return;pushUndo();let n=0,nl=0;c
    if($('recLen').checked&&tot>0&&recLen[ix]>0){const sp=cur.sents[g.si].q.speedScale||1;const L=recLen[ix]/tot*cur0*sp;mo.vowel_length=Math.max(0.02,L-(mo.consonant_length||0));nl++}}
   else if($('recLen').checked&&tot>0){const sp=cur.sents[g.si].q.speedScale||1;const ap=cur.sents[g.si].q.accent_phrases[g.pi];ap.pause_mora.vowel_length=Math.max(0,recLen[ix]/tot*cur0*sp)}});
  cur.edited=true;layout();draw();dirtyAudio();updateDiff();$('recMsg').className='msg ok';$('recMsg').textContent=`${n} 音の高さ${nl?`と ${nl} 音の長さ`:''}を、自分の声に合わせました`};
-function renderSide(){fillKataSel();renderNotes();renderLines();renderTakes();renderNarr()}
+/* ===== 全体の読み方（決まりの数をつまみで動かす） ===== */
+const ST12=12/LN2;
+const AS=[ // [決まりの種類, 項目, 名前, 最小, 最大, 刻み, 表示の倍率, 単位, 説明, 既定]
+ ['global','speedScale','話す速さ',0.8,1.5,0.01,1,'倍','全部の文の速さ。このチャンネルの基本',1.1],
+ ['global','intonationScale','抑揚',0.5,1.8,0.01,1,'倍','高さの上下の大きさ。小さいと平ら・冷静、大きいと表情豊か',1.1],
+ ['global','postPhonemeLength','文と文の間',0,0.8,0.01,1,'秒','文が終わってから次の文までの間',0.15],
+ ['end_fall','amt','文末の下げ',0,0.35,0.005,ST12,'半音','文の最後の音を下げる量。下げると落ち着いて言い切る感じ',0.08],
+ ['question','amt','問いかけの上げ',0,0.5,0.005,ST12,'半音','「？」で終わる文の最後の音を上げる量',0.15],
+ ['comma_pause','add','読点の間',0,0.4,0.01,1,'秒','「、」の所に足す間',0.05],
+ ['emph','up','強調の高さ',0,0.4,0.005,ST12,'半音','《》で囲んだ所を上げる量',0.12],
+ ['emph','stretch','強調の伸ばし',1,1.5,0.01,1,'倍','《》で囲んだ所をゆっくり言う度合い',1.12],
+ ['emph_pause','sec','強調の前の間',0,1,0.01,1,'秒','《》の直前に置く間（1本に1〜2か所まで）',0.45],
+ ['first_up','amt','文の出だしを上げる',0,0.3,0.005,ST12,'半音','文の最初の句を少し上げると、話し始めがはっきりする',0],
+];
+function ruleOf(op,make){let r=V.vrules.find(x=>x.op===op&&!x.deleted&&!x.scene);if(!r&&make){r={id:uid('vr'),op,p:{},scene:'',memo:'',from:'作り手が全体のつまみで',active:true,updatedAt:now()};V.vrules.push(r)}return r}
+function renderAll(){$('allSl').innerHTML=AS.map(([op,k,n,mn,mx,st,f,u,ex,df],i)=>{const r=ruleOf(op);const v=r&&r.active!==false&&r.p&&r.p[k]!=null?r.p[k]:(op==='global'?df:(k==='stretch'?1:0));
+  return `<div class="sl"><span>${n}</span><input type="range" data-as="${i}" min="${mn*f}" max="${mx*f}" step="${st*f}" value="${v*f}"><output id="as_o${i}">${fmtv(v*f,u)}</output><button class="r" title="はじめの値" data-asr="${i}">↺</button></div><div class="ex">${ex}</div>`}).join('')}
+function reapply(){if(!cur)return;cur.sents.forEach(s=>{s.claude=applyRules(clone(s.base),s,curScene);s._st=null;if(!cur.edited)s.q=startQ(s);else{const g=startQ(s);for(const [k] of RS)s.q[k]=g[k]}});layout();showRead();draw();dirtyAudio();updateDiff()}
+let asT=null;
+$('allSl').addEventListener('input',e=>{const el=e.target.closest('[data-as]');if(!el)return;const [op,k,,,,,f,u]=AS[+el.dataset.as];const v=+el.value/f;const r=ruleOf(op,true);r.p=r.p||{};r.p[k]=v;r.active=true;r.updatedAt=now();if(!/作り手/.test(r.from||''))r.from=(r.from||'')+'（作り手が全体のつまみで直した）';
+ $('as_o'+el.dataset.as).textContent=fmtv(+el.value,u);reapply();clearTimeout(asT);asT=setTimeout(()=>{save();$('allMsg').className='msg ok';$('allMsg').textContent='全体の読み方を保存しました（次の動画から効きます）'},800)});
+$('allSl').addEventListener('click',e=>{const b=e.target.closest('[data-asr]');if(!b)return;const [op,k,,,,,,,,df]=AS[+b.dataset.asr];const r=ruleOf(op,true);r.p[k]=df;r.updatedAt=now();save();renderAll();reapply()});
+function renderReqs(){const xs=V.notes.filter(n=>!n.deleted&&n.cat==='全体への注文').sort((a,b)=>b.updatedAt-a.updatedAt).slice(0,8);
+ $('allReqList').innerHTML=xs.map(n=>`<div class="take"><span class="badge ${n.reply?'c':''}">${n.reply?'Claude が反映':'Claude まだ'}</span>${esc(n.body)}${n.reply?`<div class="m" style="color:var(--claude)">Claude：${esc(n.reply)}</div>`:''}</div>`).join('')}
+$('allReqAdd').onclick=()=>{const t=$('allReq').value.trim();if(!t)return;V.notes.push({id:uid('vq'),cat:'全体への注文',title:t.slice(0,30),body:t,by:'作り手',updatedAt:now()});save();$('allReq').value='';flash('allReqMsg','送りました。Claude に「声の注文を見て」と言えば反映します');renderReqs()};
+function renderSide(){renderAll();renderReqs();fillKataSel();renderNotes();renderLines();renderTakes();renderNarr()}
 
 /* ===== やり方の切り替え ===== */
 const mode=()=>LS.get('vv_mode','self');
