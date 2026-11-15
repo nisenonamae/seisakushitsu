@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 20:00</span>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 20:10</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -147,7 +147,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
     <div class="row" style="margin-top:0">
       <button class="b" id="recBtn" disabled>● 自分の声を録る</button>
       <button class="b" id="recPlay" disabled>▶ 自分の声</button>
-      <button class="b" id="recFit" disabled>自分の声に合わせる</button><label style="display:inline-flex;gap:4px;align-items:center;margin:0;font-size:13px"><input type="checkbox" id="recLen" style="width:auto">長さも</label>
+      <button class="b" id="recFit" disabled>自分の声に合わせる</button><label style="display:inline-flex;gap:4px;align-items:center;margin:0;font-size:13px"><input type="checkbox" id="recLen" checked style="width:auto">長さも</label>
       <label style="display:inline-flex;gap:4px;align-items:center;margin:0;font-size:13px"><input type="checkbox" id="recShow" checked style="width:auto">自分の声の線を出す</label>
       <span class="msg" id="recMsg"></span>
     </div>
@@ -613,10 +613,10 @@ $('recFit').onclick=()=>{const m=recMap();if(!m)return;pushUndo();let n=0,nl=0;c
  // 長さ：録った声の中での割合に合わせ、話す部分の全体の長さはいまのまま（速さはつまみで）
  const keys=tl.segs.map(g=>(g.k==='m'?0:1)+'_'+g.si+'_'+g.pi+'_'+(g.k==='m'?g.mi:-1));const recLen=keys.map(k=>(by[k]||[]).length*hop);const tot=recLen.reduce((a,c)=>a+c,0);const cov=tl.segs.map((g,ix)=>recLen[ix]>0);const lo=cov.indexOf(true),hi=cov.lastIndexOf(true);const inR=ix=>ix>=lo&&ix<=hi;const cur0=tl.segs.reduce((a,g,ix)=>a+(inR(ix)?g.t1-g.t0:0),0);
  tl.segs.forEach((g,ix)=>{const k=keys[ix];if(g.k==='m'){const mo=cur.sents[g.si].q.accent_phrases[g.pi].moras[g.mi];
-   if(mo.pitch>0){const ps=(by[k]||[]).map(p=>p.p).filter(v=>v!=null).sort((p,q)=>p-q);if(ps.length){mo.pitch=ps[ps.length>>1];n++}}
+   if(mo.pitch>0){const ps=(by[k]||[]).filter(p=>p.g[4]>=0.3).map(p=>p.p).filter(v=>v!=null).sort((p,q)=>p-q);if(ps.length){mo.pitch=ps[ps.length>>1];n++}}
    if($('recLen').checked&&tot>0&&inR(ix)){const sp=cur.sents[g.si].q.speedScale||1;const L=recLen[ix]/tot*cur0*sp;mo.vowel_length=Math.max(0.02,L-(mo.consonant_length||0));nl++}}
   else if($('recLen').checked&&tot>0&&inR(ix)){const sp=cur.sents[g.si].q.speedScale||1;const ap=cur.sents[g.si].q.accent_phrases[g.pi];ap.pause_mora.vowel_length=Math.max(0,recLen[ix]/tot*cur0*sp)}});
- cur.edited=true;layout();draw();dirtyAudio();updateDiff();$('recMsg').className='msg ok';$('recMsg').textContent=`${n} 音の高さ${nl?`と ${nl} 音の長さ`:''}を、自分の声に合わせました`};
+ const oldInt=cur.sents[0].q.intonationScale;cur.sents.forEach(x=>x.q.intonationScale=1);showRead();cur.edited=true;layout();draw();dirtyAudio();updateDiff();$('recMsg').className='msg ok';$('recMsg').textContent=`${n} 音の高さ${nl?`と ${nl} 音の長さ`:''}を、自分の声に合わせました（抑揚の倍率は ${(+oldInt).toFixed(2)}→1 に。自分の声の上がり下がりをそのまま使うため）`};
 /* ===== 全体の読み方（決まりの数をつまみで動かす） ===== */
 const ST12=12/LN2;
 const AS=[ // [決まりの種類, 項目, 名前, 最小, 最大, 刻み, 表示の倍率, 単位, 説明, 既定]
