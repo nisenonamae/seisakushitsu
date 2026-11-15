@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2f6db0">
+<link rel="icon" href="icon-192.png">
+<title>音楽の棚</title>
+<style>
+:root{--ink:#1d2433;--sub:#5b6577;--paper:#f6f7f9;--row:#fff;--line:#d6dbe4;--sea:#2f6db0;--seaInk:#fff;--yel:#f2c230;--good:#2e8b57;--busy:#c0503a;--grid:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--ink:#e7ebf2;--sub:#9aa5b8;--paper:#141a26;--row:#1b2232;--line:#2c3547;--sea:#6ea4e6;--seaInk:#0e1420;--good:#5cc28a;--busy:#e57b65;--grid:#222b3c}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 16px 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}header a{color:var(--sea);font-size:13px}
+.stat{font-size:12.5px;color:var(--sub)}.stat.bad{color:var(--busy)}.stat.okk{color:var(--good)}
+main{max-width:900px;margin:0 auto;padding:12px 16px 60px}
+.tabs{display:flex;gap:6px;margin:4px 0 12px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:14.5px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:6px 16px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+section{display:none}section.on{display:block}
+h2{font-size:16px;margin:6px 0 8px}
+.hint{font-size:12.5px;color:var(--sub);margin:4px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chips button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--sea);color:var(--seaInk);border-color:var(--sea)}
+.chips button .n{font-size:11px;opacity:.7;margin-left:3px}
+input,select,textarea{font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--row);color:var(--ink)}
+input,textarea,select{width:100%}
+label{display:block;font-size:12.5px;color:var(--sub);margin:8px 0 3px}
+button.b{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:8px;padding:5px 12px;cursor:pointer}
+button.main{background:var(--sea);color:var(--seaInk);border-color:var(--sea);font-weight:700}
+button.on{background:var(--good);color:#fff;border-color:var(--good)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}@media(max-width:600px){.grid3{grid-template-columns:1fr}}
+.tr{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:0 0 8px}
+.tr .t{font-weight:700;font-size:15px}.tr .m{font-size:12.5px;color:var(--sub)}
+.tag{display:inline-block;font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:0 8px;margin:2px 4px 0 0;color:var(--ink)}
+.tag.role{border-color:var(--sea);color:var(--sea)}
+audio{width:100%;height:34px;margin:5px 0 2px}
+.msg{font-size:13px;color:var(--busy)}.ok{color:var(--good)}
+.empty{color:var(--sub);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;text-align:center}
+.picked{border:2px solid var(--good)}
+.job{font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding:5px 0}
+details summary{cursor:pointer;color:var(--sub);font-size:14px}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+</style></head><body>
+<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 20:40</span><span class="stat" id="syncStat">同期：—</span></header>
+<main>
+<div class="tabs" id="tabs"><button data-tab="shelf" aria-pressed="true">保管庫の曲</button><button data-tab="find">探す</button><button data-tab="ask">頼む・足す</button></div>
+
+<section data-tab="shelf" class="on">
+  <p class="hint">保管庫に入っている BGM。印象で絞り込んで聞ける。気に入った曲に「いい」、使わない曲に「使わない」。<b>メイン・重い回・軽い回</b>を決めておくと、Claude が動画に付けるときにまずそれを使う（ポイント帳「BGMは3曲を使い回す」）。</p>
+  <div class="chips" id="shelfF"></div>
+  <div id="shelfList"></div>
+</section>
+
+<section data-tab="find">
+  <p class="hint">フリー音楽の目録から探す。▶でその場で試聴できる。気に入ったら「入れたい」に印を付けて、まとめて「保管庫に入れる」。使い方の条件とクレジットも一緒に入る。</p>
+  <label>印象</label><div class="chips" id="findF"></div>
+  <div class="grid3">
+    <div><label>ことばでさがす（題名・楽器・説明）</label><input id="fQ" placeholder="例：piano、ピアノ、space"></div>
+    <div><label>テンポ</label><select id="fBpm"><option value="">どれでも</option><option value="slow">ゆっくり（〜90）</option><option value="mid">ふつう（90〜120）</option><option value="fast">速い（120〜）</option></select></div>
+    <div><label>長さ</label><select id="fLen"><option value="">どれでも</option><option value="120">2分以上</option><option value="180">3分以上</option></select></div>
+  </div>
+  <div class="row"><span class="hint" id="fCount"></span><button class="b main" id="addJob" disabled>保管庫に入れる</button><span class="msg" id="addMsg"></span></div>
+  <div id="findList"></div>
+  <div class="row"><button class="b" id="more" hidden>もっと見る</button></div>
+  <p class="hint">目録：Kevin MacLeod（incompetech.com）1443曲。収益化してよいが、概要欄にクレジットが必要（保管庫に入れると自動で控える）。ほかの目録（OpenTracks〔旧DOVA〕など）は順に足していく。</p>
+</section>
+
+<section data-tab="ask">
+  <h2>こういう雰囲気の曲が欲しい</h2>
+  <p class="hint">言葉で頼むと、Claude が使ってよい出どころから探して、候補を保管庫に入れる（入れた曲には「Claude が選んだ・まだ聞いていない」と付く）。</p>
+  <textarea id="wish" placeholder="例：宇宙の話の冒頭に合う、静かで広がりのある曲。ピアノかシンセ。不安すぎないもの"></textarea>
+  <div class="row"><label style="margin:0;display:inline">何曲</label><select id="wishN" style="width:auto"><option>3</option><option selected>5</option><option>8</option></select><button class="b main" id="wishGo">頼む</button><span class="msg" id="wishMsg"></span></div>
+  <div id="jobList"></div>
+
+  <h2 style="margin-top:22px">自分で見つけた曲を足す</h2>
+  <p class="hint">YouTube のオーディオライブラリ（YouTube Studio →「オーディオ ライブラリ」。「帰属表示は不要」のものが一番安全）などから落とした曲を入れる。</p>
+  <label>曲の名前</label><input id="upName" placeholder="例：Morning Light（YouTube オーディオライブラリ）">
+  <label>印象（いくつでも）</label><div class="chips" id="upMoods"></div>
+  <label>出どころと使い方の条件</label><input id="upSrc" placeholder="例：YouTube オーディオライブラリ・帰属表示不要">
+  <label>概要欄に書くクレジット（要らなければ空）</label><input id="upCredit">
+  <label>音のファイル（30MBまで）</label><input type="file" id="upFile" accept="audio/*">
+  <div class="row"><button class="b main" id="upGo">保管庫に入れる</button><span class="msg" id="upMsg"></span></div>
+</section>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const now=()=>Date.now();const uid=p=>p+now().toString(36)+Math.random().toString(36).slice(2,6);
+const MOODS=['落ち着いた','穏やか・癒し','謎・ミステリー','緊張・ハラハラ','不穏','不気味','明るい','前向き・感動','壮大','弾む・軽快','ノリがいい','コミカル','しんみり・重い','暗い','神秘・幻想','勢い・推進力','アクション','激しい','荒々しい','和風'];
+const ROLES=['メイン','重い回','軽い回'];
+/* ===== 制作室のデータ（data.json）を読む・書く。制作室と同じやり方で、ほかの所は消さずに混ぜる ===== */
+let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}D=D||{};D.sounds=D.sounds||[];D.jobs=D.jobs||[];
+const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),t:LS.get('gh_t',''),p:LS.get('gh_p','roadmap/apps/seisakushitsu/data.json')||'roadmap/apps/seisakushitsu/data.json'});
+const syncOn=()=>{const s=S();return !!(s.o&&s.r&&s.t)};
+const b64e=s=>{const u=new TextEncoder().encode(s);let t='';for(let i=0;i<u.length;i+=0x8000)t+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(t)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+function merge(a,b){const out={...a,...b};for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})])){const x=(a||{})[k],y=(b||{})[k];if(Array.isArray(x)||Array.isArray(y)){if([...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)){out[k]=y||x;continue}const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w||(v.updatedAt||0)>(w.updatedAt||0))m.set(v.id,v)}out[k]=[...m.values()]}}return out}
+async function ghGet(){const s=S();const h={Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'};const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:h,cache:'no-store'});
+ if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();let txt=j.content?b64d(j.content):'';if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{...h,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}return{data:JSON.parse(txt),sha:j.sha}}
+async function ghPut(data,sha){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:'音楽の棚 '+new Date().toISOString(),content:b64e(JSON.stringify(data)),sha})});
+ if(r.status===409||r.status===422)return false;if(!r.ok)throw new Error('GitHub '+r.status);return true}
+let busy=false,timer=null,dirty=false;
+function lab(t,c){const e=$('syncStat');e.textContent='同期：'+t;e.className='stat '+(c||'')}
+async function sync(){if(!syncOn()){lab('制作室の設定で同期をつなぐと使える','bad');return}if(busy)return;busy=true;lab('同期中…');
+ try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();const m=merge(data,D);D=m;LS.set('ss_data',JSON.stringify(D));renderAll();if(!dirty)break;if(await ghPut(D,sha)){dirty=false;break}}lab('済み '+new Date().toTimeString().slice(0,5),'okk')}catch(e){lab('できません：'+e.message,'bad')}busy=false}
+function save(){dirty=true;LS.set('ss_data',JSON.stringify(D));clearTimeout(timer);timer=setTimeout(sync,1200)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
+async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{headers:{Authorization:'Bearer '+s.t},cache:'no-store'});if(g.ok)sha=(await g.json()).sha;
+ const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:msg,content:b64,...(sha?{sha}:{})})});if(!r.ok)throw new Error('GitHub '+r.status)}
+const blobUrl={};
+async function ghAudio(path){if(blobUrl[path])return blobUrl[path];const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'force-cache'});if(!r.ok)throw new Error('GitHub '+r.status);return blobUrl[path]=URL.createObjectURL(await r.blob())}
+
+/* ===== タブ ===== */
+$('tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(!b)return;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.dataset.tab===b.dataset.tab));LS.set('bgm_tab',b.dataset.tab)};
+{const t=LS.get('bgm_tab','shelf');const b=document.querySelector(`#tabs [data-tab="${t}"]`);if(b)b.click()}
+
+/* ===== 保管庫の曲 ===== */
+let shelfF='すべて';
+const bgms=()=>D.sounds.filter(x=>!x.deleted&&x.kind==='BGM');
+function moodsOf(x){return x.moods&&x.moods.length?x.moods:(x.mood?[x.mood]:[])}
+function renderShelf(){const xs=bgms();const cnt={};xs.forEach(x=>moodsOf(x).forEach(m=>cnt[m]=(cnt[m]||0)+1));
+ const ch=['すべて','いい',...ROLES,...MOODS.filter(m=>cnt[m]),'まだ聞いていない'];
+ $('shelfF').innerHTML=ch.map(m=>`<button data-sf="${esc(m)}" aria-pressed="${m===shelfF}">${esc(m)}${cnt[m]?`<span class="n">${cnt[m]}</span>`:''}</button>`).join('');
+ const ys=xs.filter(x=>shelfF==='すべて'||(shelfF==='いい'?x.like===1:ROLES.includes(shelfF)?x.role===shelfF:shelfF==='まだ聞いていない'?x.like==null:moodsOf(x).includes(shelfF))).sort((a,b)=>(b.like||0)-(a.like||0)||(b.updatedAt||0)-(a.updatedAt||0));
+ $('shelfList').innerHTML=ys.length?ys.map(x=>`<div class="tr ${x.role?'picked':''}" data-s="${x.id}"><div class="t">${esc(x.name)}</div>
+ <div>${moodsOf(x).map(m=>`<span class="tag">${esc(m)}</span>`).join('')}${x.role?`<span class="tag role">${esc(x.role)}</span>`:''}${x.bpm?`<span class="tag">${x.bpm} BPM</span>`:''}${x.len?`<span class="tag">${Math.floor(x.len/60)}分${String(Math.round(x.len%60)).padStart(2,'0')}秒</span>`:''}</div>
+ ${x.url?`<audio controls preload="none" src="${esc(x.url)}"></audio>`:x.file?`<audio controls preload="none" data-gh="${esc(x.file)}"></audio>`:''}
+ <div class="m">${esc(x.source||'')}${x.credit?'　クレジット：'+esc(x.credit):'　クレジット不要'}${x.by==='Claude'&&x.like==null?'　（Claude が選んだ・まだ聞いていない）':''}</div>
+ <div class="row" style="margin:4px 0 0"><button class="b ${x.like===1?'on':''}" data-like="1">いい</button><button class="b ${x.like===-1?'on':''}" data-like="-1">使わない</button>
+ <select data-role style="width:auto;font-size:13px;padding:3px 6px"><option value="">役割なし</option>${ROLES.map(r=>`<option ${x.role===r?'selected':''}>${r}</option>`).join('')}</select></div></div>`).join(''):'<div class="empty">まだありません。「探す」から入れてください。</div>';
+ document.querySelectorAll('#shelfList audio[data-gh]').forEach(a=>a.addEventListener('play',async()=>{if(a.dataset.ok)return;a.pause();try{a.src=await ghAudio(a.dataset.gh);a.dataset.ok=1;a.play()}catch(e){alert('聞けません：'+e.message)}},{once:false}))}
+$('shelfF').onclick=e=>{const b=e.target.closest('[data-sf]');if(b){shelfF=b.dataset.sf;renderShelf()}};
+$('shelfList').onclick=e=>{const d=e.target.closest('[data-s]');if(!d)return;const x=D.sounds.find(y=>y.id===d.dataset.s);
+ if(e.target.matches('[data-like]')){const v=+e.target.dataset.like;x.like=x.like===v?null:v;x.updatedAt=now();save();renderShelf()}};
+$('shelfList').onchange=e=>{if(!e.target.matches('[data-role]'))return;const x=D.sounds.find(y=>y.id===e.target.closest('[data-s]').dataset.s);const r=e.target.value;
+ if(r)bgms().forEach(o=>{if(o.role===r&&o.id!==x.id){o.role='';o.updatedAt=now()}});x.role=r;x.updatedAt=now();save();renderShelf()};
+
+/* ===== 探す（目録） ===== */
+let CAT=[],findF=new Set(),shown=40,picks=new Set(JSON.parse(LS.get('bgm_picks','[]')));
+async function loadCat(){try{const r=await fetch('data/bgm_incompetech.json',{cache:'force-cache'});const j=await r.json();CAT=j.tracks.map(t=>({...t,src:j.source,lic:j.license,credit:j.credit}));renderFind()}catch(e){$('findList').innerHTML='<div class="empty">目録を読めません：'+esc(e.message)+'</div>'}}
+function renderFind(){const cnt={};CAT.forEach(t=>t.f.forEach(m=>cnt[m]=(cnt[m]||0)+1));
+ $('findF').innerHTML=MOODS.filter(m=>cnt[m]).map(m=>`<button data-ff="${esc(m)}" aria-pressed="${findF.has(m)}">${esc(m)}<span class="n">${cnt[m]}</span></button>`).join('');
+ const q=$('fQ').value.trim().toLowerCase(),bp=$('fBpm').value,ln=+$('fLen').value||0;const have=new Set(bgms().map(x=>x.catId).filter(Boolean));
+ const xs=CAT.filter(t=>[...findF].every(m=>t.f.includes(m))&&(!q||[t.t,t.d,...t.i,...t.f].join(' ').toLowerCase().includes(q))&&(!bp||(bp==='slow'?t.b&&t.b<90:bp==='mid'?t.b>=90&&t.b<=120:t.b>120))&&(!ln||t.s>=ln));
+ $('fCount').textContent=`${xs.length} 曲`+(picks.size?`／入れたい ${picks.size} 曲`:'');$('addJob').disabled=!picks.size;
+ $('findList').innerHTML=xs.slice(0,shown).map(t=>`<div class="tr ${picks.has(t.id)?'picked':''}" data-c="${esc(t.id)}"><div class="t">${esc(t.t)}${have.has(t.id)?'　<span class="tag role">保管庫にある</span>':''}</div>
+ <div>${t.f.map(m=>`<span class="tag">${esc(m)}</span>`).join('')}${t.b?`<span class="tag">${t.b} BPM</span>`:''}<span class="tag">${Math.floor(t.s/60)}分${String(t.s%60).padStart(2,'0')}秒</span>${t.i.length?`<span class="tag">${esc(t.i.join('・'))}</span>`:''}</div>
+ <audio controls preload="none" src="${esc(t.u)}"></audio><div class="m">${esc(t.d)}</div>
+ <div class="row" style="margin:4px 0 0"><button class="b ${picks.has(t.id)?'on':''}" data-pick>${picks.has(t.id)?'✓ 入れたい':'入れたい'}</button></div></div>`).join('')||'<div class="empty">合う曲がありません。印象を減らしてみてください。</div>';
+ $('more').hidden=xs.length<=shown}
+$('findF').onclick=e=>{const b=e.target.closest('[data-ff]');if(!b)return;const m=b.dataset.ff;findF.has(m)?findF.delete(m):findF.add(m);shown=40;renderFind()};
+['fQ','fBpm','fLen'].forEach(i=>$(i).addEventListener('input',()=>{shown=40;renderFind()}));
+$('more').onclick=()=>{shown+=40;renderFind()};
+$('findList').onclick=e=>{if(!e.target.matches('[data-pick]'))return;const id=e.target.closest('[data-c]').dataset.c;picks.has(id)?picks.delete(id):picks.add(id);LS.set('bgm_picks',JSON.stringify([...picks]));renderFind()};
+// 試聴は一度に一曲だけ
+document.addEventListener('play',e=>{document.querySelectorAll('audio').forEach(a=>{if(a!==e.target)a.pause()})},true);
+$('addJob').onclick=()=>{if(!picks.size)return;const have=new Set(bgms().map(x=>x.catId));let n=0;
+ for(const id of picks){const t=CAT.find(x=>x.id===id);if(!t||have.has(id))continue;D.sounds.push({id:uid('snd'),kind:'BGM',catId:t.id,name:t.t+'（'+t.src.replace(/（.*$/,'')+'）',moods:t.f,mood:t.f.join('・'),bpm:t.b,len:t.s,url:t.u,source:t.src,license:t.lic,credit:t.credit,desc:t.d,by:'作り手',like:1,createdAt:now(),updatedAt:now()});n++}
+ picks.clear();LS.set('bgm_picks','[]');save();$('addMsg').className='msg ok';$('addMsg').textContent=`${n} 曲を保管庫に入れました（「いい」付き）`;renderFind();renderShelf()};
+/* ===== 頼む・足す ===== */
+function renderJobs(){const js=D.jobs.filter(j=>!j.deleted&&(j.type==='sound_add'||j.type==='sound_collect')).sort((a,b)=>b.createdAt-a.createdAt).slice(0,8);
+ $('jobList').innerHTML=js.length?'<label>頼んだこと</label>'+js.map(j=>`<div class="job"><b>${j.type==='sound_add'?`入れてもらう（${(j.items||[]).length}曲）`:`探してもらう：${esc(j.wish||'')}`}</b>　${esc(j.status)}${j.result?'<br>'+esc(j.result):''}</div>`).join(''):''}
+$('wishGo').onclick=()=>{const w=$('wish').value.trim();if(!w)return;if(!syncOn()){$('wishMsg').textContent='制作室の設定で同期をつないでください';return}
+ D.jobs.push({id:uid('j'),type:'sound_collect',status:'待ち',wish:w,n:+$('wishN').value,createdAt:now(),updatedAt:now()});save();$('wish').value='';$('wishMsg').className='msg ok';$('wishMsg').textContent='頼みました';renderJobs()};
+$('upMoods').innerHTML=MOODS.map(m=>`<button data-um="${esc(m)}">${esc(m)}</button>`).join('');
+$('upMoods').onclick=e=>{const b=e.target.closest('[data-um]');if(b)b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true')};
+$('upGo').onclick=async()=>{const f=$('upFile').files[0],name=$('upName').value.trim();if(!f||!name){$('upMsg').textContent='名前とファイルを入れてください';return}if(f.size>30e6){$('upMsg').textContent='30MBまでです';return}if(!syncOn()){$('upMsg').textContent='制作室の設定で同期をつないでください';return}
+ $('upMsg').className='msg';$('upMsg').textContent='送っています…';const path=`roadmap/apps/seisakushitsu/sounds/BGM/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;
+ try{const b=new Uint8Array(await f.arrayBuffer());let t='';for(let i=0;i<b.length;i+=0x8000)t+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));await ghPutFile(path,btoa(t),'音楽の棚：曲を足す')}catch(e){$('upMsg').textContent='送れませんでした：'+e.message;return}
+ const moods=[...document.querySelectorAll('#upMoods [aria-pressed="true"]')].map(b=>b.dataset.um);
+ D.sounds.push({id:uid('snd'),kind:'BGM',name,moods,mood:moods.join('・'),source:$('upSrc').value.trim(),license:$('upSrc').value.trim(),credit:$('upCredit').value.trim(),file:path,by:'作り手',like:1,createdAt:now(),updatedAt:now()});save();
+ $('upMsg').className='msg ok';$('upMsg').textContent='入れました';['upName','upSrc','upCredit'].forEach(i=>$(i).value='');$('upFile').value='';document.querySelectorAll('#upMoods button').forEach(b=>b.removeAttribute('aria-pressed'));renderShelf()};
+
+function renderAll(){renderShelf();renderJobs();if(CAT.length)renderFind()}
+renderAll();loadCat();sync();
+</script>
+</body></html>

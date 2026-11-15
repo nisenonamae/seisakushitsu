@@ -315,7 +315,14 @@ if a.bgm:
     bg=np.zeros((N,2));XF=int(2.0*SR2)
     for i,x in enumerate(spec):
         s0=int(starts[i]*SR2);s1=int(starts[i+1]*SR2) if i+1<len(spec) else N;L=min(N,s1+XF)-s0
-        y=load(os.path.join(a.repo,x['file']) if a.repo and not os.path.isabs(x['file']) else x['file'])
+        fpath=x.get('file') or x.get('url')
+        if str(fpath).startswith('http'):   # 音楽の棚の目録から入れた曲（ファイルは置かず、URL で持つ）→ 取ってきて使う
+            import hashlib,urllib.request as _u
+            cdir='/home/claude/bgm_cache';os.makedirs(cdir,exist_ok=True);cp_=os.path.join(cdir,hashlib.md5(fpath.encode()).hexdigest()+'.mp3')
+            if not os.path.exists(cp_):_u.urlretrieve(fpath,cp_)
+            fpath=cp_
+        elif a.repo and not os.path.isabs(fpath):fpath=os.path.join(a.repo,fpath)
+        y=load(fpath)
         y=y/max(1e-9,np.sqrt((y**2).mean()))   # 曲ごとの大きさをそろえる
         seg=np.zeros((L,2));pos=[0]
         while pos[-1]+len(y)<L:pos.append(pos[-1]+len(y)-XF)   # 曲が短ければ、つなぎ目を重ねてくり返す
