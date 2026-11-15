@@ -29,8 +29,11 @@ else:
 from voicevox_core.blocking import Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile
 ort=Onnxruntime.load_once(filename=f'{V}/ort/voicevox_onnxruntime-linux-x64-1.17.3/lib/libvoicevox_onnxruntime.so.1.17.3')
 syn=Synthesizer(ort,OpenJtalk(f'{V}/dict/open_jtalk_dic_utf_8-1.11'))
+# 声の型（.vvm）は全部読むとメモリが足りないので、使う声が入っているものだけ読む
 for f in sorted(os.listdir(f'{V}/models')):
-    with VoiceModelFile.open(f'{V}/models/{f}') as m: syn.load_voice_model(m)
+    with VoiceModelFile.open(f'{V}/models/{f}') as m:
+        if any(s.id==a.voice for c in m.metas for s in c.styles): syn.load_voice_model(m);break
+else: raise SystemExit(f'声 {a.voice} の型が {V}/models にない（bash tools/setup_voice.sh を見直す）')
 def _moras(q):
     """AudioQuery から、モーラごとの終わりの時刻（話す速さ込み）を出す"""
     t=q.pre_phoneme_length;ends=[]
