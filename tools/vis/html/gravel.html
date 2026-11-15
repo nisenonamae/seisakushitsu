@@ -15,6 +15,7 @@
  lab      … 左：筒の中の土をおもりで押す実験（少しずつ縮む）。右：画面の中の計算で、波がだんだん育つ
  bounce   … 小さなでこぼこで上下に揺れる車。下で波が育つ。times[1] で上下の揺れの矢印が大きく光る */
 window.DEF={mode:'spots'};
+window.init=function(){if(P.img)loadImg('from',P.img)};
 const BASE=520;const gauss=(x,c,w)=>Math.exp(-Math.pow((x-c)/w,2));
 function sky2(){sky('#8fbbe0','#efdcbc');hills(0,[['#cdb48c',420,24,0]])}
 function layers(top,x0=-20,x1=W+20,base){ground(top,x0,x1,base||'#c9a46a');for(const [y,c] of [[560,'rgba(150,110,70,.30)'],[620,'rgba(120,85,55,.35)'],[680,'rgba(95,65,42,.40)']]){g.save();g.beginPath();g.moveTo(x0,H);for(let x=x0;x<=x1;x+=6)g.lineTo(x,Math.max(top(x)+6,y));g.lineTo(x1,H);g.closePath();g.fillStyle=c;g.fill();g.restore()}}
@@ -51,13 +52,16 @@ window.render=function(t){const m=P.mode;
  }
  else if(m==='brake'){
    sky2();const t1=T(1,DUR*0.1),t2=T(2,DUR*0.5);const A1=ease((t-t1-0.4)/0.8),A2=ease((t-t2-0.6)/0.8);
-   const top=x=>BASE-28*A1*Math.max(0,Math.sin(2*Math.PI*(x-260)/90))*(x>260&&x<560?1:0)-28*A2*Math.max(0,Math.sin(2*Math.PI*(x-760)/90))*(x>760&&x<1060?1:0);layers(top);
+   const hump=(x,x0,n)=>(x>x0&&x<x0+90*(n-1)+45)?Math.max(0,Math.sin(2*Math.PI*(x-x0)/90)):0;   // 山は必ず丸ごと（途中で切らない）
+   const top=x=>BASE-28*A1*hump(x,260,4)-28*A2*hump(x,760,4);layers(top);
    // 1台目：急発進（後ろへ砂）
    {const d=Math.max(0,t-t1);const x=200+420*d*d;if(x<W+300){car(x,BASE-34,1,{col:'#c0392b',heads:2,t,wheelR:34,wheelAng:x/34,bob:d<0.6?6*Math.sin(d*10)*0:0});if(t>t1&&d<1.2){sfxOnce('a',t1,'engine',1.2);const r2=R(3);for(let i=0;i<30;i++){const dd=(d*1.5+r2())%1;g.fillStyle=`rgba(200,170,120,${0.8*(1-dd)})`;g.beginPath();g.arc(x-110-dd*200,BASE-10-dd*80*r2(),3+3*r2(),0,7);g.fill()}}}}
    // 2台目：急ブレーキ（前が沈む）
    const en=Math.max(t2-1.4,t1+1.3),tb=Math.max(0.7,t2-en),v0=728/tb;if(t>en){const d=t-en;const x=d<tb?-200+v0*d:-200+v0*tb+v0*Math.min(0.5,d-tb)-v0*Math.min(0.5,d-tb)**2;const dive=d>tb&&d<tb+0.9?Math.sin(Math.PI*clamp((d-tb)/0.9))*10:0;
      g.save();g.translate(x,BASE-34);g.rotate(dive*0.004);car(0,0,1,{col:'#2f5d9f',heads:dive*0.4,t,wheelR:34,wheelAng:x/34});g.restore();if(d>tb)sfxOnce('b',t2,'puff');
      if(d>tb&&d<tb+1){const r2=R(5);for(let i=0;i<24;i++){const dd=((d-tb)*1.5+r2())%1;g.fillStyle=`rgba(200,170,120,${0.8*(1-dd)})`;g.beginPath();g.arc(x+120+dd*120,BASE-6-dd*60*r2(),3+3*r2(),0,7);g.fill()}}}
+   // img：前の場面（資料の写真）から溶けるようにつなぐ
+   if(IMG.from){const k=1-ease(t/0.7);if(k>0){g.save();g.globalAlpha=k;const im=IMG.from,sc=Math.max(W/im.width,H/im.height);g.drawImage(im,(W-im.width*sc)/2,(H-im.height*sc)/2,im.width*sc,im.height*sc);g.restore()}}
  }
  else if(m==='surge'){
    sky2();const t1=T(1,DUR*0.35);const off=t*170;const wx=520,r=170;const born=t>t1?(t1*170+wx):1e9;

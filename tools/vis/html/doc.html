@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 資料（本物の紙面の画像）を机の上に置き、話している所へ寄る。
+ img   … 紙面の画像（見開きでもよい）
+ marks … 蛍光ペンで塗る所 [[x,y,w,h],…]（画像の幅・高さに対する割合）。times[1] で寄って、続けて左から塗る
+ focus … marks のあとに寄る所 [x,y,w,h]（割合）。最後はそこが画面いっぱいになって終わる（次の場面へつなぐ） */
+window.DEF={img:'',marks:[],focus:null};
+window.init=function(){if(P.img)loadImg('doc',P.img)};
+function view(cx,cy,z){g.translate(W/2,H/2);g.scale(z,z);g.translate(-cx,-cy)}
+window.render=function(t){const im=IMG.doc;const bg=g.createRadialGradient(640,360,100,640,360,900);bg.addColorStop(0,'#5a4636');bg.addColorStop(1,'#2a2019');g.fillStyle=bg;g.fillRect(0,0,W,H);if(!im)return;
+  const ph=660,pw=ph*im.width/im.height;const x0=(W-pw)/2,y0=(H-ph)/2;const R2=(r)=>[x0+r[0]*pw,y0+r[1]*ph,r[2]*pw,r[3]*ph];
+  // カメラ：全体 → 塗る所 → 最後に focus
+  const t1=T(1,DUR*0.3),tf=DUR-1.3;const mk=(P.marks||[]).map(R2);
+  let box=[x0-20,y0-20,pw+40,ph+40];
+  if(mk.length){const xs=mk.flatMap(r=>[r[0],r[0]+r[2]]),ys=mk.flatMap(r=>[r[1],r[1]+r[3]]);const mb=[Math.min(...xs)-60,Math.min(...ys)-80,Math.max(...xs)-Math.min(...xs)+120,Math.max(...ys)-Math.min(...ys)+160];const u=ease((t-t1)/1.1);box=box.map((v,i)=>lerp(v,mb[i],u))}
+  if(P.focus){const f=R2(P.focus);const u=ease((t-tf)/1.1);box=box.map((v,i)=>lerp(v,f[i],u))}
+  const fu=P.focus?ease((t-tf)/1.1):0;const z=lerp(Math.min(W/box[2],H/box[3])*0.98,Math.max(W/box[2],H/box[3]),fu);const cx=box[0]+box[2]/2,cy=box[1]+box[3]/2;
+  g.save();view(cx,cy,z);
+  g.fillStyle='rgba(0,0,0,.45)';g.fillRect(x0+10,y0+12,pw,ph);g.drawImage(im,x0,y0,pw,ph);
+  // 蛍光ペン
+  mk.forEach((r,i)=>{const s=t1+1.1+i*0.45;const k=ease((t-s)/0.45);if(k<=0)return;if(i===0)sfxOnce('hl',s,'tick');g.fillStyle='rgba(255,226,74,.45)';g.fillRect(r[0]-3,r[1]-1,(r[2]+6)*k,r[3]+2)});
+  g.restore();
+  if(P.focus&&t>tf)sfxOnce('z',tf,'whoosh');
+};
+</script></body></html>
