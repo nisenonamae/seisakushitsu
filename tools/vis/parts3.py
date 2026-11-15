@@ -197,6 +197,9 @@ def html_scene(s,dur,out,repo=''):
     import asyncio,base64
     from playwright.async_api import async_playwright
     page=os.path.join(HERE,'html',s['page']+'.html');params={k:v for k,v in s.items() if k not in('t','page','cam')}
+    for k in ('img','portrait'):   # データのリポジトリ内のパスなら、絶対パスに直す
+        v=params.get(k)
+        if isinstance(v,str) and v and not v.startswith(('/','http')):params[k]=os.path.join(repo,v)
     async def run():
         async with async_playwright() as p:
             b=await p.chromium.launch(args=['--allow-file-access-from-files','--disable-web-security']);pg=await b.new_page(viewport={'width':W,'height':H});await pg.goto('file://'+page)
