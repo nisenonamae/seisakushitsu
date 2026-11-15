@@ -27,7 +27,15 @@ window.render=function(t){
   // 砂の輪
   g.fillStyle='#cfa86c';g.beginPath();g.ellipse(CX,CY,RX*0.96,RY*0.96,0,0,7);g.fill();g.fillStyle='#8c96a3';g.beginPath();g.ellipse(CX,CY,RX*0.56,RY*0.56,0,0,7);g.fill();g.fillStyle='#5b6470';g.beginPath();g.ellipse(CX,CY,22,8,0,0,7);g.fill();
   const rot=t*2*Math.PI*0.6;
-  for(const p of grains){const [x,y]=E(p.a+rot,p.r);g.fillStyle=p.l<.5?'rgba(140,105,60,.6)':'rgba(245,225,180,.7)';g.fillRect(x,y,2.4,1.6)}
+  for(const p of grains){if(P.mode==='smooth')break;const [x,y]=E(p.a+rot,p.r);g.fillStyle=p.l<.5?'rgba(140,105,60,.6)':'rgba(245,225,180,.7)';g.fillRect(x,y,2.4,1.6)}
+  if(P.mode==='smooth'){ // 滑らかな砂：つやを足し、時計で時間の経過。最後の2割でやっと波
+    g.fillStyle='rgba(255,250,235,.25)';g.beginPath();g.ellipse(CX-60,CY-20,RX*0.5,RY*0.25,0,0,7);g.fill();
+    const dt=Math.max(0,t-lastT);lastT=t;const late=clamp((t-DUR*0.72)/(DUR*0.25));if(late>0){const born=Math.floor(AMP.length*0.75);const reach=Math.floor(AMP.length*late);for(let i=0;i<=reach;i++){const j=(born-i+AMP.length)%AMP.length;AMP[j]=Math.min(1,AMP[j]+dt*2)}if(!window._b){window._b=1;window.SFX.push([t,'pop'])}}
+    ripplesOn(rot);
+    const cx=150,cy=130,r=78;g.fillStyle='#f8fafc';g.beginPath();g.arc(cx,cy,r,0,7);g.fill();g.strokeStyle='#374151';g.lineWidth=6;g.stroke();for(let i=0;i<12;i++){const a=i*Math.PI/6;g.beginPath();g.moveTo(cx+Math.cos(a)*r*0.8,cy+Math.sin(a)*r*0.8);g.lineTo(cx+Math.cos(a)*r*0.92,cy+Math.sin(a)*r*0.92);g.stroke()}
+    const hrs=t/DUR*5;const ah=-Math.PI/2+hrs*Math.PI/6,am=-Math.PI/2+hrs*2*Math.PI;g.lineCap='round';g.lineWidth=8;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(ah)*r*0.5,cy+Math.sin(ah)*r*0.5);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(am)*r*0.75,cy+Math.sin(am)*r*0.75);g.stroke();
+    if(Math.floor(hrs*4)!==window._h){window._h=Math.floor(hrs*4);window.SFX.push([t,'tick'])}
+  }
   if(P.mode==='grow'){ // 早回しで数十周。1か所に波が生まれ（times[1]）、そこから回る向きへ次々に広がり（times[2]〜[3]）、通り道を埋める
     const tm=P.times||[0,DUR*0.3,DUR*0.45,DUR*0.8];const tb=tm[1],tsp=tm[2]||tb+1,tf=tm[3]||DUR*0.85;const dt=Math.max(0,t-lastT);lastT=t;
     const born=Math.floor(AMP.length*0.75);if(t>=tb)AMP[born]=Math.min(1,AMP[born]+dt*1.2);
@@ -41,7 +49,7 @@ window.render=function(t){
   {const [x,y]=[CX+(RX+30)*Math.cos(0.25*Math.PI),CY+TH+30+(RY+30)*Math.sin(0.25*Math.PI)];g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.moveTo(x+18,y-16);g.lineTo(x-8,y-6);g.lineTo(x+10,y+12);g.fill()}
   // 車輪（台の手前、砂の輪の上）
   const wx=CX+40,wyS=CY+RY*0.78;let lift=0;
-  if(P.mode==='lower'){lift=170*(1-ease((t-P.drop)/0.8))}else if(P.mode==='grow'){lift=3+3*Math.sin(t*14)}else{lift=8+7*Math.sin(t*9)+5*Math.sin(t*23)}
+  if(P.mode==='lower'){lift=170*(1-ease((t-P.drop)/0.8))}else if(P.mode==='grow'||P.mode==='smooth'){lift=3+3*Math.sin(t*14)}else{lift=8+7*Math.sin(t*9)+5*Math.sin(t*23)}
   const wy=wyS-lift;
   // 腕（右奥の柱から）
   g.fillStyle='#4b5563';g.fillRect(1090,180,26,380);g.strokeStyle='#9aa3ae';g.lineWidth=12;g.lineCap='round';g.beginPath();g.moveTo(1103,200);g.lineTo(wx+13,wy-58);g.stroke();

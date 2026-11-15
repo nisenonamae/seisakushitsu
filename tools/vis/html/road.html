@@ -8,12 +8,12 @@
 window.DEF={mode:'timelapse'};
 // 道の台形（奥が狭い）。s＝0（手前）〜1（奥）
 function roadPt(s,q){const yN=640,yF=250,wN=900,wF=180;if(s<0){const y=yN-s*520,w=wN*(1-s*0.7);return [640+(q-0.5)*w,y]}const y=lerp(yN,yF,Math.pow(s,0.8));const w=lerp(wN,wF,Math.pow(s,0.8));return [640+(q-0.5)*w,y]}
-function drawRoad(A,t,phase=0){sky('#a9c8e4','#efdcbc');hills(0,[['#c9a978',262,14,0]]);const gr=g.createLinearGradient(0,250,0,H);gr.addColorStop(0,'#c9ad7f');gr.addColorStop(1,'#a8875a');g.fillStyle=gr;g.fillRect(0,250,W,H-250);
+function drawRoad(A,t,phase=0,Af=null){sky('#a9c8e4','#efdcbc');hills(0,[['#c9a978',262,14,0]]);const gr=g.createLinearGradient(0,250,0,H);gr.addColorStop(0,'#c9ad7f');gr.addColorStop(1,'#a8875a');g.fillStyle=gr;g.fillRect(0,250,W,H-250);
   const r2=R(3);for(let i=0;i<70;i++){const y=260+Math.pow(r2(),0.7)*460,x=r2()*W,sz=(y-250)/460;g.fillStyle='rgba(120,100,55,.55)';g.beginPath();g.ellipse(x,y,10+30*sz,4+10*sz,0,0,7);g.fill();g.fillStyle='rgba(150,135,80,.6)';g.beginPath();g.ellipse(x+5,y-3*sz,6+16*sz,3+7*sz,0,0,7);g.fill()}
   const p=[roadPt(-0.6,0),roadPt(-0.6,1),roadPt(1,1),roadPt(1,0)];   // 道は画面の下の端より先まで続く
   g.fillStyle='#cfa86c';g.beginPath();g.moveTo(...p[0]);for(const q of p.slice(1))g.lineTo(...q);g.fill();
-  if(A>0.01){const N=26;for(let i=-16;i<N;i++){const s0=(i+phase)/N,s1=(i+0.45+phase)/N;if(s1>1)continue;const a=roadPt(s0,0),b=roadPt(s0,1),c=roadPt(s1,1),d=roadPt(s1,0);g.fillStyle=`rgba(120,88,52,${0.6*A})`;g.beginPath();g.moveTo(...a);g.lineTo(...b);g.lineTo(...c);g.lineTo(...d);g.fill();
-    const e=roadPt(s1,0),f=roadPt(s1,1),h=roadPt(Math.min(1,s1+0.18/N),1),k=roadPt(Math.min(1,s1+0.18/N),0);g.fillStyle=`rgba(255,240,205,${0.5*A})`;g.beginPath();g.moveTo(...e);g.lineTo(...f);g.lineTo(...h);g.lineTo(...k);g.fill()}}}
+  if(A>0.01){const N=26;for(let i=-16;i<N;i++){const s0=(i+phase)/N,s1=(i+0.45+phase)/N;if(s1>1)continue;const AA=Af?Af(s0):A;if(AA<0.01)continue;const a=roadPt(s0,0),b=roadPt(s0,1),c=roadPt(s1,1),d=roadPt(s1,0);g.fillStyle=`rgba(120,88,52,${0.6*AA})`;g.beginPath();g.moveTo(...a);g.lineTo(...b);g.lineTo(...c);g.lineTo(...d);g.fill();
+    const e=roadPt(s1,0),f=roadPt(s1,1),h=roadPt(Math.min(1,s1+0.18/N),1),k=roadPt(Math.min(1,s1+0.18/N),0);g.fillStyle=`rgba(255,240,205,${0.5*AA})`;g.beginPath();g.moveTo(...e);g.lineTo(...f);g.lineTo(...h);g.lineTo(...k);g.fill()}}}
 function miniCar(s,lane,col){const [x,y]=roadPt(s,lane);const k=s<0?1-s*0.7:lerp(1,0.2,Math.pow(s,0.8));if(s>0.99||s<-0.6)return;g.save();g.globalAlpha=clamp((1-s)/0.12);g.translate(x,y);g.scale(k,k);
   g.fillStyle='rgba(0,0,0,.28)';g.beginPath();g.ellipse(0,4,82,14,0,0,7);g.fill();
   g.fillStyle='#1b1d22';g.beginPath();g.roundRect(-72,-22,26,26,6);g.roundRect(46,-22,26,26,6);g.fill();
@@ -23,6 +23,12 @@ function miniCar(s,lane,col){const [x,y]=roadPt(s,lane);const k=s<0?1-s*0.7:lerp
   g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.moveTo(-36,-104);g.lineTo(-10,-108);g.lineTo(-30,-78);g.lineTo(-44,-78);g.closePath();g.fill();
   g.fillStyle='#fff7d6';g.beginPath();g.roundRect(-72,-58,28,14,6);g.roundRect(44,-58,28,14,6);g.fill();g.fillStyle='#1f2937';g.beginPath();g.roundRect(-34,-46,68,16,4);g.fill();g.fillStyle='#e5e7eb';g.fillRect(-20,-24,40,8);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(-76,-26,152,6);g.restore()}
 window.render=function(t){
+  if(P.mode==='spread'){const u=ease((t-0.3)/Math.max(1,DUR*0.8));const c=0.45,half=lerp(0.06,1.2,u);drawRoad(1,t,0,x=>clamp(1-(Math.abs(x-c)-half)/0.06));
+    const cars=[];for(let i=0;i<3;i++){const s=1-((t*0.2+i/3)%1)*1.6;cars.push([s,0.36+0.28*(i%2),['#c0392b','#2f5d9f','#e6e2d8'][i]])}cars.sort((a,b)=>b[0]-a[0]).forEach(c=>miniCar(...c));sfxOnce('amb',0,'car',DUR);return}
+  if(P.mode==='moving'){const ph=(t*0.35)%1;drawRoad(1,t,ph);
+    // 道ばたの石（動かない目印）
+    const [x,y]=roadPt(0.18,1.12);g.fillStyle='#7d7468';g.beginPath();g.ellipse(x,y-14,46,26,0,0,7);g.fill();g.fillStyle='#9c9184';g.beginPath();g.ellipse(x-8,y-22,26,12,0,0,7);g.fill();
+    sfxOnce('amb',0,'car',DUR);return}
   if(P.mode==='timelapse'){const A=ease((t-0.6)/Math.max(1,DUR-1.2));drawRoad(A,t);
     const cols=['#c0392b','#2f5d9f','#e6e2d8','#3b3b3b','#7a8f3c'];const cars=[];for(let i=0;i<4;i++){const s=1-((t*0.2+i/4)%1)*1.6;cars.push([s,0.36+0.28*(i%2),cols[i]])}cars.sort((a,b)=>b[0]-a[0]).forEach(c=>miniCar(...c))
     // 早回しの時計

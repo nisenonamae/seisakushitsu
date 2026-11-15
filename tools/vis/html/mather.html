@@ -48,7 +48,7 @@ function storyRender(t){
   if(t>=T7&&t<T8)rut=Math.min(1,rut+da*0.12);
   if(t>T9){const born=Math.floor(amp.length*0.15),age=t-T9;const spread=Math.min(amp.length,Math.floor(age*14));for(let i=0;i<spread;i++){const j=(born+i)%amp.length;amp[j]=Math.min(1,amp[j]+da*0.25*(1+0.5*Math.sin(j*0.7)))}sfxOnce('w',T9,'pop')}
   trough(ease((t-T1)/0.9),ease(t/0.5));
-  if(t<T1+0.6){const k=back((t-0.2)/0.35);if(k>0){g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(CX-RX,CY+RY+80);g.lineTo(CX+RX,CY+RY+80);g.stroke();label(CX,CY+RY+80,'約60cm',k,'#ffd36a',30);sfxOnce('d',0.2,'tick')}}
+  if(t<T1+0.6){const k=back((t-0.2)/0.35);if(k>0){g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(CX-RX,CY+RY+80);g.globalAlpha=0;g.stroke();g.globalAlpha=1}}
   if(t>T1)sfxOnce('s',T1,'puff');
   if(t>T1)ripples();
   const a=Math.PI*0.35+ang;const back_=Math.sin(a)<0;   // 奥にいるときは、車輪を先に描いて真ん中の柱の後ろに隠す
@@ -66,7 +66,7 @@ window.render=function(t){
   if(m==='intro'){
     const t1=T(1,1.2),t2=T(2,2.2),t3=T(3,3.0),t4=T(4,3.8);
     trough(ease((t-t1)/0.9),ease(t/0.5));
-    if(t<t1+0.8){const k=back((t-0.3)/0.35);if(k>0){g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(CX-RX,CY+RY+70);g.lineTo(CX+RX,CY+RY+70);g.stroke();label(CX,CY+RY+70,'直径 約60cm',k,'#ffd36a',34);sfxOnce('d',0.3,'pop')}}
+    if(t<t1+0.8){const k=back((t-0.3)/0.35);if(k>0){g.strokeStyle='#ffd36a';g.lineWidth=4;g.beginPath();g.moveTo(CX-RX,CY+RY+70);g.globalAlpha=0;g.stroke();g.globalAlpha=1}}
     if(t>t1)sfxOnce('s',t1,'puff');
     if(t>t2)hub();
     const a=Math.PI*0.35+(t>t4?(t-t4)*1.1:0);
