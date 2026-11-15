@@ -5,7 +5,7 @@
 
 | 部品 `t` | 使いどころ | 主な指定 |
 |---|---|---|
-| `photo` | 実物の写真にゆっくり寄る | `src`（Commons のページ URL か、データのリポジトリ内のパス）, `ticks`（true＝等間隔の目盛り／"fadeout"）, `text`, `text_at`, `zoom`, `fadein` |
+| `photo` | 実物の写真にゆっくり寄る | `src`（Commons のページ URL か、データのリポジトリ内のパス）, `ticks`（true＝等間隔の目盛り／"fadeout"）, `text`, `text_at`, `zoom`, `fadein`, `fadeout`（秒：動画の終わりに黒へ） |
 | ~~`bigtext`~~ | **使わない（文字だけの画面は禁止）** | `text`, `sub`, `flash`（"gauge8"＝最後に速度計を一瞬） |
 | `map` | 世界地図で国を塗る → 写真へ。**`zoom` は 1 つの国だけに注目するときだけ**（いろいろな国を挙げる動画では寄らない） | `highlight`（国の ISO3 の並び）, `zoom`（true＝その国へ寄る）, `labels`（{ISO3: 文字}）, `pins`（[[経度,緯度,文字]]）, `photo`, `photo_at`, `photo_text` |
 | `cards` | 札が並ぶ／落ちて一部だけ残る | `groups`（札の行の並び）, `keep`（残す札）, `keep_at`, `title` |
