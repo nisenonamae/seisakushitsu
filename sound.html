@@ -57,9 +57,10 @@ button.b.del{color:var(--busy)}
 .box{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin:10px 0}
 .ab{display:inline-flex;gap:4px;flex-wrap:wrap}.ab button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .cue select{margin-top:6px}
+.pts{border-top:1px dashed var(--line);margin-top:6px}.pt{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:3px 0}.pt .tm{font-weight:700;font-size:13px;min-width:56px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><span class="stat">版 11/15 21:40</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><span class="stat">版 11/15 22:05</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
 <p class="hint">動画を流しながら BGM を置いて、その場で聞いて直す所。ここでの直しとメモを Claude が読んで、BGM の付け方を覚えていく（声の調整室と同じやり方）。</p>
 <div class="row"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="msg" id="projMsg"></span></div>
@@ -118,6 +119,10 @@ const fmt=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=t-m*60;return m+':'+
 const STD=0.12;   // 書き出しの標準の大きさ（声の大きさに対する倍率。約 −18dB）
 const XF=2.0;     // 曲と曲のつなぎ目（秒）
 const dbOf=v=>Math.round(20*Math.log10(Math.max(1e-6,v/STD))*2)/2, volOf=db=>STD*Math.pow(10,db/20);
+// 大きさの変化点：曲の頭の大きさ（vol）から、変化点（pts：{t:秒, db}）へなめらかに（直線で）変わる。最後の点のあとはその大きさのまま
+const ptsOf=c=>(c.pts||[]).filter(p=>p.t>c.at).sort((a,b)=>a.t-b.t);
+function dbAt(c,t){const b=20*Math.log10(Math.max(1e-6,(c.vol??STD)/STD));const ps=[{t:c.at,db:b},...ptsOf(c)];if(t<=ps[0].t)return ps[0].db;for(let i=1;i<ps.length;i++)if(t<=ps[i].t){const a=ps[i-1],z=ps[i];return a.db+(z.db-a.db)*(t-a.t)/Math.max(1e-6,z.t-a.t)}return ps[ps.length-1].db}
+const volAt=(c,t)=>volOf(dbAt(c,t));
 
 /* ===== 状態 ===== */
 let P=null, BASE=null, W=null, AB=LS.get('snd_ab','mine'), DUCKG=null;   // W＝いま編集中の BGM（保存前）
@@ -169,7 +174,7 @@ async function tick(){const v=$('vid'),t=v.currentTime,on=!v.paused&&!v.ended;co
   pos.forEach((p,k)=>{const u=t-s.t0-p;if(u<0||u>len)return;const key=s.c.id+':'+k;want.add(key);
    let a=EL[key];if(!a){a=EL[key]=new Audio();a.preload='auto';a.src=m.src}
    let g=envAt(s,t);if(k>0&&u<XF)g*=u/XF;if(k+1<pos.length&&len-u<XF)g*=(len-u)/XF;
-   a.volume=Math.max(0,Math.min(1,(s.c.vol??STD)*BASE.vr/m.rms*duckAt(t)*g*v.volume*(v.muted?0:1)));
+   a.volume=Math.max(0,Math.min(1,volAt(s.c,t)*BASE.vr/m.rms*duckAt(t)*g*v.volume*(v.muted?0:1)));
    const want_t=off+u;if(on){if(a.paused||Math.abs(a.currentTime-want_t)>0.25){try{a.currentTime=want_t}catch(e){}a.play().catch(()=>{})}}else{if(!a.paused)a.pause()}})}
  for(const k in EL)if(!want.has(k)){EL[k].pause()}
  drawTl();$('nowAt').textContent='今 '+fmt(t)+'　'+(blockAt(t)?.label||'')}
@@ -189,7 +194,9 @@ function drawTl(){const c=$('tl');if(!BASE)return;const w=c.clientWidth;if(c.wid
  g.fillStyle='rgba(120,130,150,.35)';const t_=BASE.talk;for(let i=0;i<t_.length;i++)if(t_[i]==='1')g.fillRect(X(i*BASE.hop),20,Math.max(1,X(BASE.hop)),6);
  const pl=cur();const ss=(pl&&pl.cues||[]).slice().sort((a,b)=>a.at-b.at);
  ss.forEach((cq,i)=>{const t1=ss[i+1]?ss[i+1].at:T;const y=34;if(cq.none||!cq.soundId){g.strokeStyle=css.getPropertyValue('--sub');g.setLineDash([3,3]);g.strokeRect(X(cq.at),y,X(t1)-X(cq.at),18);g.setLineDash([])}else{g.fillStyle=colOf(cq.soundId);g.globalAlpha=.75;g.fillRect(X(cq.at),y,X(t1)-X(cq.at),18);g.globalAlpha=1;
-  const nm=(D.sounds.find(x=>x.id===cq.soundId)||{}).name||'';g.fillStyle='#fff';g.font='11px sans-serif';g.save();g.beginPath();g.rect(X(cq.at),y,X(t1)-X(cq.at)-2,18);g.clip();g.fillText(nm.replace(/（.*$/,''),X(cq.at)+4,y+13);g.restore()}
+  const nm=(D.sounds.find(x=>x.id===cq.soundId)||{}).name||'';g.fillStyle='#fff';g.font='11px sans-serif';g.save();g.beginPath();g.rect(X(cq.at),y,X(t1)-X(cq.at)-2,18);g.clip();g.fillText(nm.replace(/（.*$/,''),X(cq.at)+4,y+13);g.restore();
+  if(ptsOf(cq).length){g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();const Y=db=>y+17-Math.max(0,Math.min(16,(db+15)/27*16));for(let k=0;k<=60;k++){const tt=cq.at+(t1-cq.at)*k/60;k?g.lineTo(X(tt),Y(dbAt(cq,tt))):g.moveTo(X(tt),Y(dbAt(cq,tt)))}g.stroke();g.lineWidth=1;
+   ptsOf(cq).forEach(p=>{if(p.t<t1){g.fillStyle='#fff';g.beginPath();g.arc(X(p.t),Y(p.db),2.5,0,7);g.fill()}})}}
   g.fillStyle=css.getPropertyValue('--ink');g.fillRect(X(cq.at)-1,y-3,2,24)});
  const t=$('vid').currentTime;g.fillStyle=css.getPropertyValue('--busy');g.fillRect(X(t)-1,0,2,74);
  g.fillStyle=css.getPropertyValue('--sub');g.font='10px sans-serif';g.fillText(AB==='claude'?'Claude の案':AB==='none'?'音楽なし':'自分の調整',2,68)}
@@ -209,6 +216,9 @@ function renderCues(){const y=window.scrollY;const cs=W.cues.slice().sort((a,b)=
  <div><label>曲のどこから流すか：<b>${fmt(c.off||0)}</b></label><input type="range" data-f="off" min="0" max="${Math.max(10,Math.floor((META[c.soundId]||{}).len||180)-5)}" step="0.5" value="${c.off||0}"></div>
  <div><label>入りのフェード：<b>${(c.fadeIn??(i===0?1:XF)).toFixed(1)}秒</b></label><input type="range" data-f="fadeIn" min="0" max="8" step="0.5" value="${c.fadeIn??(i===0?1:XF)}"></div>
  <div><label>終わりのフェード：<b>${(c.fadeOut??(nx?XF:3)).toFixed(1)}秒</b></label><input type="range" data-f="fadeOut" min="0" max="8" step="0.5" value="${c.fadeOut??(nx?XF:3)}"></div></div>`}
+ ${c.none?'':`<div class="pts"><div class="row" style="margin:6px 0 2px"><b style="font-size:13px">大きさの変化</b><button class="b sm" data-k="padd">＋ 今の位置に変化点</button><span class="hint">曲の頭の大きさ（上の「大きさ」）から、変化点の大きさへなめらかに変わる。最後の変化点のあとはその大きさのまま</span></div>
+ ${ptsOf(c).map((p,pi)=>`<div class="pt" data-pi="${pi}"><span class="tm">${fmt(p.t)}</span><button class="b sm" data-k="p-">−0.5秒</button><button class="b sm" data-k="p+">＋0.5秒</button><button class="b sm" data-k="phere">今の位置に</button><button class="b sm" data-k="pgo">少し前から再生</button>
+  <label style="margin:0 0 0 6px;display:inline">→ <b>${p.db>0?'+':''}${p.db} dB</b></label><input type="range" data-pf="db" min="-30" max="12" step="0.5" value="${p.db}" style="width:180px;vertical-align:middle"><button class="b sm del" data-k="pdel">消す</button></div>`).join('')}</div>`}
  ${c.why?`<div class="m">Claude のねらい：${esc(c.why)}</div>`:''}</div>`}).join(''):'<div class="empty">まだ曲を置いていません。動画を流して「＋ 今の位置から曲を入れる」。</div>');
  $('cues').querySelectorAll('input,select').forEach(e=>e.disabled=!mine);
  $('duck').value=W.duck??1.6;$('duckV').textContent=(+$('duck').value).toFixed(1);window.scrollTo(0,y);drawTl()}
@@ -218,12 +228,20 @@ $('cues').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const c=
  if(AB!=='mine')return;
  if(k==='-')c.at=Math.max(0,+(c.at-0.5).toFixed(2));if(k==='+')c.at=Math.min(BASE.duration-1,+(c.at+0.5).toFixed(2));if(k==='here')c.at=+v.currentTime.toFixed(2);
  if(k==='del'){if(!confirm('この曲を消しますか？'))return;W.cues=W.cues.filter(x=>x!==c)}
+ if(k==='padd'){const t=+v.currentTime.toFixed(2),cs=W.cues.slice().sort((a,b)=>a.at-b.at),nx=cs[cs.indexOf(c)+1];
+  if(t<=c.at||(nx&&t>=nx.at)){alert('変化点は、この曲が流れている間（'+fmt(c.at)+'〜'+(nx?fmt(nx.at):'終わり')+'）に置きます。動画をその所まで進めてから押してください');return}
+  c.pts=ptsOf(c);c.pts.push({t,db:Math.round(dbAt(c,t)*2)/2});c.pts.sort((a,b)=>a.t-b.t)}
+ const pe=b.closest('[data-pi]');if(pe){const ps=ptsOf(c),p=ps[+pe.dataset.pi];c.pts=ps;
+  if(k==='p-')p.t=Math.max(c.at+0.1,+(p.t-0.5).toFixed(2));if(k==='p+')p.t=+(p.t+0.5).toFixed(2);if(k==='phere')p.t=+v.currentTime.toFixed(2);
+  if(k==='pgo'){v.currentTime=Math.max(0,(ps[+pe.dataset.pi-1]||{t:c.at}).t-1);v.play();return}
+  if(k==='pdel')c.pts=ps.filter(x=>x!==p);c.pts.sort((a,b)=>a.t-b.t)}
  changed();renderCues()};
-$('cues').oninput=e=>{const f=e.target.dataset.f;if(!f||AB!=='mine')return;const c=W.cues.find(x=>x.id===e.target.closest('[data-c]').dataset.c);
+$('cues').oninput=e=>{if(e.target.dataset.pf&&AB==='mine'){const c=W.cues.find(x=>x.id===e.target.closest('[data-c]').dataset.c);const ps=ptsOf(c);c.pts=ps;const p=ps[+e.target.closest('[data-pi]').dataset.pi];p.db=+e.target.value;e.target.previousElementSibling.querySelector('b').textContent=(p.db>0?'+':'')+p.db+' dB';changed();drawTl();return}
+ const f=e.target.dataset.f;if(!f||AB!=='mine')return;const c=W.cues.find(x=>x.id===e.target.closest('[data-c]').dataset.c);
  if(f==='soundId'){c.soundId=e.target.value;meta(c.soundId).then(()=>{changed();renderCues()});return}
  const val=+e.target.value;if(f==='vol')c.vol=+volOf(val).toFixed(4);else c[f]=val;
  const lab=e.target.previousElementSibling.querySelector('b');if(lab)lab.textContent=f==='vol'?(val>0?'+':'')+val+' dB':f==='off'?fmt(val):val.toFixed(1)+'秒';changed()};
-$('cues').onchange=e=>{if(e.target.dataset.f&&e.target.dataset.f!=='soundId')renderCues()};
+$('cues').onchange=e=>{if((e.target.dataset.f&&e.target.dataset.f!=='soundId')||e.target.dataset.pf)renderCues()};
 $('addHere').onclick=()=>{if(AB!=='mine'){setAB('mine')}const t=+$('vid').currentTime.toFixed(2);const prev=W.cues.slice().sort((a,b)=>a.at-b.at).filter(c=>c.at<=t&&!c.none).pop();
  W.cues.push({id:uid('c'),at:t,soundId:prev?prev.soundId:'',vol:prev?prev.vol:STD,off:0});changed();renderCues();setTimeout(()=>{const el=[...document.querySelectorAll('.cue')].find(x=>x.querySelector('b').textContent.startsWith(fmt(t)));if(el)el.scrollIntoView({block:'nearest'})},50)};
 $('stopHere').onclick=()=>{if(AB!=='mine')setAB('mine');W.cues.push({id:uid('c'),at:+$('vid').currentTime.toFixed(2),none:true});changed();renderCues()};
@@ -232,7 +250,7 @@ function setAB(m){AB=m;LS.set('snd_ab',m);document.querySelectorAll('[data-ab]')
 document.querySelector('.ab').onclick=e=>{const b=e.target.closest('[data-ab]');if(b)setAB(b.dataset.ab)};
 
 /* ===== 保存・書き出し・学び ===== */
-const clean=pl=>({duck:pl.duck??1.6,cues:pl.cues.slice().sort((a,b)=>a.at-b.at).map(c=>{const o={id:c.id,at:c.at};for(const k of ['soundId','none','vol','off','fadeIn','fadeOut','why'])if(c[k]!=null&&c[k]!=='')o[k]=c[k];return o})});
+const clean=pl=>({duck:pl.duck??1.6,cues:pl.cues.slice().sort((a,b)=>a.at-b.at).map(c=>{const o={id:c.id,at:c.at};for(const k of ['soundId','none','vol','off','fadeIn','fadeOut','why'])if(c[k]!=null&&c[k]!=='')o[k]=c[k];if(!c.none&&ptsOf(c).length)o.pts=ptsOf(c).map(p=>({t:p.t,db:p.db}));return o})});
 $('saveBtn').onclick=()=>{if(!syncOn()){$('saveMsg').textContent='制作室の設定で同期をつないでください';return}const memo=$('memo').value.trim();
  const before=plan(P),after=clean(W);if(JSON.stringify(clean(before))===JSON.stringify(after)&&!memo){$('saveMsg').textContent='変わっていません';return}
  P.sound.claude=P.sound.claude||before;after.by='作り手';after.updatedAt=now();P.sound.bgm=after;

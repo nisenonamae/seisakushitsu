@@ -354,7 +354,13 @@ if a.bgm:
         if fa>0:fi[:fa]=np.linspace(0,1,fa)
         fo=min(int(float(fout)*SR2) if fout is not None else (XF if i+1<len(spec) else int(3*SR2)),L)
         if fo>0:fi[-fo:]*=np.linspace(1,0,fo)
-        bg[s0:s0+L]+=seg*fi[:,None]*float(x.get('vol',0.12))
+        # 大きさ：曲の頭は vol、変化点（pts：[{t:秒,db}]、0dB＝0.12）へ直線でなめらかに変わる（音の調整室と同じ）
+        _v=float(x.get('vol',0.12));_ps=sorted([p_ for p_ in (x.get('pts') or []) if float(p_['t'])>x['_t']],key=lambda p_:p_['t'])
+        if _ps:
+            _xs=[x['_t']]+[float(p_['t']) for p_ in _ps];_ys=[20*math.log10(max(1e-6,_v/0.12))]+[float(p_['db']) for p_ in _ps]
+            _vol=0.12*10**(np.interp(x['_t']+np.arange(L)/SR2,_xs,_ys)/20)
+        else:_vol=_v
+        bg[s0:s0+L]+=seg*(fi*_vol)[:,None]
     # 声のある間は下げ、0.6秒以上の間では少し上げる（なめらかに）
     hop=int(0.05*SR2);fr=np.sqrt(np.convolve(v48**2,np.ones(hop)/hop,'same')[::hop]);vref=np.percentile(fr[fr>1e-4],60) if (fr>1e-4).any() else 1
     talk=(fr>vref*0.08).astype(float);w=int(0.6/0.05)
