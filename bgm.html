@@ -45,7 +45,7 @@ audio{width:100%;height:34px;margin:5px 0 2px}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 22:10</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音楽の棚</h1><a href="./">← 制作室</a><span class="stat">版 11/15 20:35</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
 <div class="tabs" id="tabs"><button data-tab="shelf" aria-pressed="true">保管庫の曲</button><button data-tab="find">探す</button><button data-tab="ask">頼む・足す</button><button data-tab="src">出どころ</button></div>
 
@@ -138,13 +138,17 @@ function renderShelf(){const xs=bgms();const cnt={};xs.forEach(x=>moodsOf(x).for
  const ys=xs.filter(x=>shelfF==='すべて'||(shelfF==='いい'?x.like===1:ROLES.includes(shelfF)?x.role===shelfF:shelfF==='まだ聞いていない'?x.like==null:moodsOf(x).includes(shelfF))).sort((a,b)=>(b.like||0)-(a.like||0)||(b.updatedAt||0)-(a.updatedAt||0));
  $('shelfList').innerHTML=ys.length?ys.map(x=>`<div class="tr ${x.role?'picked':''}" data-s="${x.id}"><div class="t">${esc(x.name)}</div>
  <div>${moodsOf(x).map(m=>`<span class="tag">${esc(m)}</span>`).join('')}${x.role?`<span class="tag role">${esc(x.role)}</span>`:''}${x.bpm?`<span class="tag">${x.bpm} BPM</span>`:''}${x.len?`<span class="tag">${Math.floor(x.len/60)}分${String(Math.round(x.len%60)).padStart(2,'0')}秒</span>`:''}</div>
- ${x.url?`<audio controls preload="none" src="${esc(x.url)}"></audio>`:x.file?`<audio controls preload="none" data-gh="${esc(x.file)}"></audio>`:''}
+ ${x.url?`<audio controls preload="none" src="${esc(x.url)}"></audio>`:x.file?`<div class="row" style="margin:4px 0 0"><button class="b" data-ghplay="${esc(x.file)}">▶ 聞く</button><span class="msg"></span></div><audio controls preload="none" hidden></audio>`:'' }
  <div class="m">${esc(x.source||'')}${x.credit?'　クレジット：'+esc(x.credit):'　クレジット不要'}${x.by==='Claude'&&x.like==null?'　（Claude が選んだ・まだ聞いていない）':''}</div>
  <div class="row" style="margin:4px 0 0"><button class="b ${x.like===1?'on':''}" data-like="1">いい</button><button class="b ${x.like===-1?'on':''}" data-like="-1">使わない</button>
- <select data-role style="width:auto;font-size:13px;padding:3px 6px"><option value="">役割なし</option>${ROLES.map(r=>`<option ${x.role===r?'selected':''}>${r}</option>`).join('')}</select></div></div>`).join(''):'<div class="empty">まだありません。「探す」から入れてください。</div>';
- document.querySelectorAll('#shelfList audio[data-gh]').forEach(a=>a.addEventListener('play',async()=>{if(a.dataset.ok)return;a.pause();try{a.src=await ghAudio(a.dataset.gh);a.dataset.ok=1;a.play()}catch(e){alert('聞けません：'+e.message)}},{once:false}))}
+ <select data-role style="width:auto;font-size:13px;padding:3px 6px"><option value="">役割なし</option>${ROLES.map(r=>`<option ${x.role===r?'selected':''}>${r}</option>`).join('')}</select></div></div>`).join(''):'<div class="empty">まだありません。「探す」から入れてください。</div>';}
+
 $('shelfF').onclick=e=>{const b=e.target.closest('[data-sf]');if(b){shelfF=b.dataset.sf;renderShelf()}};
-$('shelfList').onclick=e=>{const d=e.target.closest('[data-s]');if(!d)return;const x=D.sounds.find(y=>y.id===d.dataset.s);
+async function playGh(btn){const card=btn.closest('.tr'),au=card.querySelector('audio'),msg=btn.nextElementSibling;
+ if(!syncOn()){msg.textContent='制作室の設定で同期をつなぐと聞けます';return}
+ btn.disabled=true;msg.className='hint';msg.textContent='読み込み中…（数秒かかります）';
+ try{au.src=await ghAudio(btn.dataset.ghplay);au.hidden=false;btn.closest('.row').hidden=true;await au.play()}catch(e){msg.className='msg';msg.textContent='聞けません：'+e.message;btn.disabled=false}}
+$('shelfList').onclick=e=>{const gp=e.target.closest('[data-ghplay]');if(gp){playGh(gp);return}const d=e.target.closest('[data-s]');if(!d)return;const x=D.sounds.find(y=>y.id===d.dataset.s);
  if(e.target.matches('[data-like]')){const v=+e.target.dataset.like;x.like=x.like===v?null:v;x.updatedAt=now();save();renderShelf()}};
 $('shelfList').onchange=e=>{if(!e.target.matches('[data-role]'))return;const x=D.sounds.find(y=>y.id===e.target.closest('[data-s]').dataset.s);const r=e.target.value;
  if(r)bgms().forEach(o=>{if(o.role===r&&o.id!==x.id){o.role='';o.updatedAt=now()}});x.role=r;x.updatedAt=now();save();renderShelf()};
