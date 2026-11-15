@@ -229,6 +229,25 @@
     "views": 0,
     "chs": []
    }
+  },
+  {
+   "id": "pocketse",
+   "name": "ポケットサウンド",
+   "url": "https://pocket-se.info/",
+   "rules": "https://pocket-se.info/rules/",
+   "status": "使える",
+   "credit": "必要（例「効果音：ポケットサウンド – @pocketse」）。書けないなら有料（効果音550円・BGM1,100円〜）",
+   "monetize": "できる（商用・YouTube 収益化可）",
+   "fetch": "Claude",
+   "note": "効果音・ジングル・BGM（ピアノ・バトル・オルゴール…）。加工自由。素材への直リンクは禁止（落として使う）。BGM だけを動画にして上げるのは禁止。",
+   "moods": "効果音は場面別、BGM は雰囲気別",
+   "seen": {
+    "videos": 1,
+    "views": 419849,
+    "chs": [
+     "Fラン大学就職チャンネル"
+    ]
+   }
   }
  ],
  "tracks": [
