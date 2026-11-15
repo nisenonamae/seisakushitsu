@@ -174,6 +174,25 @@ def gauge_q(s,dur,c,repo):
         d.text((cx,cy+70),'？ km/h',font=font(int(52*max(0.2,k))),fill=(242,194,48),anchor='mm')
         c.add(im)
 # ---------- ブラウザで描く場面（tools/vis/html/<page>.html の render(t) を一コマずつ撮る） ----------
+def find_pops(TR,edge=4):
+    """一コマごとの四角の並びから、画面の内側で（ふちに触れずに）急に出てくる・消えるものを探す。うすい（透明に近い）ものは除く"""
+    def inside(b):return b[0]>edge and b[1]>edge and b[2]<W-edge and b[3]<H-edge and b[4]>0.35
+    def near(a,b):
+        w=a[2]-a[0];return abs((a[0]+a[2])/2-(b[0]+b[2])/2)<max(60,w*0.6) and abs((a[1]+a[3])/2-(b[1]+b[3])/2)<max(60,(a[3]-a[1])*0.8) and 0.6<(w+1)/(b[2]-b[0]+1)<1.6
+    out=[]
+    for n in range(1,len(TR)):
+        A,B=TR[n-1],TR[n]
+        for b in B:
+            if inside(b) and not any(near(b,a) for a in A):out.append({'t':n/FPS,'kind':'現れる','box':[round(v) for v in b[:4]]})
+        for a in A:
+            if inside(a) and not any(near(a,b) for b in B):out.append({'t':n/FPS,'kind':'消える','box':[round(v) for v in a[:4]]})
+    # 同じ時刻の重複をまとめる
+    seen=set();res=[]
+    for p in out:
+        k=(round(p['t'],1),p['kind'])
+        if k in seen:continue
+        seen.add(k);res.append(p)
+    return res
 def html_scene(s,dur,out,repo=''):
     import asyncio,base64
     from playwright.async_api import async_playwright
@@ -184,8 +203,13 @@ def html_scene(s,dur,out,repo=''):
             await pg.evaluate(f"window.setup&&setup({json.dumps(params)},{dur})")
             await pg.wait_for_function("window.READY!==false",timeout=60000)
             ff=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','image2pipe','-c:v','mjpeg','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE)
+            TR=[]
             for n in range(max(1,int(round(dur*FPS)))):
-                u=await pg.evaluate(f"(render({n/FPS}),document.getElementById('c').toDataURL('image/jpeg',0.93))");ff.stdin.write(base64.b64decode(u.split(',')[1]))
-            sfx=await pg.evaluate("window.SFX||[]");ff.stdin.close();ff.wait();await b.close();return sfx
+                u=await pg.evaluate(f"(window._trk=[],render({n/FPS}),[document.getElementById('c').toDataURL('image/jpeg',0.93),window._trk||[]])");ff.stdin.write(base64.b64decode(u[0].split(',')[1]));TR.append(u[1])
+            sfx=await pg.evaluate("window.SFX||[]");ff.stdin.close();ff.wait();await b.close();run.TR=TR;return sfx
     sfx=asyncio.run(run())
+    pops=find_pops(run.TR)
+    if pops:
+        json.dump(pops,open(out+'.pops.json','w'),ensure_ascii=False)
+        print(f"［点検］{s['page']}:{s.get('mode','')} 画面の中でいきなり現れる／消えるもの {len(pops)} 件："+'、'.join(f"{p['t']:.2f}秒 {p['kind']}" for p in pops[:6]),flush=True)
     if sfx:json.dump(sfx,open(out+'.sfx.json','w'))

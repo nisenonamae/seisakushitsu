@@ -19,27 +19,35 @@ const BASE=520;const gauss=(x,c,w)=>Math.exp(-Math.pow((x-c)/w,2));
 function sky2(){sky('#8fbbe0','#efdcbc');hills(0,[['#cdb48c',420,24,0]])}
 function layers(top,x0=-20,x1=W+20,base){ground(top,x0,x1,base||'#c9a46a');for(const [y,c] of [[560,'rgba(150,110,70,.30)'],[620,'rgba(120,85,55,.35)'],[680,'rgba(95,65,42,.40)']]){g.save();g.beginPath();g.moveTo(x0,H);for(let x=x0;x<=x1;x+=6)g.lineTo(x,Math.max(top(x)+6,y));g.lineTo(x1,H);g.closePath();g.fillStyle=c;g.fill();g.restore()}}
 function stripes(x,y,ang,len,wid,k){if(k<=0)return;g.save();g.translate(x,y);g.rotate(ang);for(let i=-len/2;i<len/2;i+=16){g.fillStyle=`rgba(110,80,45,${0.75*k})`;g.fillRect(i,-wid/2,7,wid);g.fillStyle=`rgba(255,240,205,${0.5*k})`;g.fillRect(i+7,-wid/2,3,wid)}g.restore()}
-function blade(x,y,sc=1){g.save();g.translate(x,y);g.scale(sc,sc);g.fillStyle='#e0a526';g.beginPath();g.roundRect(-40,-150,200,60,10);g.fill();g.fillStyle='#bfe0f2';g.fillRect(90,-200,50,44);g.fillStyle='#e0a526';g.fillRect(84,-206,62,8);
+function blade(x,y,sc=1){g.save();g.translate(x,y);g.scale(sc,sc);track(-75,-210,170,10);g.fillStyle='#e0a526';g.beginPath();g.roundRect(-40,-150,200,60,10);g.fill();g.fillStyle='#bfe0f2';g.fillRect(90,-200,50,44);g.fillStyle='#e0a526';g.fillRect(84,-206,62,8);
   g.strokeStyle='#4b5563';g.lineWidth=10;g.beginPath();g.moveTo(40,-92);g.lineTo(-10,-20);g.stroke();g.fillStyle='#374151';g.beginPath();g.moveTo(-60,-34);g.lineTo(10,-34);g.lineTo(-6,6);g.lineTo(-70,6);g.closePath();g.fill();g.fillStyle='#9ca3af';g.fillRect(-72,2,72,6);tire(130,-50,40,x/40);g.restore()}
 function rain(t,k){if(k<=0)return;g.strokeStyle=`rgba(200,220,255,${0.5*k})`;g.lineWidth=2;const r2=R(11);for(let i=0;i<120;i++){const x=(r2()*W+t*120)%W,y=(r2()*H+t*900)%H;g.beginPath();g.moveTo(x,y);g.lineTo(x-6,y+22);g.stroke()}}
 function dust(x,y,t0,t,seed,n=26,dir=-1){const r2=R(seed);for(let i=0;i<n;i++){const d=t-t0-r2()*0.5;if(d<0||d>2)continue;g.fillStyle=`rgba(220,200,160,${0.5*(1-d/2)})`;g.beginPath();g.arc(x+dir*(30+r2()*160)*d,y-(20+r2()*90)*d,10+30*d,0,7);g.fill()}}
 window.render=function(t){const m=P.mode;
  if(m==='spots'){
    g.fillStyle='#6f8f4e';g.fillRect(0,0,W,H);const r2=R(7);for(let i=0;i<90;i++){g.fillStyle='rgba(60,90,40,.35)';g.beginPath();g.arc(r2()*W,r2()*H,8+r2()*26,0,7);g.fill()}
-   const road=(pts,w=64)=>{g.strokeStyle='#cfa86c';g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(...pts[0]);for(const p of pts.slice(1))g.lineTo(...p);g.stroke()};
+   // 道すじ：まっすぐ（左の外→カーブの入口）＋カーブ（下の外へ）
+   const bz=(u)=>{const P0=[820,420],C=[1010,420],P1=[1060,800];const v=1-u;return [v*v*P0[0]+2*v*u*C[0]+u*u*P1[0],v*v*P0[1]+2*v*u*C[1]+u*u*P1[1]]};
+   const main=u=>u<0.6?[lerp(-120,820,u/0.6),420]:bz((u-0.6)/0.4);
+   const branch=u=>[330,lerp(420,-60,u)],drive=u=>[130,lerp(420,250,u)];
+   const strokePath=(fn,w)=>{g.strokeStyle='#cfa86c';g.lineWidth=w;g.lineCap='butt';g.lineJoin='round';g.beginPath();for(let u=0;u<=1.0001;u+=0.005){const p=fn(u);u===0?g.moveTo(...p):g.lineTo(...p)}g.stroke()};
    // 坂（影の帯）
    const hg=g.createLinearGradient(520,0,760,0);hg.addColorStop(0,'rgba(40,60,30,0)');hg.addColorStop(0.5,'rgba(40,60,30,.35)');hg.addColorStop(1,'rgba(255,255,220,.15)');g.fillStyle=hg;g.beginPath();g.ellipse(640,420,180,150,0,0,7);g.fill();
-   road([[-40,420],[820,420]]);g.strokeStyle='#cfa86c';g.lineWidth=64;g.beginPath();g.moveTo(820,420);g.quadraticCurveTo(1010,420,1060,760);g.stroke();
-   road([[330,420],[330,-40]]);road([[130,420],[130,250]],34);
+   strokePath(main,64);strokePath(branch,64);strokePath(drive,34);g.fillStyle='#cfa86c';g.beginPath();g.arc(330,420,32,0,7);g.fill();
    // 家
    g.fillStyle='#e5e7eb';g.fillRect(90,170,90,70);g.fillStyle='#b45309';g.beginPath();g.moveTo(80,172);g.lineTo(135,120);g.lineTo(190,172);g.fill();g.fillStyle='#78350f';g.fillRect(125,205,18,35);
-   // 車が行き交う
-   const carTop=(x,y,a,col)=>{g.save();g.translate(x,y);g.rotate(a);g.fillStyle=col;g.beginPath();g.roundRect(-30,-15,60,30,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(8,-12,12,24);g.restore()};
-   const q=(t*0.12)%1;const x=lerp(-60,820,q);carTop(x,436,0,'#c0392b');const q2=(t*0.1+0.5)%1;carTop(lerp(860,-60,q2),404,Math.PI,'#2f5d9f');
-   // 波の縞
-   const sp=[[330,420,0,90,64,T(1,DUR*0.15)],[600,420,0,120,64,T(2,DUR*0.35)],[960,520,-1.0,90,64,T(3,DUR*0.55)],[130,390,Math.PI/2,40,34,T(4,DUR*0.75)]];
-   sp.forEach(([x,y,a,len,w,tk],i)=>{if(t<tk)return;sfxOnce('s'+i,tk,'pop');const k=ease((t-tk)/0.5);if(i===0){stripes(x-80,y,0,70,w,k);stripes(x+80,y,0,70,w,k);stripes(x,y-80,Math.PI/2,70,w,k)}else stripes(x,y,a,len,w,k);
-     const p=back((t-tk)/0.35);if(t-tk<1.2){g.strokeStyle=`rgba(255,211,106,${1-(t-tk)/1.2})`;g.lineWidth=5;g.beginPath();g.arc(x,y,70*p+(t-tk)*30,0,7);g.stroke()}});
+   // 道すじに沿って、道の幅いっぱいに横切る縞（道からはみ出さない）
+   const stripesAlong=(fn,u0,u1,w,k)=>{if(k<=0)return;let acc=0,prev=fn(u0),n=0;for(let u=u0;u<=u1;u+=0.0015){const p=fn(u);acc+=Math.hypot(p[0]-prev[0],p[1]-prev[1]);prev=p;if(acc<9)continue;acc=0;n++;const q=fn(Math.min(1,u+0.002)),tx=q[0]-p[0],ty=q[1]-p[1],L=Math.hypot(tx,ty)||1,nx=-ty/L,ny=tx/L;
+     g.strokeStyle=n%2?`rgba(110,80,45,${0.8*k})`:`rgba(255,240,205,${0.45*k})`;g.lineWidth=n%2?6:3;g.beginPath();g.moveTo(p[0]-nx*w/2,p[1]-ny*w/2);g.lineTo(p[0]+nx*w/2,p[1]+ny*w/2);g.stroke()}};
+   const sp=[[()=>{const k=sk(0);stripesAlong(main,0.13,0.2,62,k);stripesAlong(main,0.27,0.34,62,k);stripesAlong(branch,0.11,0.24,62,k)},T(1,DUR*0.15),[330,420]],
+             [()=>stripesAlong(main,0.38,0.5,62,sk(1)),T(2,DUR*0.35),[640,420]],
+             [()=>stripesAlong(main,0.66,0.86,62,sk(2)),T(3,DUR*0.55),bz(0.4)],
+             [()=>stripesAlong(drive,0.05,0.4,32,sk(3)),T(4,DUR*0.75),[130,380]]];
+   function sk(i){return ease((t-sp[i][1])/0.5)}
+   sp.forEach(([draw,tk,c],i)=>{if(t<tk)return;sfxOnce('s'+i,tk,'pop');draw();const p=back((t-tk)/0.35);if(t-tk<1.2){g.strokeStyle=`rgba(255,211,106,${1-(t-tk)/1.2})`;g.lineWidth=5;g.beginPath();g.arc(c[0],c[1],70*p+(t-tk)*30,0,7);g.stroke()}});
+   // 車は道すじに沿って、画面の外から外へ
+   const carTopP=(fn,u,side,col,rev)=>{const p=fn(u),q=fn(Math.min(1,u+0.003)),a=Math.atan2(q[1]-p[1],q[0]-p[0])+(rev?Math.PI:0);const nx=-Math.sin(a),ny=Math.cos(a);g.save();g.translate(p[0]+nx*side,p[1]+ny*side);g.rotate(a);track(-30,-15,30,15);g.fillStyle=col;g.beginPath();g.roundRect(-30,-15,60,30,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(8,-12,12,24);g.restore()};
+   carTopP(main,(t*0.09)%1,15,'#c0392b',false);carTopP(main,1-((t*0.08+0.45)%1),15,'#2f5d9f',true);
  }
  else if(m==='brake'){
    sky2();const t1=T(1,DUR*0.1),t2=T(2,DUR*0.5);const A1=ease((t-t1-0.4)/0.8),A2=ease((t-t2-0.6)/0.8);
@@ -90,7 +98,7 @@ window.render=function(t){const m=P.mode;
  }
  else if(m==='regrade'){
    const t1=T(1,DUR*0.3),t2=T(2,DUR*0.7);sky('#7d8a99','#c9cfd6');rain(t,1-clamp(t/1.5));
-   const trough=BASE+4;const bx=t<t1?lerp(-150,200,t/Math.max(0.5,t1)):lerp(200,W+260,clamp((t-t1)/Math.max(0.8,t2-t1)));const cut=t>t1;
+   const trough=BASE+4;const bx=lerp(-200,W+260,clamp((t-t1+0.9)/Math.max(1,t2-t1+0.9)));const cut=true;const low=1;   // 刃は最初から深く下ろした状態で、左の外から一定の速さで入ってくる
    const smooth=ease((t-t2)/1.2);
    const top=x=>{const rip=BASE-22*Math.max(0,Math.sin(2*Math.PI*x/140));if(cut&&x<bx-70)return lerp(BASE+18,BASE+10,smooth);return rip};
    layers(top,-20,W+20,'#a9824f');g.fillStyle='rgba(255,255,255,.08)';g.fillRect(0,BASE-30,W,20);
@@ -98,7 +106,7 @@ window.render=function(t){const m=P.mode;
    const lk=1-smooth;g.strokeStyle=`rgba(255,211,106,${0.9*lk})`;g.lineWidth=4;g.beginPath();g.moveTo(0,trough);g.lineTo(W,trough);g.stroke();
    // 刃の前に混ざる土
    if(cut&&bx<W+150){g.fillStyle='#8a6a46';g.beginPath();g.ellipse(bx-60,BASE+2,60,26,0,Math.PI,0);g.fill();const r2=R(3);for(let i=0;i<18;i++){const a=t*6+i;g.fillStyle=i%2?'#c9a46a':'#6f5235';g.beginPath();g.arc(bx-60+40*Math.cos(a+r2()*6),BASE-8+12*Math.sin(a*1.3),5,0,7);g.fill()}sfxOnce('e',t1,'engine',Math.max(0.5,t2-t1))}
-   if(bx<W+200)blade(bx,cut?BASE+20:BASE-6,1);
+   if(bx<W+200)blade(bx,lerp(BASE-6,BASE+20,low),1);
    if(t>t2){const rx=lerp(-200,W+200,clamp((t-t2)/1.6));g.fillStyle='#9ca3af';g.beginPath();g.arc(rx,BASE-40,52,0,7);g.fill();g.fillStyle='#e0a526';g.beginPath();g.roundRect(rx-120,BASE-150,140,70,10);g.fill();g.fillStyle='#bfe0f2';g.fillRect(rx-90,BASE-190,50,40);tire(rx-110,BASE-26+10,26,rx/26);sfxOnce('r',t2,'engine',1.6)}
  }
  else if(m==='skim'){

@@ -8,7 +8,7 @@ window.DEF={};
 const LANE=[230,500];
 function laneDraw(y,kind,off){g.fillStyle=kind==='paved'?'#4b5160':'#cfa86c';g.fillRect(0,y-110,W,220);
   if(kind==='paved'){g.fillStyle='#e5e7eb';for(let x=-(off%120);x<W;x+=120)g.fillRect(x,y-3,60,6)}else{for(let x=-(off%34);x<W;x+=34){g.fillStyle='rgba(120,90,55,.45)';g.fillRect(x,y-108,14,216)}}}
-function carTop(x,y,ang,col,hop,alpha=1){g.save();g.globalAlpha=alpha;g.translate(x,y);g.rotate(ang);
+function carTop(x,y,ang,col,hop,alpha=1){g.save();g.globalAlpha=alpha;g.translate(x,y);g.rotate(ang);track(-40,-22,40,22);
   for(const [wx,wy,i] of [[-60,-50,0],[-60,50,1],[62,-50,2],[62,50,3]]){const up=hop&&hop[i];g.save();g.translate(wx,wy);if(i>=2)g.rotate(-(P._steer||0));g.fillStyle=up?'rgba(20,20,20,.35)':'#15171b';g.fillRect(-24,-12,48,24);g.restore()}
   g.fillStyle=col;g.beginPath();g.roundRect(-95,-42,190,84,20);g.fill();g.fillStyle='#bfe0f2';g.beginPath();g.roundRect(18,-34,34,68,8);g.fill();g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect(-40,-36,56,72,10);g.fill();g.restore()}
 window.render=function(t){
