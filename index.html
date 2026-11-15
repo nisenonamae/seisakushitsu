@@ -1105,7 +1105,7 @@ try{await ghPutFile(path,await fileToB64(file),'音を保管庫に追加')}catch
 D.sounds=D.sounds||[];D.sounds.push({id:uid('s'),kind,name:$('sdName').value.trim()||file.name,mood:$('sdMood').value.trim(),tags:[],source:$('sdSrc').value.trim(),license:'',file:path,usedIn:[],by:'作り手',createdAt:now(),updatedAt:now()});save();
 $('sdName').value='';$('sdMood').value='';$('sdSrc').value='';$('sdFile').value='';$('sdMsg').textContent='入れました';renderSounds()}}}
 /* ---------- ポイント帳（作り手が読む所） ---------- */
-const PAREA=['声','語り','構成','見せ方','サムネ','題名','音','進め方'];let ptF='すべて';
+const PAREA=['声','語り','構成','見せ方','サムネ','題名','音','題材選び','進め方'];let ptF='すべて';
 function renderPoints(){if(!$('ptList'))return;const all=(D.points||[]).filter(x=>!x.deleted);const q=($('ptQ').value||'').trim();
 if(!$('ptArea').options.length)$('ptArea').innerHTML=PAREA.map(a=>`<option>${a}</option>`).join('');
 const areas=['すべて','★ 大事',...PAREA.filter(a=>all.some(x=>x.area===a))];$('ptFilter').innerHTML=areas.map(a=>`<button data-ptf="${a}" aria-pressed="${a===ptF}">${a}${a==='すべて'?'':a==='★ 大事'?'':' '+all.filter(x=>x.area===a).length}</button>`).join('');
@@ -1116,7 +1116,9 @@ $('ptList').innerHTML=xs.length?xs.map(x=>`<div class="item" data-pt="${x.id}"><
 ${x.example?`<div class="how" style="margin:6px 0 0">例：${esc(x.example)}</div>`:''}${x.claude?`<div class="lead" style="margin:5px 0 0">Claude の見立て：${esc(x.claude)}</div>`:''}
 ${x.src?`<div class="lead" style="margin:4px 0 0;font-size:12px">出どころ：<a href="${esc(x.src)}" target="_blank" rel="noopener" style="color:var(--sea)">${esc(x.srcTitle||x.src)}</a></div>`:''}${x.by==='作り手'?'<div class="st"><button data-ptdel>消す</button></div>':''}</div>`).join(''):'<div class="empty">まだありません。</div>';
 const srcs={};for(const x of all)if(x.src){(srcs[x.src]=srcs[x.src]||{t:x.srcTitle||x.src,n:0,o:x.srcOrder||0}).n++}
-$('ptSrc').innerHTML=Object.entries(srcs).sort((a,b)=>b[1].o-a[1].o).map(([u,v])=>`<div class="item" style="font-size:14px"><a href="${esc(u)}" target="_blank" rel="noopener" style="color:var(--sea)">${esc(v.t)}</a> <span class="lead">ポイント ${v.n}</span></div>`).join('')||'<div class="empty">まだありません。</div>';
+const notUsed=u=>{const f=(D.feeds||[]).find(f=>f.url===u&&!f.deleted);const m=f&&(f.text||'').match(/採用しない：[^（]*（[^）]*）/g);return m||[]};
+for(const f of (D.feeds||[]))if(f.url&&!f.deleted&&/^fsk-/.test(f.id)&&!srcs[f.url])srcs[f.url]={t:f.title,n:0,o:f.createdAt||0};
+$('ptSrc').innerHTML=Object.entries(srcs).sort((a,b)=>b[1].o-a[1].o).map(([u,v])=>{const nu=notUsed(u);return `<div class="item" style="font-size:14px"><a href="${esc(u)}" target="_blank" rel="noopener" style="color:var(--sea)">${esc(v.t)}</a> <span class="lead">ポイント ${v.n}</span>${nu.length?`<details style="margin-top:4px"><summary style="font-size:12.5px">採用しなかったもの ${nu.length}</summary>${nu.map(x=>`<div class="lead" style="margin:3px 0 0">・${esc(x.replace('採用しない：',''))}</div>`).join('')}</details>`:''}</div>`}).join('')||'<div class="empty">まだありません。</div>';
 if(!$('ptList').dataset.on){$('ptList').dataset.on=1;
 $('ptQ').oninput=renderPoints;$('ptFilter').onclick=e=>{const b=e.target.closest('[data-ptf]');if(b){ptF=b.dataset.ptf;renderPoints()}};
 $('ptList').onclick=e=>{const d=e.target.closest('[data-pt]');if(!d)return;const x=D.points.find(y=>y.id===d.dataset.pt);
