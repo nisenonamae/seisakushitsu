@@ -71,6 +71,7 @@ if a.kata:
         for x in t.get('sents',[]):TUNED[(x.get('plain') or x['text']).strip()]=x['q']
     try:VR.eng('/version')
     except Exception:raise SystemExit('VOICEVOX エンジンが動いていない（bash tools/setup_engine.sh）')
+    VR.sync_dict(VV)   # 読み方の辞書（調整室で登録したもの）
 def tts(text,path):
     if VK:
         plain=text.replace('《','').replace('》','').strip()

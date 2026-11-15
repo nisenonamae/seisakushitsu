@@ -237,6 +237,26 @@ def write_wav(path, y, sr=SR):
         w.writeframes((np.clip(y, -1, 1) * 32767).astype(np.int16).tobytes())
 
 
+def sync_dict(V):
+    """voice.json の dict（読み方の辞書）を、このエンジンのユーザー辞書に入れる（調整室と同じ読みにする）"""
+    import unicodedata
+    nk = lambda t: unicodedata.normalize('NFKC', t or '')
+    ud = eng('/user_dict'); by = {nk(w['surface']): (u, w) for u, w in ud.items()}; n = 0
+    for d in V.get('dict', []):
+        h = by.get(nk(d['surface']))
+        prm = {'surface': d['surface'], 'pronunciation': d['yomi'], 'accent_type': d['accent'], 'word_type': 'PROPER_NOUN', 'priority': 10}
+        def call(method, path, params=None):
+            qs = urllib.parse.urlencode(params or {})
+            urllib.request.urlopen(urllib.request.Request(f'{ENG}{path}' + (f'?{qs}' if qs else ''), method=method), timeout=60).read()
+        if d.get('deleted'):
+            if h: call('DELETE', f"/user_dict_word/{h[0]}")
+            continue
+        if not h: call('POST', '/user_dict_word', prm); n += 1
+        elif h[1].get('pronunciation') != d['yomi'] or h[1].get('accent_type') != d['accent'] or h[1].get('priority') != 10:
+            call('PUT', f"/user_dict_word/{h[0]}", prm); n += 1
+    return n
+
+
 def load_voice(path):
     V = json.load(open(path, encoding='utf-8'))
     return V
