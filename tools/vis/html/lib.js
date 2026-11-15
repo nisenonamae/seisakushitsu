@@ -1,3 +1,5 @@
+/* 半径が負になると描けずに止まるので、0 にそろえる（声の長さが変わって動きの時間がずれても落ちないように） */
+(()=>{const A=CanvasRenderingContext2D.prototype.arc;CanvasRenderingContext2D.prototype.arc=function(x,y,r,...a){return A.call(this,x,y,Math.max(0,r||0),...a)};const E=CanvasRenderingContext2D.prototype.ellipse;CanvasRenderingContext2D.prototype.ellipse=function(x,y,rx,ry,...a){return E.call(this,x,y,Math.max(0,rx||0),Math.max(0,ry||0),...a)}})();
 /* 場面を描く共通の道具。効果音の種類：pop・whoosh・thump・tick・puff・boing（ぽよよん）・長さのある rattle・engine・motor・car（走り去る車の音）
    各ページは setup(params,dur) と render(t) を持つ。
    効果音は SFX.push([秒,'pop'|'whoosh'|'thump'|'tick'|'puff']) か、長さのある音 [秒,'rattle'|'engine'|'motor',長さ] */
