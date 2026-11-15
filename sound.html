@@ -46,6 +46,11 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
 .vwrap{position:relative;background:#000;border-radius:10px;overflow:hidden}
 video{width:100%;display:block;max-height:42vh;background:#000}
+body[data-vs=small] video{max-height:24vh}body[data-vs=hide] .vwrap{display:none}
+.vs button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+@media(max-width:999px){#stick .row{margin:4px 0}#stick .b{padding:3px 9px;font-size:13px}}
+@media(min-width:1000px){main{max-width:1600px}#room:not([hidden]){display:grid;grid-template-columns:minmax(0,1.2fr) minmax(400px,1fr);gap:20px;align-items:start}
+ #stick{top:56px;border-bottom:0;padding:0}#side{min-width:0}video{max-height:62vh}body[data-vs=small] video{max-height:34vh}#side h2:first-child{margin-top:0}}
 #stick{position:sticky;top:46px;z-index:4;background:var(--paper);padding:4px 0 2px;border-bottom:1px solid var(--line)}
 .vload[hidden]{display:none}
 .vload{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;background:rgba(0,0,0,.6)}
@@ -60,7 +65,7 @@ button.b.del{color:var(--busy)}
 .pts{border-top:1px dashed var(--line);margin-top:6px}.pt{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:3px 0}.pt .tm{font-weight:700;font-size:13px;min-width:56px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/15 22:05</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/15 22:50</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
 <p class="hint">動画を流しながら BGM を置いて、その場で聞いて直す所。ここでの直しとメモを Claude が読んで、BGM の付け方を覚えていく（声の調整室と同じやり方）。</p>
 <div class="row"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="msg" id="projMsg"></span></div>
@@ -71,9 +76,12 @@ button.b.del{color:var(--busy)}
   <div class="row" style="margin-top:4px">
     <span class="ab"><button class="b" data-ab="mine" aria-pressed="true">自分の調整で聞く</button><button class="b" data-ab="claude">Claude の案で聞く</button><button class="b" data-ab="none">音楽なしで聞く</button></span>
     <span class="hint" id="nowAt"></span>
+    <span class="vs" style="margin-left:auto"><span class="hint">動画：</span><button class="b sm" data-vs="big">大</button><button class="b sm" data-vs="small">小</button><button class="b sm" data-vs="hide">隠す</button></span>
   </div>
-  <div class="row"><button class="b main" id="addHere">＋ 今の位置から曲を入れる</button><button class="b" id="stopHere">今の位置で音楽を止める</button><span class="hint">下の帯：上の段＝語りの段（押すとその頭へ）、灰色＝声のある所、色＝置いた曲</span></div></div>
+  <div class="row"><button class="b main" id="addHere">＋ 今の位置から曲を入れる</button><button class="b" id="stopHere">今の位置で音楽を止める</button></div></div>
 
+  <div id="side">
+  <p class="hint" style="margin-top:6px">動画の下の帯：上の段＝語りの段（押すとその頭へ）、灰色＝声のある所、色＝置いた曲（白い線＝大きさの変化）</p>
   <h2>置いた曲</h2>
   <div id="cues"></div>
 
@@ -87,6 +95,7 @@ button.b.del{color:var(--busy)}
   <textarea id="memo" rows="2" placeholder="例：結論の段は音楽を消して、最後の一言のあとにだけ戻す"></textarea>
   <div class="row"><button class="b main" id="saveBtn">メモを付けて保存</button><button class="b" id="renderBtn">この音で書き出してもらう</button><button class="b" id="resetBtn">Claude の案に戻す</button><span class="msg" id="saveMsg"></span></div>
   <div id="takes"></div>
+  </div>
 </div>
 </main>
 <script>
@@ -263,6 +272,8 @@ function renderTakes(){const ts=(P.soundTakes||[]).slice().reverse();$('takes').
 function renderAll2(){renderCues();renderTakes();drawTl()}
 function renderAll(){renderProj();if(!P&&$('proj').value)openProj($('proj').value);else if(P){const np=D.projects.find(p=>p.id===P.id)||P;const hadBase=!!BASE;P=np;if(!hadBase&&P.sound&&P.sound.base)openProj(P.id);else if(BASE)renderTakes()}}
 {const q=new URLSearchParams(location.search).get('p');if(q)LS.set('snd_proj',q)}
+function setVs(v){document.body.dataset.vs=v;LS.set('snd_vs',v);document.querySelectorAll('[data-vs]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vs===v));setTimeout(drawTl,30)}
+document.querySelector('.vs').onclick=e=>{const b=e.target.closest('[data-vs]');if(b)setVs(b.dataset.vs)};setVs(LS.get('snd_vs','big'));
 renderProj();if($('proj').value)openProj($('proj').value);sync();
 </script>
 </body></html>
