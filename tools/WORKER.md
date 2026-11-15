@@ -334,7 +334,7 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 ## 音の調整室（sound.html）
 作り手が動画を流しながら BGM を置き・直し、メモを付けて残す所（声の調整室と同じく、直しから Claude が BGM の付け方を覚える）。
 - `projects[].sound.base`＝`{"video":"…/videos/<id>/base_vN.mp4","json":"…/base_vN.json"}`：BGM なし（声と効果音だけ）の軽い動画（960x540）と、段の時刻・声の有無（`talk`、0.05秒ごと）・声の大きさ（`vr`）。`render_draft.py … --base-out <base.mp4>` で本番と同時に作れる
-- `projects[].sound.bgm`＝`{"duck":間で上げる倍率(1.6),"cues":[{"id","at":秒,"soundId"（音の保管庫の id）,"vol":声に対する大きさ(標準0.12),"off":曲のどこから(秒),"fadeIn","fadeOut","none":true＝ここから音楽なし,"why":Claude のねらい},…],"by":"Claude"|"作り手","updatedAt"}`。**Claude が案を作るときは `why`（なぜこの曲・この位置か）を必ず一言入れる**。作り手が直すと `sound.claude` に Claude の元の案が残る（聞き比べ用）
+- `projects[].sound.bgm`＝`{"duck":間で上げる倍率(1.6),"cues":[{"id","at":秒,"soundId"（音の保管庫の id）,"vol":声に対する大きさ(標準0.12),"off":曲のどこから(秒),"fadeIn","fadeOut","none":true＝ここから音楽なし,"pts":[{"t":秒,"db":0dB＝標準}]＝大きさの変化点（曲の頭の vol から点へ直線でなめらかに変わり、最後の点のあとはそのまま）,"why":Claude のねらい},…],"by":"Claude"|"作り手","updatedAt"}`。**Claude が案を作るときは `why`（なぜこの曲・この位置か）を必ず一言入れる**。作り手が直すと `sound.claude` に Claude の元の案が残る（聞き比べ用）
 - 書き出し：`render_draft.py … --bgm proj`（`sound.bgm` をそのまま使う）。調整室での聞こえ方と同じ計算（曲ごとの大きさをそろえ、声の大きさ×vol、声のない所で duck 倍、つなぎ目2秒）。`sounds[].rms` があると調整室の音量が正確になる（BGM を入れたら `rms`＝ステレオ 48kHz の二乗平均の平方根、`len`＝秒 を入れておく）
 - **sound_base**（調整室用の動画を作って）：`--base-out` 付きで書き出し、`base_vN.mp4`・`.json` を `videos/<projId>/` に置いて `sound.base` を書く。まだ `sound.bgm` が無ければ Claude の案も作る（音楽の棚の role → like=1 → 印象の順、`why` 付き）。total は 2
 - **sound_render**（この音で書き出して）：`--bgm proj --base-out` で書き出し、`project.video`（と `videoHistory`）を新しい版にする。`sound.base` も新しい版に。total は 2
