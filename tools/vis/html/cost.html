@@ -11,17 +11,23 @@ window.DEF={mode:'paved'};
 function coin(x,y,col='#e8b923'){g.fillStyle='#a77d12';g.beginPath();g.ellipse(x,y+6,58,16,0,0,7);g.fill();g.fillRect(x-58,y,116,6);g.fillStyle=col;g.beginPath();g.ellipse(x,y,58,16,0,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=2;g.beginPath();g.ellipse(x,y,40,10,0,0,7);g.stroke()}
 function stack(x,base,n,frac=0){g.save();g.translate(x,base);g.scale(1.35,1.35);g.translate(-x,-base);stack0(x,base,n,frac);g.restore()}
 function stack0(x,base,n,frac=0){const N=Math.floor(n);for(let i=0;i<N;i++)coin(x,base-i*13);if(frac>0){const y=lerp(base-N*13-160,base-N*13,eout(frac));g.globalAlpha=clamp(frac*3);coin(x,y);g.globalAlpha=1}}
-function sun(cx,cy,a){const x=cx+150*Math.cos(a),y=cy-90*Math.sin(a);if(y>cy+10)return;g.fillStyle='#ffd36a';g.shadowColor='#ffd36a';g.shadowBlur=30;g.beginPath();g.arc(x,y,24,0,7);g.fill();g.shadowBlur=0}
-function scene(paved){sky('#9cc3e6','#f1dcb5');hills(0,[['#c9b28c',430,28,0]]);g.fillStyle='#8a7350';g.fillRect(0,520,W,H-520);
+function sun(cx,cy,a){const x=cx+560*Math.cos(a),y=cy-330*Math.sin(a);if(y>cy+30)return;g.fillStyle='#ffd36a';g.shadowColor='#ffb03a';g.shadowBlur=40;g.beginPath();g.arc(x,y,30,0,7);g.fill();g.shadowBlur=0}
+function moon(cx,cy,a){const x=cx+560*Math.cos(a),y=cy-330*Math.sin(a);if(y>cy+30)return;g.fillStyle='#eef2f7';g.shadowColor='#cbd5e1';g.shadowBlur=24;g.beginPath();g.arc(x,y,22,0,7);g.fill();g.shadowBlur=0}
+function mix(a,b,u){const p=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));const A=p(a),B=p(b);return `rgb(${A.map((v,i)=>Math.round(lerp(v,B[i],u))).join(',')})`}
+// 早回しの一日：day＝1 で昼、0 で夜。空の色・地面の暗さ・太陽と月が一緒に変わる
+function scene(paved,day=1,a=Math.PI/2){sky(mix('#0d1526','#9cc3e6',day),mix('#2a2840','#f1dcb5',day));
+  if(day<0.6){const r2=R(12);for(let i=0;i<70;i++){g.fillStyle=`rgba(255,255,255,${(0.6-day)*1.4*r2()})`;g.fillRect(r2()*W,r2()*400,2,2)}}
+  sun(640,420,a);moon(640,420,a+Math.PI);
+  hills(0,[[mix('#3a3a44','#c9b28c',day),430,28,0]]);g.fillStyle='#8a7350';g.fillRect(0,520,W,H-520);
   g.fillStyle=paved?'#3d4148':'#cfa86c';g.fillRect(0,500,W,70);if(paved){g.fillStyle='#f3f4f6';for(let x=20;x<W;x+=110)g.fillRect(x,532,56,6)}else{const r2=R(2);for(let i=0;i<260;i++){g.fillStyle='rgba(120,90,55,.6)';g.fillRect(r2()*W,500+r2()*68,4,3)}}}
 function smallCar(x,col,dir=1){g.save();g.translate(x,520);g.scale(dir*0.62,0.62);car(0,-34,1,{col,wheelR:34,wheelAng:x/34});g.restore()}
 function grader(x){g.save();g.translate(x,500);track(-90,-120,90,0);g.fillStyle='#e0a526';g.beginPath();g.roundRect(-80,-70,160,44,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(20,-110,40,36);g.fillStyle='#e0a526';g.fillRect(14,-114,52,6);g.fillStyle='#333';g.fillRect(-40,-22,90,8);tire(-60,-18,18,x/18);tire(60,-18,18,x/18);g.restore()}
 function truck(x){g.save();g.translate(x,500);track(-95,-90,95,0);g.fillStyle='#64748b';g.beginPath();g.moveTo(-90,-24);g.lineTo(-90,-70);g.lineTo(30,-80);g.lineTo(30,-24);g.fill();g.fillStyle='#8a6a46';g.beginPath();g.ellipse(-30,-74,56,14,0,Math.PI,0);g.fill();g.fillStyle='#c0392b';g.beginPath();g.roundRect(34,-74,56,50,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(56,-66,26,20);tire(-60,-18,18,x/18);tire(60,-18,18,x/18);g.restore()}
 window.render=function(t){const m=P.mode;
  if(m==='paved'||m==='dirt'){
-   const paved=m==='paved';scene(paved);const t1=T(1,DUR*0.3);
-   // 年月：太陽が回る（造ったあと）
-   const yrs=Math.max(0,t-0.9)*(paved?2.4:1.6);sun(640,380,Math.PI-yrs*Math.PI%(Math.PI*2));
+   const paved=m==='paved';const t1=T(1,DUR*0.3);
+   // 年月：造ったあと、早回しで昼と夜がくり返す（一日＝約3秒）
+   const a=Math.PI/2-Math.max(0,t-0.9)*2*Math.PI/3.2;const day=clamp(Math.sin(a)*1.5+0.45);scene(paved,day,a);
    const sx=1110,base=680;
    // 造る時の硬貨
    const build=paved?14:3;const kb=clamp(t/0.9);let n=build*kb;
@@ -34,6 +40,7 @@ window.render=function(t){const m=P.mode;
      const COL=['#c0392b','#2f5d9f','#e6e2d8','#3b3b3b','#7a8f3c','#d97706','#9333ea','#0f766e'];for(let i=0;i<8;i++){const v=0.22+0.03*(i%3),ph=(i*0.37)%1;const q=t*v+ph,lap=Math.floor(q),lapStart=(lap-ph)/v;const act=i===0?-1e9:t1+(i-1)*(DUR-t1)*0.11;if(lapStart<act)continue;smallCar(lerp(-260,W+260,q-lap),COL[i],1)}
      if(tt>0){const q=((tt*0.16)%1);if(Math.floor(tt*0.16)%2===0)grader(lerp(-260,W+260,q));else truck(lerp(-260,W+260,q))}}
    if(paved){for(let i=0;i<2;i++){const q=((t*0.22+i/2)%1);smallCar(lerp(-260,W+260,q),['#c0392b','#2f5d9f'][i],1)}if(t<1.8){const rx=lerp(-200,W+200,t/1.8);g.fillStyle='#4b5563';g.beginPath();g.roundRect(rx-90,430,180,70,12);g.fill();tire(rx-50,478,22,t*9);tire(rx+50,478,22,t*9)}}
+   g.fillStyle=`rgba(6,10,26,${0.6*(1-day)})`;g.fillRect(0,0,W,H);   // 夜は地上も暗く
    g.fillStyle='rgba(20,15,10,.35)';g.beginPath();g.ellipse(sx,base+14,90,22,0,0,7);g.fill();stack(sx,base,n,n%1);
  }
  else if(m==='cross'){
@@ -62,9 +69,9 @@ window.render=function(t){const m=P.mode;
    // 道：最初は太く寄っていて、引いていくと細長い
    const hh=lerp(220,22,zo);g.fillStyle='#3d4148';if(t<t1+0.4){g.globalAlpha=1-clamp((t-t1)/0.4);g.fillRect(-20,360-hh/2,W+40,hh);g.fillStyle='#f3f4f6';const per=120*hh/220;for(let x=-((t*40*hh/220)%per);x<W;x+=per)g.fillRect(x,360-hh*0.03,per/2,Math.max(1,hh*0.06));g.globalAlpha=1}
    // 台所の床のタイル（何百枚）
-   if(t>t1){const cols=36,rows=20,sz=26,gap=5,gx=(W-cols*(sz+gap))/2,gy=(H-rows*(sz+gap))/2+10;const r2=R(6);
-     for(let i=0;i<cols*rows;i++){const c=i%cols,rw=Math.floor(i/cols);const d=t-t1-r2()*1.6;if(d<0)continue;const q=eout(d/0.6);const sx=r2()*W,sy=360;const x=lerp(sx,gx+c*(sz+gap),q),y=lerp(sy,gy+rw*(sz+gap),q);
-       g.fillStyle='#e9dcc3';g.fillRect(x,y,sz,sz);g.fillStyle='#c9b48f';g.fillRect(x,y,sz/2,sz/2);g.fillRect(x+sz/2,y+sz/2,sz/2,sz/2)}
+   if(t>t1){const cols=36,rows=20,sz=27,gap=4,gx=(W-cols*(sz+gap))/2,gy=(H-rows*(sz+gap))/2+10;const span=Math.min(2.4,DUR-t1-0.9);
+     for(let i=0;i<cols*rows;i++){const c=i%cols,rw=Math.floor(i/cols);const d=t-t1-(rw/rows)*span-(c/cols)*0.15;if(d<0)continue;const q=ease(d/0.55);const sx=gx+c*(sz+gap),sy=360-sz/2;const x=sx,y=lerp(sy,gy+rw*(sz+gap),q);
+       g.fillStyle='#e9dcc3';g.fillRect(x,y,sz,sz);g.strokeStyle='rgba(150,125,90,.6)';g.lineWidth=1;g.strokeRect(x+0.5,y+0.5,sz-1,sz-1)}
      const n=Math.floor((t-t1)*14);if(n!==window._k&&t-t1<2){window._k=n;window.SFX.push([t,'tick'])}}
  }
 };

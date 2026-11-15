@@ -26,7 +26,13 @@ function rain(t,k){if(k<=0)return;g.strokeStyle=`rgba(200,220,255,${0.5*k})`;g.l
 function dust(x,y,t0,t,seed,n=26,dir=-1){const r2=R(seed);for(let i=0;i<n;i++){const d=t-t0-r2()*0.5;if(d<0||d>2)continue;g.fillStyle=`rgba(220,200,160,${0.5*(1-d/2)})`;g.beginPath();g.arc(x+dir*(30+r2()*160)*d,y-(20+r2()*90)*d,10+30*d,0,7);g.fill()}}
 window.render=function(t){const m=P.mode;
  if(m==='spots'){
-   g.fillStyle='#6f8f4e';g.fillRect(0,0,W,H);const r2=R(7);for(let i=0;i<90;i++){g.fillStyle='rgba(60,90,40,.35)';g.beginPath();g.arc(r2()*W,r2()*H,8+r2()*26,0,7);g.fill()}
+   // 地面：牧草地の区画（少しずつ色の違う畑）と、木の影のある木立
+   g.fillStyle='#7a9a55';g.fillRect(0,0,W,H);
+   for(const [x,y,w,h,c,ang] of [[380,0,420,380,'#86a560',0],[820,40,460,330,'#a8a96a',0],[0,470,560,250,'#8fae66',0],[560,480,420,240,'#7e9d58',0],[0,0,300,380,'#839f5c',0]]){g.fillStyle=c;g.fillRect(x+6,y+6,w-12,h-12);g.strokeStyle='rgba(60,80,40,.18)';g.lineWidth=2;for(let k=y+14;k<y+h-10;k+=12){g.beginPath();g.moveTo(x+10,k);g.lineTo(x+w-10,k);g.stroke()}}
+   const nearRoad=(x,y)=>Math.abs(y-420)<70||(Math.abs(x-330)<70&&y<430)||(Math.abs(x-130)<50&&y>230&&y<430)||(x>800&&Math.hypot(x-930,y-560)<230&&y>400&&x>820)||(x>40&&x<220&&y>100&&y<260);
+   const r2=R(7);const trees=[];for(let i=0;i<400&&trees.length<46;i++){const x=r2()*W,y=r2()*H;if(nearRoad(x,y))continue;const cl=r2()<0.6;trees.push([x,y,cl?16+r2()*10:12+r2()*8])}
+   trees.sort((a,b)=>a[1]-b[1]);for(const [x,y,r] of trees){g.fillStyle='rgba(20,35,15,.30)';g.beginPath();g.ellipse(x+r*0.55,y+r*0.45,r*1.05,r*0.85,0,0,7);g.fill()}
+   for(const [x,y,r] of trees){const gr=g.createRadialGradient(x-r*0.35,y-r*0.35,r*0.1,x,y,r);gr.addColorStop(0,'#6e9a4a');gr.addColorStop(1,'#2f5226');g.fillStyle=gr;for(const [dx,dy,k] of [[0,0,1],[-r*0.5,r*0.2,0.65],[r*0.45,r*0.25,0.6],[0,-r*0.45,0.6]]){g.beginPath();g.arc(x+dx,y+dy,r*k,0,7);g.fill()}}
    // 道すじ：まっすぐ（左の外→カーブの入口）＋カーブ（下の外へ）
    const bz=(u)=>{const P0=[820,420],C=[1010,420],P1=[1060,800];const v=1-u;return [v*v*P0[0]+2*v*u*C[0]+u*u*P1[0],v*v*P0[1]+2*v*u*C[1]+u*u*P1[1]]};
    const main=u=>u<0.6?[lerp(-120,820,u/0.6),420]:bz((u-0.6)/0.4);
