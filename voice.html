@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 20:20</span>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 20:30</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -153,7 +153,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
     </div>
     <div class="legend"><span><i style="background:var(--dot)"></i>いまの高さ（上下にドラッグ）</span><span><i style="background:#e0457b"></i>自分の声（録ったもの。高さは形だけ合わせて表示）</span><span><i style="background:var(--claude)"></i>Claude の案</span><span><i style="background:var(--line)"></i>調整前（動画の語りは「動画でいま使われている読み方」、ほかは「チャンネルの基本の速さ・抑揚」から始まる）</span><span>下の棒＝音の長さ（ドラッグ）</span><span>｜＝間（左右の棒をドラッグ）</span><span>文字をダブルクリック＝そこをアクセントの山にする</span></div>
     <div id="ed"><canvas id="cv" height="330"></canvas><canvas id="cv2" height="0"></canvas></div>
-    <div id="rawBox" hidden style="margin-top:8px"><div class="hint">自分の声（録ったそのまま。横は時間。縦線と文字＝どの音に当たったか）</div><div style="overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--row)"><canvas id="cv3" height="150"></canvas></div></div>
+    <div id="rawBox" hidden style="margin-top:8px"><div class="hint">自分の声（録ったそのまま。横は時間）。<b style="color:#2f6db0">青い枠＝句</b>（どの言葉か）。<b>青い線の上の四角を左右にドラッグすると、句の始まり・終わりを直せる</b>。句の中の音は長さの割合で自動で分ける</div><div style="overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--row)"><canvas id="cv3" height="150"></canvas></div></div>
     <p class="hint">音をクリックして選ぶと、キーボードでも動かせる：↑↓ 高さ／Shift＋↑↓ 長さ／←→ となりの音へ／スペース 再生</p>
     <h3>読み方（この文の全体）</h3>
     <div id="readSl"></div>
@@ -432,7 +432,7 @@ $('sceneChips').onclick=e=>{const b=e.target.closest('button');if(b){setScene(cu
 $('saveTake').onclick=()=>{if(!cur)return;const memo=$('memo').value.trim();
  if(!curScene&&!memo&&!confirm('場面もメモもないまま保存しますか？（メモがあると Claude が学びやすい）'))return;
  const qs=cur.sents.map(s=>s.q);const t={id:uid('vt'),text:cur.text,lineId:cur.lineId||null,src:cur.src||null,scene:curScene,memo,mode:mode(),kataId:K.id,kata:clone(K),
-  sents:cur.sents.map(s=>({text:s.text,plain:s.plain,emk:s.emk,base:s.base,claude:mode()==='claude'?s.claude:null,q:s.q})),ref:cur.rec?{hop:cur.rec.hop,a:cur.rec.a,b:cur.rec.b,f0:cur.rec.f0.map(v=>Math.round(v)),al:cur.rec.al}:null,
+  sents:cur.sents.map(s=>({text:s.text,plain:s.plain,emk:s.emk,base:s.base,claude:mode()==='claude'?s.claude:null,q:s.q})),ref:cur.rec?{hop:cur.rec.hop,a:cur.rec.a,b:cur.rec.b,f0:cur.rec.f0.map(v=>Math.round(v)),al:cur.rec.al,pb:cur.rec.pb}:null,
   fromBase:diffAmount(qs,cur.sents.map(s=>startQ(s))),fromClaude:mode()==='claude'?diffAmount(qs,cur.sents.map(s=>s.claude)):null,
   rulesUsed:mode()==='claude'?V.vrules.filter(r=>r.active!==false&&!r.deleted).map(r=>r.id):[],status:'Claude まだ',createdAt:now(),updatedAt:now()};
  if(cur.rec&&RECBLOB&&syncOn()){t.recPath=`roadmap/apps/seisakushitsu/voice_rec/${t.id}.webm`;upRec(t.recPath,RECBLOB)}
@@ -455,7 +455,7 @@ function renderTakes(){const ts=V.takes.filter(t=>!t.deleted).sort((a,b)=>b.crea
 $('takeList').onclick=async e=>{const d=e.target.closest('[data-take]');if(!d)return;const t=V.takes.find(x=>x.id===d.dataset.take);
  if(e.target.matches('[data-td]')){if(confirm('消しますか？')){t.deleted=true;t.updatedAt=now();save();renderTakes()}return}
  if(e.target.matches('[data-tl]')||e.target.matches('[data-tp]')){const k=V.kata.find(x=>x.id===t.kataId);if(k){LS.set('vv_kata',k.id);fillKataSel()}K=clone(t.kata);showKata();
-  cur={text:t.text,scene:t.scene,edited:false,lineId:t.lineId,src:t.src||null,rec:t.ref||null,sents:t.sents.map(s=>({...clone(s),claude:s.claude||clone(s.base)}))};RECBUF=null;$('recPlay').disabled=true;$('recFit').disabled=!t.ref;$('txt').value=t.text;setScene(t.scene||'');$('memo').value=t.memo||'';afterLoad();
+  cur={text:t.text,scene:t.scene,edited:false,lineId:t.lineId,src:t.src||null,rec:t.ref?(t.ref.pb||!t.ref.al?t.ref:(()=>{const r={...t.ref};setTimeout(()=>{pbFromAl(r);draw()},0);return r})()):null,sents:t.sents.map(s=>({...clone(s),claude:s.claude||clone(s.base)}))};RECBUF=null;$('recPlay').disabled=true;$('recFit').disabled=!t.ref;$('txt').value=t.text;setScene(t.scene||'');$('memo').value=t.memo||'';afterLoad();
   if(e.target.matches('[data-tp]'))play('now')}};
 /* ===== 動画の語り（制作室のデータ。同じサイトなのでこの Mac の制作室が持っているものを読む） ===== */
 let REMOTE_D=null;// クラウドから読んだ制作室のデータ（あればこちらを使う。制作室をこの Mac で開いていなくても最新になる）
@@ -535,6 +535,13 @@ $('nAdd').onclick=()=>{const t=$('nTitle').value.trim(),b=$('nBody').value.trim(
 /* ===== 自分の声を録って、抑揚の形を重ねる ===== */
 // 音ごとの「自分の声」と「いま」の数字を、キャンバスのすぐ下に並べる。録ったそのままの声の形は、その下に時間の順で出す
 const cv2=document.getElementById('cv2'),cx2=cv2.getContext('2d'),cv3=document.getElementById('cv3'),cx3=cv3.getContext('2d');
+let RAWX=null,rdrag=null;
+cv3.addEventListener('pointerdown',e=>{const r=cur&&cur.rec;if(!r||!r.pb||!RAWX)return;const x=e.clientX-cv3.getBoundingClientRect().left;let best=null;
+ r.pb.forEach((ph,k)=>{for(const w of ['t0','t1']){const d=Math.abs(RAWX.tx(ph[w])-x);if(d<8&&(!best||d<best.d))best={k,w,d}}});if(best){rdrag=best;cv3.setPointerCapture(e.pointerId)}});
+cv3.addEventListener('pointermove',e=>{const r=cur&&cur.rec;if(!rdrag||!r)return;const x=e.clientX-cv3.getBoundingClientRect().left;let t=RAWX.a0+(x-30)/RAWX.PX;const ph=r.pb[rdrag.k],pv=r.pb[rdrag.k-1],nx=r.pb[rdrag.k+1];
+ if(rdrag.w==='t0'){t=Math.min(t,ph.t1-0.05);if(pv)t=Math.max(t,pv.t1);ph.t0=Math.max(0,t)}else{t=Math.max(t,ph.t0+0.05);if(nx)t=Math.min(t,nx.t0);ph.t1=t}alFromPb(r);draw()});
+cv3.addEventListener('pointerup',()=>{if(rdrag){rdrag=null;$('recMsg').className='msg ok';$('recMsg').textContent='句の切れ目を直しました。「自分の声に合わせる」で、直した切れ目で合わせ直します'}});
+cv3.style.touchAction='none';
 function drawRecSide(){const r=cur&&cur.rec;$('rawBox').hidden=!(r&&r.al);if(!r||!r.al){return}
  if(cv2.height===0){layout();return draw()}
  const W=cv2.width/(window.devicePixelRatio||1),H2=104;cx2.clearRect(0,0,W,H2);cx2.fillStyle=css('--grid');cx2.fillRect(0,0,W,H2);
@@ -558,9 +565,14 @@ function drawRecSide(){const r=cur&&cur.rec;$('rawBox').hidden=!(r&&r.al);if(!r|
  const lo=Math.min(...lf.filter(v=>v)),hi=Math.max(...lf.filter(v=>v));const py=l=>10+(hi-l)/Math.max(0.05,hi-lo)*80;
  cx3.strokeStyle=css('--grid');cx3.beginPath();cx3.moveTo(30,95);cx3.lineTo(W3,95);cx3.stroke();cx3.fillStyle='#e0457b';
  lf.forEach((l,i)=>{const t=i*r.hop;if(!l||t<a0||t>a1)return;cx3.fillRect(tx(t)-1,py(l)-1,2.4,2.4)});
- cx3.font='bold 13px sans-serif';cx3.fillStyle=css('--ink');let prev=null;
- r.al.forEach((g,i)=>{const k=g?g.slice(0,4).join('_'):null;if(k!==prev&&g){const t=i*r.hop;cx3.strokeStyle=g[0]?'#c0503a':css('--sub');cx3.globalAlpha=.5;cx3.beginPath();cx3.moveTo(tx(t),0);cx3.lineTo(tx(t),H3-14);cx3.stroke();cx3.globalAlpha=1;
-  if(!g[0]){const m=cur.sents[g[1]].q.accent_phrases[g[2]].moras[g[3]];cx3.fillText(m.text,tx(t)+2,H3-2)}}prev=k});
+ // 音の切れ目（細い線と文字）
+ cx3.font='12px sans-serif';cx3.fillStyle=css('--sub');let prev=null;
+ r.al.forEach((g,i)=>{const k=g?g.slice(0,4).join('_'):null;if(k!==prev&&g&&!g[0]){const t=i*r.hop;cx3.strokeStyle=css('--line');cx3.beginPath();cx3.moveTo(tx(t),96);cx3.lineTo(tx(t),H3-14);cx3.stroke();cx3.fillText(cur.sents[g[1]].q.accent_phrases[g[2]].moras[g[3]].text,tx(t)+2,H3-2)}prev=k});
+ // 句の切れ目（青い太線。左右にドラッグして直せる）
+ RAWX={tx,a0,PX};(r.pb||[]).forEach((ph,k)=>{const ms=cur.sents[ph.si].q.accent_phrases[ph.pi].moras.map(m=>m.text).join('');
+  cx3.fillStyle='rgba(47,109,176,.10)';cx3.fillRect(tx(ph.t0),12,tx(ph.t1)-tx(ph.t0),H3-26);
+  for(const [t,dash] of [[ph.t0,0],[ph.t1,1]]){cx3.strokeStyle='#2f6db0';cx3.lineWidth=dash?2:3;cx3.setLineDash(dash?[4,3]:[]);cx3.beginPath();cx3.moveTo(tx(t),12);cx3.lineTo(tx(t),H3-14);cx3.stroke();cx3.setLineDash([]);cx3.lineWidth=1;cx3.fillStyle='#2f6db0';cx3.fillRect(tx(t)-4,12,8,8)}
+  cx3.fillStyle='#2f6db0';cx3.font='bold 12px sans-serif';cx3.fillText(ms,tx(ph.t0)+5,24)});
  cx3.fillStyle=css('--sub');cx3.font='10px sans-serif';for(let t=Math.ceil(a0*2)/2;t<a1;t+=0.5)cx3.fillText(t.toFixed(1)+'秒',tx(t),8)}
 // 録った声そのものもクラウドに置く（Claude が、うまく合わなかった理由を調べられるように）
 async function upRec(path,blob){try{const b=new Uint8Array(await blob.arrayBuffer());let t='';for(let i=0;i<b.length;i+=0x8000)t+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));const s=S();
@@ -632,7 +644,15 @@ async function alignRec(){const r=cur.rec;const parts=[];for(const s of cur.sent
  const map=new Float32Array(I).fill(-1);let i=iEnd,j=jEnd;
  while(i>=0&&j>=0){map[i]=j;const w=bk[i*J+j];if(w===0)break;if(w===3){i--;j--}else if(w===4){i--;j-=2}else{map[i-1]=j-0.5;i-=2;j--}}
  r.al=Array.from({length:r.f0.length},()=>null);
- for(let k=0;k<I;k++){if(map[k]<0)continue;const ts=(ja+map[k])*hop;const g=tl.segs.find(s=>ts>=s.t0&&ts<s.t1);if(g)r.al[ia+k]=[g.k==='m'?0:1,g.si,g.pi,g.k==='m'?g.mi:-1,+((ts-g.t0)/Math.max(1e-6,g.t1-g.t0)).toFixed(2)]}}
+ for(let k=0;k<I;k++){if(map[k]<0)continue;const ts=(ja+map[k])*hop;const g=tl.segs.find(s=>ts>=s.t0&&ts<s.t1);if(g)r.al[ia+k]=[g.k==='m'?0:1,g.si,g.pi,g.k==='m'?g.mi:-1,+((ts-g.t0)/Math.max(1e-6,g.t1-g.t0)).toFixed(2)]}
+ // 自動の突き合わせは「句の切れ目の最初の見当」にだけ使い、音への割り当ては句の中で長さの割合に配る（句の切れ目は録ったそのままの画面で直せる）
+ pbFromAl(r);alFromPb(r)}
+function pbFromAl(r){const o={};(r.al||[]).forEach((g,i)=>{if(!g||g[0])return;const k=g[1]+'_'+g[2];(o[k]=o[k]||{si:g[1],pi:g[2],t0:i*r.hop,t1:(i+1)*r.hop}).t1=(i+1)*r.hop});
+ r.pb=Object.values(o).sort((a,b)=>a.si-b.si||a.pi-b.pi);for(let k=1;k<r.pb.length;k++)if(r.pb[k].t0<r.pb[k-1].t1)r.pb[k].t0=r.pb[k-1].t1}
+function alFromPb(r){r.al=Array.from({length:r.f0.length},()=>null);const pb=r.pb||[];
+ pb.forEach((ph,k)=>{const ms=cur.sents[ph.si].q.accent_phrases[ph.pi].moras;const L=ms.map(m=>(m.consonant_length||0)+m.vowel_length);const tot=L.reduce((a,c)=>a+c,0)||1;const cum=[0];L.forEach(l=>cum.push(cum[cum.length-1]+l/tot));
+  for(let i=Math.floor(ph.t0/r.hop);i<Math.ceil(ph.t1/r.hop)&&i<r.al.length;i++){const u=(i*r.hop-ph.t0)/Math.max(0.01,ph.t1-ph.t0);let mi=0;while(mi<ms.length-1&&u>=cum[mi+1])mi++;r.al[i]=[0,ph.si,ph.pi,mi,+((u-cum[mi])/Math.max(1e-6,cum[mi+1]-cum[mi])).toFixed(2)]}
+  const nx=pb[k+1];if(nx&&nx.si===ph.si&&nx.t0-ph.t1>0.02&&cur.sents[ph.si].q.accent_phrases[ph.pi].pause_mora)for(let i=Math.ceil(ph.t1/r.hop);i<Math.floor(nx.t0/r.hop);i++)r.al[i]=[1,ph.si,ph.pi,-1,+((i*r.hop-ph.t1)/(nx.t0-ph.t1)).toFixed(2)]})}
 function recMap(){const r=cur&&cur.rec;if(!r||!r.al)return null;const lf=r.f0.map(v=>v>0?Math.log(v):0);const v=lf.filter(x=>x).sort((p,q)=>p-q);if(!v.length)return null;
  const medR=v[v.length>>1];const qs=[];cur.sents.forEach(s=>s.base.accent_phrases.forEach(ap=>ap.moras.forEach(m=>{if(m.pitch>0)qs.push(m.pitch)})));qs.sort((p,q)=>p-q);const medQ=qs[qs.length>>1]||5.5;
  const colOf={};cols.forEach(c=>colOf[(c.k==='m'?0:1)+'_'+c.si+'_'+c.pi+'_'+(c.k==='m'?c.mi:-1)]=c);
