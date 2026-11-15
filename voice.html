@@ -128,7 +128,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
       <label style="display:inline-flex;gap:4px;align-items:center;margin:0;font-size:13px"><input type="checkbox" id="recShow" checked style="width:auto">自分の声の線を出す</label>
       <span class="msg" id="recMsg"></span>
     </div>
-    <div class="legend"><span><i style="background:var(--dot)"></i>いまの高さ（上下にドラッグ）</span><span><i style="background:#e0457b"></i>自分の声（録ったもの。高さは形だけ合わせて表示）</span><span><i style="background:var(--claude)"></i>Claude の案</span><span><i style="background:var(--line)"></i>調整前</span><span>下の棒＝音の長さ（ドラッグ）</span><span>｜＝間（左右の棒をドラッグ）</span><span>文字をダブルクリック＝そこをアクセントの山にする</span></div>
+    <div class="legend"><span><i style="background:var(--dot)"></i>いまの高さ（上下にドラッグ）</span><span><i style="background:#e0457b"></i>自分の声（録ったもの。高さは形だけ合わせて表示）</span><span><i style="background:var(--claude)"></i>Claude の案</span><span><i style="background:var(--line)"></i>調整前（動画の語りは「動画でいま使われている読み方」、ほかは「チャンネルの基本の速さ・抑揚」から始まる）</span><span>下の棒＝音の長さ（ドラッグ）</span><span>｜＝間（左右の棒をドラッグ）</span><span>文字をダブルクリック＝そこをアクセントの山にする</span></div>
     <div id="ed"><canvas id="cv" height="330"></canvas></div>
     <p class="hint">音をクリックして選ぶと、キーボードでも動かせる：↑↓ 高さ／Shift＋↑↓ 長さ／←→ となりの音へ／スペース 再生</p>
     <h3>読み方（この文の全体）</h3>
@@ -257,7 +257,7 @@ const emk=[];for(const [a,b] of em){const k=await kanaOf(plain.slice(a,b));if(k)
 sents.push({text:s,plain,emk,base:clone(q),q:null,claude:null})}
 cur={text,sents,scene:scene||'',edited:false,lineId:curLineId,src:curSrc};RECBUF=null;$('recPlay').disabled=true;$('recFit').disabled=true;$('recMsg').textContent='';
 const cl=sents.map(s=>applyRules(clone(s.base),s,scene||''));sents.forEach((s,i)=>{s.claude=cl[i]});
-sents.forEach((s,i)=>{s.q=clone(mode()==='claude'?s.claude:s.base)});
+sents.forEach((s,i)=>{s.q=startQ(s)});
 undoStack=[];if(scene)setScene(scene);$('txt').value=text;afterLoad()}
 async function reloadForSpeaker(){if(!cur)return;const t=cur.text,sc=cur.scene;await loadLine(t,sc)}
 function afterLoad(){['playNow','playBase','undo','resetRead','saveTake','recBtn'].forEach(i=>$(i).disabled=false);$('playClaude').hidden=mode()!=='claude';$('playClaude').disabled=false;
@@ -271,13 +271,19 @@ function setRead(k,v){for(const s of cur.sents)s.q[k]=v;cur.edited=true;showRead
 for(const [k] of RS){const el=$('r_'+k);el.addEventListener('pointerdown',()=>{if(cur)pushUndo()});el.addEventListener('input',e=>{if(cur)setRead(k,+e.target.value)})}
 function pushUndo(){undoStack.push(clone(cur.sents.map(s=>s.q)));if(undoStack.length>80)undoStack.shift();$('undo').disabled=false}
 $('undo').onclick=()=>{const u=undoStack.pop();if(!u)return;cur.sents.forEach((s,i)=>{s.q=u[i]});showRead();draw();dirtyAudio();updateDiff()};
-$('resetRead').onclick=()=>{if(!cur)return;pushUndo();cur.sents.forEach(s=>{s.q=clone(mode()==='claude'?s.claude:s.base)});showRead();draw();dirtyAudio();updateDiff()};
+$('resetRead').onclick=()=>{if(!cur)return;pushUndo();cur.sents.forEach(s=>{s.q=startQ(s)});showRead();draw();dirtyAudio();updateDiff()};
 
 /* ===== Claude の案（決まりを当てはめる） ===== */
+// 調整を始める読み方：
+//  ・動画の語りの文 → 動画でいま使われている読み方（決まりを全部当てはめたもの）から
+//  ・Claude の案から → 決まりを全部当てはめたものから
+//  ・自分で（練習の文・自分で打った文）→ チャンネルの基本（速さ・抑揚・前後の間＝決まりの「global」）だけ当てはめたものから
+function stQ(s){if(!s._st)s._st=startQ(s);return s._st}
+function startQ(s){if((cur&&cur.src)||mode()==='claude')return clone(s.claude);return applyRules(clone(s.base),s,cur&&cur.scene,['global'])}
 // vrules: {id, op, p:{...}, scene:'' (空=どの場面にも), memo, active, updatedAt}
 function voicedIdx(ms){const r=[];ms.forEach((m,i)=>{if(m.pitch>0)r.push(i)});return r}
 function flatMoras(q){const r=[];q.accent_phrases.forEach((ap,pi)=>ap.moras.forEach((m,mi)=>r.push({m,pi,mi})));return r}
-function applyRules(q,s,sc){sc=sc??(curScene||'');const rules=V.vrules.filter(r=>r.active!==false&&!r.deleted&&(!r.scene||r.scene===sc));
+function applyRules(q,s,sc,only){sc=sc??(curScene||'');const rules=V.vrules.filter(r=>r.active!==false&&!r.deleted&&(!only||only.includes(r.op))&&(!r.scene||r.scene===sc));
 for(const r of rules){const p=r.p||{};
  if(r.op==='global'){for(const k of ['speedScale','intonationScale','volumeScale','prePhonemeLength','postPhonemeLength'])if(p[k]!=null)q[k]=p[k]}
  else if(r.op==='end_fall'){const fm=flatMoras(q).filter(x=>x.m.pitch>0);const n=Math.min(p.n||2,fm.length);for(let i=0;i<n;i++){const x=fm[fm.length-1-i];x.m.pitch-=(p.amt||0.1)*(n-i)/n}}
@@ -318,7 +324,7 @@ s.start();const out=await oc.startRendering();const od=out.getChannelData(0);let
 let AC=null,playing=null,cache={};
 function dirtyAudio(){cache={}}
 async function play(which){if(!cur)return;stopPlay();$('playMsg').textContent='作っています…';$('playMsg').className='msg';
-try{const key=which;let buf=cache[key];if(!buf){const qs=cur.sents.map(s=>which==='now'?s.q:which==='claude'?s.claude:keepRead(s.base,s.q));buf=await renderQs(qs);cache[key]=buf}
+try{const key=which;let buf=cache[key];if(!buf){const qs=cur.sents.map(s=>which==='now'?s.q:which==='claude'?s.claude:keepRead(stQ(s),s.q));buf=await renderQs(qs);cache[key]=buf}
 AC=AC||new AudioContext({sampleRate:SR});const src=AC.createBufferSource();src.buffer=buf;src.connect(AC.destination);src.start();playing=src;$('playMsg').textContent=''}
 catch(e){$('playMsg').textContent='鳴らせません：'+e.message}}
 // 「調整前」は、一音ずつの直しだけを外して聞く（速さなどはいまと同じ）
@@ -332,12 +338,12 @@ let cols=[],sel=-1,drag=null,yr=[5,6.5];
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
 function layout(){cols=[];let x=PAD;if(!cur)return;
 cur.sents.forEach((s,si)=>{s.q.accent_phrases.forEach((ap,pi)=>{ap.moras.forEach((m,mi)=>{cols.push({k:'m',si,pi,mi,x});x+=COL});cols.push({k:'p',si,pi,x});x+=GAP});x+=GAP*1.5});
-let lo=9,hi=0;for(const s of cur.sents)for(const q of [s.base,s.q,s.claude])for(const ap of q.accent_phrases)for(const m of ap.moras)if(m.pitch>0){lo=Math.min(lo,m.pitch);hi=Math.max(hi,m.pitch)}
+let lo=9,hi=0;for(const s of cur.sents)for(const q of [stQ(s),s.q,s.claude])for(const ap of q.accent_phrases)for(const m of ap.moras)if(m.pitch>0){lo=Math.min(lo,m.pitch);hi=Math.max(hi,m.pitch)}
 if(hi<lo){lo=5;hi=6}const c=(lo+hi)/2,h=Math.max(0.5,(hi-lo)*0.8+0.25);yr=[c-h,c+h];
 const w=Math.max(x+PAD,$('ed').clientWidth-2);const dpr=window.devicePixelRatio||1;cv.style.width=w+'px';cv.style.height='330px';cv.width=w*dpr;cv.height=330*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}
 const pY=p=>TOP+PH-(p-yr[0])/(yr[1]-yr[0])*PH;const yP=y=>yr[0]+(TOP+PH-y)/PH*(yr[1]-yr[0]);
 const LY0=TOP+PH+LBL+8;const lenY=L=>LY0+LENH-Math.min(1,L/0.35)*LENH;const yLen=y=>Math.max(0.01,(LY0+LENH-y)/LENH*0.35);
-function mOf(c,which){const s=cur.sents[c.si];const q=which==='q'?s.q:which==='b'?s.base:s.claude;const ap=q.accent_phrases[c.pi];return c.k==='m'?ap.moras[c.mi]:ap}
+function mOf(c,which){const s=cur.sents[c.si];const q=which==='q'?s.q:which==='b'?stQ(s):s.claude;const ap=q.accent_phrases[c.pi];return c.k==='m'?ap.moras[c.mi]:ap}
 function draw(){const W=cv.width/(window.devicePixelRatio||1);cx.clearRect(0,0,W,330);if(!cur){cx.fillStyle=css('--sub');cx.font='14px sans-serif';cx.fillText('セリフを読み込むと、ここに一音ずつの高さと長さが出ます',20,60);return}
 cx.fillStyle=css('--grid');cx.fillRect(0,TOP,W,PH);cx.fillRect(0,LY0,W,LENH);
 cx.fillStyle=css('--sub');cx.font='11px sans-serif';cx.fillText('高さ',6,TOP+12);cx.fillText('長さ',6,LY0+12);
@@ -389,7 +395,7 @@ function diffAmount(a,b){let p=0,np=0,l=0,nl=0,pa=0;for(let si=0;si<a.length;si+
  let g=0;for(const [k] of RS)g+=Math.abs(a[0][k]-b[0][k])/(k==='speedScale'||k==='intonationScale'||k==='volumeScale'?1:2);
  // 1 ≒ 平均で半音ずれ。ほぼ直していなければ 0.1 以下
  return +(p/Math.max(1,np)+3*l/Math.max(1,nl)+4*pa+2*g).toFixed(2)}
-function updateDiff(){if(!cur){$('diffInfo').textContent='';return}const qs=cur.sents.map(s=>s.q);const vb=diffAmount(qs,cur.sents.map(s=>s.base));
+function updateDiff(){if(!cur){$('diffInfo').textContent='';return}const qs=cur.sents.map(s=>s.q);const vb=diffAmount(qs,cur.sents.map(s=>startQ(s)));
  $('diffInfo').textContent=mode()==='claude'?`Claude の案から直した量：${diffAmount(qs,cur.sents.map(s=>s.claude))}（調整前からは ${vb}）。0 に近いほど、Claude の案のままで良かったということ`:`調整前から変えた量：${vb}`}
 
 /* ===== 場面とメモと保存 ===== */
@@ -397,12 +403,12 @@ const SCENES=['ふつうの説明','問いかけ','答え・結論','数字','�
 let curScene='',curLineId=null,curSrc=null;
 function setScene(s){curScene=s;if(cur)cur.scene=s;document.querySelectorAll('#sceneChips button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s))}
 $('sceneChips').innerHTML=SCENES.map(s=>`<button data-s="${s}">${s}</button>`).join('');
-$('sceneChips').onclick=e=>{const b=e.target.closest('button');if(b){setScene(curScene===b.dataset.s?'':b.dataset.s);if(cur&&mode()==='claude'){/* 場面ごとの決まりがあるので案を作り直す */const keepEdited=cur.edited;cur.sents.forEach(s=>{s.claude=applyRules(clone(s.base),s,curScene);if(!keepEdited)s.q=clone(s.claude)});draw();dirtyAudio();updateDiff()}}};
+$('sceneChips').onclick=e=>{const b=e.target.closest('button');if(b){setScene(curScene===b.dataset.s?'':b.dataset.s);if(cur&&mode()==='claude'){/* 場面ごとの決まりがあるので案を作り直す */const keepEdited=cur.edited;cur.sents.forEach(s=>{s.claude=applyRules(clone(s.base),s,curScene);s._st=null;if(!keepEdited)s.q=startQ(s)});draw();dirtyAudio();updateDiff()}}};
 $('saveTake').onclick=()=>{if(!cur)return;const memo=$('memo').value.trim();
  if(!curScene&&!memo&&!confirm('場面もメモもないまま保存しますか？（メモがあると Claude が学びやすい）'))return;
  const qs=cur.sents.map(s=>s.q);const t={id:uid('vt'),text:cur.text,lineId:cur.lineId||null,src:cur.src||null,scene:curScene,memo,mode:mode(),kataId:K.id,kata:clone(K),
   sents:cur.sents.map(s=>({text:s.text,plain:s.plain,emk:s.emk,base:s.base,claude:mode()==='claude'?s.claude:null,q:s.q})),ref:cur.rec?{hop:cur.rec.hop,a:cur.rec.a,b:cur.rec.b,f0:cur.rec.f0.map(v=>Math.round(v)),al:cur.rec.al}:null,
-  fromBase:diffAmount(qs,cur.sents.map(s=>s.base)),fromClaude:mode()==='claude'?diffAmount(qs,cur.sents.map(s=>s.claude)):null,
+  fromBase:diffAmount(qs,cur.sents.map(s=>startQ(s))),fromClaude:mode()==='claude'?diffAmount(qs,cur.sents.map(s=>s.claude)):null,
   rulesUsed:mode()==='claude'?V.vrules.filter(r=>r.active!==false&&!r.deleted).map(r=>r.id):[],status:'Claude まだ',createdAt:now(),updatedAt:now()};
  V.takes.push(t);save();$('memo').value='';flash('saveMsg','保存しました。Claude に「声の調整を見て」と言えば読みます');renderSide()};
 
@@ -535,7 +541,7 @@ function renderSide(){fillKataSel();renderNotes();renderLines();renderTakes();re
 const mode=()=>LS.get('vv_mode','self');
 function showMode(){document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode()));$('playClaude').hidden=mode()!=='claude'}
 $('modeSeg').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;LS.set('vv_mode',b.dataset.mode);showMode();
- if(cur&&!cur.edited)cur.sents.forEach(s=>{s.q=clone(mode()==='claude'?s.claude:s.base)});if(cur){showRead();draw();dirtyAudio();updateDiff()}};
+ if(cur)cur.sents.forEach(s=>{s._st=null});if(cur&&!cur.edited)cur.sents.forEach(s=>{s.q=startQ(s)});if(cur){showRead();draw();dirtyAudio();updateDiff()}};
 
 /* ===== はじめ ===== */
 $('engUrl').value=E();$('engUrl').onchange=()=>{LS.set('vv_eng',$('engUrl').value.trim());checkEngine()};
