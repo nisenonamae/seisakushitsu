@@ -52,7 +52,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 20:10</span>
+<header><h1>声の調整室</h1><a href="./">← 制作室</a><span class="stat" title="この画面の版。古いままなら Command＋Shift＋R">版 11/15 20:20</span>
 <span class="stat" id="engStat">VOICEVOX：まだ確かめていません</span>
 <span class="stat" id="syncStat">同期：—</span>
 <span style="margin-left:auto" class="seg" id="modeSeg"><button data-mode="self">自分で調整</button><button data-mode="claude">Claude の案から</button></span>
@@ -152,7 +152,8 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
       <span class="msg" id="recMsg"></span>
     </div>
     <div class="legend"><span><i style="background:var(--dot)"></i>いまの高さ（上下にドラッグ）</span><span><i style="background:#e0457b"></i>自分の声（録ったもの。高さは形だけ合わせて表示）</span><span><i style="background:var(--claude)"></i>Claude の案</span><span><i style="background:var(--line)"></i>調整前（動画の語りは「動画でいま使われている読み方」、ほかは「チャンネルの基本の速さ・抑揚」から始まる）</span><span>下の棒＝音の長さ（ドラッグ）</span><span>｜＝間（左右の棒をドラッグ）</span><span>文字をダブルクリック＝そこをアクセントの山にする</span></div>
-    <div id="ed"><canvas id="cv" height="330"></canvas></div>
+    <div id="ed"><canvas id="cv" height="330"></canvas><canvas id="cv2" height="0"></canvas></div>
+    <div id="rawBox" hidden style="margin-top:8px"><div class="hint">自分の声（録ったそのまま。横は時間。縦線と文字＝どの音に当たったか）</div><div style="overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--row)"><canvas id="cv3" height="150"></canvas></div></div>
     <p class="hint">音をクリックして選ぶと、キーボードでも動かせる：↑↓ 高さ／Shift＋↑↓ 長さ／←→ となりの音へ／スペース 再生</p>
     <h3>読み方（この文の全体）</h3>
     <div id="readSl"></div>
@@ -363,7 +364,8 @@ function layout(){cols=[];let x=PAD;if(!cur)return;
 cur.sents.forEach((s,si)=>{s.q.accent_phrases.forEach((ap,pi)=>{ap.moras.forEach((m,mi)=>{cols.push({k:'m',si,pi,mi,x});x+=COL});cols.push({k:'p',si,pi,x});x+=GAP});x+=GAP*1.5});
 let lo=9,hi=0;for(const s of cur.sents)for(const q of [stQ(s),s.q,s.claude])for(const ap of q.accent_phrases)for(const m of ap.moras)if(m.pitch>0){lo=Math.min(lo,m.pitch);hi=Math.max(hi,m.pitch)}
 if(hi<lo){lo=5;hi=6}const c=(lo+hi)/2,h=Math.max(0.5,(hi-lo)*0.8+0.25);yr=[c-h,c+h];
-const w=Math.max(x+PAD,$('ed').clientWidth-2);const dpr=window.devicePixelRatio||1;cv.style.width=w+'px';cv.style.height='330px';cv.width=w*dpr;cv.height=330*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}
+const w=Math.max(x+PAD,$('ed').clientWidth-2);const dpr=window.devicePixelRatio||1;cv.style.width=w+'px';cv.style.height='330px';cv.width=w*dpr;cv.height=330*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+ const h2=cur.rec&&cur.rec.al?104:0;cv2.style.width=w+'px';cv2.style.height=h2+'px';cv2.width=w*dpr;cv2.height=h2*dpr;cx2.setTransform(dpr,0,0,dpr,0,0)}
 const pY=p=>TOP+PH-(p-yr[0])/(yr[1]-yr[0])*PH;const yP=y=>yr[0]+(TOP+PH-y)/PH*(yr[1]-yr[0]);
 const LY0=TOP+PH+LBL+8;const lenY=L=>LY0+LENH-Math.min(1,L/0.35)*LENH;const yLen=y=>Math.max(0.01,(LY0+LENH-y)/LENH*0.35);
 function mOf(c,which){const s=cur.sents[c.si];const q=which==='q'?s.q:which==='b'?stQ(s):s.claude;const ap=q.accent_phrases[c.pi];return c.k==='m'?ap.moras[c.mi]:ap}
@@ -388,7 +390,7 @@ for(const [i,c] of cols.entries()){const X=c.x;
   if(!last){cx.fillStyle=L>0?css('--busy'):css('--line');cx.fillRect(X+GAP/2-4,lenY(L),8,LY0+LENH-lenY(L)+(L>0?0:0));cx.fillStyle=css('--sub');cx.font='10px sans-serif';cx.textAlign='center';cx.fillText(L>0?L.toFixed(2):'間',X+GAP/2,LY0+LENH+12);cx.textAlign='left'}
   else{cx.fillStyle=css('--sub');cx.font='10px sans-serif';cx.textAlign='center';cx.fillText('文末',X+GAP/2,LY0+LENH+12);cx.textAlign='left'}}}
 if(sel>=0&&cols[sel]){const m=mOf(cols[sel],'q'),b=mOf(cols[sel],'b');const d=m.pitch>0&&b.pitch>0?(m.pitch-b.pitch)*12/LN2:0;cx.fillStyle=css('--ink');cx.font='12px sans-serif';
- cx.fillText(`「${m.text}」 高さ ${d>=0?'+':''}${d.toFixed(1)} 半音（調整前から）　長さ ${((m.consonant_length||0)+m.vowel_length).toFixed(3)} 秒`,PAD,TOP+PH+LBL+LENH+30)}}
+ cx.fillText(`「${m.text}」 高さ ${d>=0?'+':''}${d.toFixed(1)} 半音（調整前から）　長さ ${((m.consonant_length||0)+m.vowel_length).toFixed(3)} 秒`,PAD,TOP+PH+LBL+LENH+30)}drawRecSide()}
 function hit(x,y){for(const [i,c] of cols.entries()){if(c.k==='m'&&x>=c.x&&x<c.x+COL)return{i,c,zone:y<TOP+PH+4?'pitch':y<LY0?'label':'len'};if(c.k==='p'&&x>=c.x&&x<c.x+GAP)return{i,c,zone:'pause'}}return null}
 function pt(e){const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
 cv.addEventListener('pointerdown',e=>{if(!cur)return;const [x,y]=pt(e);const h=hit(x,y);if(!h)return;
@@ -531,6 +533,35 @@ $('noteFilter').onclick=e=>{const b=e.target.closest('[data-nf]');if(b){noteF=b.
 $('noteList').onclick=e=>{if(!e.target.matches('[data-ndel]'))return;const n=V.notes.find(x=>x.id===e.target.closest('[data-note]').dataset.note);if(confirm('このメモを消しますか？')){n.deleted=true;n.updatedAt=now();save();renderNotes()}};
 $('nAdd').onclick=()=>{const t=$('nTitle').value.trim(),b=$('nBody').value.trim();if(!t&&!b)return;V.notes.push({id:uid('vn'),cat:'自分のメモ',title:t||b.slice(0,30),body:b,by:'作り手',updatedAt:now()});save();$('nTitle').value='';$('nBody').value='';flash('nMsg','足しました');renderNotes()};
 /* ===== 自分の声を録って、抑揚の形を重ねる ===== */
+// 音ごとの「自分の声」と「いま」の数字を、キャンバスのすぐ下に並べる。録ったそのままの声の形は、その下に時間の順で出す
+const cv2=document.getElementById('cv2'),cx2=cv2.getContext('2d'),cv3=document.getElementById('cv3'),cx3=cv3.getContext('2d');
+function drawRecSide(){const r=cur&&cur.rec;$('rawBox').hidden=!(r&&r.al);if(!r||!r.al){return}
+ if(cv2.height===0){layout();return draw()}
+ const W=cv2.width/(window.devicePixelRatio||1),H2=104;cx2.clearRect(0,0,W,H2);cx2.fillStyle=css('--grid');cx2.fillRect(0,0,W,H2);
+ const lf=r.f0.map(v=>v>0?Math.log(v):0),vv=lf.filter(x=>x).sort((p,q)=>p-q),medR=vv[vv.length>>1]||0;
+ const qs=[];cur.sents.forEach(s=>s.q.accent_phrases.forEach(ap=>ap.moras.forEach(m=>{if(m.pitch>0)qs.push(m.pitch)})));qs.sort((p,q)=>p-q);const medQ=qs[qs.length>>1]||0;
+ const by={};r.al.forEach((g,i)=>{if(!g)return;const k=g.slice(0,4).join('_');(by[k]=by[k]||[]).push(i)});
+ cx2.font='11px sans-serif';cx2.fillStyle=css('--sub');[['高 自分',16],['高 いま',36],['長 自分',60],['長 いま',80]].forEach(([t,y])=>cx2.fillText(t,2,y+4));
+ cx2.fillStyle=css('--sub');cx2.fillText('高＝高さ（それぞれの真ん中から何半音か。ピンク＝1.5半音以上ちがう）　長＝長さ（秒）。赤＝間',2,100);
+ for(const c of cols){const k=(c.k==='m'?0:1)+'_'+c.si+'_'+c.pi+'_'+(c.k==='m'?c.mi:-1);const fr=by[k]||[];const X=c.k==='m'?c.x+COL/2:c.x+GAP/2;cx2.textAlign='center';
+  if(c.k==='m'){const m=mOf(c,'q');const own=fr.filter(i=>r.al[i][4]>=0.3&&lf[i]).map(i=>lf[i]).sort((p,q)=>p-q);const oS=own.length?(own[own.length>>1]-medR)*ST12:null;const nS=m.pitch>0?(m.pitch-medQ)*ST12:null;
+   const bad=oS!=null&&nS!=null&&Math.abs(oS-nS)>1.5;cx2.fillStyle=bad?'#e0457b':css('--ink');cx2.font=(bad?'bold ':'')+'11px sans-serif';
+   cx2.fillText(oS==null?'–':(oS>=0?'+':'')+oS.toFixed(1),X,20);cx2.fillStyle=css('--dot');cx2.font='11px sans-serif';cx2.fillText(nS==null?'無声':(nS>=0?'+':'')+nS.toFixed(1),X,40);
+   const oL=fr.length*r.hop,nL=((m.consonant_length||0)+m.vowel_length)/(cur.sents[c.si].q.speedScale||1);cx2.fillStyle=css('--ink');cx2.fillText(fr.length?oL.toFixed(2):'–',X,64);cx2.fillStyle=css('--dot');cx2.fillText(nL.toFixed(2),X,84)}
+  else{const ap=mOf(c,'q');const oL=fr.length*r.hop,nL=ap.pause_mora?ap.pause_mora.vowel_length/(cur.sents[c.si].q.speedScale||1):0;if(fr.length||nL){cx2.fillStyle='#c0503a';cx2.fillText(fr.length?oL.toFixed(2):'0',X,64);cx2.fillText(nL.toFixed(2),X,84)}}
+  cx2.textAlign='left'}
+ // 録ったそのまま（時間の順）
+ const a0=Math.max(0,r.a-0.2),a1=r.b+0.2,PX=180,W3=Math.max(($('rawBox').clientWidth||800)-4,(a1-a0)*PX+60),H3=150,dpr=window.devicePixelRatio||1;
+ cv3.style.width=W3+'px';cv3.style.height=H3+'px';cv3.width=W3*dpr;cv3.height=H3*dpr;cx3.setTransform(dpr,0,0,dpr,0,0);cx3.clearRect(0,0,W3,H3);
+ const tx=t=>30+(t-a0)*PX;const x=r.x16||null;
+ if(x){cx3.fillStyle=css('--line');for(let t=a0;t<a1;t+=0.01){const i0=Math.floor(t*16000),i1=Math.min(x.length,i0+160);let e=0;for(let i=i0;i<i1;i++)e=Math.max(e,Math.abs(x[i]));const hh=Math.min(1,e*3)*30;cx3.fillRect(tx(t),118-hh,PX*0.01,hh*2)}}
+ const lo=Math.min(...lf.filter(v=>v)),hi=Math.max(...lf.filter(v=>v));const py=l=>10+(hi-l)/Math.max(0.05,hi-lo)*80;
+ cx3.strokeStyle=css('--grid');cx3.beginPath();cx3.moveTo(30,95);cx3.lineTo(W3,95);cx3.stroke();cx3.fillStyle='#e0457b';
+ lf.forEach((l,i)=>{const t=i*r.hop;if(!l||t<a0||t>a1)return;cx3.fillRect(tx(t)-1,py(l)-1,2.4,2.4)});
+ cx3.font='bold 13px sans-serif';cx3.fillStyle=css('--ink');let prev=null;
+ r.al.forEach((g,i)=>{const k=g?g.slice(0,4).join('_'):null;if(k!==prev&&g){const t=i*r.hop;cx3.strokeStyle=g[0]?'#c0503a':css('--sub');cx3.globalAlpha=.5;cx3.beginPath();cx3.moveTo(tx(t),0);cx3.lineTo(tx(t),H3-14);cx3.stroke();cx3.globalAlpha=1;
+  if(!g[0]){const m=cur.sents[g[1]].q.accent_phrases[g[2]].moras[g[3]];cx3.fillText(m.text,tx(t)+2,H3-2)}}prev=k});
+ cx3.fillStyle=css('--sub');cx3.font='10px sans-serif';for(let t=Math.ceil(a0*2)/2;t<a1;t+=0.5)cx3.fillText(t.toFixed(1)+'秒',tx(t),8)}
 // 録った声そのものもクラウドに置く（Claude が、うまく合わなかった理由を調べられるように）
 async function upRec(path,blob){try{const b=new Uint8Array(await blob.arrayBuffer());let t='';for(let i=0;i<b.length;i+=0x8000)t+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));const s=S();
  await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:'声の調整室：録った声',content:btoa(t)})})}catch(e){}}
