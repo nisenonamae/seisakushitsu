@@ -12,8 +12,8 @@ body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic 
 header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 14px 8px;display:flex;align-items:center;gap:10px}
 header h1{font-size:18px;margin:0}header .sync{font-size:12px;color:var(--sub);margin-left:auto}
 main{max-width:820px;margin:0 auto;padding:12px 14px 30px}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--row);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(10,1fr);padding-bottom:env(safe-area-inset-bottom)}
-nav button,nav a.nl{background:none;border:0;color:var(--sub);font:inherit;font-size:min(12px,2.75vw);letter-spacing:-.03em;white-space:nowrap;padding:8px 0 9px;cursor:pointer;text-align:center;text-decoration:none}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--row);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(11,1fr);padding-bottom:env(safe-area-inset-bottom)}
+nav button,nav a.nl{background:none;border:0;color:var(--sub);font:inherit;font-size:min(12px,2.5vw);letter-spacing:-.05em;white-space:nowrap;padding:8px 0 9px;cursor:pointer;text-align:center;text-decoration:none}
 nav a.nl b{display:block;font-size:18px;line-height:1.2}
 nav button b{display:block;font-size:18px;line-height:1.2}
 nav button[aria-current="true"]{color:var(--sea);font-weight:700}
@@ -357,6 +357,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 <button data-t="kufu"><b>▤</b>工夫</button>
 <a class="nl" href="bgm.html"><b>♪</b>音楽</a>
 <a class="nl" href="sound.html"><b>≋</b>音調整</a>
+<a class="nl" href="draw.html"><b>✎</b>描く</a>
 <button data-t="num"><b>▦</b>数字</button>
 <button data-t="set"><b>⚙</b>設定</button>
 </nav>
@@ -566,7 +567,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（下のボタンで Claude に頼むと片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${(()=>{const pj=j.projId&&D.projects.filter(x=>!x.deleted&&!x.finished).length>1&&D.projects.find(x=>x.id===j.projId);return pj?`<span class="pill">${esc(candQ(pj).slice(0,14))}</span>`:''})()}${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
