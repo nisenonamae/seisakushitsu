@@ -22,7 +22,7 @@ ap.add_argument('--lead',type=float,default=0.0,help='動画のいちばん頭�
 ap.add_argument('--bgm',default='',help='BGM の指定。proj＝音の調整室で決めたもの（project.sound.bgm）。または JSON のファイル：[{"from":段の番号(1から) か "at":秒,"file":音のファイル,"vol":声に対する大きさ(既定0.12),"off":曲のどこから(秒),"fadeIn","fadeOut","none":true＝ここから音楽なし}] か {"duck":間で上げる倍率,"cues":[…]}')
 ap.add_argument('--lufs',type=float,default=-14.0,help='仕上げの大きさ（LUFS）。--bgm のとき')
 ap.add_argument('--base-out',default='',help='音の調整室用：BGM なし（声と効果音だけ）の軽い動画もここに書き出し、同じ名前の .json に段の時刻と「声の大きさの曲線」を置く')
-ap.add_argument('--subfont',type=int,default=1,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
+ap.add_argument('--subfont',type=int,default=4,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
 D=json.load(open(a.data,encoding='utf-8'));P=[p for p in D['projects'] if p['id']==a.proj][0]
 ob=(P.get('outline') or {}).get('blocks',[]);fb=(P.get('flesh') or {}).get('blocks',[])
 oi={b['id']:i for i,b in enumerate(ob)}

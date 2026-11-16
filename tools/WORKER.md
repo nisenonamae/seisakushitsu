@@ -331,6 +331,10 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - **読み方の辞書**：`voice.json` の `dict[]`（`surface` 書き方、`yomi` カタカナ、`accent`）。調整室で作り手が登録すると、その Mac の VOICEVOX のユーザー辞書に入る。書き出し（`render_draft.py --kata`）のときは `voice_render.sync_dict` でクラウドのエンジンにも入れるので、同じ読みになる。読み間違いを見つけたら Claude もここに足してよい（作り手に一言伝える）
 - take に `recPath` があれば、作り手が録った声そのもの（`roadmap/apps/seisakushitsu/voice_rec/<id>.webm`）。録音の合わせ方（高さの測り方 YIN・時間の突き合わせ DTW）の精度を確かめ、直すときに使う
 
+## 字幕の見た目
+- `render_draft.py` の `--subfont`（1〜10）。**いまの決まりは 4（UD ゴシック＋影）**で、これが既定値。`rules` に字幕の見た目の決まりがあれば、そちらに合わせる
+- 字幕なし（焼き込まない）案は保留中。作り手が決めたら `rules` に書く
+
 ## 音の調整室（sound.html）
 作り手が動画を流しながら BGM を置き・直し、メモを付けて残す所（声の調整室と同じく、直しから Claude が BGM の付け方を覚える）。
 - `projects[].sound.base`＝`{"video":"…/videos/<id>/base_vN.mp4","json":"…/base_vN.json"}`：BGM なし（声と効果音だけ）の軽い動画（960x540）と、段の時刻・声の有無（`talk`、0.05秒ごと）・声の大きさ（`vr`）。`render_draft.py … --base-out <base.mp4>` で本番と同時に作れる
