@@ -62,6 +62,7 @@ video{width:100%;display:block;max-height:max(170px,calc(100vh - 470px));backgro
 button.b.tb{padding:3px 10px;font-size:13px}
 #playBtn{min-width:44px;font-size:14px}
 #tc{font-variant-numeric:tabular-nums;font-size:13px;min-width:108px}
+#hear{width:auto;padding:3px 6px;font-size:12.5px;margin:0}
 .spd{display:inline-flex;align-items:center;gap:4px}.spd input{width:110px;padding:0;margin:0}.spd b{font-size:12.5px;min-width:52px;font-variant-numeric:tabular-nums}
 .sep{width:1px;height:20px;background:var(--line);margin:0 3px}
 .ab{display:inline-flex;gap:3px}.ab button[aria-pressed=true],#snapBtn[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -80,7 +81,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);c
 .keys td{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}.keys td:first-child{white-space:nowrap;font-weight:600}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/16 12:00</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/16 12:45</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
 <div class="row" style="margin:0 0 8px"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="hint">DaVinci のように：曲を掴んで動かす・端を引っ張って切る・白い線を上下して大きさ・角の□でフェード。<a href="#" id="helpLink">操作の一覧</a></span></div>
 <div id="noBase" class="empty" hidden></div>
@@ -107,6 +108,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);c
  <div id="bar">
   <button class="b tb" id="playBtn" title="再生・停止（スペース）">▶</button>
   <span id="tc">0:00.0 / 0:00</span>
+  <select id="hear" title="聞こえ方：見る人の機械の音をまねる（書き出しには関係しない）"><option value="raw">聞こえ方：そのまま</option><option value="phone">スマホのスピーカー風</option><option value="laptop">ノートパソコン風</option></select>
   <span class="spd" title="再生の速さ（1〜5倍）"><input type="range" id="spd" min="1" max="5" step="0.25" value="1"><b id="spdV">1.00 倍</b></span>
   <span class="ab"><button class="b tb" data-ab="mine" aria-pressed="true">自分の調整</button><button class="b tb" data-ab="claude">Claude の案</button><button class="b tb" data-ab="none">音楽なし</button></span>
   <span class="sep"></span>
@@ -129,6 +131,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);c
 <dialog id="help"><h2 style="margin-top:0">操作の一覧</h2>
 <table class="keys">
 <tr><td>スペース ／ J・K・L</td><td>再生・停止 ／ 後ろへ・止める・前へ（L は押すたびに 2→4→5 倍、J は押すたびに速く）</td></tr>
+<tr><td>「聞こえ方」</td><td>スマホのスピーカー・ノートパソコンでの聞こえ方をまねる（低い音を削る）。調整の確かめ用で、書き出しには関係しない</td></tr>
 <tr><td>上の「倍」のつまみ</td><td>再生の速さ（1〜5倍、0.25 ずつ）。スペースで再生しても、この速さで流れる</td></tr>
 <tr><td>← → ／ ⇧← →</td><td>1コマ ／ 1秒 動かす</td></tr>
 <tr><td>↑ ↓ ／ Home・End</td><td>前・次の切れ目（クリップの端・段の頭）へ ／ 頭・終わりへ</td></tr>
@@ -228,7 +231,7 @@ async function openProj(id){LS.set('snd_proj',id);P=D.projects.find(p=>p.id===id
   $('noBase').innerHTML=`この動画はまだ音の調整室用の動画（BGM なしの軽い版）がありません。<br><button class="b main" id="askBase" style="margin-top:8px" ${j?'disabled':''}>${j?'頼みました（'+esc(j.status)+'）':'作ってもらう'}</button>`;
   const ab=$('askBase');if(ab&&!j)ab.onclick=()=>{D.jobs.push({id:uid('j'),type:'sound_base',projId:P.id,status:'待ち',createdAt:now(),updatedAt:now()});save();openProj(P.id)};return}
  $('noBase').hidden=true;$('room').hidden=false;$('vload').hidden=false;$('vload').textContent='動画を読み込み中…（初回は数十秒）';
- try{const [v,j]=await Promise.all([ghAudio(P.sound.base.video),ghText(P.sound.base.json)]);BASE=JSON.parse(j);$('vid').src=v;$('vload').hidden=true}
+ try{const [v,j]=await Promise.all([ghAudio(P.sound.base.video),ghText(P.sound.base.json)]);BASE=JSON.parse(j);$('vid').src=v;$('vload').hidden=true;hookVideo()}
  catch(e){$('vload').textContent='読み込めません：'+e.message;return}
  let d=null;try{d=JSON.parse(LS.get(draftKey(),'null'))}catch(e){}
  W=d&&d.from===(P.sound.bgm||{}).updatedAt?toV2(d.w):toV2(P.sound.bgm);CL=claudePlan();UNDO=[];REDO=[];SEL=new Set();KSEL=new Set();KC=null;
@@ -262,6 +265,18 @@ function loadBuf(sid){if(!sid)return Promise.reject(new Error('曲なし'));if(B
   PK[sid]=pk;BUF[sid]=b;dirtyDraw=true;renderInsp(true);return b})().catch(e=>{FAIL[sid]=e.message||'読めない';delete LOADING[sid];dirtyDraw=true;renderPool();throw e})}
 const srcLen=c=>BUF[c.soundId]?BUF[c.soundId].duration-(c.off||0):null;
 function reps(c){const sl=srcLen(c);if(!sl||sl<XF+0.5)return [0];const p=[0];while(p[p.length-1]+sl<c.dur)p.push(p[p.length-1]+sl-XF);return p}
+/* 聞こえ方：声（動画の音）も BGM も同じ「出口」を通し、そこで小さいスピーカーの聞こえ方をまねる（書き出しには関係しない） */
+let OUT=null,VSRC=null,HEAR=LS.get('snd_hear','raw');
+function outNode(){const A=ac();if(!OUT){OUT={in:A.createGain(),nodes:[]};wireHear()}return OUT.in}
+function wireHear(){const A=ac();const o=OUT;try{o.in.disconnect()}catch(e){}o.nodes.forEach(n=>{try{n.disconnect()}catch(e){}});o.nodes=[];
+ const bq=(type,f,q,g)=>{const b=A.createBiquadFilter();b.type=type;b.frequency.value=f;if(q!=null)b.Q.value=q;if(g!=null)b.gain.value=g;return b};
+ let chain=[];
+ if(HEAR==='phone'){const mono=A.createGain();mono.channelCount=1;mono.channelCountMode='explicit';mono.channelInterpretation='speakers';   // スマホは左右がほぼ1つ
+  chain=[mono,bq('highpass',350,0.7),bq('highpass',350,0.7),bq('peaking',2500,1,4),bq('lowpass',10000,0.7)]}
+ else if(HEAR==='laptop')chain=[bq('highpass',180,0.7),bq('highpass',180,0.7),bq('peaking',3000,1,2),bq('lowpass',14000,0.7)];
+ let cur_=o.in;chain.forEach(n=>{cur_.connect(n);cur_=n});cur_.connect(A.destination);o.nodes=chain}
+function hookVideo(){if(VSRC)return;try{VSRC=ac().createMediaElementSource(V());VSRC.connect(outNode())}catch(e){console.warn(e)}}
+function setHear(m){HEAR=m;LS.set('snd_hear',m);$('hear').value=m;if(OUT)wireHear()}
 let NODES=[],SCH=null,schT=null;
 function stopNodes(){NODES.forEach(n=>{try{n.stop()}catch(e){}try{n.disconnect()}catch(e){}});NODES=[];SCH=null}
 function resched(){clearTimeout(schT);schT=setTimeout(()=>{if(!$('vid').paused)schedule()},90)}
@@ -270,7 +285,7 @@ function schedule(){stopNodes();const v=$('vid');if(v.paused||!BASE)return;const
  for(const c of pl.clips){if(!laneOn(pl,c.lane))continue;const b=BUF[c.soundId];const end=c.start+c.dur;if(end<=t)continue;
   if(!b){loadBuf(c.soundId).then(()=>resched()).catch(()=>{});continue}
   const off=c.off||0,sl=b.duration-off;if(sl<0.5)continue;const ps=reps(c),base=STD*BASE.vr/(RMS[c.soundId]||0.15)*vol*amp(laneDb(pl,c.lane));
-  const cg=A.createGain();cg.connect(A.destination);NODES.push(cg);
+  const cg=A.createGain();cg.connect(outNode());NODES.push(cg);
   const from=Math.max(t,c.start),n=Math.max(2,Math.ceil((end-from)/0.02)+1),cv=new Float32Array(n);
   for(let i=0;i<n;i++){const tt=from+(end-from)*i/(n-1),u=tt-c.start;cv[i]=base*amp(clipDb(c,u))*duckAt(tt)*fadeG(c,u)}
   const at=a0+(from-t)/R;cg.gain.setValueAtTime(cv[0],A.currentTime);try{cg.gain.setValueCurveAtTime(cv,at,Math.max(0.03,(end-from)/R))}catch(e){}
@@ -289,7 +304,7 @@ function setSpd(x){SPD=clamp(Math.round(x*4)/4,1,5);LS.set('snd_spd',String(SPD)
 function togglePlay(){const v=V();if(v.paused){ac().resume();if(v.playbackRate<1)v.playbackRate=SPD;v.play()}else v.pause()}
 // 試聴（曲を足すの一覧）
 let PREV=null;function stopPrev(){if(PREV){try{PREV.src.stop()}catch(e){}PREV.btn.textContent='▶';PREV=null}}
-async function preview(sid,btn){if(PREV&&PREV.sid===sid){stopPrev();return}stopPrev();btn.textContent='…';try{const b=await loadBuf(sid);const A=ac();A.resume();const s=A.createBufferSource();s.buffer=b;const g=A.createGain();g.gain.value=STD*(BASE?BASE.vr:0.1)/(RMS[sid]||0.15)*3;s.connect(g);g.connect(A.destination);s.start();PREV={sid,src:s,btn};btn.textContent='■';s.onended=()=>{if(PREV&&PREV.src===s)stopPrev()}}catch(e){btn.textContent='×'}}
+async function preview(sid,btn){if(PREV&&PREV.sid===sid){stopPrev();return}stopPrev();btn.textContent='…';try{const b=await loadBuf(sid);const A=ac();A.resume();const s=A.createBufferSource();s.buffer=b;const g=A.createGain();g.gain.value=STD*(BASE?BASE.vr:0.1)/(RMS[sid]||0.15)*3;s.connect(g);g.connect(outNode());s.start();PREV={sid,src:s,btn};btn.textContent='■';s.onended=()=>{if(PREV&&PREV.src===s)stopPrev()}}catch(e){btn.textContent='×'}}
 
 /* ===== タイムライン（描く） ===== */
 const cv=$('tl');const HDR=72,RUL=24,VOI=46,LH=72,TH=RUL+VOI+NL*LH+4;const LHH=()=>LH-12;
@@ -518,6 +533,7 @@ document.addEventListener('keydown',e=>{if(!BASE||$('room').hidden)return;const 
 $('playBtn').onclick=()=>{stopJ();togglePlay()};V().addEventListener('play',()=>$('playBtn').textContent='❚❚');V().addEventListener('pause',()=>$('playBtn').textContent='▶');
 V().addEventListener('ratechange',()=>{const r=V().playbackRate;$('spd').value=r;$('spdV').textContent=r.toFixed(2)+' 倍';resched()});
 $('spd').oninput=e=>setSpd(+e.target.value);setSpd(SPD);
+$('hear').onchange=e=>setHear(e.target.value);setHear(HEAR);
 $('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('bladeBtn').onclick=blade;$('zIn').onclick=()=>zoom(1.5);$('zOut').onclick=()=>zoom(1/1.5);$('zFit').onclick=fitZoom;
 function setSnap(v){SNAP=v;LS.set('snd_snap',v?'1':'0');$('snapBtn').setAttribute('aria-pressed',v)}$('snapBtn').onclick=()=>setSnap(!SNAP);setSnap(SNAP);
 $('helpLink').onclick=e=>{e.preventDefault();$('help').showModal()};
