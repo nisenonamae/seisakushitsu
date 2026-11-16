@@ -44,59 +44,104 @@ audio{width:100%;height:34px;margin:5px 0 2px}
 .job{font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding:5px 0}
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
-.vwrap{position:relative;background:#000;border-radius:10px;overflow:hidden}
-video{width:100%;display:block;max-height:42vh;background:#000}
-body[data-vs=small] video{max-height:24vh}body[data-vs=hide] .vwrap{display:none}
-.vs button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-@media(max-width:999px){#stick .row{margin:4px 0}#stick .b{padding:3px 9px;font-size:13px}}
-@media(min-width:1000px){main{max-width:1600px}#room:not([hidden]){display:grid;grid-template-columns:minmax(0,1.2fr) minmax(400px,1fr);gap:20px;align-items:start}
- #stick{top:56px;border-bottom:0;padding:0}#side{min-width:0}video{max-height:62vh}body[data-vs=small] video{max-height:34vh}#side h2:first-child{margin-top:0}}
-#stick{position:sticky;top:46px;z-index:4;background:var(--paper);padding:4px 0 2px;border-bottom:1px solid var(--line)}
+
+main{max-width:1700px}
+#top{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,1fr);gap:12px;align-items:stretch}
+@media(max-width:999px){#top{grid-template-columns:1fr}}
+.vwrap{position:relative;background:#000;border-radius:8px;overflow:hidden;cursor:pointer}
+video{width:100%;display:block;max-height:max(170px,calc(100vh - 430px));background:#000}
+@media(max-width:999px){video{max-height:32vh}}
 .vload[hidden]{display:none}
 .vload{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;background:rgba(0,0,0,.6)}
-#tl{width:100%;height:74px;display:block;margin-top:6px;cursor:pointer;border:1px solid var(--line);border-radius:6px;background:var(--row)}
-button.b.sm{font-size:12.5px;padding:2px 8px}
-button.b.del{color:var(--busy)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}@media(max-width:600px){.g2{grid-template-columns:1fr}}
-.g2 input[type=range]{padding:0}
-.box{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin:10px 0}
-.ab{display:inline-flex;gap:4px;flex-wrap:wrap}.ab button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.cue select{margin-top:6px}
-.pts{border-top:1px dashed var(--line);margin-top:6px}.pt{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:3px 0}.pt .tm{font-weight:700;font-size:13px;min-width:56px}
+#panel{border:1px solid var(--line);border-radius:8px;background:var(--paper);display:flex;flex-direction:column;min-height:0;max-height:max(220px,calc(100vh - 430px));overflow:hidden}
+@media(max-width:999px){#panel{max-height:none}}
+#panel>[data-pp]{overflow:auto;padding:8px 10px;flex:1}
+.ptabs{display:flex;border-bottom:1px solid var(--line)}.ptabs button{flex:1;background:none;border:0;padding:8px 4px;font:inherit;font-size:13.5px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
+.ptabs button[aria-pressed=true]{color:var(--ink);font-weight:700;border-bottom-color:var(--sea)}
+#bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:8px 0 4px}
+button.b.tb{padding:3px 10px;font-size:13px}
+#playBtn{min-width:44px;font-size:14px}
+#tc{font-variant-numeric:tabular-nums;font-size:13px;min-width:108px}
+.sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+.ab{display:inline-flex;gap:3px}.ab button[aria-pressed=true],#snapBtn[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#stat{margin-left:6px;font-variant-numeric:tabular-nums}
+#tlwrap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+#tl{display:block;width:100%;height:248px;touch-action:none;user-select:none}
+#hscroll{display:block;width:100%;margin:0;padding:0}
+button.b.sm{font-size:12.5px;padding:2px 8px}button.b.del{color:var(--busy)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.chip{font:inherit;font-size:12px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);cursor:pointer}.chip[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.pool{display:flex;align-items:center;gap:6px;padding:6px 4px;border-bottom:1px solid var(--line);cursor:grab}.pool:active{cursor:grabbing}.pn{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pv{min-width:30px}
+.insp>select{width:100%;margin-bottom:4px;padding:4px 8px}.insp .kv select{width:auto;padding:2px 6px}.insp input[type=number]{padding:2px 6px;font-size:13px;margin:0}.kv{display:flex;align-items:center;gap:6px;margin:5px 0;flex-wrap:wrap;font-size:13px}.kv>span:first-child{min-width:78px;color:var(--sub)}.kv input[type=range]{flex:1;min-width:120px;padding:0}
+.kfr{font-size:12.5px;margin:2px 0;padding:2px 4px;border-radius:4px}.kfr.on{background:rgba(255,211,77,.35)}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);max-width:640px}dialog::backdrop{background:rgba(0,0,0,.35)}
+.keys td{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}.keys td:first-child{white-space:nowrap;font-weight:600}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/15 22:50</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/16 13:30</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
-<p class="hint">動画を流しながら BGM を置いて、その場で聞いて直す所。ここでの直しとメモを Claude が読んで、BGM の付け方を覚えていく（声の調整室と同じやり方）。</p>
-<div class="row"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="msg" id="projMsg"></span></div>
+<div class="row" style="margin:0 0 8px"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="hint">DaVinci のように：曲を掴んで動かす・端を引っ張って切る・白い線を上下して大きさ・角の□でフェード。<a href="#" id="helpLink">操作の一覧</a></span></div>
 <div id="noBase" class="empty" hidden></div>
 <div id="room" hidden>
-  <div id="stick"><div class="vwrap"><video id="vid" controls playsinline preload="auto"></video><div class="vload" id="vload">動画を読み込み中…</div></div>
-  <canvas id="tl" height="74"></canvas>
-  <div class="row" style="margin-top:4px">
-    <span class="ab"><button class="b" data-ab="mine" aria-pressed="true">自分の調整で聞く</button><button class="b" data-ab="claude">Claude の案で聞く</button><button class="b" data-ab="none">音楽なしで聞く</button></span>
-    <span class="hint" id="nowAt"></span>
-    <span class="vs" style="margin-left:auto"><span class="hint">動画：</span><button class="b sm" data-vs="big">大</button><button class="b sm" data-vs="small">小</button><button class="b sm" data-vs="hide">隠す</button></span>
-  </div>
-  <div class="row"><button class="b main" id="addHere">＋ 今の位置から曲を入れる</button><button class="b" id="stopHere">今の位置で音楽を止める</button></div></div>
-
-  <div id="side">
-  <p class="hint" style="margin-top:6px">動画の下の帯：上の段＝語りの段（押すとその頭へ）、灰色＝声のある所、色＝置いた曲（白い線＝大きさの変化）</p>
-  <h2>置いた曲</h2>
-  <div id="cues"></div>
-
-  <details class="box"><summary>全体の調整</summary>
+ <div id="top">
+  <div id="vbox"><div class="vwrap"><video id="vid" playsinline preload="auto"></video><div class="vload" id="vload">動画を読み込み中…</div></div></div>
+  <div id="panel">
+   <div class="ptabs"><button data-pt="clip" aria-pressed="true">クリップ</button><button data-pt="pool">曲を足す</button><button data-pt="all">全体</button></div>
+   <div data-pp="clip" id="insp"></div>
+   <div data-pp="pool" hidden>
+    <input id="poolQ" placeholder="曲名・印象で絞る">
+    <div id="poolMoods" class="chips"></div>
+    <p class="hint" style="margin:4px 0">曲を下のタイムラインへ<b>引きずって</b>置く。または「再生ヘッドに置く」。</p>
+    <div id="poolList"></div>
+   </div>
+   <div data-pp="all" hidden>
     <label>声がないとき、BGM をどれだけ上げるか（<span id="duckV"></span>倍）</label><input type="range" id="duck" min="1" max="2.5" step="0.1">
-    <p class="hint">1.0＝いつも同じ大きさ。上げるほど、語りの切れ目で音楽が前に出る。</p>
-  </details>
-
-  <h2>メモを付けて残す</h2>
-  <p class="hint">「なぜこう直したか」を一言。例：オチの前は音楽を止めたほうが言葉が入る／この曲は暗すぎる／章の切り替わりで曲を変える。Claude はこのメモと直した所を見て、次から最初からそうする。</p>
-  <textarea id="memo" rows="2" placeholder="例：結論の段は音楽を消して、最後の一言のあとにだけ戻す"></textarea>
-  <div class="row"><button class="b main" id="saveBtn">メモを付けて保存</button><button class="b" id="renderBtn">この音で書き出してもらう</button><button class="b" id="resetBtn">Claude の案に戻す</button><span class="msg" id="saveMsg"></span></div>
-  <div id="takes"></div>
+    <p class="hint">1.0＝いつも同じ大きさ。上げるほど、語りの切れ目で音楽が前に出る（書き出しも同じ）。</p>
+    <label>段（トラック）</label><div id="laneInfo" class="hint"></div>
+    <p class="hint">M＝その段を鳴らさない（書き出しにも反映）／S＝その段だけ聞く（聞くときだけ）。タイムラインの左の M・S を押す。</p>
+   </div>
   </div>
+ </div>
+ <div id="bar">
+  <button class="b tb" id="playBtn" title="再生・停止（スペース）">▶</button>
+  <span id="tc">0:00.0 / 0:00</span>
+  <span class="ab"><button class="b tb" data-ab="mine" aria-pressed="true">自分の調整</button><button class="b tb" data-ab="claude">Claude の案</button><button class="b tb" data-ab="none">音楽なし</button></span>
+  <span class="sep"></span>
+  <button class="b tb" id="undoBtn" title="元に戻す（⌘Z）">↶</button><button class="b tb" id="redoBtn" title="やり直す（⇧⌘Z）">↷</button>
+  <button class="b tb" id="bladeBtn" title="再生ヘッドで切る（⌘B）">✂ 切る</button>
+  <button class="b tb" id="snapBtn" title="吸着（N）" aria-pressed="true">吸着</button>
+  <span class="sep"></span>
+  <button class="b tb" id="zOut" title="縮める（−）">−</button><button class="b tb" id="zFit" title="全体を表示（⇧Z）">全体</button><button class="b tb" id="zIn" title="広げる（＋）">＋</button>
+  <span class="hint" id="stat"></span>
+ </div>
+ <div id="tlwrap"><canvas id="tl"></canvas><input type="range" id="hscroll" min="0" max="1000" value="0" step="1"></div>
+ <div id="mode" class="hint"></div>
+
+ <h2>メモを付けて残す</h2>
+ <p class="hint">「なぜこう直したか」を一言。例：オチの前は音楽を止めたほうが言葉が入る／この曲は暗すぎる／章の切り替わりで曲を変える。Claude はこのメモと直した所を見て、次から最初からそうする。</p>
+ <textarea id="memo" rows="2" placeholder="例：結論の段は音楽を消して、最後の一言のあとにだけ戻す"></textarea>
+ <div class="row"><button class="b main" id="saveBtn">メモを付けて保存</button><button class="b" id="renderBtn">この音で書き出してもらう</button><button class="b" id="resetBtn">Claude の案に戻す</button><span class="msg" id="saveMsg"></span></div>
+ <div id="takes"></div>
 </div>
+<dialog id="help"><h2 style="margin-top:0">操作の一覧</h2>
+<table class="keys">
+<tr><td>スペース</td><td>再生・停止</td></tr>
+<tr><td>上の目盛りを押す・引きずる</td><td>その時刻へ飛ぶ（再生ヘッドを動かす）</td></tr>
+<tr><td>曲（クリップ）を掴んで動かす</td><td>時刻を変える。上下で段を移す。⇧＋押すと複数選べる</td></tr>
+<tr><td>クリップの左右の端を引っ張る</td><td>切る・伸ばす（曲より長くすると、つなぎ目を重ねてくり返す）</td></tr>
+<tr><td>クリップの白い線を上下</td><td>大きさ（dB）。⇧を押しながらだと細かく</td></tr>
+<tr><td>白い線をダブルクリック（または ⌥＋クリック）</td><td>大きさの点を足す。点を動かすと、なめらかに大きく・小さくなる。点をダブルクリックで消す</td></tr>
+<tr><td>クリップの上の角の □</td><td>左右に引っ張ってフェードイン・フェードアウト</td></tr>
+<tr><td>⌘B（✂ 切る）</td><td>再生ヘッドの所で切る（選んだクリップ。選んでいなければ再生ヘッドの下の全部）</td></tr>
+<tr><td>Delete</td><td>選んだクリップ（または選んだ点）を消す</td></tr>
+<tr><td>⌘C ／ ⌘V</td><td>コピー ／ 再生ヘッドに貼り付け</td></tr>
+<tr><td>⌘Z ／ ⇧⌘Z</td><td>元に戻す ／ やり直す</td></tr>
+<tr><td>← →</td><td>再生ヘッドを少し動かす（⇧で1秒）</td></tr>
+<tr><td>↑ ↓</td><td>前・次の切れ目（クリップの端・段の頭）へ</td></tr>
+<tr><td>N</td><td>吸着のオン・オフ</td></tr>
+<tr><td>＋ − ／ ⇧Z</td><td>タイムラインを広げる・縮める ／ 全体を表示</td></tr>
+<tr><td>⌘＋ホイール・トラックパッドの横スクロール</td><td>広げる・縮める ／ 横に動かす</td></tr>
+</table>
+<div class="row"><button class="b" onclick="this.closest('dialog').close()">閉じる</button></div></dialog>
 </main>
 <script>
 'use strict';
@@ -124,156 +169,340 @@ async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`
  const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:msg,content:b64,...(sha?{sha}:{})})});if(!r.ok)throw new Error('GitHub '+r.status)}
 const blobUrl={};
 async function ghAudio(path){if(blobUrl[path])return blobUrl[path];const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'force-cache'});if(!r.ok)throw new Error('GitHub '+r.status);return blobUrl[path]=URL.createObjectURL(await r.blob())}
+
 const fmt=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1)};
-const STD=0.12;   // 書き出しの標準の大きさ（声の大きさに対する倍率。約 −18dB）
-const XF=2.0;     // 曲と曲のつなぎ目（秒）
-const dbOf=v=>Math.round(20*Math.log10(Math.max(1e-6,v/STD))*2)/2, volOf=db=>STD*Math.pow(10,db/20);
-// 大きさの変化点：曲の頭の大きさ（vol）から、変化点（pts：{t:秒, db}）へなめらかに（直線で）変わる。最後の点のあとはその大きさのまま
-const ptsOf=c=>(c.pts||[]).filter(p=>p.t>c.at).sort((a,b)=>a.t-b.t);
-function dbAt(c,t){const b=20*Math.log10(Math.max(1e-6,(c.vol??STD)/STD));const ps=[{t:c.at,db:b},...ptsOf(c)];if(t<=ps[0].t)return ps[0].db;for(let i=1;i<ps.length;i++)if(t<=ps[i].t){const a=ps[i-1],z=ps[i];return a.db+(z.db-a.db)*(t-a.t)/Math.max(1e-6,z.t-a.t)}return ps[ps.length-1].db}
-const volAt=(c,t)=>volOf(dbAt(c,t));
+const fmt0=t=>{t=Math.max(0,Math.round(t||0));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+const STD=0.12;   // 0 dB＝書き出しの標準の大きさ（声の大きさに対する倍率）
+const XF=2.0;     // 曲より長いクリップをくり返すときのつなぎ目（秒）
+const NL=3;       // BGM の段の数
+const DBMIN=-40,DBMAX=24;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const r2=v=>Math.round(v*100)/100;const rh=v=>Math.round(v*2)/2;
+
+/* ===== データ：BGM の案（v2＝クリップ） ===== */
+// clip：{id, lane:1..3, start:秒, dur:秒, soundId, off:曲のどこから(秒), gain:dB(0＝標準), kf:[{u:クリップの頭からの秒, db}]（大きさの点。線は gain＋点の値）, fadeIn, fadeOut, why}
+function toV2(b){if(!b)return {v:2,duck:1.6,lanes:[{},{},{}],clips:[]};
+ if(b.clips){const o=JSON.parse(JSON.stringify(b));o.v=2;o.lanes=o.lanes||[];while(o.lanes.length<NL)o.lanes.push({});
+  o.clips.forEach(c=>{c.id=c.id||uid('k');c.lane=clamp(c.lane||1,1,NL);c.kf=(c.kf||[]).sort((a,b)=>a.u-b.u);c.gain=c.gain||0;c.off=c.off||0;c.fadeIn=c.fadeIn??0;c.fadeOut=c.fadeOut??0});return o}
+ const T=BASE?BASE.duration:1e9;const cs=(b.cues||[]).slice().sort((a,b)=>a.at-b.at);const clips=[];let k=0;
+ cs.forEach((x,i)=>{if(x.none||!x.soundId)return;const nx=cs[i+1];const st=x.at,en=nx?Math.min(T,nx.at+XF):T;const g=20*Math.log10(Math.max(1e-6,(x.vol??STD)/STD));
+  const ps=(x.pts||[]).filter(q=>q.t>st).sort((a,b)=>a.t-b.t);const kf=ps.length?[{u:0,db:0},...ps.map(q=>({u:r2(q.t-st),db:rh(q.db-g)}))]:[];
+  clips.push({id:x.id||uid('k'),lane:(k++%2)+1,start:r2(st),dur:r2(en-st),soundId:x.soundId,off:x.off||0,gain:rh(g),kf,fadeIn:x.fadeIn??(i>0?XF:1),fadeOut:x.fadeOut??(nx?XF:3),...(x.why?{why:x.why}:{})})});
+ return {v:2,duck:b.duck??1.6,lanes:[{},{},{}],clips}}
+const clean=pl=>({v:2,duck:pl.duck??1.6,lanes:pl.lanes.slice(0,NL).map(l=>l&&l.m?{m:true}:{}),clips:pl.clips.slice().sort((a,b)=>a.start-b.start||a.lane-b.lane).map(c=>{const o={id:c.id,lane:c.lane,start:r2(c.start),dur:r2(c.dur),soundId:c.soundId,off:r2(c.off||0),gain:rh(c.gain||0),fadeIn:r2(c.fadeIn||0),fadeOut:r2(c.fadeOut||0)};if(c.kf&&c.kf.length)o.kf=c.kf.map(k=>({u:r2(k.u),db:rh(k.db)}));if(c.why)o.why=c.why;return o})});
 
 /* ===== 状態 ===== */
-let P=null, BASE=null, W=null, AB=LS.get('snd_ab','mine'), DUCKG=null;   // W＝いま編集中の BGM（保存前）
+let P=null,BASE=null,W=null,AB=LS.get('snd_ab','mine'),DUCKG=null;
+let SEL=new Set(),SELK=null;   // 選んだクリップ／選んだ大きさの点 {id,i}
+let UNDO=[],REDO=[];
+let SNAP=LS.get('snd_snap','1')==='1',SOLO=null;
 const bgms=()=>D.sounds.filter(x=>!x.deleted&&x.kind==='BGM');
-const projs=()=>D.projects.filter(p=>!p.deleted&&p.sound&&p.sound.base);
-const draftKey=()=>'snd_draft_'+(P&&P.id);
-function plan(p){const b=(p.sound||{}).bgm;return b?JSON.parse(JSON.stringify(b)):{duck:1.6,cues:[]}}
-function claudePlan(p){const b=(p.sound||{}).claude||(p.sound||{}).bgm;return b?JSON.parse(JSON.stringify(b)):{duck:1.6,cues:[]}}
-function cur(){return AB==='claude'?claudePlan(P):AB==='none'?{duck:1,cues:[]}:W}
+const snd=id=>D.sounds.find(x=>x.id===id);
+const draftKey=()=>'snd_draft2_'+(P&&P.id);
+function claudePlan(){return toV2((P.sound||{}).claude||(P.sound||{}).bgm)}
+function cur(){return AB==='claude'?CL:AB==='none'?{v:2,duck:1,lanes:[{},{},{}],clips:[]}:W}
+let CL=null;
+const editable=()=>AB==='mine';
 
 /* ===== 動画を選ぶ ===== */
+function projTitle(p){const c=(D.candidates||[]).find(c=>c.id===p.candId);return p.title||(c?c.q:p.id)}
 function renderProj(){const ps=D.projects.filter(p=>!p.deleted&&(p.video||p.sound));const keep=LS.get('snd_proj','');
- $('proj').innerHTML=ps.length?ps.map(p=>`<option value="${p.id}" ${p.id===keep?'selected':''}>${esc(p.title||projTitle(p))}${p.sound&&p.sound.base?'':'（まだ調整室用の動画なし）'}</option>`).join(''):'<option value="">制作中の動画がありません</option>'}
-function projTitle(p){const c=(D.candidates||[]).find(c=>c.id===p.candId);return c?c.q:p.id}
-async function openProj(id){LS.set('snd_proj',id);P=D.projects.find(p=>p.id===id);stopAll();if(!P){$('room').hidden=true;return}
+ $('proj').innerHTML=ps.length?ps.map(p=>`<option value="${p.id}" ${p.id===keep?'selected':''}>${esc(projTitle(p))}${p.sound&&p.sound.base?'':'（まだ調整室用の動画なし）'}</option>`).join(''):'<option value="">制作中の動画がありません</option>'}
+async function openProj(id){LS.set('snd_proj',id);P=D.projects.find(p=>p.id===id);stopNodes();BASE=null;if(!P){$('room').hidden=true;return}
  if(!P.sound||!P.sound.base){$('room').hidden=true;$('noBase').hidden=false;
   const j=D.jobs.find(j=>!j.deleted&&j.type==='sound_base'&&j.projId===P.id&&j.status!=='できた');
   $('noBase').innerHTML=`この動画はまだ音の調整室用の動画（BGM なしの軽い版）がありません。<br><button class="b main" id="askBase" style="margin-top:8px" ${j?'disabled':''}>${j?'頼みました（'+esc(j.status)+'）':'作ってもらう'}</button>`;
   const ab=$('askBase');if(ab&&!j)ab.onclick=()=>{D.jobs.push({id:uid('j'),type:'sound_base',projId:P.id,status:'待ち',createdAt:now(),updatedAt:now()});save();openProj(P.id)};return}
- $('noBase').hidden=true;$('room').hidden=false;
+ $('noBase').hidden=true;$('room').hidden=false;$('vload').hidden=false;$('vload').textContent='動画を読み込み中…（初回は数十秒）';
+ try{const [v,j]=await Promise.all([ghAudio(P.sound.base.video),ghText(P.sound.base.json)]);BASE=JSON.parse(j);$('vid').src=v;$('vload').hidden=true}
+ catch(e){$('vload').textContent='読み込めません：'+e.message;return}
  let d=null;try{d=JSON.parse(LS.get(draftKey(),'null'))}catch(e){}
- W=d&&d.from===(P.sound.bgm||{}).updatedAt?d.w:plan(P);W.cues=W.cues||[];W.cues.forEach(c=>c.id=c.id||uid('c'));
- $('vload').hidden=false;$('vload').textContent='動画を読み込み中…（初回は数十秒）';
- try{const [v,j]=await Promise.all([ghAudio(P.sound.base.video),ghText(P.sound.base.json)]);BASE=JSON.parse(j);$('vid').src=v;$('vload').hidden=true;mkDuck();renderAll2()}
- catch(e){$('vload').textContent='読み込めません：'+e.message}}
+ W=d&&d.from===(P.sound.bgm||{}).updatedAt?toV2(d.w):toV2(P.sound.bgm);CL=claudePlan();UNDO=[];REDO=[];SEL=new Set();SELK=null;
+ mkDuck();fitZoom();W.clips.forEach(c=>loadBuf(c.soundId).catch(()=>{}));CL.clips.forEach(c=>loadBuf(c.soundId).catch(()=>{}));
+ renderInsp();renderPool();renderAllTab();renderTakes();setAB(AB);draw()}
 async function ghText(path){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});if(!r.ok)throw new Error('GitHub '+r.status);return r.text()}
 $('proj').onchange=e=>openProj(e.target.value);
 
-/* ===== 声の大きさの曲線 → BGM を下げる・上げる（書き出しと同じ計算） ===== */
+/* ===== 声の大きさ → BGM を下げる・上げる（書き出しと同じ計算） ===== */
 function mkDuck(){if(!BASE)return;const t=BASE.talk,du=(cur()||{}).duck??1.6,g=new Float32Array(t.length);let v=t[0]==='1'?1:du;for(let i=0;i<t.length;i++){const tg=t[i]==='1'?1:du;v=i?v+0.15*(tg-v):tg;g[i]=v}DUCKG=g}
 function duckAt(t){if(!DUCKG)return 1;const i=t/BASE.hop,i0=Math.floor(i);if(i0<0)return DUCKG[0];if(i0>=DUCKG.length-1)return DUCKG[DUCKG.length-1];return DUCKG[i0]+(DUCKG[i0+1]-DUCKG[i0])*(i-i0)}
 
-/* ===== 鳴らす（<audio> を動画の時刻に合わせて動かす） ===== */
-const EL={};   // key（区間×くり返し）→ audio
-const META={}; // soundId → {src, rms, len}
-async function meta(sid){if(META[sid])return META[sid];const x=D.sounds.find(y=>y.id===sid);if(!x)return null;
- const m={src:x.url||null,rms:x.rms||0,len:x.len||0,name:x.name};
- if(!m.src&&x.file){m.src=await ghAudio(x.file)}
- if(!m.rms&&x.file){try{const ac=new (window.AudioContext||window.webkitAudioContext)();const buf=await ac.decodeAudioData(await (await fetch(m.src)).arrayBuffer());let s=0,n=0;for(let c=0;c<buf.numberOfChannels;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i+=4){s+=d[i]*d[i];n++}}m.rms=Math.sqrt(s/n);m.len=buf.duration;ac.close()}catch(e){m.rms=0.15}}
- if(!m.rms)m.rms=0.15;return META[sid]=m}
-function segs(pl){const cs=(pl.cues||[]).slice().sort((a,b)=>a.at-b.at);const T=BASE?BASE.duration:0;
- return cs.map((c,i)=>{const nx=cs[i+1];return {c,t0:c.at,t1:nx?Math.min(T,nx.at+XF):T,last:!nx,first:i===0}}).filter(s=>!s.c.none&&s.c.soundId&&s.t1>s.t0)}
-function envAt(s,t){const L=s.t1-s.t0,u=t-s.t0;const fin=s.c.fadeIn??(s.first?1:XF),fout=s.c.fadeOut??(s.last?3:XF);let g=1;if(fin>0&&u<fin)g*=u/fin;if(fout>0&&L-u<fout)g*=Math.max(0,(L-u)/fout);return Math.max(0,Math.min(1,g))}
-let raf=0,ready=new Set();
-async function tick(){const v=$('vid'),t=v.currentTime,on=!v.paused&&!v.ended;const pl=cur();if(!pl||!BASE){return}
- const want=new Set();
- for(const s of segs(pl)){if(t<s.t0-0.05||t>s.t1)continue;const m=META[s.c.soundId];if(!m){meta(s.c.soundId);continue}
-  const off=s.c.off||0,len=Math.max(4,(m.len||9999)-off),L=s.t1-s.t0;const pos=[0];while(pos[pos.length-1]+len<L)pos.push(pos[pos.length-1]+len-XF);
-  pos.forEach((p,k)=>{const u=t-s.t0-p;if(u<0||u>len)return;const key=s.c.id+':'+k;want.add(key);
-   let a=EL[key];if(!a){a=EL[key]=new Audio();a.preload='auto';a.src=m.src}
-   let g=envAt(s,t);if(k>0&&u<XF)g*=u/XF;if(k+1<pos.length&&len-u<XF)g*=(len-u)/XF;
-   a.volume=Math.max(0,Math.min(1,volAt(s.c,t)*BASE.vr/m.rms*duckAt(t)*g*v.volume*(v.muted?0:1)));
-   const want_t=off+u;if(on){if(a.paused||Math.abs(a.currentTime-want_t)>0.25){try{a.currentTime=want_t}catch(e){}a.play().catch(()=>{})}}else{if(!a.paused)a.pause()}})}
- for(const k in EL)if(!want.has(k)){EL[k].pause()}
- drawTl();$('nowAt').textContent='今 '+fmt(t)+'　'+(blockAt(t)?.label||'')}
-function loop(){tick();raf=requestAnimationFrame(loop)}
-function stopAll(){for(const k in EL){EL[k].pause();delete EL[k]}}
-['play','seeked','pause','volumechange'].forEach(ev=>$('vid').addEventListener(ev,()=>{if(ev==='seeked')for(const k in EL)EL[k].pause();tick()}));
-$('vid').addEventListener('play',()=>{cancelAnimationFrame(raf);loop()});$('vid').addEventListener('pause',()=>cancelAnimationFrame(raf));
+/* ===== 大きさ・フェード ===== */
+function envDb(c,u){const k=c.kf;if(!k||!k.length)return 0;if(u<=k[0].u)return k[0].db;for(let i=1;i<k.length;i++)if(u<=k[i].u){const a=k[i-1],z=k[i];return a.db+(z.db-a.db)*(u-a.u)/Math.max(1e-6,z.u-a.u)}return k[k.length-1].db}
+const clipDb=(c,u)=>(c.gain||0)+envDb(c,u);
+function fadeG(c,u){let g=1;if(c.fadeIn>0&&u<c.fadeIn)g*=u/c.fadeIn;if(c.fadeOut>0&&c.dur-u<c.fadeOut)g*=(c.dur-u)/c.fadeOut;return clamp(g,0,1)}
+const laneOn=(pl,l)=>SOLO?l===SOLO:!(pl.lanes[l-1]||{}).m;
 
-/* ===== 段と時刻の帯 ===== */
-function blockAt(t){if(!BASE)return null;const i=BASE.blocks.findIndex(b=>t>=b.start&&t<b.end);return i<0?null:{i,b:BASE.blocks[i],label:(i+1)+'. '+BASE.blocks[i].role}}
+/* ===== 音（WebAudio。曲をまるごと読み込んで、動画の時刻に合わせて鳴らす） ===== */
+let AC=null;const BUF={},PK={},RMS={},LOADING={},FAIL={};
+const ac=()=>AC||(AC=new (window.AudioContext||window.webkitAudioContext)());
+function loadBuf(sid){if(!sid)return Promise.reject(new Error('曲なし'));if(BUF[sid])return Promise.resolve(BUF[sid]);if(LOADING[sid])return LOADING[sid];
+ const x=snd(sid);if(!x)return Promise.reject(new Error('棚にない曲'));
+ return LOADING[sid]=(async()=>{let ab;if(x.file){const u=await ghAudio(x.file);ab=await (await fetch(u)).arrayBuffer()}else if(x.url){const r=await fetch(x.url);if(!r.ok)throw new Error(r.status);ab=await r.arrayBuffer()}else throw new Error('ファイルなし');
+  const b=await ac().decodeAudioData(ab);let s=0,n=0;for(let c=0;c<b.numberOfChannels;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i+=8){s+=d[i]*d[i];n++}}
+  RMS[sid]=x.rms||Math.sqrt(s/n)||0.15;const hop=Math.floor(b.sampleRate*0.05),m=Math.floor(b.length/hop),pk=new Float32Array(m);
+  for(let c=0;c<b.numberOfChannels;c++){const d=b.getChannelData(c);for(let j=0;j<m;j++){let mx=0;for(let i=j*hop;i<(j+1)*hop;i+=16){const v=Math.abs(d[i]);if(v>mx)mx=v}if(mx>pk[j])pk[j]=mx}}
+  PK[sid]=pk;BUF[sid]=b;dirtyDraw=true;renderInsp(true);return b})().catch(e=>{FAIL[sid]=e.message||'読めない';delete LOADING[sid];dirtyDraw=true;renderPool();throw e})}
+const srcLen=c=>BUF[c.soundId]?BUF[c.soundId].duration-(c.off||0):null;
+function reps(c){const sl=srcLen(c);if(!sl||sl<XF+0.5)return [0];const p=[0];while(p[p.length-1]+sl<c.dur)p.push(p[p.length-1]+sl-XF);return p}
+let NODES=[],SCH=null,schT=null;
+function stopNodes(){NODES.forEach(n=>{try{n.stop()}catch(e){}try{n.disconnect()}catch(e){}});NODES=[];SCH=null}
+function resched(){clearTimeout(schT);schT=setTimeout(()=>{if(!$('vid').paused)schedule()},90)}
+function schedule(){stopNodes();const v=$('vid');if(v.paused||!BASE)return;const A=ac();if(A.state==='suspended')A.resume();
+ const t=v.currentTime,a0=A.currentTime+0.06;SCH={t0:t,a0};const pl=cur();const vol=v.muted?0:v.volume;
+ for(const c of pl.clips){if(!laneOn(pl,c.lane))continue;const b=BUF[c.soundId];const end=c.start+c.dur;if(end<=t)continue;
+  if(!b){loadBuf(c.soundId).then(()=>resched()).catch(()=>{});continue}
+  const off=c.off||0,sl=b.duration-off;if(sl<0.5)continue;const ps=reps(c),base=STD*BASE.vr/(RMS[c.soundId]||0.15)*vol;
+  const cg=A.createGain();cg.connect(A.destination);NODES.push(cg);
+  const from=Math.max(t,c.start),n=Math.max(2,Math.ceil((end-from)/0.02)+1),cv=new Float32Array(n);
+  for(let i=0;i<n;i++){const tt=from+(end-from)*i/(n-1),u=tt-c.start;cv[i]=base*Math.pow(10,clipDb(c,u)/20)*duckAt(tt)*fadeG(c,u)}
+  const at=a0+(from-t);cg.gain.setValueAtTime(cv[0],A.currentTime);try{cg.gain.setValueCurveAtTime(cv,at,Math.max(0.03,end-from))}catch(e){}
+  ps.forEach((p,k)=>{const rs=c.start+p,re=Math.min(end,rs+sl);if(re<=t)return;const st=Math.max(t,rs);
+   const src=A.createBufferSource();src.buffer=b;const rg=A.createGain();src.connect(rg);rg.connect(cg);
+   const fin=k>0,fout=k+1<ps.length,m=Math.max(2,Math.ceil((re-st)/0.05)+1),rc=new Float32Array(m);
+   for(let i=0;i<m;i++){const tt=st+(re-st)*i/(m-1);rc[i]=(fin?clamp((tt-rs)/XF,0,1):1)*(fout?clamp((re-tt)/XF,0,1):1)}
+   const w=a0+(st-t);rg.gain.setValueAtTime(rc[0],A.currentTime);try{rg.gain.setValueCurveAtTime(rc,w,Math.max(0.03,re-st))}catch(e){}
+   src.start(w,off+(st-rs),re-st);NODES.push(src,rg)})}}
+const V=()=>$('vid');
+V().addEventListener('play',schedule);V().addEventListener('playing',schedule);V().addEventListener('pause',stopNodes);V().addEventListener('waiting',stopNodes);
+V().addEventListener('seeked',()=>{if(!V().paused)schedule();dirtyDraw=true});V().addEventListener('volumechange',resched);
+V().addEventListener('click',togglePlay);
+function togglePlay(){const v=V();if(v.paused){ac().resume();v.play()}else v.pause()}
+// 試聴（曲を足すの一覧）
+let PREV=null;function stopPrev(){if(PREV){try{PREV.src.stop()}catch(e){}PREV.btn.textContent='▶';PREV=null}}
+async function preview(sid,btn){if(PREV&&PREV.sid===sid){stopPrev();return}stopPrev();btn.textContent='…';try{const b=await loadBuf(sid);const A=ac();A.resume();const s=A.createBufferSource();s.buffer=b;const g=A.createGain();g.gain.value=STD*(BASE?BASE.vr:0.1)/(RMS[sid]||0.15)*3;s.connect(g);g.connect(A.destination);s.start();PREV={sid,src:s,btn};btn.textContent='■';s.onended=()=>{if(PREV&&PREV.src===s)stopPrev()}}catch(e){btn.textContent='×'}}
+
+/* ===== タイムライン（描く） ===== */
+const cv=$('tl');const HDR=72,RUL=24,VOI=46,LH=58,TH=RUL+VOI+NL*LH+4;
+let T0=0,PPS=10,dirtyDraw=true,HOV=null,DRAG=null,SNAPX=null;
+const Wd=()=>cv.clientWidth-HDR;const X=t=>HDR+(t-T0)*PPS;const tAt=x=>T0+(x-HDR)/PPS;const laneY=l=>RUL+VOI+(l-1)*LH;
+function dbY(l,db){const top=laneY(l)+5,h=LH-12;return top+h-(clamp(db,-36,24)+36)/60*h}
+function fitZoom(){if(!BASE)return;PPS=Math.max(0.5,Wd()/BASE.duration);T0=0;syncScroll()}
+function zoom(f,tc){if(!BASE)return;const t=tc??(V().currentTime);const x=X(t);PPS=clamp(PPS*f,Math.max(0.3,Wd()/BASE.duration),400);T0=t-(x-HDR)/PPS;clampT0();syncScroll();dirtyDraw=true}
+function clampT0(){const vis=Wd()/PPS;T0=clamp(T0,0,Math.max(0,BASE.duration+5-vis))}
+function syncScroll(){if(!BASE)return;const vis=Wd()/PPS,mx=Math.max(0.0001,BASE.duration+5-vis);$('hscroll').value=Math.round(T0/mx*1000);$('hscroll').disabled=vis>=BASE.duration;dirtyDraw=true}
+$('hscroll').oninput=e=>{const vis=Wd()/PPS;T0=(+e.target.value/1000)*Math.max(0,BASE.duration+5-vis);dirtyDraw=true};
 const COL=['#3b82c4','#d08a2c','#4a9e6b','#a55ab8','#c4503b','#2f9fa8','#8a7d2c','#5560c8'];
-function colOf(sid){const ids=[...new Set(bgms().map(x=>x.id))];const i=ids.indexOf(sid);return COL[(i<0?7:i)%COL.length]}
-function drawTl(){const c=$('tl');if(!BASE)return;const w=c.clientWidth;if(c.width!==w*2){c.width=w*2;c.height=148}const g=c.getContext('2d');g.setTransform(2,0,0,2,0,0);const T=BASE.duration,X=t=>t/T*w;
- const css=getComputedStyle(document.documentElement);g.clearRect(0,0,w,74);
- BASE.blocks.forEach((b,i)=>{g.fillStyle=i%2?css.getPropertyValue('--grid'):css.getPropertyValue('--row');g.fillRect(X(b.start),0,X(b.end)-X(b.start),28);g.fillStyle=css.getPropertyValue('--sub');g.font='10px sans-serif';if(X(b.end)-X(b.start)>14)g.fillText(String(i+1),X(b.start)+3,12)});
- // 声のある所
- g.fillStyle='rgba(120,130,150,.35)';const t_=BASE.talk;for(let i=0;i<t_.length;i++)if(t_[i]==='1')g.fillRect(X(i*BASE.hop),20,Math.max(1,X(BASE.hop)),6);
- const pl=cur();const ss=(pl&&pl.cues||[]).slice().sort((a,b)=>a.at-b.at);
- ss.forEach((cq,i)=>{const t1=ss[i+1]?ss[i+1].at:T;const y=34;if(cq.none||!cq.soundId){g.strokeStyle=css.getPropertyValue('--sub');g.setLineDash([3,3]);g.strokeRect(X(cq.at),y,X(t1)-X(cq.at),18);g.setLineDash([])}else{g.fillStyle=colOf(cq.soundId);g.globalAlpha=.75;g.fillRect(X(cq.at),y,X(t1)-X(cq.at),18);g.globalAlpha=1;
-  const nm=(D.sounds.find(x=>x.id===cq.soundId)||{}).name||'';g.fillStyle='#fff';g.font='11px sans-serif';g.save();g.beginPath();g.rect(X(cq.at),y,X(t1)-X(cq.at)-2,18);g.clip();g.fillText(nm.replace(/（.*$/,''),X(cq.at)+4,y+13);g.restore();
-  if(ptsOf(cq).length){g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();const Y=db=>y+17-Math.max(0,Math.min(16,(db+15)/27*16));for(let k=0;k<=60;k++){const tt=cq.at+(t1-cq.at)*k/60;k?g.lineTo(X(tt),Y(dbAt(cq,tt))):g.moveTo(X(tt),Y(dbAt(cq,tt)))}g.stroke();g.lineWidth=1;
-   ptsOf(cq).forEach(p=>{if(p.t<t1){g.fillStyle='#fff';g.beginPath();g.arc(X(p.t),Y(p.db),2.5,0,7);g.fill()}})}}
-  g.fillStyle=css.getPropertyValue('--ink');g.fillRect(X(cq.at)-1,y-3,2,24)});
- const t=$('vid').currentTime;g.fillStyle=css.getPropertyValue('--busy');g.fillRect(X(t)-1,0,2,74);
- g.fillStyle=css.getPropertyValue('--sub');g.font='10px sans-serif';g.fillText(AB==='claude'?'Claude の案':AB==='none'?'音楽なし':'自分の調整',2,68)}
-$('tl').onclick=e=>{if(!BASE)return;const r=e.target.getBoundingClientRect(),t=(e.clientX-r.left)/r.width*BASE.duration;const b=blockAt(t);$('vid').currentTime=e.clientY-r.top<28&&b?b.b.start:t;tick()};
-window.addEventListener('resize',drawTl);
+function colOf(sid){const ids=bgms().map(x=>x.id);const i=ids.indexOf(sid);return COL[(i<0?7:i)%COL.length]}
+function draw(){if(!BASE){return}const dpr=window.devicePixelRatio||1,w=cv.clientWidth;if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(TH*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(TH*dpr)}
+ const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);const css=getComputedStyle(document.documentElement),C=k=>css.getPropertyValue(k).trim();
+ const T=BASE.duration,pl=cur(),t1=tAt(w);g.clearRect(0,0,w,TH);
+ // 背景・段
+ g.fillStyle=C('--row');g.fillRect(HDR,0,w-HDR,TH);
+ for(let l=1;l<=NL;l++){g.fillStyle=l%2?C('--paper'):C('--row');g.fillRect(HDR,laneY(l),w-HDR,LH);g.strokeStyle=C('--line');g.beginPath();g.moveTo(HDR,laneY(l)+.5);g.lineTo(w,laneY(l)+.5);g.stroke()}
+ g.fillStyle=C('--paper');g.fillRect(HDR,RUL,w-HDR,VOI);
+ // 語りの段の切れ目
+ BASE.blocks.forEach((b,i)=>{const x=X(b.start);if(x<HDR||x>w)return;g.strokeStyle='rgba(120,130,150,.25)';g.beginPath();g.moveTo(x+.5,RUL);g.lineTo(x+.5,TH);g.stroke()});
+ // 声の波形
+ const env=BASE.env;g.fillStyle='rgba(110,120,140,.55)';const mid=RUL+VOI/2+6;
+ for(let x=HDR;x<w;x++){const ta=tAt(x),tb=tAt(x+1);let mx=0;if(env){for(let i=Math.floor(ta/BASE.hop);i<=Math.floor(tb/BASE.hop);i++){if(i>=0&&i<env.length&&env[i]>mx)mx=env[i]}mx/=255}else{const i=Math.floor(ta/BASE.hop);mx=BASE.talk[i]==='1'?.5:0}
+  if(mx>0){const h=Math.max(1,mx*(VOI-18));g.fillRect(x,mid-h/2,1,h)}}
+ g.fillStyle=C('--sub');g.font='10px sans-serif';
+ BASE.blocks.forEach((b,i)=>{const x=X(b.start),x2=X(b.end);if(x2<HDR||x>w)return;if(x2-x>16){g.save();g.beginPath();g.rect(Math.max(HDR,x),RUL,x2-Math.max(HDR,x),14);g.clip();g.fillText((i+1)+(x2-x>90?' '+b.role.replace(/^.*?：/,''):''),Math.max(HDR,x)+3,RUL+11);g.restore()}});
+ // クリップ
+ const order=pl.clips.slice().sort((a,b)=>(SEL.has(a.id)?1:0)-(SEL.has(b.id)?1:0));
+ for(const c of order){const x0=X(c.start),x1=X(c.start+c.dur);if(x1<HDR||x0>w)continue;const top=laneY(c.lane)+3,h=LH-6,on=laneOn(pl,c.lane);
+  g.save();g.beginPath();g.rect(HDR,0,w-HDR,TH);g.clip();
+  g.globalAlpha=on?1:.35;g.fillStyle=colOf(c.soundId);rr(g,x0,top,x1-x0,h,4);g.fill();
+  // 波形
+  const pk=PK[c.soundId];if(pk){g.fillStyle='rgba(0,0,0,.28)';const ps=reps(c),cm=top+h/2+4;for(let x=Math.max(HDR,Math.floor(x0));x<Math.min(w,x1);x+=1){const u=tAt(x)-c.start;let k=0;for(let i=0;i<ps.length;i++)if(ps[i]<=u)k=i;const st=(c.off||0)+u-ps[k];const j=Math.floor(st/0.05);const a=(pk[j]||0)*Math.pow(10,clipDb(c,u)/20)*fadeG(c,u);const hh=Math.min(h-14,a*(h-14)*1.2);if(hh>0.5)g.fillRect(x,cm-hh/2,1,hh)}
+   // くり返しのつなぎ目
+   g.strokeStyle='rgba(255,255,255,.5)';g.setLineDash([2,3]);ps.slice(1).forEach(p=>{const x=X(c.start+p);g.beginPath();g.moveTo(x+.5,top+14);g.lineTo(x+.5,top+h);g.stroke()});g.setLineDash([])}
+  else{g.fillStyle='rgba(255,255,255,.85)';g.font='10px sans-serif';g.fillText(FAIL[c.soundId]?'鳴らせない：'+FAIL[c.soundId]:'読み込み中…',x0+6,top+h-8)}
+  // フェード
+  g.fillStyle='rgba(0,0,0,.25)';if(c.fadeIn>0){g.beginPath();g.moveTo(x0,top);g.lineTo(x0+c.fadeIn*PPS,top);g.lineTo(x0,top+h);g.closePath();g.fill()}
+  if(c.fadeOut>0){g.beginPath();g.moveTo(x1,top);g.lineTo(x1-c.fadeOut*PPS,top);g.lineTo(x1,top+h);g.closePath();g.fill()}
+  // 名前
+  g.fillStyle='#fff';g.font='bold 11px sans-serif';g.save();g.beginPath();g.rect(x0,top,x1-x0-3,h);g.clip();g.fillText(((snd(c.soundId)||{}).name||'（曲なし）').replace(/（.*$/,''),Math.max(x0,HDR)+5,top+12);g.restore();
+  // 大きさの線
+  g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();const xa=Math.max(x0,HDR),xb=Math.min(x1,w);for(let x=xa;x<=xb;x+=2){const u=tAt(x)-c.start;const y=dbY(c.lane,clipDb(c,u));x===xa?g.moveTo(x,y):g.lineTo(x,y)}g.stroke();g.lineWidth=1;
+  (c.kf||[]).forEach((k,i)=>{const x=X(c.start+k.u),y=dbY(c.lane,c.gain+k.db);const s=SELK&&SELK.id===c.id&&SELK.i===i;g.fillStyle=s?'#ffd34d':'#fff';g.beginPath();g.arc(x,y,s?5:3.6,0,7);g.fill();g.strokeStyle='rgba(0,0,0,.5)';g.stroke()});
+  // フェードのつまみ
+  g.fillStyle='#fff';g.strokeStyle='rgba(0,0,0,.6)';[[x0+c.fadeIn*PPS],[x1-c.fadeOut*PPS]].forEach(([x])=>{g.fillRect(x-4,top-1,8,8);g.strokeRect(x-4+.5,top-.5,7,7)});
+  // 選んだもの
+  if(SEL.has(c.id)){g.strokeStyle='#fff';g.lineWidth=2.5;rr(g,x0+1,top+1,x1-x0-2,h-2,4);g.stroke();g.strokeStyle=C('--ink');g.lineWidth=1;rr(g,x0-.5,top-.5,x1-x0+1,h+1,4);g.stroke()}
+  g.restore()}
+ // 目盛り
+ g.fillStyle=C('--paper');g.fillRect(HDR,0,w-HDR,RUL);g.strokeStyle=C('--line');g.beginPath();g.moveTo(HDR,RUL+.5);g.lineTo(w,RUL+.5);g.stroke();
+ const steps=[0.5,1,2,5,10,15,30,60,120,300];const st=steps.find(s=>s*PPS>=64)||300;g.fillStyle=C('--sub');g.font='10px sans-serif';
+ for(let t=Math.floor(T0/st)*st;t<=t1;t+=st){const x=X(t);if(x<HDR)continue;g.fillRect(x,RUL-8,1,8);g.fillText(st<1?fmt(t):fmt0(t),x+3,RUL-10)}
+ const s2=st/5;g.fillStyle='rgba(120,130,150,.5)';for(let t=Math.floor(T0/s2)*s2;t<=t1;t+=s2){const x=X(t);if(x>=HDR)g.fillRect(x,RUL-4,1,4)}
+ g.fillStyle='rgba(0,0,0,.08)';if(X(T)<w)g.fillRect(X(T),0,w-X(T),TH);
+ // 吸着の線
+ if(SNAPX!=null){g.strokeStyle='#ffd34d';g.setLineDash([4,3]);g.beginPath();g.moveTo(SNAPX+.5,0);g.lineTo(SNAPX+.5,TH);g.stroke();g.setLineDash([])}
+ // 再生ヘッド
+ const ph=X(V().currentTime);if(ph>=HDR&&ph<=w){g.fillStyle='#e0443a';g.fillRect(ph-.5,0,1.5,TH);g.beginPath();g.moveTo(ph-6,0);g.lineTo(ph+6,0);g.lineTo(ph,8);g.closePath();g.fill()}
+ // 左の見出し
+ g.fillStyle=C('--paper');g.fillRect(0,0,HDR,TH);g.strokeStyle=C('--line');g.beginPath();g.moveTo(HDR-.5,0);g.lineTo(HDR-.5,TH);g.stroke();
+ g.fillStyle=C('--ink');g.font='bold 11px sans-serif';g.fillText('語り',8,RUL+VOI/2+4);
+ for(let l=1;l<=NL;l++){const y=laneY(l);g.fillStyle=C('--ink');g.font='bold 11px sans-serif';g.fillText('BGM '+l,8,y+18);
+  const m=(pl.lanes[l-1]||{}).m,so=SOLO===l;btn(g,8,y+28,'M',m,'#c4503b');btn(g,32,y+28,'S',so,'#d0a12c')}
+ dirtyDraw=false}
+function btn(g,x,y,t,on,col){g.fillStyle=on?col:'rgba(120,130,150,.15)';rr(g,x,y,20,18,3);g.fill();g.fillStyle=on?'#fff':'#666';g.font='bold 10px sans-serif';g.fillText(t,x+6,y+13)}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.closePath()}
+let lastPh=-1;function loop(){const v=V();if(BASE){const ph=v.currentTime;
+  if(!v.paused){// 再生ヘッドが見えなくなったら追いかける
+   const vis=Wd()/PPS;if(ph>T0+vis*0.92||ph<T0){T0=ph-vis*0.1;clampT0();syncScroll()}
+   if(SCH){const exp=SCH.t0+(ac().currentTime-SCH.a0);if(Math.abs(ph-exp)>0.12)schedule()}}
+  if(ph!==lastPh){lastPh=ph;dirtyDraw=true;$('tc').textContent=fmt(ph)+' / '+fmt0(BASE.duration)}
+  if(dirtyDraw)draw()}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+window.addEventListener('resize',()=>{if(BASE){PPS=Math.max(PPS,Wd()/BASE.duration);clampT0();syncScroll()}dirtyDraw=true});
 
-/* ===== 置いた曲の一覧（編集） ===== */
-function trackOpts(sel){const xs=bgms().filter(x=>x.like!==-1).sort((a,b)=>(b.role?1:0)-(a.role?1:0)||(b.like||0)-(a.like||0));
- return `<option value="">（曲を選ぶ）</option>${xs.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc((x.role?'【'+x.role+'】':'')+x.name)}${x.moods&&x.moods.length?'　'+esc(x.moods.join('・')):''}</option>`).join('')}`}
-function renderCues(){const y=window.scrollY;const cs=W.cues.slice().sort((a,b)=>a.at-b.at);const mine=AB==='mine';
- $('cues').innerHTML=(mine?'':`<p class="hint" style="color:var(--busy)">いまは「${AB==='claude'?'Claude の案':'音楽なし'}」で聞いています。直すときは「自分の調整で聞く」に戻してください。</p>`)+(cs.length?cs.map((c,i)=>{const bk=blockAt(c.at);const nx=cs[i+1];return `<div class="tr cue" data-c="${c.id}" style="border-left:6px solid ${c.none?'var(--sub)':colOf(c.soundId)}">
- <div class="row" style="margin:0"><b>${fmt(c.at)}〜${nx?fmt(nx.at):'終わり'}</b><span class="hint">${esc(bk?bk.label:'')}</span>
- <button class="b sm" data-k="go">ここから再生</button><button class="b sm" data-k="-">−0.5秒</button><button class="b sm" data-k="+">＋0.5秒</button><button class="b sm" data-k="here">今の位置に動かす</button><button class="b sm del" data-k="del">消す</button></div>
- ${c.none?'<div class="hint" style="margin-top:4px">ここから音楽なし</div>':`
- <select data-f="soundId">${trackOpts(c.soundId)}</select>
- <div class="g2"><div><label>大きさ：<b>${dbOf(c.vol??STD)>0?'+':''}${dbOf(c.vol??STD)} dB</b>（0＝いつもの大きさ）</label><input type="range" data-f="vol" min="-15" max="12" step="0.5" value="${dbOf(c.vol??STD)}"></div>
- <div><label>曲のどこから流すか：<b>${fmt(c.off||0)}</b></label><input type="range" data-f="off" min="0" max="${Math.max(10,Math.floor((META[c.soundId]||{}).len||180)-5)}" step="0.5" value="${c.off||0}"></div>
- <div><label>入りのフェード：<b>${(c.fadeIn??(i===0?1:XF)).toFixed(1)}秒</b></label><input type="range" data-f="fadeIn" min="0" max="8" step="0.5" value="${c.fadeIn??(i===0?1:XF)}"></div>
- <div><label>終わりのフェード：<b>${(c.fadeOut??(nx?XF:3)).toFixed(1)}秒</b></label><input type="range" data-f="fadeOut" min="0" max="8" step="0.5" value="${c.fadeOut??(nx?XF:3)}"></div></div>`}
- ${c.none?'':`<div class="pts"><div class="row" style="margin:6px 0 2px"><b style="font-size:13px">大きさの変化</b><button class="b sm" data-k="padd">＋ 今の位置に変化点</button><span class="hint">曲の頭の大きさ（上の「大きさ」）から、変化点の大きさへなめらかに変わる。最後の変化点のあとはその大きさのまま</span></div>
- ${ptsOf(c).map((p,pi)=>`<div class="pt" data-pi="${pi}"><span class="tm">${fmt(p.t)}</span><button class="b sm" data-k="p-">−0.5秒</button><button class="b sm" data-k="p+">＋0.5秒</button><button class="b sm" data-k="phere">今の位置に</button><button class="b sm" data-k="pgo">少し前から再生</button>
-  <label style="margin:0 0 0 6px;display:inline">→ <b>${p.db>0?'+':''}${p.db} dB</b></label><input type="range" data-pf="db" min="-30" max="12" step="0.5" value="${p.db}" style="width:180px;vertical-align:middle"><button class="b sm del" data-k="pdel">消す</button></div>`).join('')}</div>`}
- ${c.why?`<div class="m">Claude のねらい：${esc(c.why)}</div>`:''}</div>`}).join(''):'<div class="empty">まだ曲を置いていません。動画を流して「＋ 今の位置から曲を入れる」。</div>');
- $('cues').querySelectorAll('input,select').forEach(e=>e.disabled=!mine);
- $('duck').value=W.duck??1.6;$('duckV').textContent=(+$('duck').value).toFixed(1);window.scrollTo(0,y);drawTl()}
-function changed(){LS.set(draftKey(),JSON.stringify({from:(P.sound.bgm||{}).updatedAt,w:W}));$('saveMsg').className='msg';$('saveMsg').textContent='まだ保存していません';mkDuck();for(const k in EL)EL[k].pause();tick()}
-$('cues').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const c=W.cues.find(x=>x.id===b.closest('[data-c]').dataset.c);const k=b.dataset.k,v=$('vid');
- if(k==='go'){v.currentTime=Math.max(0,c.at-1);v.play();return}
- if(AB!=='mine')return;
- if(k==='-')c.at=Math.max(0,+(c.at-0.5).toFixed(2));if(k==='+')c.at=Math.min(BASE.duration-1,+(c.at+0.5).toFixed(2));if(k==='here')c.at=+v.currentTime.toFixed(2);
- if(k==='del'){if(!confirm('この曲を消しますか？'))return;W.cues=W.cues.filter(x=>x!==c)}
- if(k==='padd'){const t=+v.currentTime.toFixed(2),cs=W.cues.slice().sort((a,b)=>a.at-b.at),nx=cs[cs.indexOf(c)+1];
-  if(t<=c.at||(nx&&t>=nx.at)){alert('変化点は、この曲が流れている間（'+fmt(c.at)+'〜'+(nx?fmt(nx.at):'終わり')+'）に置きます。動画をその所まで進めてから押してください');return}
-  c.pts=ptsOf(c);c.pts.push({t,db:Math.round(dbAt(c,t)*2)/2});c.pts.sort((a,b)=>a.t-b.t)}
- const pe=b.closest('[data-pi]');if(pe){const ps=ptsOf(c),p=ps[+pe.dataset.pi];c.pts=ps;
-  if(k==='p-')p.t=Math.max(c.at+0.1,+(p.t-0.5).toFixed(2));if(k==='p+')p.t=+(p.t+0.5).toFixed(2);if(k==='phere')p.t=+v.currentTime.toFixed(2);
-  if(k==='pgo'){v.currentTime=Math.max(0,(ps[+pe.dataset.pi-1]||{t:c.at}).t-1);v.play();return}
-  if(k==='pdel')c.pts=ps.filter(x=>x!==p);c.pts.sort((a,b)=>a.t-b.t)}
- changed();renderCues()};
-$('cues').oninput=e=>{if(e.target.dataset.pf&&AB==='mine'){const c=W.cues.find(x=>x.id===e.target.closest('[data-c]').dataset.c);const ps=ptsOf(c);c.pts=ps;const p=ps[+e.target.closest('[data-pi]').dataset.pi];p.db=+e.target.value;e.target.previousElementSibling.querySelector('b').textContent=(p.db>0?'+':'')+p.db+' dB';changed();drawTl();return}
- const f=e.target.dataset.f;if(!f||AB!=='mine')return;const c=W.cues.find(x=>x.id===e.target.closest('[data-c]').dataset.c);
- if(f==='soundId'){c.soundId=e.target.value;meta(c.soundId).then(()=>{changed();renderCues()});return}
- const val=+e.target.value;if(f==='vol')c.vol=+volOf(val).toFixed(4);else c[f]=val;
- const lab=e.target.previousElementSibling.querySelector('b');if(lab)lab.textContent=f==='vol'?(val>0?'+':'')+val+' dB':f==='off'?fmt(val):val.toFixed(1)+'秒';changed()};
-$('cues').onchange=e=>{if((e.target.dataset.f&&e.target.dataset.f!=='soundId')||e.target.dataset.pf)renderCues()};
-$('addHere').onclick=()=>{if(AB!=='mine'){setAB('mine')}const t=+$('vid').currentTime.toFixed(2);const prev=W.cues.slice().sort((a,b)=>a.at-b.at).filter(c=>c.at<=t&&!c.none).pop();
- W.cues.push({id:uid('c'),at:t,soundId:prev?prev.soundId:'',vol:prev?prev.vol:STD,off:0});changed();renderCues();setTimeout(()=>{const el=[...document.querySelectorAll('.cue')].find(x=>x.querySelector('b').textContent.startsWith(fmt(t)));if(el)el.scrollIntoView({block:'nearest'})},50)};
-$('stopHere').onclick=()=>{if(AB!=='mine')setAB('mine');W.cues.push({id:uid('c'),at:+$('vid').currentTime.toFixed(2),none:true});changed();renderCues()};
-$('duck').oninput=e=>{if(AB!=='mine')return;W.duck=+e.target.value;$('duckV').textContent=W.duck.toFixed(1);changed()};
-function setAB(m){AB=m;LS.set('snd_ab',m);document.querySelectorAll('[data-ab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ab===m));stopAll();mkDuck();renderCues();tick()}
+/* ===== タイムライン（さわる） ===== */
+function hit(x,y){const pl=cur();
+ if(x<HDR){if(y>RUL+VOI){const l=Math.floor((y-RUL-VOI)/LH)+1,yy=laneY(l);if(y>=yy+28&&y<=yy+46){if(x>=8&&x<28)return {k:'mute',l};if(x>=32&&x<52)return {k:'solo',l}}}return {k:'none'}}
+ if(y<RUL)return {k:'ruler'};if(y<RUL+VOI)return {k:'voice'};const l=Math.floor((y-RUL-VOI)/LH)+1;if(l<1||l>NL)return {k:'none'};
+ const cs=pl.clips.filter(c=>c.lane===l).sort((a,b)=>(SEL.has(b.id)?1:0)-(SEL.has(a.id)?1:0));
+ for(const c of cs){const x0=X(c.start),x1=X(c.start+c.dur);if(x<x0-4||x>x1+4)continue;const top=laneY(l)+3,h=LH-6;
+  if(Math.abs(y-(top+3))<7){if(Math.abs(x-(x0+c.fadeIn*PPS))<7)return {k:'fin',c};if(Math.abs(x-(x1-c.fadeOut*PPS))<7)return {k:'fout',c}}
+  for(let i=0;i<(c.kf||[]).length;i++){const k=c.kf[i];if(Math.hypot(x-X(c.start+k.u),y-dbY(l,c.gain+k.db))<7)return {k:'kf',c,i}}
+  if(x>=x0&&x<=x1&&Math.abs(y-dbY(l,clipDb(c,tAt(x)-c.start)))<5)return {k:'vol',c};
+  if(x<x0+6)return {k:'L',c};if(x>x1-6)return {k:'R',c};return {k:'body',c}}
+ return {k:'lane',l}}
+const CUR={ruler:'col-resize',voice:'pointer',L:'w-resize',R:'e-resize',fin:'ew-resize',fout:'ew-resize',vol:'ns-resize',kf:'move',body:'grab',mute:'pointer',solo:'pointer',lane:'default',none:'default'};
+function snapPts(ex){const pts=[0,V().currentTime,BASE.duration,...BASE.blocks.map(b=>b.start)];cur().clips.forEach(c=>{if(!ex.has(c.id))pts.push(c.start,c.start+c.dur)});return pts}
+function snapT(t,ex){if(!SNAP)return {t,s:null};let best=null,bd=9/PPS;for(const p of snapPts(ex)){const d=Math.abs(p-t);if(d<bd){bd=d;best=p}}return best==null?{t,s:null}:{t:best,s:best}}
+function pos(e){const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}
+function snap0(){return JSON.stringify(W)}
+function commit(before){if(before!==JSON.stringify(W)){UNDO.push(before);if(UNDO.length>150)UNDO.shift();REDO=[];changed()}}
+cv.addEventListener('pointermove',e=>{if(!BASE)return;const [x,y]=pos(e);if(DRAG){dragMove(x,y,e);return}const h=hit(x,y);cv.style.cursor=editable()||['ruler','voice','solo','none','lane'].includes(h.k)?CUR[h.k]:'default'});
+cv.addEventListener('pointerdown',e=>{if(!BASE)return;const [x,y]=pos(e);const h=hit(x,y);cv.setPointerCapture(e.pointerId);
+ if(h.k==='mute'){if(!editable())return;const b=snap0();W.lanes[h.l-1]=W.lanes[h.l-1]||{};W.lanes[h.l-1].m=!W.lanes[h.l-1].m;commit(b);resched();dirtyDraw=true;return}
+ if(h.k==='solo'){SOLO=SOLO===h.l?null:h.l;resched();dirtyDraw=true;return}
+ if(h.k==='ruler'||h.k==='voice'||h.k==='lane'||h.k==='none'){if(h.k==='lane'&&!e.shiftKey){SEL.clear();SELK=null;renderInsp()}DRAG={k:'scrub'};V().currentTime=clamp(tAt(x),0,BASE.duration);dirtyDraw=true;return}
+ if(!editable()){SEL=new Set([h.c.id]);renderInsp();dirtyDraw=true;return}
+ if(e.altKey&&h.k==='vol'){addKf(h.c,tAt(x)-h.c.start);return}
+ if(h.k==='kf'){SELK={id:h.c.id,i:h.c.kf[h.i]===undefined?null:h.i}}else SELK=null;
+ if(e.shiftKey&&h.k==='body'){if(SEL.has(h.c.id)){SEL.delete(h.c.id);renderInsp();dirtyDraw=true;return}SEL.add(h.c.id)}else if(!SEL.has(h.c.id)){SEL=new Set([h.c.id])}
+ DRAG={k:h.k,c:h.c,i:h.i,x0:x,y0:y,started:false,before:snap0(),orig:JSON.parse(JSON.stringify(W.clips.filter(c=>SEL.has(c.id)||c===h.c)))};
+ renderInsp();dirtyDraw=true});
+cv.addEventListener('pointerup',e=>{if(DRAG){if(DRAG.before)commit(DRAG.before);if(DRAG.started)resched()}DRAG=null;SNAPX=null;dirtyDraw=true;$('stat').textContent=''});
+cv.addEventListener('dblclick',e=>{if(!BASE||!editable())return;const [x,y]=pos(e);const h=hit(x,y);
+ if(h.k==='kf'){const b=snap0();h.c.kf.splice(h.i,1);SELK=null;commit(b);resched();renderInsp();dirtyDraw=true;return}
+ if(h.k==='vol'||h.k==='body'){addKf(h.c,tAt(x)-h.c.start);return}
+ if(h.k==='voice'){const bl=BASE.blocks.find(b=>tAt(x)>=b.start&&tAt(x)<b.end);if(bl)V().currentTime=bl.start}});
+function addKf(c,u){const b=snap0();c.kf=c.kf||[];const db=rh(envDb(c,u));c.kf.push({u:r2(clamp(u,0,c.dur)),db});c.kf.sort((a,z)=>a.u-z.u);SELK={id:c.id,i:c.kf.findIndex(k=>k.u===r2(clamp(u,0,c.dur)))};commit(b);renderInsp();dirtyDraw=true}
+function dragMove(x,y,e){const d=DRAG;if(d.k==='scrub'){V().currentTime=clamp(tAt(x),0,BASE.duration);dirtyDraw=true;return}
+ if(!d.started){if(Math.abs(x-d.x0)<3&&Math.abs(y-d.y0)<3)return;d.started=true}
+ const dt=(x-d.x0)/PPS,dy=y-d.y0,c=d.c,o=d.orig.find(z=>z.id===c.id),fine=e.shiftKey?0.25:1.0,ex=new Set(SEL);SNAPX=null;
+ if(d.k==='body'){const dl=Math.round(dy/LH);let ns=o.start+dt;const a=snapT(ns,ex),b=snapT(ns+o.dur,ex);
+  if(a.s!=null&&(b.s==null||Math.abs(a.t-ns)<=Math.abs(b.t-(ns+o.dur)))){ns=a.t;SNAPX=X(a.s)}else if(b.s!=null){ns=b.t-o.dur;SNAPX=X(b.s)}
+  const shift=ns-o.start;d.orig.forEach(oo=>{const cc=W.clips.find(z=>z.id===oo.id);cc.start=r2(Math.max(0,oo.start+shift));cc.lane=clamp(oo.lane+dl,1,NL)});$('stat').textContent='開始 '+fmt(c.start)}
+ else if(d.k==='L'){let ns=o.start+dt;const a=snapT(ns,ex);if(a.s!=null){ns=a.t;SNAPX=X(a.s)}ns=clamp(ns,o.start-(o.off||0),o.start+o.dur-0.3);const dd=ns-o.start;
+  c.start=r2(ns);c.dur=r2(o.dur-dd);c.off=r2(Math.max(0,(o.off||0)+dd));c.kf=(o.kf||[]).map(k=>({u:r2(k.u-dd),db:k.db}));$('stat').textContent='頭 '+fmt(c.start)+'（曲の '+fmt(c.off)+' から）'}
+ else if(d.k==='R'){let ne=o.start+o.dur+dt;const a=snapT(ne,ex);if(a.s!=null){ne=a.t;SNAPX=X(a.s)}c.dur=r2(clamp(ne-o.start,0.3,BASE.duration+60-o.start));$('stat').textContent='終わり '+fmt(c.start+c.dur)+'（長さ '+fmt(c.dur)+'）'}
+ else if(d.k==='fin'){c.fadeIn=r2(clamp(o.fadeIn+dt,0,c.dur-c.fadeOut));$('stat').textContent='フェードイン '+c.fadeIn.toFixed(1)+' 秒'}
+ else if(d.k==='fout'){c.fadeOut=r2(clamp(o.fadeOut-dt,0,c.dur-c.fadeIn));$('stat').textContent='フェードアウト '+c.fadeOut.toFixed(1)+' 秒'}
+ else if(d.k==='vol'){c.gain=rh(clamp(o.gain-dy*fine,DBMIN,DBMAX));$('stat').textContent='大きさ '+(c.gain>0?'+':'')+c.gain+' dB'}
+ else if(d.k==='kf'){const k=c.kf[d.i],ok=o.kf[d.i];if(!k)return;k.u=r2(clamp(ok.u+dt,0,c.dur));k.db=rh(clamp(ok.db-dy*fine,DBMIN-c.gain,DBMAX-c.gain));const kk=k;c.kf.sort((a,z)=>a.u-z.u);d.i=c.kf.indexOf(kk);SELK={id:c.id,i:d.i};$('stat').textContent=fmt(c.start+k.u)+'　'+((c.gain+k.db)>0?'+':'')+rh(c.gain+k.db)+' dB'}
+ dirtyDraw=true;renderInsp(true);resched()}
+cv.addEventListener('wheel',e=>{if(!BASE)return;const [x]=pos(e);if(e.ctrlKey||e.metaKey||e.altKey){e.preventDefault();zoom(Math.exp(-e.deltaY*0.0025),tAt(x));return}
+ if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){e.preventDefault();T0+=e.deltaX/PPS;clampT0();syncScroll()}},{passive:false});
+// 曲を足す一覧から引きずって置く
+cv.addEventListener('dragover',e=>{if(editable()){e.preventDefault();const [x,y]=pos(e);const l=clamp(Math.floor((y-RUL-VOI)/LH)+1,1,NL);HOV={x,l};SNAPX=X(snapT(tAt(x),new Set()).t);dirtyDraw=true}});
+cv.addEventListener('dragleave',()=>{SNAPX=null;dirtyDraw=true});
+cv.addEventListener('drop',e=>{e.preventDefault();SNAPX=null;const sid=e.dataTransfer.getData('text/plain');if(!sid||!editable())return;const [x,y]=pos(e);const l=clamp(Math.floor((y-RUL-VOI)/LH)+1,1,NL);addClip(sid,snapT(Math.max(0,tAt(x)),new Set()).t,l)});
+async function addClip(sid,t,l){const b=snap0();let len=(snd(sid)||{}).len||0;try{len=(await loadBuf(sid)).duration}catch(e){}
+ const c={id:uid('k'),lane:l,start:r2(t),dur:r2(Math.min(len||60,Math.max(5,BASE.duration-t))),soundId:sid,off:0,gain:0,kf:[],fadeIn:1,fadeOut:2};
+ W.clips.push(c);SEL=new Set([c.id]);SELK=null;commit(b);resched();renderInsp();showTab('clip');dirtyDraw=true}
+
+/* ===== 編集の操作（切る・消す・コピー・元に戻す） ===== */
+function blade(){if(!editable())return;const t=V().currentTime;const b=snap0();let tg=W.clips.filter(c=>SEL.has(c.id)&&t>c.start+0.05&&t<c.start+c.dur-0.05);
+ if(!tg.length)tg=W.clips.filter(c=>t>c.start+0.05&&t<c.start+c.dur-0.05&&laneOn(W,c.lane));if(!tg.length)return;
+ tg.forEach(c=>{const u=t-c.start,ps=reps(c);let k=0;ps.forEach((p,i)=>{if(p<=u)k=i});const n={...JSON.parse(JSON.stringify(c)),id:uid('k'),start:r2(t),dur:r2(c.dur-u),off:r2((c.off||0)+(u-ps[k])),fadeIn:0,kf:(c.kf||[]).filter(q=>q.u>u).map(q=>({u:r2(q.u-u),db:q.db}))};
+  const dbAtU=rh(envDb(c,u));if(c.kf&&c.kf.length){n.kf.unshift({u:0,db:dbAtU});c.kf=c.kf.filter(q=>q.u<u);c.kf.push({u:r2(u),db:dbAtU})}
+  n.fadeOut=c.fadeOut;c.dur=r2(u);c.fadeOut=0;delete n.why;W.clips.push(n)});commit(b);resched();renderInsp();dirtyDraw=true}
+function delSel(){if(!editable())return;const b=snap0();if(SELK!=null&&SELK.i!=null){const c=W.clips.find(z=>z.id===SELK.id);if(c&&c.kf[SELK.i]){c.kf.splice(SELK.i,1);SELK=null;commit(b);resched();renderInsp();dirtyDraw=true;return}}
+ if(!SEL.size)return;W.clips=W.clips.filter(c=>!SEL.has(c.id));SEL.clear();commit(b);resched();renderInsp();dirtyDraw=true}
+let CLIP=null;function copySel(){CLIP=W.clips.filter(c=>SEL.has(c.id)).map(c=>JSON.parse(JSON.stringify(c)))}
+function paste(){if(!editable()||!CLIP||!CLIP.length)return;const b=snap0();const t=V().currentTime,m=Math.min(...CLIP.map(c=>c.start));SEL=new Set();
+ CLIP.forEach(c=>{const n={...JSON.parse(JSON.stringify(c)),id:uid('k'),start:r2(t+(c.start-m))};delete n.why;W.clips.push(n);SEL.add(n.id)});commit(b);resched();renderInsp();dirtyDraw=true}
+function undo(){if(!UNDO.length||!editable())return;REDO.push(JSON.stringify(W));W=JSON.parse(UNDO.pop());after()}
+function redo(){if(!REDO.length||!editable())return;UNDO.push(JSON.stringify(W));W=JSON.parse(REDO.pop());after()}
+function after(){SEL=new Set([...SEL].filter(id=>W.clips.some(c=>c.id===id)));SELK=null;changed();resched();renderInsp();renderAllTab();dirtyDraw=true}
+function edges(){return [...new Set([0,BASE.duration,...BASE.blocks.map(b=>b.start),...cur().clips.flatMap(c=>[c.start,c.start+c.dur])])].sort((a,b)=>a-b)}
+document.addEventListener('keydown',e=>{if(!BASE||$('room').hidden)return;const tg=e.target.tagName;if(/INPUT|TEXTAREA|SELECT/.test(tg)&&e.target.type!=='range')return;const mod=e.metaKey||e.ctrlKey;const v=V();
+ if(e.code==='Space'){e.preventDefault();togglePlay();return}
+ if(mod&&e.key.toLowerCase()==='b'){e.preventDefault();blade();return}
+ if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
+ if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
+ if(mod&&e.key.toLowerCase()==='c'){copySel();return}
+ if(mod&&e.key.toLowerCase()==='v'){e.preventDefault();paste();return}
+ if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();delSel();return}
+ if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();v.currentTime=clamp(v.currentTime+(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?1:1/30),0,BASE.duration);return}
+ if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const t=v.currentTime,es=edges();const n=e.key==='ArrowDown'?es.find(x=>x>t+0.02):[...es].reverse().find(x=>x<t-0.02);if(n!=null)v.currentTime=n;return}
+ if(!mod&&e.key.toLowerCase()==='n'){setSnap(!SNAP);return}
+ if(e.key==='+'||e.key===';'||e.key==='='){zoom(1.5);return}if(e.key==='-'){zoom(1/1.5);return}
+ if(e.shiftKey&&e.key.toLowerCase()==='z'){fitZoom();return}
+ if(e.key==='Escape'){SEL.clear();SELK=null;renderInsp();dirtyDraw=true}});
+$('playBtn').onclick=togglePlay;V().addEventListener('play',()=>$('playBtn').textContent='❚❚');V().addEventListener('pause',()=>$('playBtn').textContent='▶');
+$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('bladeBtn').onclick=blade;$('zIn').onclick=()=>zoom(1.5);$('zOut').onclick=()=>zoom(1/1.5);$('zFit').onclick=fitZoom;
+function setSnap(v){SNAP=v;LS.set('snd_snap',v?'1':'0');$('snapBtn').setAttribute('aria-pressed',v)}$('snapBtn').onclick=()=>setSnap(!SNAP);setSnap(SNAP);
+$('helpLink').onclick=e=>{e.preventDefault();$('help').showModal()};
+
+/* ===== 右の欄：クリップ（選んだものを細かく）・曲を足す・全体 ===== */
+function showTab(t){document.querySelectorAll('[data-pt]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pt===t));document.querySelectorAll('[data-pp]').forEach(p=>p.hidden=p.dataset.pp!==t);LS.set('snd_pt',t)}
+document.querySelector('.ptabs').onclick=e=>{const b=e.target.closest('[data-pt]');if(b)showTab(b.dataset.pt)};
+const num=(f,v,step,min,max,suf)=>`<input type="number" data-n="${f}" value="${v}" step="${step}" ${min!=null?'min="'+min+'"':''} ${max!=null?'max="'+max+'"':''} style="width:92px">${suf||''}`;
+function renderInsp(soft){const el=$('insp');const c=cur().clips.find(z=>SEL.has(z.id));
+ if(soft&&document.activeElement&&el.contains(document.activeElement)&&document.activeElement.type!=='range')return;
+ if(!c){el.innerHTML=`<div class="empty" style="text-align:left">タイムラインの曲（クリップ）を押すと、ここで数字で細かく直せる。<br><br>曲を足すときは上の「曲を足す」。<br>操作は <a href="#" onclick="$('help').showModal();return false">操作の一覧</a>。</div>`;return}
+ const ro=editable()?'':'disabled';const sl=srcLen(c);
+ el.innerHTML=`<div class="insp" data-cid="${c.id}"><select data-n="soundId" ${ro}>${bgms().filter(x=>x.like!==-1||x.id===c.soundId).map(x=>`<option value="${x.id}" ${x.id===c.soundId?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+ <div class="kv"><span>大きさ</span><input type="range" data-n="gain" min="${DBMIN}" max="${DBMAX}" step="0.5" value="${c.gain}" ${ro}><b>${c.gain>0?'+':''}${c.gain} dB</b></div>
+ <div class="kv"><span>段</span><select data-n="lane" ${ro}>${[1,2,3].map(l=>`<option ${l===c.lane?'selected':''}>${l}</option>`).join('')}</select><span>開始</span>${num('start',c.start,0.1,0)}<span class="hint">${fmt(c.start)}</span></div>
+ <div class="kv"><span>長さ</span>${num('dur',c.dur,0.1,0.3)}<span class="hint">終わり ${fmt(c.start+c.dur)}${sl&&c.dur>sl?'（くり返し '+reps(c).length+' 回）':''}</span></div>
+ <div class="kv"><span>曲のどこから</span>${num('off',c.off||0,0.1,0)}<span class="hint">${fmt(c.off||0)}${sl!=null?'／曲の長さ '+fmt((c.off||0)+sl):''}</span></div>
+ <div class="kv"><span>フェードイン</span>${num('fadeIn',c.fadeIn,0.1,0)}<span>アウト</span>${num('fadeOut',c.fadeOut,0.1,0)}</div>
+ <div class="kv" style="align-items:flex-start"><span>大きさの点</span><div style="flex:1">${(c.kf||[]).length?c.kf.map((k,i)=>`<div class="kfr ${SELK&&SELK.id===c.id&&SELK.i===i?'on':''}" data-ki="${i}">${fmt(c.start+k.u)}　<input type="number" data-k="db" value="${rh(c.gain+k.db)}" step="0.5" style="width:70px" ${ro}> dB <button class="b sm" data-k="go">ここへ</button> <button class="b sm del" data-k="del" ${ro}>消す</button></div>`).join(''):'<span class="hint">なし（白い線をダブルクリックで足す）</span>'}</div></div>
+ ${c.why?`<div class="m">Claude のねらい：${esc(c.why)}</div>`:''}
+ <div class="row"><button class="b sm" data-a="go">頭から再生</button><button class="b sm" data-a="blade" ${ro}>再生ヘッドで切る</button><button class="b sm" data-a="dup" ${ro}>すぐ後ろに複製</button><button class="b sm del" data-a="del" ${ro}>消す</button></div></div>`}
+$('insp').addEventListener('input',e=>{const box=e.target.closest('[data-cid]');if(!box||!editable())return;const c=W.clips.find(z=>z.id===box.dataset.cid);if(!c)return;
+ if(!INB)INB=snap0();const f=e.target.dataset.n,v=e.target.value;
+ if(f==='soundId'){c.soundId=v;loadBuf(v).catch(()=>{})}else if(f==='lane')c.lane=+v;else if(f){const n=+v;if(isNaN(n))return;if(f==='gain'){c.gain=rh(clamp(n,DBMIN,DBMAX));e.target.nextElementSibling.textContent=(c.gain>0?'+':'')+c.gain+' dB'}else if(f==='dur')c.dur=Math.max(0.3,n);else c[f]=Math.max(0,n)}
+ else if(e.target.dataset.k==='db'){const i=+e.target.closest('[data-ki]').dataset.ki;c.kf[i].db=rh(clamp(+v,DBMIN,DBMAX)-c.gain)}
+ resched();dirtyDraw=true});
+let INB=null;$('insp').addEventListener('change',e=>{if(INB){commit(INB);INB=null}renderInsp()});
+$('insp').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const box=b.closest('[data-cid]');if(!box)return;const c=cur().clips.find(z=>z.id===box.dataset.cid);if(!c)return;
+ const a=b.dataset.a,k=b.dataset.k;
+ if(a==='go'){V().currentTime=c.start;V().play();return}
+ if(k==='go'){const i=+b.closest('[data-ki]').dataset.ki;V().currentTime=Math.max(0,c.start+c.kf[i].u-2);V().play();return}
+ if(!editable())return;const bf=snap0();
+ if(a==='blade'){blade();return}if(a==='del'){W.clips=W.clips.filter(z=>z!==c);SEL.clear()}
+ if(a==='dup'){const n={...JSON.parse(JSON.stringify(c)),id:uid('k'),start:r2(c.start+c.dur)};delete n.why;W.clips.push(n);SEL=new Set([n.id])}
+ if(k==='del'){c.kf.splice(+b.closest('[data-ki]').dataset.ki,1)}
+ commit(bf);resched();renderInsp();dirtyDraw=true});
+// 曲を足す
+const MOODS=['謎・ミステリー','落ち着いた','前向き・感動','明るい・軽快','弾む・軽快','コミカル','穏やか・癒し','しんみり・重い','神秘・幻想','緊張・不穏','壮大','勢い・推進力','和風'];
+let PM=LS.get('snd_pm','');
+function renderPool(){const q=($('poolQ').value||'').trim();const xs=bgms().filter(x=>x.like!==-1).filter(x=>!PM||(x.moods||[]).includes(PM)).filter(x=>!q||(x.name+' '+(x.moods||[]).join(' ')+' '+(x.tags||[]).join(' ')).includes(q))
+  .sort((a,b)=>(b.role?1:0)-(a.role?1:0)||(b.like||0)-(a.like||0));
+ const ms=[...new Set(bgms().flatMap(x=>x.moods||[]))];$('poolMoods').innerHTML=['',...MOODS.filter(m=>ms.includes(m))].map(m=>`<button class="chip" data-m="${m}" aria-pressed="${m===PM}">${m||'すべて'}</button>`).join('');
+ $('poolList').innerHTML=xs.length?xs.map(x=>`<div class="pool" draggable="true" data-sid="${x.id}"><button class="b sm pv" data-pv="${x.id}">▶</button><div style="flex:1;min-width:0"><div class="pn">${x.role?'<span class="tag">'+esc(x.role)+'</span>':''}${esc(x.name)}</div><div class="m">${esc((x.moods||[]).join('・'))}${x.len?'　'+fmt0(x.len):''}${FAIL[x.id]?'　<span style="color:var(--busy)">鳴らせない（'+esc(FAIL[x.id])+'）</span>':''}</div></div><button class="b sm" data-put="${x.id}">再生ヘッドに置く</button></div>`).join(''):'<div class="empty">棚に曲がありません。音楽の棚で入れてください。</div>'}
+$('poolQ').oninput=renderPool;$('poolMoods').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;PM=b.dataset.m;LS.set('snd_pm',PM);renderPool()};
+$('poolList').addEventListener('dragstart',e=>{const d=e.target.closest('[data-sid]');if(d){e.dataTransfer.setData('text/plain',d.dataset.sid);e.dataTransfer.effectAllowed='copy'}});
+$('poolList').onclick=e=>{const p=e.target.closest('[data-pv]');if(p){preview(p.dataset.pv,p);return}const u=e.target.closest('[data-put]');if(u&&editable()){const t=V().currentTime;
+ const free=[1,2,3].find(l=>!W.clips.some(c=>c.lane===l&&t<c.start+c.dur&&t+5>c.start))||1;addClip(u.dataset.put,t,free)}};
+function renderAllTab(){if(!W)return;$('duck').value=W.duck??1.6;$('duckV').textContent=(+$('duck').value).toFixed(1);$('laneInfo').textContent=[1,2,3].map(l=>'BGM '+l+'：'+W.clips.filter(c=>c.lane===l).length+' 本'+((W.lanes[l-1]||{}).m?'（M）':'')).join('　')}
+let DKB=null;$('duck').oninput=e=>{if(!editable())return;if(!DKB)DKB=snap0();W.duck=+e.target.value;$('duckV').textContent=W.duck.toFixed(1);mkDuck();resched()};$('duck').onchange=()=>{if(DKB){commit(DKB);DKB=null}};
+
+/* ===== 聞き比べ・保存・書き出し・学び ===== */
+function setAB(m){AB=m;LS.set('snd_ab',m);document.querySelectorAll('[data-ab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ab===m));
+ $('mode').innerHTML=m==='mine'?'':`<span style="color:var(--busy)">いまは「${m==='claude'?'Claude の案':'音楽なし'}」を聞いています（さわれません）。直すときは「自分の調整」に戻す。</span>`;
+ SEL.clear();SELK=null;mkDuck();resched();renderInsp();renderAllTab();dirtyDraw=true}
 document.querySelector('.ab').onclick=e=>{const b=e.target.closest('[data-ab]');if(b)setAB(b.dataset.ab)};
-
-/* ===== 保存・書き出し・学び ===== */
-const clean=pl=>({duck:pl.duck??1.6,cues:pl.cues.slice().sort((a,b)=>a.at-b.at).map(c=>{const o={id:c.id,at:c.at};for(const k of ['soundId','none','vol','off','fadeIn','fadeOut','why'])if(c[k]!=null&&c[k]!=='')o[k]=c[k];if(!c.none&&ptsOf(c).length)o.pts=ptsOf(c).map(p=>({t:p.t,db:p.db}));return o})});
+function changed(){if(!P)return;LS.set(draftKey(),JSON.stringify({from:(P.sound.bgm||{}).updatedAt,w:W}));$('saveMsg').className='msg';$('saveMsg').textContent='まだ保存していません';mkDuck();renderAllTab()}
 $('saveBtn').onclick=()=>{if(!syncOn()){$('saveMsg').textContent='制作室の設定で同期をつないでください';return}const memo=$('memo').value.trim();
- const before=plan(P),after=clean(W);if(JSON.stringify(clean(before))===JSON.stringify(after)&&!memo){$('saveMsg').textContent='変わっていません';return}
- P.sound.claude=P.sound.claude||before;after.by='作り手';after.updatedAt=now();P.sound.bgm=after;
- P.soundTakes=P.soundTakes||[];P.soundTakes.push({id:uid('st'),at:now(),before:clean(before),after,memo,learned:false});P.updatedAt=now();
- LS.set(draftKey(),'null');W=plan(P);save();$('memo').value='';$('saveMsg').className='msg ok';$('saveMsg').textContent='保存しました。Claude が次に読みます';renderTakes();renderCues()};
-$('renderBtn').onclick=()=>{if(!syncOn())return;const dirty=LS.get(draftKey(),'null')!=='null';if(dirty&&!confirm('まだ保存していない直しがあります。保存した所までで書き出しますか？'))return;
+ const before=clean(toV2(P.sound.bgm)),after=clean(W);if(JSON.stringify(before.clips)===JSON.stringify(after.clips)&&before.duck===after.duck&&JSON.stringify(before.lanes)===JSON.stringify(after.lanes)&&!memo){$('saveMsg').textContent='変わっていません';return}
+ P.sound.claude=P.sound.claude||P.sound.bgm||null;after.by='作り手';after.updatedAt=now();P.sound.bgm=after;
+ P.soundTakes=P.soundTakes||[];P.soundTakes.push({id:uid('st'),at:now(),before,after,memo,learned:false});P.updatedAt=now();
+ LS.set(draftKey(),'null');save();$('memo').value='';$('saveMsg').className='msg ok';$('saveMsg').textContent='保存しました。Claude が次に読みます';renderTakes()};
+$('renderBtn').onclick=()=>{if(!syncOn())return;const dirty_=LS.get(draftKey(),'null')!=='null';if(dirty_&&!confirm('まだ保存していない直しがあります。保存した所までで書き出しますか？'))return;
  D.jobs.push({id:uid('j'),type:'sound_render',projId:P.id,status:'待ち',createdAt:now(),updatedAt:now()});save();$('saveMsg').className='msg ok';$('saveMsg').textContent='頼みました（制作タブの動画が新しくなります）'};
-$('resetBtn').onclick=()=>{if(!confirm('いまの直しを捨てて、Claude の案に戻しますか？（保存するまでは残りません）'))return;W=claudePlan(P);W.cues.forEach(c=>c.id=c.id||uid('c'));changed();renderCues()};
-function renderTakes(){const ts=(P.soundTakes||[]).slice().reverse();$('takes').innerHTML=ts.length?'<label>残した直し</label>'+ts.map(t=>`<div class="job">${new Date(t.at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}　曲 ${t.before.cues.length}→${t.after.cues.length} か所　${esc(t.memo||'（メモなし）')}${t.learned?'　<span class="ok">Claude が読んだ'+(t.lesson?'：'+esc(t.lesson):'')+'</span>':''}</div>`).join(''):''}
-function renderAll2(){renderCues();renderTakes();drawTl()}
-function renderAll(){renderProj();if(!P&&$('proj').value)openProj($('proj').value);else if(P){const np=D.projects.find(p=>p.id===P.id)||P;const hadBase=!!BASE;P=np;if(!hadBase&&P.sound&&P.sound.base)openProj(P.id);else if(BASE)renderTakes()}}
+$('resetBtn').onclick=()=>{if(!editable())return;if(!confirm('いまの直しを捨てて、Claude の案に戻しますか？（⌘Z で戻せます）'))return;const b=snap0();W=JSON.parse(JSON.stringify(CL));commit(b);after()};
+function renderTakes(){const ts=(P.soundTakes||[]).slice().reverse();const n=pl=>(pl.clips||pl.cues||[]).length;$('takes').innerHTML=ts.length?'<label>残した直し</label>'+ts.map(t=>`<div class="job">${new Date(t.at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}　曲 ${n(t.before)}→${n(t.after)} 本　${esc(t.memo||'（メモなし）')}${t.learned?'　<span class="ok">Claude が読んだ'+(t.lesson?'：'+esc(t.lesson):'')+'</span>':''}</div>`).join(''):''}
+function renderAll(){renderProj();if(!P&&$('proj').value)openProj($('proj').value);else if(P){const np=D.projects.find(p=>p.id===P.id)||P;const had=!!BASE;P=np;if(!had&&P.sound&&P.sound.base)openProj(P.id);else if(BASE){renderTakes();renderPool()}}}
 {const q=new URLSearchParams(location.search).get('p');if(q)LS.set('snd_proj',q)}
-function setVs(v){document.body.dataset.vs=v;LS.set('snd_vs',v);document.querySelectorAll('[data-vs]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vs===v));setTimeout(drawTl,30)}
-document.querySelector('.vs').onclick=e=>{const b=e.target.closest('[data-vs]');if(b)setVs(b.dataset.vs)};setVs(LS.get('snd_vs','big'));
-renderProj();if($('proj').value)openProj($('proj').value);sync();
+showTab(LS.get('snd_pt','clip'));renderProj();if($('proj').value)openProj($('proj').value);sync();
 </script>
 </body></html>

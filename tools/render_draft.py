@@ -310,7 +310,7 @@ if a.base_out:
     _hop=int(0.05*SR);_fr=np.sqrt(np.convolve(mix**2,np.ones(_hop)/_hop,'same')[::_hop]);_vref=np.percentile(_fr[_fr>1e-4],60) if (_fr>1e-4).any() else 1
     _talk=(_fr>_vref*0.08).astype(float);_w=int(0.6/0.05);_talk=np.convolve(_talk,np.ones(2*_w+1),'same')>0
     _vr=float(np.sqrt((mix**2)[mix**2>1e-8].mean())) if (mix**2>1e-8).any() else 0.1
-    json.dump({'duration':round(T,2),'blocks':tl,'hop':0.05,'talk':''.join('1' if v else '0' for v in _talk),'vr':round(_vr,5)},open(os.path.splitext(a.base_out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
+    json.dump({'duration':round(T,2),'blocks':tl,'hop':0.05,'talk':''.join('1' if v else '0' for v in _talk),'vr':round(_vr,5),'env':[int(v) for v in np.clip(np.round(_fr/max(1e-9,_fr.max())*255),0,255)]},open(os.path.splitext(a.base_out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
     print('音の調整室用：',a.base_out,os.path.getsize(a.base_out)//1024,'KB',file=sys.stderr)
 if a.bgm:
     # 8) BGM：段ごとに曲を決め、つなぎ目はゆっくり入れ替える。声のある間は小さく、間では少し上げる。最後に大きさをそろえる
@@ -321,46 +321,53 @@ if a.bgm:
         r=subprocess.run(['ffmpeg','-loglevel','error','-i',f,'-f','f32le','-ac','2','-ar',str(SR2),'-'],capture_output=True,check=True);return np.frombuffer(r.stdout,np.float32).reshape(-1,2).astype(np.float64)
     if a.bgm=='proj':   # 音の調整室で決めた BGM（project.sound.bgm）。soundId を音の保管庫のファイル／URL に置きかえる
         _b=(P.get('sound') or {}).get('bgm') or {'cues':[]};_sd={x['id']:x for x in D.get('sounds',[])}
-        spec={'duck':_b.get('duck',1.6),'cues':[{**c,'file':(_sd.get(c.get('soundId')) or {}).get('file') or (_sd.get(c.get('soundId')) or {}).get('url')} for c in _b.get('cues',[])]}
+        _f=lambda c:{**c,'file':(_sd.get(c.get('soundId')) or {}).get('file') or (_sd.get(c.get('soundId')) or {}).get('url')}
+        spec={'duck':_b.get('duck',1.6),'lanes':_b.get('lanes') or [],**({'clips':[_f(c) for c in _b['clips']]} if 'clips' in _b else {'cues':[_f(c) for c in _b.get('cues',[])]})}
     else:spec=json.load(open(a.bgm,encoding='utf-8'))
-    duck=1.6
-    if isinstance(spec,dict):duck=float(spec.get('duck',1.6));spec=spec.get('cues',[])
-    # 置く所：at（秒）があればそこ、なければ from（段の番号）の頭
-    for x in spec:x['_t']=float(x['at']) if x.get('at') is not None else tl[min(len(tl),max(1,int(x.get('from',1))))-1]['start']
-    spec.sort(key=lambda x:x['_t']);starts=[x['_t'] for x in spec]
-    bg=np.zeros((N,2));XF=int(2.0*SR2)
-    for i,x in enumerate(spec):
-        s0=int(starts[i]*SR2);s1=int(starts[i+1]*SR2) if i+1<len(spec) else N;L=min(N,s1+XF)-s0
+    duck=1.6;lanes=[]
+    if isinstance(spec,dict):duck=float(spec.get('duck',1.6));lanes=spec.get('lanes') or [];clips=spec.get('clips');spec=spec.get('cues',[])
+    else:clips=None
+    XFs=2.0;XF=int(XFs*SR2);T_=N/SR2
+    if clips is None:
+        # 古い形（cues：置いた時刻から次の曲まで）→ クリップ（タイムラインの上の1本の曲）に直す。音の調整室と同じ直し方
+        for x in spec:x['_t']=float(x['at']) if x.get('at') is not None else tl[min(len(tl),max(1,int(x.get('from',1))))-1]['start']
+        spec.sort(key=lambda x:x['_t']);clips=[]
+        for i,x in enumerate(spec):
+            if x.get('none') or not (x.get('file') or x.get('url')):continue
+            nx=spec[i+1] if i+1<len(spec) else None;st=x['_t'];en=min(T_,nx['_t']+XFs) if nx else T_
+            g=20*math.log10(max(1e-6,float(x.get('vol',0.12))/0.12));ps=sorted([q for q in (x.get('pts') or []) if float(q['t'])>st],key=lambda q:q['t'])
+            kf=([{'u':0,'db':0}]+[{'u':float(q['t'])-st,'db':float(q['db'])-g} for q in ps]) if ps else []
+            clips.append({'start':st,'dur':en-st,'file':x.get('file') or x.get('url'),'off':float(x.get('off',0)),'gain':g,'kf':kf,
+                'fadeIn':float(x['fadeIn']) if x.get('fadeIn') is not None else (XFs if i>0 else 1.0),'fadeOut':float(x['fadeOut']) if x.get('fadeOut') is not None else (XFs if nx else 3.0),'lane':1})
+    muted={i+1 for i,l in enumerate(lanes) if (l or {}).get('m')}
+    bg=np.zeros((N,2));_cache={}
+    for x in clips:
         fpath=x.get('file') or x.get('url')
-        if x.get('none') or not fpath:continue   # 「ここから音楽なし」
+        if not fpath or int(x.get('lane',1)) in muted:continue
         if str(fpath).startswith('http'):   # 音楽の棚の目録から入れた曲（ファイルは置かず、URL で持つ）→ 取ってきて使う
             import hashlib,urllib.request as _u
             cdir='/home/claude/bgm_cache';os.makedirs(cdir,exist_ok=True);cp_=os.path.join(cdir,hashlib.md5(fpath.encode()).hexdigest()+'.mp3')
             if not os.path.exists(cp_):_u.urlretrieve(fpath,cp_)
             fpath=cp_
         elif a.repo and not os.path.isabs(fpath):fpath=os.path.join(a.repo,fpath)
-        y=load(fpath)
-        y=y/max(1e-9,np.sqrt((y**2).mean()))   # 曲ごとの大きさをそろえる
-        y=y[int(float(x.get('off',0))*SR2):] if float(x.get('off',0))*SR2<len(y)-SR2 else y   # 曲のどこから流すか（秒）
+        if fpath not in _cache:_y=load(fpath);_cache[fpath]=_y/max(1e-9,np.sqrt((_y**2).mean()))   # 曲ごとの大きさをそろえる
+        y=_cache[fpath];o_=int(float(x.get('off',0))*SR2);y=y[o_:] if o_<len(y)-SR2 else y   # 曲のどこから流すか
+        s0=max(0,int(float(x['start'])*SR2));L=min(N-s0,int(float(x['dur'])*SR2))
+        if L<=0:continue
         seg=np.zeros((L,2));pos=[0]
-        while pos[-1]+len(y)<L:pos.append(pos[-1]+len(y)-XF)   # 曲が短ければ、つなぎ目を重ねてくり返す
+        while pos[-1]+len(y)<L:pos.append(pos[-1]+len(y)-XF)   # 曲より長いクリップは、つなぎ目を重ねてくり返す
         for ci,k in enumerate(pos):
             n=min(len(y),L-k);c=y[:n].copy();r=min(XF,n)
             if ci>0:c[:r]*=np.linspace(0,1,r)[:,None]
             if ci+1<len(pos):c[-XF:]*=np.linspace(1,0,XF)[:,None]
             seg[k:k+n]+=c
-        fin=x.get('fadeIn');fout=x.get('fadeOut')
-        fi=np.ones(L);fa=min(int(float(fin)*SR2) if fin is not None else (XF if i>0 else int(1.0*SR2)),L)
+        fi=np.ones(L);fa=min(int(float(x.get('fadeIn',0))*SR2),L);fo=min(int(float(x.get('fadeOut',0))*SR2),L)
         if fa>0:fi[:fa]=np.linspace(0,1,fa)
-        fo=min(int(float(fout)*SR2) if fout is not None else (XF if i+1<len(spec) else int(3*SR2)),L)
         if fo>0:fi[-fo:]*=np.linspace(1,0,fo)
-        # 大きさ：曲の頭は vol、変化点（pts：[{t:秒,db}]、0dB＝0.12）へ直線でなめらかに変わる（音の調整室と同じ）
-        _v=float(x.get('vol',0.12));_ps=sorted([p_ for p_ in (x.get('pts') or []) if float(p_['t'])>x['_t']],key=lambda p_:p_['t'])
-        if _ps:
-            _xs=[x['_t']]+[float(p_['t']) for p_ in _ps];_ys=[20*math.log10(max(1e-6,_v/0.12))]+[float(p_['db']) for p_ in _ps]
-            _vol=0.12*10**(np.interp(x['_t']+np.arange(L)/SR2,_xs,_ys)/20)
-        else:_vol=_v
-        bg[s0:s0+L]+=seg*(fi*_vol)[:,None]
+        # 大きさ：gain（dB、0＝標準 0.12）＋音量の線の点（kf：[{u:クリップの頭からの秒, db}]。最初の点の前・最後の点の後はその値のまま、点と点の間は直線）
+        kf=sorted(x.get('kf') or [],key=lambda q:q['u']);db=float(x.get('gain',0))+(np.interp(np.arange(L)/SR2,[q['u'] for q in kf],[q['db'] for q in kf]) if kf else 0)
+        bg[s0:s0+L]+=seg*(fi*0.12*10**(db/20))[:,None]
+    spec=clips
     # 声のある間は下げ、0.6秒以上の間では少し上げる（なめらかに）
     hop=int(0.05*SR2);fr=np.sqrt(np.convolve(v48**2,np.ones(hop)/hop,'same')[::hop]);vref=np.percentile(fr[fr>1e-4],60) if (fr>1e-4).any() else 1
     talk=(fr>vref*0.08).astype(float);w=int(0.6/0.05)
