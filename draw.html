@@ -202,6 +202,7 @@ const view=$('view'),vctx=g2(view);let dpr=1;
 let SC,BK,TMP,TMP2,TMPG;            // 描いている途中・描く前の写し・合成用
 let SEL=null,selPath=null;          // 選択範囲（白＝選ばれている）と輪郭
 let hist=[],hpos=0,histBytes=0;
+const HIST_MAX=((navigator.deviceMemory||4)<=4||matchMedia('(pointer:coarse)').matches)?110e6:260e6; // 戻す用に覚えておく量（端末の中だけ。保存はしない）
 let stroke=null,float=null,adj=null,textEdit=null,crop=null,drag=null;
 let changedIds=new Set(),saveT=null,upT=null;
 
@@ -335,7 +336,7 @@ const LA={
 /* ===== ヒストリー（戻す・やり直し） ===== */
 function snap(){return{w:art.w,h:art.h,bg:art.bg,activeId,layers:layers.map(l=>({...l}))}}
 function restore(s){const sized=s.w!==art.w||s.h!==art.h;art.w=s.w;art.h=s.h;art.bg=s.bg;layers=s.layers.map(l=>({...l}));activeId=s.activeId;if(sized){allocTemps();SEL=null;selPath=null;fit();updKindTag()}}
-function pushHist(e){hist.splice(hpos);hist.push(e);hpos=hist.length;histBytes+=e.bytes||0;while(histBytes>260e6&&hist.length>2){const o=hist.shift();hpos--;histBytes-=o.bytes||0}renderHist();art.updatedAt=now();schedulePreview();scheduleSave()}
+function pushHist(e){hist.splice(hpos);hist.push(e);hpos=hist.length;histBytes+=e.bytes||0;while(histBytes>HIST_MAX&&hist.length>2){const o=hist.shift();hpos--;histBytes-=o.bytes||0}renderHist();art.updatedAt=now();schedulePreview();scheduleSave()}
 function structOp(name,fn){if(!art)return;const before=snap();fn();const after=snap();pushHist({type:'struct',name,before,after,bytes:0});markAll();renderLayers();need()}
 function pushPatch(name,lid,x,y,w,h,meta){const l=byId(lid);x=Math.max(0,Math.floor(x));y=Math.max(0,Math.floor(y));w=Math.min(art.w-x,Math.ceil(w)+1);h=Math.min(art.h-y,Math.ceil(h)+1);if(w<=0||h<=0)return;
  const before=g2(BK).getImageData(x,y,w,h),after=g2(l.cv).getImageData(x,y,w,h);pushHist({type:'patch',name,lid,x,y,before,after,bytes:w*h*8,...(meta||{})});changedIds.add(lid);thumbLayers()}
@@ -674,7 +675,7 @@ async function openArt(rec){if(art)await flushSave(true);float=null;adj=null;tex
  LS.set('pd_open',art.id);$('artName').value=art.name||'';updKindTag();changedIds=new Set();resize();fit();renderLayers();renderHist();renderPreview();renderFin();renderOpts();if(KINDS[art.kind].note)hint(KINDS[art.kind].note)}
 function newArt(kind){const k=KINDS[kind];const n=(D.arts||[]).filter(a=>a.kind===kind&&!a.deleted).length+1;return{id:uid('art'),kind,name:k.n+(n>1?n:''),w:k.w,h:k.h,bg:kind==='icon'||kind==='mark'?'':'#ffffff',rev:0,updatedAt:now(),layerData:[]}}
 async function startNew(kind){await openArt(newArt(kind));OPT.brush.size={icon:14,banner:24,mark:12,thumb:14,free:14}[kind];saveOpt();renderOpts();markAll();await flushSave(false)}
-function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(()=>flushSave(false),900);clearTimeout(upT);upT=setTimeout(()=>upload(),60000)}
+function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(()=>flushSave(false),900);clearTimeout(upT);upT=setTimeout(()=>upload(),600000)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
 const META=l=>({id:l.id,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text});
