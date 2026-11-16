@@ -68,7 +68,7 @@ function storm(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.3),T3=T(3,DUR*0.46),T4=T(4
   const BR=[[5.06,52.46,-0.075,0,15],[5.33,52.292,0,-0.04,11],[4.90,52.80,-0.06,0,10]];
   zbase(v,t,{storm:st,flood:()=>{if(f0<=0)return;g.fillStyle='rgba(72,120,156,.92)';BR.forEach(([lo,la,dx,dy,km],b)=>{const k=0.14*f0+0.86*fl;const[x,y]=pj(v,lo+dx*k,la+dy*k);const rr=km*v.sc/111*k;const r=R(40+b);for(let j=0;j<6;j++){g.beginPath();g.ellipse(x+(r()-0.5)*rr*1.0,y+(r()-0.5)*rr*1.0,rr*(0.5+r()*0.4),rr*(0.38+r()*0.36),r()*3,0,7);g.fill()}})}});
   // 切れた所（赤く点滅）
-  const bk=f0*(1-clamp((t-T3)/0.6));if(bk>0)for(const[lo,la] of BR){const[x,y]=pj(v,lo,la);const p=0.5+0.5*Math.sin((t-T1)*9);g.fillStyle=`rgba(226,58,48,${(0.55+0.45*p)*bk})`;g.beginPath();g.arc(x,y,9,0,7);g.fill();g.strokeStyle=`rgba(226,58,48,${(1-p)*bk})`;g.lineWidth=4;g.beginPath();g.arc(x,y,12+16*p,0,7);g.stroke()}
+  const bk=f0*(1-clamp((t-T3)/0.6));if(bk>0)for(const[lo,la] of BR){const[x,y]=pj(v,lo,la);const p=0.5+0.5*Math.sin((t-T1)*9);g.fillStyle=`rgba(226,58,48,${(0.55+0.45*p)*bk})`;g.beginPath();g.arc(x,y,12,0,7);g.fill();g.strokeStyle=`rgba(226,58,48,${(1-p)*bk})`;g.lineWidth=5;g.beginPath();g.arc(x,y,16+22*p,0,7);g.stroke()}
   if(st>0){g.fillStyle=`rgba(18,26,44,${0.3*st})`;g.fillRect(0,0,W,H);rainS(t,st*0.9)}
   numLabel(230,104,'1916年',clamp((t-0.3)/0.35),84);
   // 前からあった計画（紙）と、かかるお金
@@ -88,7 +88,7 @@ function lely(t){const T1=T(1,DUR*0.2),T2=T(2,DUR*0.32),T3=T(3,DUR*0.46),T4=T(4,
   {const[x,y]=pj(v,6.02,52.46);badge(x,y,2,clamp((t-T3-0.2)/0.3))}
   {const[x,y]=pj(v,4.80,52.79);badge(x,y,3,clamp((t-T4)/0.3))}
   // 前の場面の紙が広がって、この図になる
-  const ik=ease(clamp((t-0.25)/1.1));if(ik<1){g.save();g.globalAlpha=1-ik;planPaper(lerp(250,640,ik),lerp(548,360,ik),lerp(1.08,5.2,ik),lerp(-0.08,0,ik));g.restore()}
+  const ik=ease(clamp((t-0.25)/Math.max(1.1,T1-1.8)));if(ik<1){g.save();g.globalAlpha=1-ik*ik;planPaper(lerp(250,640,ik),lerp(548,360,ik),lerp(1.08,5.2,ik),lerp(-0.08,0,ik));g.restore()}
   if(t>=0.25)sfxOnce('i',0.25,'whoosh');if(t>=T1)sfxOnce('a',T1,'thump');if(t>=T2)sfxOnce('b',T2,'whoosh');if(t>=T3)sfxOnce('c',T3,'tick')}
 
 function dike(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.42);const u=ease(clamp((t-0.15)/1.3));const v=view(lerp(5.32,5.21,u),lerp(52.70,53.0,u),Math.exp(lerp(Math.log(720),Math.log(2500),u)));
