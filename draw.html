@@ -288,9 +288,8 @@ let rq=0;function need(){if(!rq)rq=requestAnimationFrame(render)}
 let checker=null;function checkerPat(){if(checker)return checker;const c=mk(16,16),x=g2(c);x.fillStyle='#fff';x.fillRect(0,0,16,16);x.fillStyle='#cfd3d9';x.fillRect(0,0,8,8);x.fillRect(8,8,8,8);return checker=vctx.createPattern(c,'repeat')}
 function allocTemps(){SC=mk(art.w,art.h);BK=mk(art.w,art.h);TMP=mk(art.w,art.h);TMP2=mk(art.w,art.h);TMPG=mk(art.w,art.h)}
 /* レイヤーの今の見た目（描いている途中・変形中・補正の見本を含む） */
-function layerView(l){if(l.id!==activeId)return l.cv;
+function layerView(l){if(adj&&adj.cvs&&adj.cvs[l.id])return adj.cvs[l.id];if(l.id!==activeId)return l.cv;
  if(float&&float.lid===l.id){const t=g2(TMP);t.clearRect(0,0,art.w,art.h);t.drawImage(float.base,0,0);drawFloat(t);return TMP}
- if(adj&&adj.lid===l.id)return adj.cv;
  if(stroke&&stroke.lid===l.id){const t=g2(TMP);t.globalCompositeOperation='copy';t.drawImage(l.cv,0,0);let s=SC;if(SEL){const t2=g2(TMP2);t2.globalCompositeOperation='copy';t2.drawImage(SC,0,0);t2.globalCompositeOperation='destination-in';t2.drawImage(SEL,0,0);t2.globalCompositeOperation='source-over';s=TMP2}
   t.globalCompositeOperation=stroke.erase?'destination-out':(l.lockAlpha?'source-atop':'source-over');t.globalAlpha=stroke.op;t.drawImage(s,0,0);t.globalAlpha=1;t.globalCompositeOperation='source-over';return TMP}
  return l.cv}
@@ -548,13 +547,23 @@ const ADJ={
  sharp:{name:'アンシャープマスク',p:[['a','量',1,300,80],['r','半径',1,30,2]],gpu:(c,src,v)=>{const b=mk(src.width,src.height);const bx=g2(b);bx.filter=`blur(${v.r}px)`;bx.drawImage(src,0,0);c.drawImage(src,0,0);const id=c.getImageData(0,0,src.width,src.height),bd=bx.getImageData(0,0,src.width,src.height).data,d=id.data,k=v.a/100;for(let i=0;i<d.length;i+=4)for(let j=0;j<3;j++)d[i+j]=d[i+j]+(d[i+j]-bd[i+j])*k;c.putImageData(id,0,0)}},
  noise:{name:'ノイズを加える',p:[['a','量',1,100,12],['m','モノクロ（1=はい）',0,1,1]],px:(d,v)=>{for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*v.a*2.55;for(let k=0;k<3;k++)d[i+k]+=v.m?n:(Math.random()-.5)*v.a*2.55}}},
  mosaic:{name:'モザイク',p:[['s','セルの大きさ',2,200,16]],gpu:(c,src,v)=>{const w=Math.max(1,Math.round(src.width/v.s)),h=Math.max(1,Math.round(src.height/v.s));const t=mk(w,h);g2(t).drawImage(src,0,0,w,h);c.imageSmoothingEnabled=false;c.drawImage(t,0,0,src.width,src.height);c.imageSmoothingEnabled=true}}};
-function openAdj(key){if(!art)return;const l=act();if(!l)return;if(float)commitFloat();if(textEdit)commitText();const A=ADJ[key];adj={lid:l.id,key,orig:cloneCv(l.cv),cv:mk(art.w,art.h),v:Object.fromEntries(A.p.map(p=>[p[0],p[4]]))};computeAdj();
- if(!A.p.length){applyAdj();return}
- dialog(A.name+(SEL?'（選択範囲の中）':''),A.p.map(([k,n,mn,mx,v])=>`<div class="rowx"><label>${n}</label><input type="range" min="${mn}" max="${mx}" value="${v}" data-adj="${k}"><span class="num" id="adjv_${k}">${v}</span></div>`).join('')+'<div class="lead">絵を見ながら動かせます</div>',applyAdj,()=>{$('dlgBody').oninput=e=>{const k=e.target.dataset.adj;if(!k)return;adj.v[k]=+e.target.value;$('adjv_'+k).textContent=e.target.value;clearTimeout(adj.t);adj.t=setTimeout(computeAdj,30)}},()=>{adj=null;need()})}
-function computeAdj(){if(!adj)return;const A=ADJ[adj.key];const c=g2(adj.cv);c.clearRect(0,0,art.w,art.h);if(A.gpu)A.gpu(c,adj.orig,adj.v);else{c.drawImage(adj.orig,0,0);const id=c.getImageData(0,0,art.w,art.h);A.px(id.data,adj.v);c.putImageData(id,0,0)}
- if(SEL){const t=mk(art.w,art.h);const x=g2(t);x.drawImage(adj.cv,0,0);x.globalCompositeOperation='destination-in';x.drawImage(SEL,0,0);c.globalCompositeOperation='copy';c.drawImage(adj.orig,0,0);c.globalCompositeOperation='destination-out';c.drawImage(SEL,0,0);c.globalCompositeOperation='source-over';c.drawImage(t,0,0)}
- const l=byId(adj.lid);if(l&&l.lockAlpha){c.globalCompositeOperation='destination-in';c.drawImage(adj.orig,0,0);c.globalCompositeOperation='source-over'}need()}
-function applyAdj(){if(!adj)return;clearTimeout(adj.t);computeAdj();const a=adj;adj=null;const l=byId(a.lid);const x=g2(BK);x.globalCompositeOperation='copy';x.drawImage(a.orig,0,0);x.globalCompositeOperation='source-over';const c=g2(l.cv);c.globalCompositeOperation='copy';c.drawImage(a.cv,0,0);c.globalCompositeOperation='source-over';const tb=l.text;l.text=null;pushPatch(ADJ[a.key].name,l.id,0,0,art.w,art.h,tb?{textBefore:tb,textAfter:null}:null);renderLayers();need()}
+/* 色調補正・フィルターは「このレイヤーだけ／このレイヤーから上の全部／このレイヤーから下の全部／全部のレイヤー」にかけられる（なぞり用は除く） */
+let adjScope=LS.get('pd_adjscope','one');
+function adjTargets(scope){const i=layers.indexOf(act());const ok=l=>!l.trace&&l.visible;if(scope==='up')return layers.filter((l,k)=>k>=i&&ok(l));if(scope==='down')return layers.filter((l,k)=>k<=i&&ok(l));if(scope==='all')return layers.filter(ok);return[act()]}
+function adjSetTargets(){const ts=adjTargets(adjScope);adj.ids=ts.map(l=>l.id);adj.orig={};adj.cvs={};for(const l of ts){adj.orig[l.id]=cloneCv(l.cv);adj.cvs[l.id]=mk(art.w,art.h)}}
+function openAdj(key){if(!art)return;const l=act();if(!l)return;if(float)commitFloat();if(textEdit)commitText();const A=ADJ[key];adj={lid:l.id,key,v:Object.fromEntries(A.p.map(p=>[p[0],p[4]]))};adjSetTargets();computeAdj();
+ const scopeSel=`<div class="rowx"><label>かける所</label><select id="adjScope"><option value="one" ${adjScope==='one'?'selected':''}>このレイヤーだけ</option><option value="up" ${adjScope==='up'?'selected':''}>このレイヤーから上の全部</option><option value="down" ${adjScope==='down'?'selected':''}>このレイヤーから下の全部</option><option value="all" ${adjScope==='all'?'selected':''}>全部のレイヤー</option></select><span class="lead" id="adjN" style="margin:0">${adj.ids.length}枚</span></div>`;
+ dialog(A.name+(SEL?'（選択範囲の中）':''),scopeSel+A.p.map(([k,n,mn,mx,v])=>`<div class="rowx"><label>${n}</label><input type="range" min="${mn}" max="${mx}" value="${v}" data-adj="${k}"><span class="num" id="adjv_${k}">${v}</span></div>`).join('')+'<div class="lead">絵を見ながら動かせます。なぞり用の画像と隠しているレイヤーにはかかりません</div>',applyAdj,()=>{
+  $('dlgBody').oninput=e=>{const k=e.target.dataset.adj;if(!k)return;adj.v[k]=+e.target.value;$('adjv_'+k).textContent=e.target.value;clearTimeout(adj.t);adj.t=setTimeout(computeAdj,30)};
+  $('adjScope').onchange=e=>{adjScope=e.target.value;LS.set('pd_adjscope',adjScope);adjSetTargets();$('adjN').textContent=adj.ids.length+'枚';computeAdj()}},()=>{adj=null;need()})}
+function computeOne(id){const A=ADJ[adj.key];const o=adj.orig[id],cv=adj.cvs[id];const c=g2(cv);c.globalCompositeOperation='source-over';c.clearRect(0,0,art.w,art.h);if(A.gpu)A.gpu(c,o,adj.v);else{c.drawImage(o,0,0);const im=c.getImageData(0,0,art.w,art.h);A.px(im.data,adj.v);c.putImageData(im,0,0)}
+ if(SEL){const t=mk(art.w,art.h);const x=g2(t);x.drawImage(cv,0,0);x.globalCompositeOperation='destination-in';x.drawImage(SEL,0,0);c.globalCompositeOperation='copy';c.drawImage(o,0,0);c.globalCompositeOperation='destination-out';c.drawImage(SEL,0,0);c.globalCompositeOperation='source-over';c.drawImage(t,0,0)}
+ const l=byId(id);if(l&&l.lockAlpha){c.globalCompositeOperation='destination-in';c.drawImage(o,0,0);c.globalCompositeOperation='source-over'}}
+function computeAdj(){if(!adj)return;for(const id of adj.ids)computeOne(id);need()}
+function applyAdj(){if(!adj)return;clearTimeout(adj.t);computeAdj();const a=adj;adj=null;if(!ADJ[a.key].p.length&&false)return;
+ if(a.ids.length===1){const l=byId(a.ids[0]);const x=g2(BK);x.globalCompositeOperation='copy';x.drawImage(a.orig[l.id],0,0);x.globalCompositeOperation='source-over';const c=g2(l.cv);c.globalCompositeOperation='copy';c.drawImage(a.cvs[l.id],0,0);c.globalCompositeOperation='source-over';const tb=l.text;l.text=null;pushPatch(ADJ[a.key].name,l.id,0,0,art.w,art.h,tb?{textBefore:tb,textAfter:null}:null)}
+ else structOp(ADJ[a.key].name+`（${a.ids.length}枚）`,()=>{for(const id of a.ids){const l=byId(id);if(l){l.cv=a.cvs[id];l.text=null}}});
+ renderLayers();need()}
 
 /* ===== 編集（コピー・貼り付け・塗り・消去） ===== */
 let clip=null;
@@ -711,7 +720,7 @@ let dlgOk=null,dlgCancel=null;
 function dialog(title,body,ok,init,cancel){$('dlgTitle').textContent=title;$('dlgBody').innerHTML=body;dlgOk=ok;dlgCancel=cancel||null;$('dlg').showModal();init&&init()}
 $('dlgOk').onclick=()=>{const f=dlgOk;dlgOk=null;dlgCancel=null;$('dlg').close();f&&f()};
 $('dlgCancel').onclick=()=>$('dlg').close();
-$('dlg').addEventListener('close',()=>{if(dlgCancel){const f=dlgCancel;dlgCancel=null;dlgOk=null;f()}});
+$('dlg').addEventListener('close',()=>{if($('dlg').open)return;if(dlgCancel){const f=dlgCancel;dlgCancel=null;dlgOk=null;f()}});
 function numDlg(title,label,v,fn){dialog(title,`<div class="rowx"><label>${label}</label><input type="number" id="dN" value="${v}"> px</div>`,()=>fn(+$('dN').value||v))}
 function bgDialog(){dialog('背景（紙）の色',`<div class="rowx"><label><input type="radio" name="bgk" value="t" ${!art.bg?'checked':''}> 透明</label><label><input type="radio" name="bgk" value="c" ${art.bg?'checked':''}> 色</label><input type="color" id="dBg" value="${art.bg||'#ffffff'}"></div><div class="lead">すべてのレイヤーの下に敷く紙の色です。書き出しにも入ります</div>`,()=>{const t=document.querySelector('[name=bgk]:checked').value;const v=t==='t'?'':$('dBg').value;structOp('背景の色',()=>{art.bg=v});renderPreview()})}
 
