@@ -1,0 +1,143 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・第4章「抜いたあと」。横から見た断面
+ mode：mudwalk（干上がったばかりの泥。ats：[0] 置いた家が傾いて沈む [1] 泥が光る・泡 [2] 人が歩いてきて、足が沈んで止まる）
+      ／ditch（ats：[0] 溝を掘る・泥の水が溝へ [1] ポンプが海へ出す [2] 地面が沈む（もとの高さは点線） [3] 海面の線と、広がる高さの差）
+      ／reed（ヨシの寄り。ats：[0] 根から水を吸い上げ、葉から逃がす [1] 根のまわりに空気の通り道 [2] 泥が土の色に）
+      ／colors（ヨシ → 焼く → 菜の花 → 麦 → 野菜。ats：[0] 焼く [1] 菜の花が育つ [2] 一面の黄色 [3] 麦 [4] 野菜 [5] 「水を抜く」と「土を作る」の長さくらべ）
+      ／seep（陸とじかにつながった干拓地。ats：[0] つなぎ目が光る [1] 高さの差 [2] 地下水がしみ出す [3] 陸の地下水の面が下がる [4] 陸の畑がしおれる）
+      ／seeplake（あいだに湖を残した形。ats：[0] 湖と地下水の面が同じ高さで光る [1] 畑は元気なまま）
+      ／pumpnow（今の干拓地。ats：[0] 海面の線 [1] ポンプがくみ出し続ける [2] 止めたときの水が重なる） */
+window.DEF={mode:'mudwalk'};
+const MUD='#84765f',MUDD='#5e5342',SOIL='#b9a47a';
+const mix=(a,b,u)=>{const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));const A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(lerp(v,B[i],clamp(u))).toString(16).padStart(2,'0')).join('')};
+function sheen(x0,x1,y,t,a=1){g.strokeStyle=`rgba(255,255,255,${0.22*a})`;g.lineWidth=3;const r=R(17);for(let i=0;i<14;i++){const x=x0+r()*(x1-x0),w=30+r()*70;const k=0.5+0.5*Math.sin(t*1.6+i*1.7);g.globalAlpha=k;g.beginPath();g.moveTo(x,y+5+r()*10);g.lineTo(x+w,y+5+r()*10);g.stroke()}g.globalAlpha=1}
+function puddles(x0,x1,y,t,a=1,seed=23,n=7){const r=R(seed);for(let i=0;i<n;i++){const x=x0+r()*(x1-x0),w=28+r()*50;g.fillStyle=`rgba(86,134,166,${0.8*a})`;g.beginPath();g.ellipse(x,y+4,w,5,0,0,7);g.fill();g.fillStyle=`rgba(255,255,255,${0.4*a*(0.5+0.5*Math.sin(t*3+i))})`;g.fillRect(x-w*0.4,y+2,w*0.45,2)}}
+function seaDike(SL,BED,t,cx=150){waterBody(-400,cx,SL,BED+8,t);}
+function pumpHouse(x,y,s=1){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='#d9d4c8';g.fillRect(-46,-58,92,58);g.fillStyle='#6d7783';g.fillRect(-52,-66,104,10);g.fillStyle='#7fa7bf';g.fillRect(-32,-44,22,18);g.fillRect(8,-44,22,18);g.fillStyle='#5c6670';g.fillRect(-9,-24,18,24);g.restore()}
+function stream(x0,y0,x1,y1,t,n=9,arc=40,a=1){for(let i=0;i<n;i++){const q=(t*1.1+i/n)%1;g.fillStyle=`rgba(150,205,240,${0.95*a})`;g.beginPath();g.arc(lerp(x0,x1,q),lerp(y0,y1,q*q)-Math.sin(q*Math.PI)*arc,6,0,7);g.fill()}}
+
+function mudwalk(t){const T1=T(1,DUR*0.3),T2=T(2,DUR*0.45),T3=T(3,DUR*0.68);const SL=250,BED=470;
+  skyG();cloudS(260+t*5,90,1.4);cloudS(900+t*4,130,1.5);seaDike(SL,BED,t);
+  // 置いてみた家：傾いて沈む
+  const hk=eout(clamp((t-0.5)/0.7)),sk=ease(clamp((t-T1)/1.2));g.save();g.translate(930,lerp(-80,BED,hk)+sk*40);g.rotate(sk*0.16);houseS(0,0,2.3);g.restore();
+  // 歩いてくる人：一歩ごとに沈んで、止まる
+  const wk=ease(clamp((t-T3)/Math.max(2.2,DUR-T3-0.8)));const px=lerp(330,640,wk),ps=ease(clamp((px-400)/200))*40;personS(px,BED+ps,2.1,{walk:wk<1?t*7*(1-wk*0.7):0,col:'#3b5a7c'});
+  soil(-400,W+400,x=>BED+Math.sin(x*0.02+t*1.5)*1.5,MUD,MUDD);sheen(300,W,BED,t);puddles(320,W,BED,t,1,23,6);
+  // 泥の泡（やわらかい）
+  const bk=clamp((t-T2)/0.4);if(bk>0){const r=R(31);for(let i=0;i<9;i++){const q=((t*0.5+r())%1),x=360+r()*860;g.strokeStyle=`rgba(255,255,255,${0.5*bk*(1-q)})`;g.lineWidth=2.5;g.beginPath();g.arc(x,BED+10+r()*30,3+q*9,0,7);g.stroke()}}
+  if(wk>0.3&&wk<1){g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=3;for(const d of [-1,1]){g.beginPath();g.ellipse(px+d*4,BED+3,26+10*Math.sin(t*6),5,0,0,7);g.stroke()}}
+  dikeS(150,BED,SL-64,300);
+  crossX(930,BED-90,clamp((t-T1-0.25)/0.4),54,15);
+  if(t>=0.5)sfxOnce('h',1.15,'thump');if(t>=T1)sfxOnce('s',T1,'puff');if(t>=T1+0.25)sfxOnce('x',T1+0.25,'tick');if(t>=T2)sfxOnce('b',T2,'pop');if(t>=T3)sfxOnce('w',T3+1.0,'puff')}
+
+function ditch(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.32),T3=T(3,DUR*0.56),T4=T(4,DUR*0.8);const SL=200,G0=410;
+  const sink=ease(clamp((t-T3)/Math.max(3,T4-T3+1.5)))*78,G=G0+sink;const dk=ease(clamp((t-T1)/1.0));const DX=[560,740,920,1100];
+  const gy=x=>{let y=G;for(const d of DX){const u=Math.abs(x-d)/34;if(u<1)y=Math.max(y,G+52*dk*(1-u))}return y};
+  const dryk=ease(clamp((t-T1-0.8)/Math.max(4,T3-T1+2)));
+  skyG();cloudS(300+t*5,80,1.3);cloudS(980+t*4,110,1.5);seaDike(SL,G0+90,t,140);
+  soil(-400,W+400,x=>x<300?G0+90-(G0+90-G)*ease(clamp((x-180)/120)):gy(x),mix(MUD,SOIL,dryk*0.8),MUDD);
+  // 泥の中の水：溝へ集まる
+  {const r=R(41);for(let i=0;i<150;i++){const x0=430+r()*830,y0=30+r()*250,dl=r()*3.2;const d=DX.reduce((a,b)=>Math.abs(b-x0)<Math.abs(a-x0)?b:a);const u=ease(clamp((t-T1-0.7-dl)/2.2));const a=t<T1+0.7+dl?1:1-clamp((u-0.75)/0.25);if(a<=0)continue;g.fillStyle=`rgba(96,160,205,${0.85*a})`;g.beginPath();g.arc(lerp(x0,d,u),G+lerp(y0,44*dk,u),4.5,0,7);g.fill()}}
+  // 溝にたまる水
+  if(dk>0.5){const wa=clamp((t-T1-1.2)/0.8);for(const d of DX){g.fillStyle=`rgba(90,156,194,${0.95*wa})`;g.beginPath();g.moveTo(d-18,G+26);g.lineTo(d+18,G+26);g.lineTo(d,G+52);g.closePath();g.fill()}}
+  // ポンプ場と、堤防をこえる水
+  const pk=clamp((t-T2+0.5)/0.4);if(pk>0){g.save();g.translate(380,G);g.scale(back(pk),back(pk));stationS(0,0,0.62,t,t>=T2?1:0);g.restore();g.strokeStyle='#3a4250';g.lineWidth=12*pk;g.lineCap='round';g.beginPath();g.moveTo(350,G-26);g.lineTo(268,SL-76);g.lineTo(150,SL-76);g.stroke();g.lineCap='butt';if(t>=T2)stream(150,SL-70,84,SL,t,8,10)}
+  dikeS(140,G0+90,SL-64,330);
+  // もとの高さ（点線）と、沈んだ分
+  if(sink>2){seaLine(G0,420,W-90,1,'rgba(255,255,255,.8)');g.strokeStyle='#ffd36a';g.lineWidth=6;g.beginPath();g.moveTo(1206,G0);g.lineTo(1206,G);g.moveTo(1192,G0);g.lineTo(1220,G0);g.moveTo(1192,G);g.lineTo(1220,G);g.stroke()}
+  // 海面の線と、海面からの低さ
+  const lk=clamp((t-T4)/0.6);if(lk>0){seaLine(SL,300,W+20,lk,'rgba(40,110,170,.95)');const b=clamp((t-T4-0.5)/0.5);if(b>0){g.strokeStyle=`rgba(255,211,106,${b})`;g.lineWidth=7;g.beginPath();g.moveTo(840,SL);g.lineTo(840,G);g.moveTo(824,SL);g.lineTo(856,SL);g.moveTo(824,G);g.lineTo(856,G);g.stroke()}}
+  if(t>=T1)sfxOnce('d',T1,'thump');if(t>=T2)sfxOnce('p',T2,'puff');if(t>=T3)sfxOnce('s',T3,'whoosh');if(t>=T4)sfxOnce('l',T4,'pop')}
+
+function reedPlant(x,y,h,t,i,grow=1,col='#7c9a4c'){if(grow<=0)return;const sw=Math.sin(t*1.3+i)*10*grow,hh=h*grow;g.strokeStyle=col;g.lineWidth=5;g.lineCap='round';g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+sw*0.4,y-hh*0.6,x+sw,y-hh);g.stroke();
+  for(let k=0;k<4;k++){const u=0.3+k*0.17;const bx=x+sw*u*u,by=y-hh*u;const d=k%2?1:-1;g.lineWidth=4;g.beginPath();g.moveTo(bx,by);g.quadraticCurveTo(bx+d*30*grow,by-26*grow,bx+d*58*grow,by-10*grow+sw*0.2);g.stroke()}
+  g.fillStyle='#7a5a36';g.beginPath();g.ellipse(x+sw,y-hh-12*grow,5*grow,16*grow,sw*0.01,0,7);g.fill();g.lineCap='butt'}
+function reed(t){const T1=T(1,DUR*0.3),T2=T(2,DUR*0.55),T3=T(3,DUR*0.8);const GY=340;const dry=ease(clamp((t-T3)/Math.max(2,DUR-T3)));
+  skyG();cloudS(200+t*5,80,1.3);cloudS(940+t*4,110,1.4);
+  soil(-400,W+400,x=>GY,mix(MUD,'#a98a5c',dry),MUDD);if(dry<0.6)sheen(0,W,GY,t,1-dry/0.6);
+  const XS=[150,330,510,690,870,1050,1200];const r=R(51);const air=ease(clamp((t-T2)/1.5));
+  XS.forEach((x,i)=>{const gk=ease(clamp((t-0.2-i*0.12)/1.4));const roots=[];for(let j=0;j<3;j++){const p=[[x,GY]];let cx=x,cy=GY;for(let s=0;s<5;s++){cx+=(r()-0.5)*70+(j-1)*16;cy+=40+r()*26;p.push([cx,cy])}roots.push(p)}
+    for(const p of roots){const n=(p.length-1)*gk;
+      if(air>0){g.strokeStyle=`rgba(238,226,196,${0.5*air})`;g.lineWidth=16;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(p[0][0],p[0][1]);for(let s=1;s<=Math.floor(n);s++)g.lineTo(p[s][0],p[s][1]);g.stroke()}
+      g.strokeStyle='#d9cfae';g.lineWidth=4;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(p[0][0],p[0][1]);for(let s=1;s<p.length;s++){if(s<=n)g.lineTo(p[s][0],p[s][1]);else if(s-1<n){const u=n-(s-1);g.lineTo(lerp(p[s-1][0],p[s][0],u),lerp(p[s-1][1],p[s][1],u))}}g.stroke();g.lineCap='butt';
+      // 根を上がっていく水
+      if(t>=T1&&gk>=1)for(let k=0;k<3;k++){const q=1-((t*0.45+k/3+i*0.13)%1);const f=q*(p.length-1),s=Math.min(p.length-2,Math.floor(f)),u=f-s;g.fillStyle='rgba(120,190,235,.95)';g.beginPath();g.arc(lerp(p[s][0],p[s+1][0],u),lerp(p[s][1],p[s+1][1],u),5,0,7);g.fill()}}
+    reedPlant(x,GY,250+((i*37)%50),t,i,gk);
+    // 葉から空へ逃げていく水
+    if(t>=T1+0.8&&gk>=1)for(let k=0;k<4;k++){const q=(t*0.4+k/4+i*0.21)%1;g.fillStyle=`rgba(190,228,250,${0.8*(1-q)})`;g.beginPath();g.arc(x+(k%2?46:-46)+Math.sin(q*5+i)*10,GY-150-(k*26)-q*110,4+q*5,0,7);g.fill()}
+    if(air>0)for(let k=0;k<4;k++){const b=roots[k%3][1+((k+i)%4)];g.strokeStyle=`rgba(255,255,255,${0.75*air})`;g.lineWidth=2.5;g.beginPath();g.arc(b[0]+((k*29)%40)-20,b[1]+((k*17)%30)-15,5+((k+i)%3)*2,0,7);g.stroke()}});
+  if(t>=0.2)sfxOnce('g',0.3,'whoosh');if(t>=T1)sfxOnce('w',T1,'pop');if(t>=T2)sfxOnce('a',T2,'pop');if(t>=T3)sfxOnce('s',T3,'tick')}
+
+function colors(t){const T1=T(1,DUR*0.1),T2=T(2,DUR*0.24),T3=T(3,DUR*0.36),T4=T(4,DUR*0.5),T5=T(5,DUR*0.66),T6=T(6,DUR*0.82);const GY=470;
+  const soilk=ease(clamp((t-T1)/Math.max(6,T5-T1)));skyG();cloudS(220+t*6,90,1.4);cloudS(900+t*5,120,1.5);
+  const N=34,FT=2.3;
+  for(let i=0;i<N;i++){const x=20+i*38,u=i/(N-1);const burnAt=T1+u*FT;
+    // ヨシ（焼ける前）
+    const bk=clamp((t-burnAt)/0.5);if(bk<1)reedPlant(x,GY,(150+((i*37)%50))*(1-bk*0.85),t,i,1,mix('#7c9a4c','#2c2620',bk));
+    if(t>=burnAt&&t<burnAt+0.7){const f=1-(t-burnAt)/0.7;for(let k=0;k<3;k++){g.fillStyle=['#f6a23c','#f1672e','#ffd36a'][k];g.beginPath();const fx=x+(k-1)*12,fh=(70+k*18)*f*(0.8+0.2*Math.sin(t*30+k+i));g.moveTo(fx-13,GY);g.quadraticCurveTo(fx-8,GY-fh*0.5,fx,GY-fh);g.quadraticCurveTo(fx+8,GY-fh*0.5,fx+13,GY);g.fill()}}
+    if(t>=burnAt&&t<burnAt+2.4){const q=(t-burnAt)/2.4;g.fillStyle=`rgba(90,90,96,${0.4*(1-q)})`;g.beginPath();g.arc(x+q*40,GY-60-q*220,14+q*34,0,7);g.fill()}
+    // 菜の花
+    const rg=ease(clamp((t-T2-u*1.2)/1.2))*(1-ease(clamp((t-T4+0.3-u*0.8)/0.8)));if(rg>0){const h=96*rg;g.strokeStyle='#5f9a4a';g.lineWidth=4;g.beginPath();g.moveTo(x,GY);g.lineTo(x+Math.sin(t*1.5+i)*4,GY-h);g.stroke();const bl=clamp((t-T2-u*1.2-0.7)/0.6)*rg;if(bl>0){g.fillStyle='#f4d21f';for(const[dx,dy,rr] of [[0,-h,11],[-9,-h+12,9],[9,-h+10,9],[0,-h+22,8],[-13,-h+26,7],[13,-h+24,7]]){g.beginPath();g.arc(x+dx+Math.sin(t*1.5+i)*4,GY+dy,rr*bl,0,7);g.fill()}}}
+    // 麦
+    const wg=ease(clamp((t-T4-u*1.0)/1.1))*(1-ease(clamp((t-T5+0.3-u*0.8)/0.8)));if(wg>0)for(const dx of [-10,6]){const h=(104+((i*13)%16))*wg,sw=Math.sin(t*1.8+i+dx)*5;g.strokeStyle='#cfa844';g.lineWidth=3.5;g.beginPath();g.moveTo(x+dx,GY);g.lineTo(x+dx+sw,GY-h);g.stroke();g.fillStyle='#e2bd4f';g.beginPath();g.ellipse(x+dx+sw,GY-h-12*wg,5*wg,17*wg,sw*0.02,0,7);g.fill()}
+    // 野菜
+    const vg=back(clamp((t-T5-u*1.0)/0.6));if(t>=T5+u*1.0){g.fillStyle='#4f8f4a';g.beginPath();g.arc(x,GY-12*vg,17*vg,0,7);g.fill();g.fillStyle='#7fbf6a';g.beginPath();g.arc(x-3,GY-15*vg,10*vg,0,7);g.fill();g.strokeStyle='#3d7240';g.lineWidth=2;g.beginPath();g.arc(x,GY-12*vg,17*vg,Math.PI,Math.PI*1.9);g.stroke()}}
+  soil(-400,W+400,x=>GY,mix(MUD,'#9a7447',soilk),MUDD);
+  {const ash=clamp((t-T1)/FT)*(1-clamp((t-T2-0.6)/1.2));if(ash>0){g.fillStyle=`rgba(40,36,32,${0.5*ash})`;g.fillRect(0,GY,Math.min(W,20+N*38*clamp((t-T1)/FT)),10)}}
+  if(t>=T3){const y=clamp((t-T3)/0.5)*(1-clamp((t-T4)/0.6));if(y>0){g.fillStyle=`rgba(255,226,90,${0.12*y})`;g.fillRect(0,0,W,GY)}}
+  // 「水を抜く」と「土を作る」の長さくらべ
+  const ck=clamp((t-T6)/0.4);if(ck>0){g.save();g.globalAlpha=ck;g.fillStyle='rgba(22,30,42,.93)';g.beginPath();g.roundRect(150,50,980,170,20);g.fill();
+    g.fillStyle='#6fb4e0';g.beginPath();g.moveTo(205,84);g.bezierCurveTo(186,108,186,126,205,126);g.bezierCurveTo(224,126,224,108,205,84);g.fill();
+    g.fillStyle='#6fb4e0';g.beginPath();g.roundRect(250,92,38*ease(clamp((t-T6-0.2)/0.3)),28,8);g.fill();
+    g.strokeStyle='#8fd07a';g.lineWidth=5;g.lineCap='round';g.beginPath();g.moveTo(205,196);g.lineTo(205,166);g.stroke();g.fillStyle='#8fd07a';g.beginPath();g.ellipse(194,160,13,7,-0.5,0,7);g.fill();g.beginPath();g.ellipse(216,160,13,7,0.5,0,7);g.fill();g.lineCap='butt';
+    g.fillStyle='#8fd07a';g.beginPath();g.roundRect(250,160,820*ease(clamp((t-T6-0.9)/Math.max(1.6,DUR-T6-1.6))),28,8);g.fill();g.restore()}
+  if(t>=T1)sfxOnce('f',T1,'whoosh');if(t>=T2)sfxOnce('r',T2,'pop');if(t>=T4)sfxOnce('w',T4,'pop');if(t>=T5)sfxOnce('v',T5,'pop');if(t>=T6)sfxOnce('c',T6,'tick')}
+
+function cropS(x,y,t,i,wilt=0,s=1){const dr=wilt*0.9;g.save();g.translate(x,y);g.rotate(dr*(i%2?1:-1)*0.5);g.strokeStyle=mix('#5f9a4a','#9a8450',wilt);g.lineWidth=4*s;g.lineCap='round';g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(Math.sin(t*1.4+i)*3,-22*s,dr*14*(i%2?1:-1),-42*s*(1-wilt*0.35));g.stroke();g.fillStyle=mix('#6fb05a','#a89258',wilt);for(const d of [-1,1]){g.beginPath();g.ellipse(d*9*s,(-24+wilt*12)*s,11*s,5*s,d*(0.5+wilt*0.9),0,7);g.fill()}g.lineCap='butt';g.restore()}
+function seepScene(t,lake,o){const LY=300,PY=474;const tbl0=LY+44,drop=o.drop||0;   // 陸の地下水の面は、地面の少し下
+  const prof=lake?(x=>x<470?LY:(x<520?lerp(LY,430,(x-470)/50):(x<700?430:(x<740?lerp(430,PY,(x-700)/40):PY)))):(x=>x<560?LY:(x<690?lerp(LY,PY,ease((x-560)/130)):PY));
+  const tblL=tbl0+drop;const tbl=lake?(x=>x<760?tbl0:lerp(tbl0,PY+30,ease(clamp((x-760)/70)))):(x=>lerp(tblL,PY+30,ease(clamp((x-(300-drop*0.6))/(420+drop*0.6)))));
+  skyG();cloudS(240+t*5,70,1.3);cloudS(900+t*4,100,1.4);
+  if(lake)waterBody(486,760,tbl0-6,440,t,'#5a9cc2','#3f7ea6',0.5);
+  soil(-400,W+400,prof,SOIL);
+  // 地下水（土の中の、水をふくんだ所）
+  g.save();g.beginPath();g.moveTo(-400,H+20);for(let x=-400;x<=W+400;x+=10)g.lineTo(x,Math.max(tbl(x),prof(x)+2));g.lineTo(W+400,H+20);g.closePath();g.clip();g.fillStyle='rgba(52,128,204,.55)';g.fillRect(-400,0,W+800,H+20);
+  if(o.flow>0){const r=R(61);for(let i=0;i<46;i++){const q=(t*0.14+r())%1,lane=r();const x=lerp(40,930,q),y=lerp(tbl(x)+14+lane*150,PY+44+lane*50,ease(clamp((x-300)/420)));g.fillStyle=`rgba(170,220,250,${0.9*o.flow*Math.sin(q*Math.PI)})`;g.beginPath();g.arc(x,y,5,0,7);g.fill()}}
+  g.restore();g.strokeStyle='rgba(150,205,240,.95)';g.lineWidth=4;g.beginPath();for(let x=-20;x<=W+20;x+=10){const y=Math.max(tbl(x),prof(x)+2);x===-20?g.moveTo(x,y):g.lineTo(x,y)}g.stroke();
+  if(lake)dikeS(772,PY,LY-26,150);
+  // 陸（昔からの畑と家）と、干拓地（新しい畑・溝・ポンプ）
+  grassTop(-400,lake?470:560,x=>LY);houseS(90,LY,1.5);treeS(180,LY,1.1);for(let i=0;i<9;i++)cropS(240+i*(lake?24:34),LY,t,i,o.wilt||0,1.15);
+  if(o.wilt>0.4){g.strokeStyle=`rgba(90,70,48,${0.7*(o.wilt-0.4)/0.6})`;g.lineWidth=2.5;for(let i=0;i<6;i++){const x=230+i*56;g.beginPath();g.moveTo(x,LY+4);g.lineTo(x+7,LY+18);g.lineTo(x-3,LY+30);g.stroke()}}
+  grassTop(lake?850:700,W+400,x=>PY,'#86ac62');for(let i=0;i<8;i++)cropS((lake?880:740)+i*36,PY,t,i+3,0,0.9);
+  {const dx=1140;g.fillStyle=SOIL;g.fillStyle='rgba(90,156,194,.95)';g.beginPath();g.moveTo(dx-22,PY+2);g.lineTo(dx+22,PY+2);g.lineTo(dx,PY+34);g.closePath();g.fill();pumpHouse(1215,PY,0.9)}
+  return{LY,PY,tbl0}}
+function seep(t){const T1=T(1,DUR*0.16),T2=T(2,DUR*0.36),T3=T(3,DUR*0.5),T4=T(4,DUR*0.62),T5=T(5,DUR*0.84);
+  const drop=ease(clamp((t-T4)/Math.max(3.5,T5-T4+1.5)))*110,wilt=ease(clamp((t-T5)/2.2));const s=seepScene(t,0,{drop,wilt,flow:clamp((t-T3)/0.8)});
+  const jk=clamp((t-T1)/0.4)*(1-clamp((t-T2)/0.5));if(jk>0){g.strokeStyle=`rgba(255,211,106,${(0.6+0.4*Math.sin(t*6))*jk})`;g.lineWidth=9;g.lineCap='round';g.beginPath();for(let x=540;x<=710;x+=10){const y=(x<560?s.LY:(x<690?lerp(s.LY,s.PY,ease((x-560)/130)):s.PY));x===540?g.moveTo(x,y):g.lineTo(x,y)}g.stroke();g.lineCap='butt'}
+  const hk=clamp((t-T2)/0.5)*(1-clamp((t-T3-0.6)/0.5));if(hk>0){seaLine(s.LY,560,820,hk,`rgba(255,255,255,${0.9*hk})`);g.strokeStyle=`rgba(255,211,106,${hk})`;g.lineWidth=7;g.beginPath();g.moveTo(790,s.LY);g.lineTo(790,lerp(s.LY,s.PY,ease(hk)));g.moveTo(774,s.LY);g.lineTo(806,s.LY);g.moveTo(774,s.PY);g.lineTo(806,s.PY);g.stroke()}
+  if(drop>3)seaLine(s.tbl0,0,330,1,'rgba(255,255,255,.75)');
+  if(t>=T1)sfxOnce('j',T1,'pop');if(t>=T2)sfxOnce('h',T2,'tick');if(t>=T3)sfxOnce('f',T3,'whoosh');if(t>=T5)sfxOnce('w',T5,'puff')}
+function seeplake(t){const T1=T(1,DUR*0.25),T2=T(2,DUR*0.62);const s=seepScene(t,1,{flow:0});
+  const k=clamp((t-T1)/0.5);if(k>0){g.strokeStyle=`rgba(255,211,106,${(0.55+0.45*Math.sin(t*5))*k})`;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(20,s.tbl0);g.lineTo(lerp(20,756,ease(k)),s.tbl0);g.stroke();g.lineCap='butt'}
+  if(t>=T1)sfxOnce('l',T1,'pop');if(t>=T2)sfxOnce('o',T2,'tick')}
+
+function pumpnow(t){const T1=T(1,DUR*0.26),T2=T(2,DUR*0.5),T3=T(3,DUR*0.76);const SL=226,PY=480;const run=clamp((t-T2)/0.4),back2=ease(clamp((t-T3)/1.6))*(0.6+0.08*Math.sin(t*3));
+  skyG(0.18);cloudS(280+t*5,70,1.4,'rgba(236,240,244,.92)');cloudS(820+t*4,100,1.6,'rgba(236,240,244,.92)');seaDike(SL,PY+10,t,170);
+  soil(-400,W+400,x=>{let y=PY;for(const d of [620,960]){const u=Math.abs(x-d)/30;if(u<1)y=Math.max(y,PY+40*(1-u))}return y},SOIL);
+  const wl=lerp(10,26,run*0.8);for(const d of [620,960]){g.fillStyle='rgba(90,156,194,.95)';g.beginPath();g.moveTo(d-30+wl*0.72,PY+wl);g.lineTo(d+30-wl*0.72,PY+wl);g.lineTo(d,PY+40);g.closePath();g.fill()}
+  // 堤防の下からしみ出す水
+  {const r=R(71);for(let i=0;i<10;i++){const q=(t*0.12+r())%1;g.fillStyle=`rgba(150,205,240,${0.8*Math.sin(q*Math.PI)})`;g.beginPath();g.arc(lerp(40,600,q),PY+40+r()*70+Math.sin(q*3)*10,4.5,0,7);g.fill()}}
+  grassTop(330,590,x=>PY,'#86ac62');grassTop(650,930,x=>PY,'#86ac62');grassTop(990,W+400,x=>PY,'#86ac62');
+  houseS(760,PY,1.5);houseS(840,PY,1.25,'#e6dcc6','#8e4a3a');treeS(700,PY,1.1);treeS(1180,PY,1.2);cowS(1060,PY,1.3);cowS(1120,PY,1.2,-1);for(let i=0;i<5;i++)cropS(450+i*26,PY,t,i,0,0.85);
+  pumpHouse(390,PY,1.15);g.strokeStyle='#3a4250';g.lineWidth=13;g.lineCap='round';g.beginPath();g.moveTo(350,PY-30);g.lineTo(290,SL-80);g.lineTo(172,SL-80);g.stroke();g.lineCap='butt';
+  dikeS(170,PY+10,SL-66,330);if(run>0)stream(172,SL-74,96,SL,t,9,12,run);
+  rainS(t,0.5*(1-clamp((t-T3)/1.5)*0.5));
+  seaLine(SL,330,W+20,clamp((t-T1)/0.7),'rgba(40,110,170,.95)');
+  if(back2>0){g.fillStyle=`rgba(63,126,166,${back2})`;g.beginPath();g.moveTo(322,PY+2);for(let x=322;x<=W+20;x+=10)g.lineTo(x,SL+Math.sin(x*0.03+t*2)*4);g.lineTo(W+20,PY+2);g.closePath();g.fill()}
+  if(t>=T1)sfxOnce('l',T1,'pop');if(t>=T2)sfxOnce('p',T2,'puff');if(t>=T3)sfxOnce('b',T3,'whoosh')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({mudwalk,ditch,reed,colors,seep,seeplake,pumpnow}[P.mode]||mudwalk)(t)};
+</script></body></html>

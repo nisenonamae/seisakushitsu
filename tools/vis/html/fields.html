@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・第4章。上から見た干拓地
+ mode：seedair（泥の平らな土地に飛行機が種をまく。ats：[0] 飛行機が来る [1] 種がまかれ、通ったあとが緑に）
+      ／parcel（区画。ats：[0]「約20ha」 [1] 前の道 [2] 後ろの水路 [3] 引いて、たくさんの区画 [4] いい土＝野菜 [5] 次＝麦 [6] 悪い土＝森） */
+window.DEF={mode:'seedair'};
+function planeTop(x,y,ang,s=1){g.save();g.translate(x,y);g.rotate(ang);g.scale(s,s);track(-70,-80,70,80);g.fillStyle='#e9e4d8';g.beginPath();g.ellipse(0,0,62,11,0,0,7);g.fill();g.fillStyle='#d6cfbd';g.beginPath();g.roundRect(-4,-78,30,156,10);g.fill();g.beginPath();g.roundRect(-58,-26,16,52,6);g.fill();g.fillStyle='#b23a2e';g.beginPath();g.ellipse(56,0,9,9,0,0,7);g.fill();g.fillStyle='rgba(60,60,60,.35)';g.beginPath();g.ellipse(66,0,3,24,0,0,7);g.fill();g.restore()}
+function seedair(t){const T1=T(1,DUR*0.36),T2=T(2,DUR*0.6);
+  g.fillStyle=noiseFill('#84765f');g.fillRect(0,0,W,H);
+  // 溝（前の場面で掘ったもの）と水たまり
+  g.strokeStyle='rgba(86,134,166,.75)';g.lineWidth=5;for(let x=110;x<W;x+=212){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()}
+  {const r=R(7);for(let i=0;i<16;i++){const x=r()*W,y=r()*H,w=30+r()*60;g.fillStyle='rgba(96,140,168,.55)';g.beginPath();g.ellipse(x,y,w,w*0.35,r()*3,0,7);g.fill();g.fillStyle=`rgba(255,255,255,${0.25*(0.5+0.5*Math.sin(t*2+i))})`;g.beginPath();g.ellipse(x-w*0.2,y-2,w*0.3,2.5,0,0,7);g.fill()}}
+  // 3回の行き来。通ったあとが、少し遅れて緑になる
+  const P0=Math.max(0.4,T1-0.9);const PASS=[[P0,150,1],[P0+2.4,360,-1],[P0+4.8,570,1]],SPD=640;
+  for(const[t0,y,dir] of PASS){if(t<t0)continue;const px=dir>0?-140+(t-t0)*SPD:W+140-(t-t0)*SPD;
+    // 緑（芽）
+    const r=R(Math.round(y));for(let i=0;i<420;i++){const sx=r()*W,sy=y+(r()-0.5)*190,dl=r()*0.6;const passT=t0+(dir>0?(sx+140)/SPD:(W+140-sx)/SPD);const a=clamp((t-passT-0.25-dl)/0.5),gk=clamp((t-passT-1.1-dl)/1.4);if(a<=0)continue;
+      if(gk>0){g.fillStyle=`rgba(${Math.round(lerp(120,104,gk))},${Math.round(lerp(150,168,gk))},${Math.round(lerp(80,84,gk))},${0.9})`;g.beginPath();g.arc(sx,sy,2.5+gk*7,0,7);g.fill()}else{g.fillStyle=`rgba(240,226,180,${a})`;g.beginPath();g.arc(sx,sy,2.2,0,7);g.fill()}}
+    // 落ちていく種（飛行機のすぐ後ろ）
+    if(px>-200&&px<W+200){const r2=R(3);for(let i=0;i<40;i++){const q=r2();g.fillStyle=`rgba(250,240,200,${0.9*(1-q)})`;g.beginPath();g.arc(px-dir*(40+q*200),y+(r2()-0.5)*(30+q*150),2.4,0,7);g.fill()}
+      g.fillStyle='rgba(20,24,30,.28)';g.save();g.translate(px+38,y+52);g.rotate(dir>0?0:Math.PI);g.beginPath();g.ellipse(0,0,62,11,0,0,7);g.fill();g.fillRect(-4,-78,30,156);g.restore();planeTop(px,y,dir>0?0:Math.PI,1.15)}
+    sfxOnce('p'+y,t0,'whoosh')}
+  if(t>=T2)sfxOnce('s',T2,'tick')}
+let _nf={};function noiseFill(base){if(_nf[base])return _nf[base];const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,256,256);const r=R(base.length*5+base.charCodeAt(2));for(let i=0;i<1400;i++){x.fillStyle=r()<0.5?'rgba(255,255,255,.07)':'rgba(0,0,0,.09)';x.fillRect(r()*256,r()*256,2+r()*3,2+r()*3)}return _nf[base]=g.createPattern(c,'repeat')}
+
+function parcel(t){const T1=T(1,DUR*0.1),T2=T(2,DUR*0.2),T3=T(3,DUR*0.3),T4=T(4,DUR*0.42),T5=T(5,DUR*0.6),T6=T(6,DUR*0.72),T7=T(7,DUR*0.84);
+  const PW=250,PH=430,RD=40,CN=34;const zo=ease(clamp((t-T4)/1.6)),sc=lerp(1,0.34,zo);
+  g.fillStyle=noiseFill('#b9a47a');g.fillRect(0,0,W,H);g.save();g.translate(W/2,H/2+lerp(RD/2+PH/2+8,0,zo));g.scale(sc,sc);   // はじめは、1つの区画（道の上側）を真ん中に
+  // 行の並び：水路／区画／道／区画／水路 …（区画は道をはさんで向かい合い、後ろは水路）
+  const band=2*PH+RD+CN;const typeOf=(i,j)=>{const v=Math.sin(i*1.7+j*2.3)+Math.cos(i*0.9-j*1.1)+ (i>3&&j>=1?2.2:0)+(i<-4&&j<=-1?1.8:0);return v>1.9?2:(v>0.2?1:0)};
+  for(let j=-3;j<=3;j++){const by=j*band;   // by＝この帯の道の中心
+    g.fillStyle='#8f8a80';g.fillRect(-4000,by-RD/2,8000,RD);g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=3;g.setLineDash([22,18]);g.beginPath();g.moveTo(-4000,by);g.lineTo(4000,by);g.stroke();g.setLineDash([]);
+    g.fillStyle='#5a9cc2';g.fillRect(-4000,by-RD/2-PH-CN,8000,CN);
+    for(let i=-9;i<=9;i++)for(const side of [-1,1]){const x=i*PW-PW/2,y=side<0?by-RD/2-PH:by+RD/2;const ty=typeOf(i,j*2+(side>0?1:0));const t0=[T5,T6,T7][ty]+((i+9)%5)*0.12;const k=clamp((t-t0)/0.6);
+      g.fillStyle='#c9b58c';g.fillRect(x+4,y+4,PW-8,PH-8);
+      if(k>0){g.globalAlpha=k;if(ty===0){g.fillStyle='#5d9a52';g.fillRect(x+4,y+4,PW-8,PH-8);g.strokeStyle='rgba(30,70,30,.35)';g.lineWidth=5;for(let yy=y+18;yy<y+PH-8;yy+=18){g.beginPath();g.moveTo(x+12,yy);g.lineTo(x+PW-12,yy);g.stroke()}}
+        else if(ty===1){g.fillStyle='#d9b84e';g.fillRect(x+4,y+4,PW-8,PH-8);g.strokeStyle='rgba(140,100,20,.3)';g.lineWidth=3;for(let xx=x+14;xx<x+PW-8;xx+=14){g.beginPath();g.moveTo(xx,y+10);g.lineTo(xx,y+PH-10);g.stroke()}}
+        else{g.fillStyle='#4c7a48';g.fillRect(x+4,y+4,PW-8,PH-8);const r=R(i*31+j*7+side+50);for(let q=0;q<26;q++){const tx=x+24+r()*(PW-48),tyy=y+24+r()*(PH-48),rr=(20+r()*16)*back(k);g.fillStyle='#2f5f36';g.beginPath();g.arc(tx+4,tyy+5,rr,0,7);g.fill();g.fillStyle=r()<0.5?'#3f7a45':'#4c8a4f';g.beginPath();g.arc(tx,tyy,rr,0,7);g.fill()}}
+        g.globalAlpha=1}
+      // 農家（道に面した側）
+      const hy=side<0?y+PH-54:y+16;g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x+PW/2-18+5,hy+5,40,34);g.fillStyle='#b5533c';g.fillRect(x+PW/2-18,hy,40,34);g.fillStyle='#8e3f2e';g.fillRect(x+PW/2-18,hy+15,40,4)}}
+  // 道を走る車と、水路を行く船
+  const FY=-RD/2-PH;   // 見ている区画（i=0、道の上側）の上の辺
+  if(t>=T2){const q=clamp((t-T2)/3.2);const cx=lerp(-760,760,q);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(cx-22+4,-12+4,46,24);g.fillStyle='#d9534f';g.beginPath();g.roundRect(cx-22,-12,46,24,6);g.fill();g.fillStyle='#f3ead6';g.fillRect(cx+6,-9,12,18)}
+  if(t>=T3){const q=clamp((t-T3)/3.6);const bx=lerp(760,-760,q);g.save();g.translate(bx,FY-CN/2);g.rotate(Math.PI);g.scale(1.2,1.2);g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=2;g.beginPath();g.moveTo(-16,-5);g.lineTo(-44,-12);g.moveTo(-16,5);g.lineTo(-44,12);g.stroke();g.fillStyle='#5a4634';g.beginPath();g.moveTo(22,0);g.quadraticCurveTo(8,-11,-16,-10);g.lineTo(-16,10);g.quadraticCurveTo(8,11,22,0);g.fill();g.restore()}
+  // 1つの区画・道・水路を順に光らせる
+  const hi=(k,fn)=>{if(k>0){g.strokeStyle=`rgba(255,211,106,${k*(0.7+0.3*Math.sin(t*6))})`;g.lineWidth=9;fn()}};
+  hi(clamp((t-T1)/0.3)*(1-clamp((t-T2+0.2)/0.4)),()=>g.strokeRect(-PW/2,FY,PW,PH));
+  hi(clamp((t-T2)/0.3)*(1-clamp((t-T3+0.2)/0.4)),()=>g.strokeRect(-640,-RD/2,1280,RD));
+  hi(clamp((t-T3)/0.3)*(1-clamp((t-T4+0.2)/0.4)),()=>g.strokeRect(-640,FY-CN,1280,CN));
+  g.restore();
+  numLabel(W/2+300,H/2-40,'約20ha',clamp((t-T1)/0.35)*(1-clamp((t-T4+0.3)/0.4)),84);
+  if(t>=T1)sfxOnce('a',T1,'pop');if(t>=T2)sfxOnce('b',T2,'tick');if(t>=T3)sfxOnce('c',T3,'tick');if(t>=T4)sfxOnce('z',T4,'whoosh');if(t>=T5)sfxOnce('v',T5,'pop');if(t>=T6)sfxOnce('w',T6,'pop');if(t>=T7)sfxOnce('f',T7,'pop')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({seedair,parcel}[P.mode]||seedair)(t)};
+</script></body></html>
