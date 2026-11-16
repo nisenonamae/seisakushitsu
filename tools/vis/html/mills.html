@@ -1,0 +1,84 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・第2章。横から見た、湖の水をくみ上げる仕組み（58px＝1m）
+ mode：one（風車1基。1.5m しか上げられない。ats[0] で湖の底の深さが見え、外の水路に届かない）
+      ／three（風車3基の階段。ats：[0] 1基目→2段目 [1] 2基目→3段目 [2] 3基目→外の水路）
+      ／limit（ats：[0] 浅い湖なら干せる [1] 風が止まると水が戻る [2] 引いていくと、となりに大きく深い湖）
+      ／steam（蒸気のポンプ場。大きな腕が水をくみ上げる）
+      ／airsec（空港の断面。ats：[0] 海面の線と「約4.5m」 [1] 昔の湖の水が重なり、飛行機が降りてくる） */
+window.DEF={mode:'one'};
+const M=58;
+function scoop(x,y,rad,ang){g.save();g.translate(x,y);g.strokeStyle='#4a3120';g.lineWidth=5;g.beginPath();g.arc(0,0,rad,0,7);g.stroke();for(let i=0;i<10;i++){const a=ang+i*Math.PI/5;g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);g.stroke();g.save();g.rotate(a);g.fillStyle='#7a5536';g.fillRect(rad-16,-3,18,7);g.restore()}g.fillStyle='#2e2018';g.beginPath();g.arc(0,0,6,0,7);g.fill();g.restore()}
+function basin(x0,x1,top,bot,t,col='#5a9cc2'){g.fillStyle=col;g.beginPath();g.moveTo(x0,bot);for(let x=x0;x<=x1;x+=8)g.lineTo(x,top+Math.sin(x*0.05+t*2)*2);g.lineTo(x1,top);g.lineTo(x1,bot);g.closePath();g.fill();g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=2.5;g.beginPath();for(let x=x0;x<=x1;x+=8){const y=top+Math.sin(x*0.05+t*2)*2;x===x0?g.moveTo(x,y):g.lineTo(x,y)}g.stroke()}
+function drops(x0,y0,x1,y1,t,n=6,arc=26){for(let i=0;i<n;i++){const q=((t*0.9+i/n)%1);g.fillStyle=`rgba(150,205,240,${0.95*(1-q*0.3)})`;g.beginPath();g.arc(lerp(x0,x1,q),lerp(y0,y1,q)-Math.sin(q*Math.PI)*arc,6,0,7);g.fill()}}
+function bracket(x,y0,y1,k,txt,side=1,size=58){if(k<=0)return;g.strokeStyle=`rgba(255,211,106,${clamp(k)})`;g.lineWidth=6;const yb=lerp(y0,y1,ease(clamp(k)));g.beginPath();g.moveTo(x-14,y0);g.lineTo(x+14,y0);g.moveTo(x,y0);g.lineTo(x,yb);g.moveTo(x-14,yb);g.lineTo(x+14,yb);g.stroke();if(txt)numLabel(x+side*96,(y0+y1)/2,txt,clamp(k*1.5-0.5),size)}
+// 段になった地面：左に湖（lakeTop＝水面、lakeBot＝底）、右へ階段、いちばん右に外の水路（高い）
+function one(t){const T1=T(1,DUR*0.55);skyG();cloudS(200+t*6,90,1.4);cloudS(1060+t*4,110,1.5);
+  const GY=300,LB=660,OUT=GY+12,R=0.75*M,REACH=OUT+1.5*M,WX=676;   // 水車の直径＝上げられる高さ（1.5m）。水車は岸に据え付けたまま動かさない
+  const dn=ease(clamp((t-0.6)/Math.max(2,T1-1.5)));const lt=lerp(GY+34,REACH-7,dn);
+  basin(60,700,lt,LB+2,t,'#4d86a8');
+  const rest=clamp((t-T1)/0.5);   // 残った水（湖の底は、もっと深い）
+  if(rest>0){g.fillStyle=`rgba(255,255,255,${rest*(0.13+0.07*Math.sin(t*5))})`;g.fillRect(60,lt+3,640,LB-lt)}
+  soil(-300,W+300,x=>x<700?(x<60?GY:(x<120?lerp(GY,LB,(x-60)/60):(x>640?lerp(LB,GY,(x-640)/60):LB))):GY,'#b9a47a');grassTop(-300,60,x=>GY);grassTop(700,W+300,x=>GY);
+  // 外の水路と、そこへ流す樋
+  g.fillStyle='#e6eef0';g.fillRect(980,GY-2,200,44);basin(980,1180,OUT,GY+42,t);
+  const pump=1-clamp((dn-0.9)/0.1);g.fillStyle='#e6eef0';g.fillRect(704,GY-3,276,11);if(pump>0){g.fillStyle=`rgba(90,156,194,${pump})`;g.fillRect(704,GY,276,6)}
+  windmillS(850,GY,1.7,t*1.4);
+  scoop(WX,OUT+R,R,t*1.4);if(pump>0){g.globalAlpha=pump;drops(WX-8,Math.min(lt,REACH-4),712,GY-2,t,6,20);g.globalAlpha=1}
+  bracket(560,OUT,REACH,clamp((t-0.8)/0.6),'1.5m',-1,62);if(t>=0.8)sfxOnce('m',0.8,'tick');
+  if(rest>0){const yb=lerp(lt+6,LB-4,ease(rest));g.strokeStyle=`rgba(255,255,255,${0.95*rest})`;g.lineWidth=6;g.beginPath();g.moveTo(346,lt+6);g.lineTo(374,lt+6);g.moveTo(360,lt+6);g.lineTo(360,yb);g.moveTo(346,yb);g.lineTo(374,yb);g.stroke();sfxOnce('l',T1,'thump')}}
+function three(t){const T1=T(1,DUR*0.36),T2=T(2,DUR*0.56),T3=T(3,DUR*0.76);skyG();cloudS(200+t*6,90,1.4);cloudS(900+t*4,120,1.6);const GY=300,LB=660;
+  // 階段状の3つの小さな水路
+  const S=[[640,820,LB-70-1.5*M],[850,1030,LB-70-3.0*M],[1060,1240,LB-70-4.5*M]];
+  const lk=ease(clamp((t-T1)/Math.max(3,DUR-T1)));basin(60,640,lerp(LB-70,LB-48,lk),LB+2,t,'#4d86a8');
+  soil(-300,W+300,x=>x<60?GY:(x<120?lerp(GY,LB,(x-60)/60):(x<600?LB:(x<640?lerp(LB,S[0][2]-20,(x-600)/40):(x<830?S[0][2]-20:(x<1040?S[1][2]-20:S[2][2]-20))))),'#b9a47a');grassTop(-300,60,x=>GY);
+  
+  S.forEach(([x0,x1,y],i)=>{const k=clamp((t-0.3-i*0.45)/0.4);if(k<=0)return;g.globalAlpha=clamp(k);g.fillStyle='#e6eef0';g.fillRect(x0+20,y-18,x1-x0-30,40);g.globalAlpha=1;const fill=clamp((t-[T1,T2,T3][i]-0.3)/1.2);if(fill>0)basin(x0+20,x1-10,y+6-fill*4,y+22,t);
+    g.save();g.translate(x0+110,y-20);g.scale(back(k),back(k));windmillS(0,0,1.25,t*1.5+i);g.restore();if(k>=1)scoop(x0+6,(i?S[i-1][2]:LB-70)-4,34,t*1.5)});
+  if(t>=0.3)sfxOnce('a',0.3,'pop');
+  if(t>=T1)drops(600,LB-70,668,S[0][2],t,6,24);if(t>=T2)drops(826,S[0][2],878,S[1][2],t+0.3,6,24);if(t>=T3)drops(1036,S[1][2],1088,S[2][2],t+0.6,6,24);
+  [T1,T2,T3].forEach((T0,i)=>{const p=clamp((t-T0)/0.3)*(1-clamp((t-T0-1.0)/0.4));if(p>0){g.strokeStyle=`rgba(255,211,106,${0.9*p})`;g.lineWidth=6;g.beginPath();g.arc(S[i][0]+110,S[i][2]-166,96,0,7);g.stroke()}if(t>=T0)sfxOnce('s'+i,T0,'pop')})}
+function limit(t){const T1=T(1,DUR*0.22),T2=T(2,DUR*0.42),T3=T(3,DUR*0.72);const calm=ease(clamp((t-T2)/0.9))*(1-ease(clamp((t-T3)/0.6)));skyG(calm*0.25);
+  const zo=ease(clamp((t-T3)/1.4));const sc=lerp(1.25,0.62,zo);g.save();g.translate(lerp(520,1000,zo),lerp(420,300,zo));g.scale(sc,sc);g.translate(-520,-420);
+  const GY=380,LB=470;   // 浅い湖（1.5m ほど）
+  const dry=ease(clamp((t-0.4)/Math.max(1.5,T2-0.8)));const back2=ease(clamp((t-T2-0.5)/Math.max(1.5,T3-T2-0.5)));const lv=lerp(lerp(GY+14,LB-8,dry),GY+30,back2);
+  // 水は先に描いて、土をかぶせる（岸とのすき間を作らない）。となりの大きく深い湖は、引いたときに見える
+  basin(-1500,-50,GY+16,GY+524,t,'#3f7ea6');basin(180,760,lv,LB+2,t,'#4d86a8');
+  soil(-2400,W+2400,x=>{if(x<-1500)return GY;if(x<-1400)return lerp(GY,GY+520,(x+1500)/100);if(x<-150)return GY+520;if(x<-50)return lerp(GY+520,GY,(x+150)/100);if(x<180)return GY;if(x<240)return lerp(GY,LB,(x-180)/60);if(x<700)return LB;if(x<760)return lerp(LB,GY,(x-700)/60);return GY},'#b9a47a','#8f7a55',2600);
+  grassTop(-50,180,x=>GY);grassTop(760,W+2400,x=>GY);grassTop(-2400,-1500,x=>GY);
+  const spin=t<T2?t*1.5:T2*1.5+(1-Math.exp(-(t-T2)*1.6))*0.9;windmillS(860,GY,1.6,spin);scoop(748,LB-38,36,spin);if(t<T2+0.4&&lv<LB-12)drops(744,Math.max(lv,LB-70),800,GY-8,t,5,20);
+  // 風（止まる）
+  if(calm<0.9){g.strokeStyle=`rgba(255,255,255,${0.55*(1-calm)})`;g.lineWidth=3;for(let i=0;i<6;i++){const q=((t*0.7+i/6)%1);const y=90+i*30;g.beginPath();g.moveTo(lerp(500,1100,q),y);g.lineTo(lerp(500,1100,q)+80,y);g.stroke()}}
+  bracket(470,lerp(GY+14,GY+14,1),LB,clamp((t-T1)/0.5)*(1-clamp((t-T2+0.2)/0.3)),'',1);
+  if(t>=T1)sfxOnce('a',T1,'tick');if(t>=T2)sfxOnce('b',T2,'pop');if(zo>0&&zo<1)sfxOnce('z',T3,'whoosh');
+  g.restore();
+  cloudS(lerp(200+t*8,200+T2*8+ (t-T2)*1,calm>0?1:0),90,1.4);cloudS(560,130,1.5)}
+function steam(t){skyG();cloudS(160+t*5,100,1.4);const GY=330,LB=600;
+  soil(-300,W+300,x=>x<560?LB:(x<640?lerp(LB,GY,(x-560)/80):GY),'#b9a47a');grassTop(640,W+300,x=>GY);
+  basin(-300,566,lerp(LB-190,LB-40,ease(clamp(t/Math.max(4,DUR)))),LB+2,t,'#4d86a8');
+  g.fillStyle='#e6eef0';g.fillRect(1010,GY-2,330,46);basin(1010,W+300,GY+12,GY+44,t);
+  // ポンプ場：れんがの建物・高いえんとつ・上下する大きな腕
+  stationS(820,GY,1.85,t,1);
+  // 湖から建物へのびる太い吸い込み管
+  g.strokeStyle='#3d4650';g.lineWidth=26;g.lineCap='round';g.beginPath();g.moveTo(712,GY-40);g.lineTo(610,GY-40);g.lineTo(530,LB-30);g.stroke();g.lineCap='butt';g.fillStyle='#2c333b';g.fillRect(596,GY-58,30,36);
+  // 大きな水の流れ：湖 → 建物の下 → 外の水路
+  g.fillStyle='#3d4650';g.fillRect(928,GY-46,84,26);const pu=0.75+0.25*Math.sin(t*9);g.strokeStyle='rgba(120,190,235,.95)';g.lineWidth=26*pu;g.lineCap='round';g.beginPath();g.moveTo(1010,GY-32);g.quadraticCurveTo(1050,GY-40,1066,GY+10);g.stroke();g.lineCap='butt';for(let i=0;i<8;i++){const q=((t*1.6+i/8)%1);g.fillStyle=`rgba(255,255,255,${0.7*(1-q)})`;g.beginPath();g.arc(1066+(i%3-1)*18*q,GY+12-q*14,5,0,7);g.fill()}
+  // 比べるための小さな風車
+  windmillS(1150,GY,0.8,t*1.4);sfxOnce('s',0.2,'whoosh')}
+function plane(x,y,rot,s=1){g.save();g.translate(x,y);g.rotate(rot);g.scale(-s,s);track(-130,-50,130,40);g.fillStyle='#f4f6f8';g.beginPath();g.moveTo(-120,4);g.lineTo(70,-16);g.quadraticCurveTo(128,-12,132,4);g.quadraticCurveTo(128,18,70,18);g.lineTo(-112,18);g.closePath();g.fill();g.beginPath();g.moveTo(-118,6);g.lineTo(-146,-48);g.lineTo(-112,-48);g.lineTo(-76,2);g.closePath();g.fill();g.fillStyle='#d6dde6';g.beginPath();g.moveTo(-6,8);g.lineTo(-62,64);g.lineTo(-24,64);g.lineTo(48,10);g.closePath();g.fill();g.fillStyle='#7fb2c9';for(let i=0;i<7;i++)g.fillRect(-40+i*20,-6,10,7);g.restore()}
+function airsec(t){const T1=T(1,DUR*0.28),T2=T(2,DUR*0.62);skyG();cloudS(240+t*6,80,1.3);const SL=250,RW=SL+Math.round(4.5*M);
+  waterBody(-300,260,SL,H,t);soil(-300,W+300,x=>x<200?SL+150:(x<330?lerp(SL+150,RW,ease((x-200)/130)):RW),'#b9a47a');grassTop(330,W+300,x=>RW);dikeS(300,RW,SL-60,300);
+  // 滑走路・管制塔・建物
+  g.fillStyle='#4a4f58';g.fillRect(560,RW-8,W,14);g.fillStyle='#fff';for(let x=590;x<W+40;x+=70)g.fillRect(x,RW-3,34,4);
+  g.fillStyle='#dfe5ec';g.fillRect(430,RW-70,96,70);g.fillRect(468,RW-150,16,80);g.fillStyle='#9fb3c6';g.fillRect(452,RW-176,48,28);
+  // 昔の湖の水（うすく重なる）
+  const wk=ease(clamp((t-T2)/1.0));if(wk>0){g.fillStyle=`rgba(77,134,168,${0.42*wk})`;g.beginPath();g.moveTo(390,SL+26);for(let x=390;x<=W;x+=10)g.lineTo(x,SL+26+Math.sin(x*0.03+t*2)*3);g.lineTo(W,RW);g.lineTo(390,RW);g.closePath();g.fill();g.strokeStyle=`rgba(255,255,255,${0.5*wk})`;g.lineWidth=3;g.beginPath();for(let x=390;x<=W;x+=10){const y=SL+26+Math.sin(x*0.03+t*2)*3;x===390?g.moveTo(x,y):g.lineTo(x,y)}g.stroke();
+    for(let i=0;i<4;i++){const q=((t*0.05*(1+i*0.2)+i*0.26)%1);g.save();g.globalAlpha=0.7*wk;g.translate(lerp(W+40,420,q),SL+80+i*40);g.fillStyle='rgba(235,245,250,.85)';g.beginPath();g.ellipse(0,0,16,7,0,0,7);g.fill();g.beginPath();g.moveTo(14,0);g.lineTo(26,-8);g.lineTo(26,8);g.closePath();g.fill();g.restore()}}
+  seaLine(SL,380,W,clamp((t-T1)/0.7));bracket(1130,SL,RW-8,clamp((t-T1-0.4)/0.6),'約4.5m',-1,60);if(t>=T1)sfxOnce('m',T1,'tick');
+  // 飛行機が降りてくる
+  const q=ease(clamp((t-T2-0.3)/Math.max(3,DUR-T2-0.8)));const px=lerp(W+180,760,q),py=lerp(60,RW-36,q);plane(px,py,lerp(-0.16,0,q),1.0);if(t>=T2)sfxOnce('p',T2+0.3,'whoosh')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({one,three,limit,steam,airsec}[P.mode]||one)(t)};
+</script></body></html>

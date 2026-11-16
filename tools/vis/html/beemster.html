@@ -1,0 +1,125 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="geo_land.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・第2章「湖を干す」。地図と、上から見た干拓地。湖の形は、場所と広さを合わせただ円（模式）
+ mode：find（昔の地図 → アムステルダムの北の湖へ寄る。ats[0] で湖のふちが光る）
+      ／plan（ats：[0]「1607年」 [1] 商人のお金が湖へ [2] 堤防が湖を囲む [3]「38km」 [4] 風車が並びはじめる）
+      ／ring43（上から見た湖と風車の列「43基」。ats[0] で水が引き「1612年」）
+      ／grid（干上がった底に線を引く。ats：[0] 水路 [1] 畑の境目 [2] 外の曲がった土地 [3] 何もない底 [4] まっすぐに引ける [5] 全体）
+      ／plots（ats：[0] 区画の寸法 [1] 商人が区画を分け合う [2] お金になる）
+      ／haarlem（アムステルダムの南西の湖。ats：[0] 岸がけずれて広がる [1]「約2倍」 [2] 1836年の嵐 [3] たまっていく計画の紙）
+      ／drain3（ats：[0] 蒸気のポンプ場が3つ [1] 1848→1852年で湖が消える）
+      ／airport（湖のあとに空港）
+      ／lakes（ats：[0] 蒸気で大きな湖も [1] 残った内海が光る [2] 嵐の波 [3] ふちが強く光る） */
+window.DEF={mode:'find'};
+const AMS=[4.90,52.37],BEE=[4.91,52.555,4.5,5.4],HAA=[4.685,52.30,5.35,10.0,0.33];
+const VB=()=>view(4.93,52.465,2300),VH=()=>view(4.80,52.31,2300);
+function amsterdam(v,k,t){const[x,y]=pj(v,AMS[0],AMS[1]);if(k<=0)return;g.save();g.translate(x,y);g.scale(back(clamp(k)),back(clamp(k)));townIcon(0,0,1.5);g.restore()}
+function find(t){const T1=T(1,DUR*0.6);const u=ease(clamp((t-0.6)/Math.max(2.4,T1-0.9)));const v=view(lerp(5.35,4.93,u),lerp(52.25,52.465,u),Math.exp(lerp(Math.log(238),Math.log(2300),u)));nlBaseOld(v,t);
+  lakeLL(v,t,BEE[0],BEE[1],BEE[2],BEE[3]);amsterdam(v,clamp((u-0.75)/0.25),t);
+  const k=clamp((t-T1)/0.4);if(k>0){const p=0.5+0.5*Math.sin((t-T1)*5);g.strokeStyle=`rgba(255,211,106,${(0.6+0.4*p)*k})`;g.lineWidth=7;ellLL(v,BEE[0],BEE[1],BEE[2],BEE[3]);g.stroke();sfxOnce('p',T1,'pop')}
+  if(u>0&&u<1)sfxOnce('z',0.6,'whoosh')}
+function plan(t){const T1=T(1,DUR*0.16),T2=T(2,DUR*0.36),T3=T(3,DUR*0.56),T4=T(4,DUR*0.72),T5=T(5,DUR*0.84);const v=VB();nlBaseOld(v,t);
+  const e=lakeLL(v,t,BEE[0],BEE[1],BEE[2],BEE[3]);amsterdam(v,1,t);const[ax,ay]=pj(v,AMS[0],AMS[1]);
+  if(t<T1){const p=0.5+0.5*Math.sin(t*5);g.strokeStyle=`rgba(255,211,106,${0.5+0.4*p})`;g.lineWidth=6;ellLL(v,BEE[0],BEE[1],BEE[2],BEE[3]);g.stroke()}
+  numLabel(e[0]+e[2]+150,e[1]-40,'1607年',clamp((t-T1)/0.35)*(1-clamp((t-T3)/0.4)),70);if(t>=T1)sfxOnce('y',T1,'pop');
+  // 商人のお金：町から湖へ
+  if(t>=T2){for(let i=0;i<9;i++){const q=clamp((t-T2-i*0.22)/1.3);if(q>0&&q<1)coinS(lerp(ax,e[0],ease(q))+Math.sin(q*Math.PI)*-70,lerp(ay-40,e[1]+e[3]*0.5,ease(q)),1.2)}sfxOnce('c',T2+0.1,'tick')}
+  // 堤防が湖を囲む
+  const dk=ease(clamp((t-T3)/1.6));if(dk>0){g.strokeStyle='#6f5a3e';g.lineWidth=11;g.beginPath();g.ellipse(e[0],e[1],e[2]+9,e[3]+9,0,-Math.PI/2,-Math.PI/2+6.283*dk);g.stroke();g.strokeStyle='#8fae6b';g.lineWidth=4;g.beginPath();g.ellipse(e[0],e[1],e[2]+9,e[3]+9,0,-Math.PI/2,-Math.PI/2+6.283*dk);g.stroke();sfxOnce('d',T3,'whoosh')}
+  numLabel(e[0]+e[2]+140,e[1]+10,'38km',clamp((t-T4)/0.35),82);if(t>=T4)sfxOnce('k',T4,'pop');
+  if(t>=T5)for(let i=0;i<10;i++){const a=i/10*6.283+0.3;const k=back(clamp((t-T5-i*0.09)/0.35));if(k>0)millIcon(e[0]+Math.cos(a)*(e[2]+12),e[1]+Math.sin(a)*(e[3]+12),0.9*k,t*2+i)}}
+// 上から見た湖（画面いっぱいのだ円）
+const LC=[640,372,470,286];
+function outerLand(t,seed=3){g.fillStyle='#93b06c';g.fillRect(0,0,W,H);const r=R(seed);for(let i=0;i<46;i++){g.fillStyle=['#9cbb6c','#b9c873','#86a862','#a9c47a','#c9c382'][i%5];g.beginPath();const x=r()*W,y=r()*H;g.moveTo(x,y);for(let k=0;k<5;k++)g.lineTo(x+(r()-0.3)*150,y+(r()-0.3)*110);g.closePath();g.fill()}
+  // 曲がった川と小道
+  g.strokeStyle='#5f9fc0';g.lineWidth=14;g.beginPath();for(let y=-10;y<=H+10;y+=10){const x=92+Math.sin(y*0.012)*46+Math.sin(y*0.031)*18;y<0?g.moveTo(x,y):g.lineTo(x,y)}g.stroke();
+  g.strokeStyle='#d9d3c3';g.lineWidth=5;g.beginPath();for(let x=-10;x<=W+10;x+=10){const y=640+Math.sin(x*0.011)*38+Math.sin(x*0.027)*14;x<0?g.moveTo(x,y):g.lineTo(x,y)}g.stroke();g.beginPath();for(let y=-10;y<=H;y+=10){const x=1190+Math.sin(y*0.014)*40;y<0?g.moveTo(x,y):g.lineTo(x,y)}g.stroke()}
+function ringDike(){g.strokeStyle='#7fb7d3';g.lineWidth=16;g.beginPath();g.ellipse(LC[0],LC[1],LC[2]+30,LC[3]+30,0,0,7);g.stroke();g.strokeStyle='#6f5a3e';g.lineWidth=14;g.beginPath();g.ellipse(LC[0],LC[1],LC[2]+12,LC[3]+12,0,0,7);g.stroke();g.strokeStyle='#8fae6b';g.lineWidth=5;g.beginPath();g.ellipse(LC[0],LC[1],LC[2]+12,LC[3]+12,0,0,7);g.stroke()}
+function bedFill(){g.fillStyle=sandPat('#c8b488');g.beginPath();g.ellipse(LC[0],LC[1],LC[2],LC[3],0,0,7);g.fill()}
+function ring43(t){const T0=T(1,2.3),T1=T(2,DUR*0.5);outerLand(t);bedFill();const dr=ease(clamp((t-T1)/2.4));
+  if(dr<1){g.save();g.beginPath();g.ellipse(LC[0],LC[1],LC[2],LC[3],0,0,7);g.clip();g.fillStyle='#4d86a8';g.beginPath();g.ellipse(LC[0],LC[1],LC[2]*(1-dr),LC[3]*(1-dr),0,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.3)';g.lineWidth=3;g.beginPath();g.ellipse(LC[0],LC[1],LC[2]*(1-dr),LC[3]*(1-dr),0,0,7);g.clip();const r=R(12);for(let i=0;i<60;i++){const x=LC[0]+(r()-0.5)*2*LC[2],y=LC[1]+(r()-0.5)*2*LC[3],w=30+r()*50,o=Math.sin(t*1.3+i)*10;g.beginPath();g.moveTo(x+o,y);g.quadraticCurveTo(x+o+w/2,y-7,x+o+w,y);g.stroke()}g.restore()}
+  ringDike();
+  // 風車は3基ずつ、外へ向かって並ぶ（14列＋1基＝43基）
+  let n=0;for(let i=0;i<14;i++){const a=i/14*6.283+0.22;for(let j=0;j<3;j++){const k=back(clamp((t-0.25-n*0.05)/0.3));n++;if(k>0)millIcon(LC[0]+Math.cos(a)*(LC[2]+16+j*27),LC[1]+Math.sin(a)*(LC[3]+16+j*27),0.72*k,t*2.2+i+j)}}
+  {const k=back(clamp((t-0.25-42*0.05)/0.3));if(k>0)millIcon(LC[0]+Math.cos(0)*(LC[2]+16)-6,LC[1]+Math.sin(-0.11)*(LC[3]+16)-34,0.72*k,t*2.2)}
+  numLabel(LC[0],LC[1]-30,'43基',clamp((t-T0)/0.35)*(1-clamp((t-T1+0.1)/0.3)),110);if(t>=T0)sfxOnce('n',T0,'pop');
+  numLabel(LC[0],LC[1],'1612年',clamp((t-T1-1.4)/0.35),96);if(t>=T1)sfxOnce('d',T1,'whoosh')}
+// 干拓地の中の線（道＝横、水路＝縦、畑の境目＝細い）
+function gridLines(kRoad,kCanal,kField,col=1,al=1){if(al<=0)return;g.save();g.beginPath();g.ellipse(LC[0],LC[1],LC[2],LC[3],0,0,7);g.clip();
+  if(col>0){const r=R(5);g.globalAlpha=col*al;for(let i=0;i<10;i++)for(let j=0;j<6;j++){g.fillStyle=['#a9c47a','#c9c382','#93b56e','#d9c58a','#b9c873'][Math.floor(r()*5)];g.fillRect(170+i*94,86+j*96,94,96)}}g.globalAlpha=al;if(0){}
+  if(kField>0){g.strokeStyle='rgba(90,100,60,.55)';g.lineWidth=1.5;for(let i=0;i<50;i++){const x=170+i*18.8;g.beginPath();g.moveTo(x,86);g.lineTo(x,86+576*clamp(kField*1.2-i*0.004));g.stroke()}}
+  if(kRoad>0){g.strokeStyle='#e9e4d6';g.lineWidth=6;for(let j=0;j<=6;j++){const y=86+j*96;g.beginPath();g.moveTo(170,y);g.lineTo(170+940*clamp(kRoad*1.3-j*0.05),y);g.stroke()}}
+  if(kCanal>0){g.strokeStyle='#5f9fc0';g.lineWidth=5;for(let i=0;i<=10;i++){const x=170+i*94;g.beginPath();g.moveTo(x,86);g.lineTo(x,86+576*clamp(kCanal*1.3-i*0.03));g.stroke()}}
+  g.restore()}
+function ruler(x,y,ang,k){if(k<=0)return;g.save();g.translate(x,y);g.rotate(ang);g.globalAlpha=clamp(k);g.fillStyle='#f0d58a';g.fillRect(-170,-16,340,32);g.strokeStyle='#7a5a2a';g.lineWidth=2;g.strokeRect(-170,-16,340,32);for(let i=-160;i<170;i+=20){g.beginPath();g.moveTo(i,-16);g.lineTo(i,i%100===0?0:-6);g.stroke()}g.restore()}
+function grid(t){const T1=T(1,DUR*0.1),T2=T(2,DUR*0.17),T3=T(3,DUR*0.32),T4=T(4,DUR*0.5),T5=T(5,DUR*0.72),T6=T(6,DUR*0.82);
+  // カメラ：まず中を大きく → T3 で外の曲がった土地へ → T4 で中へ戻る → T6 で全体
+  const zIn=1.55,o3=ease(clamp((t-T3)/1.0))*(1-ease(clamp((t-T4+0.2)/0.9))),o6=ease(clamp((t-T6)/1.1));const z=lerp(lerp(zIn,1.25,o3),1.0,o6);const cx=lerp(lerp(640,330,o3),640,o6),cy=lerp(lerp(372,430,o3),360,o6);
+  g.save();g.translate(W/2,H/2);g.scale(z,z);g.translate(-cx,-cy);outerLand(t);bedFill();
+  const blank=ease(clamp((t-T4)/0.6))*(1-ease(clamp((t-T5)/0.45)));const a=1-blank;
+  gridLines(ease(clamp((t-0.3)/1.1)),ease(clamp((t-T1)/1.1)),ease(clamp((t-T2)/1.2)),ease(clamp((t-T2-0.8)/1.0)),a);
+  ringDike();
+  // 外の土地：曲がった境目が光る
+  if(o3>0.3){g.strokeStyle=`rgba(255,211,106,${0.9*clamp((o3-0.3)*2)})`;g.lineWidth=6;g.beginPath();for(let y=120;y<=640;y+=10){const x=92+Math.sin(y*0.012)*46+Math.sin(y*0.031)*18;y===120?g.moveTo(x,y):g.lineTo(x,y)}g.stroke()}
+  // 何もない底に、定規
+  if(blank>0.2&&t<T5+0.5){ruler(lerp(420,760,ease(clamp((t-T4-0.5)/1.6))),372,0.0,blank)}
+  // 外の家と古い道（T4〜）
+  if(t>=T4-0.2){const k=clamp((t-T4)/0.5)*(1-clamp((t-T6)/0.5));g.globalAlpha=k;for(const[x,y] of [[60,150],[120,330],[40,520],[1230,200],[1210,520]]){g.fillStyle='rgba(20,30,20,.3)';g.fillRect(x-10,y-6,28,20);g.fillStyle='#b5533c';g.fillRect(x-14,y-10,28,20)}g.globalAlpha=1}
+  g.restore();
+  if(t>=0.3)sfxOnce('a',0.3,'tick');if(t>=T1)sfxOnce('b',T1,'tick');if(t>=T2)sfxOnce('c',T2,'tick');if(t>=T5)sfxOnce('e',T5,'pop');if(o6>0&&o6<1)sfxOnce('z',T6,'whoosh')}
+function plots(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.45),T3=T(3,DUR*0.7);g.fillStyle=sandPat('#c8b488');g.fillRect(0,0,W,H);
+  // 区画：幅 96px・長さ 482px（185m : 930m ＝ 1 : 5）
+  const PW2=96,PH=482,X0=64,Y0=118;const own=['#d98a5a','#6aa0c8','#9a7ac0','#6fb07a'];
+  for(let i=0;i<12;i++){const x=X0+i*PW2;const ok=clamp((t-T2-0.3-i*0.16)/0.4);g.fillStyle=['#a9c47a','#c9c382','#93b56e','#d9c58a'][i%4];g.fillRect(x,Y0,PW2,PH);
+    if(ok>0){g.fillStyle=own[Math.floor(i/3)];g.globalAlpha=0.55*ok;g.fillRect(x,Y0,PW2,PH);g.globalAlpha=1}
+    g.strokeStyle='rgba(60,80,40,.25)';g.lineWidth=2;for(let y=Y0+14;y<Y0+PH;y+=14){g.beginPath();g.moveTo(x+6,y);g.lineTo(x+PW2-6,y);g.stroke()}
+    g.strokeStyle='#5f9fc0';g.lineWidth=4;g.beginPath();g.moveTo(x,Y0);g.lineTo(x,Y0+PH);g.stroke()}
+  g.strokeStyle='#e9e4d6';g.lineWidth=10;g.beginPath();g.moveTo(0,Y0-6);g.lineTo(W,Y0-6);g.moveTo(0,Y0+PH+6);g.lineTo(W,Y0+PH+6);g.stroke();
+  // 寸法
+  const dk=clamp((t-T1)/0.5)*(1-clamp((t-T2+0.2)/0.4));if(dk>0){const x=X0+4*PW2;g.strokeStyle=`rgba(255,211,106,${dk})`;g.lineWidth=7;g.strokeRect(x,Y0,PW2,PH);g.lineWidth=5;g.beginPath();g.moveTo(x,Y0-34);g.lineTo(x+PW2,Y0-34);g.moveTo(x,Y0-46);g.lineTo(x,Y0-22);g.moveTo(x+PW2,Y0-46);g.lineTo(x+PW2,Y0-22);g.moveTo(x+PW2+34,Y0);g.lineTo(x+PW2+34,Y0+PH);g.moveTo(x+PW2+22,Y0);g.lineTo(x+PW2+46,Y0);g.moveTo(x+PW2+22,Y0+PH);g.lineTo(x+PW2+46,Y0+PH);g.stroke();numLabel(x+PW2/2,Y0-76,'185m',dk,54);numLabel(x+PW2+140,Y0+PH/2,'930m',clamp((t-T1-0.9)/0.4)*(1-clamp((t-T2+0.2)/0.4)),64);sfxOnce('d',T1,'pop')}
+  // 旗（区画の持ち主。上から見た人は点にしか見えないので描かない）
+  for(let m=0;m<4;m++){const x=X0+(m*3+1.5)*PW2;
+    const fk=clamp((t-T2-0.5-m*0.48)/0.3);if(fk>0){g.fillStyle='#4a3a2a';g.fillRect(x-2,Y0+PH*0.5-50*fk,4,50*fk);g.fillStyle=own[m];g.beginPath();g.moveTo(x+2,Y0+PH*0.5-50*fk);g.lineTo(x+40,Y0+PH*0.5-50*fk+12);g.lineTo(x+2,Y0+PH*0.5-50*fk+24);g.closePath();g.fill()}}
+  if(t>=T2)sfxOnce('o',T2+0.3,'pop');
+  // お金になる
+  if(t>=T3){for(let i=0;i<12;i++)for(let n=0;n<2;n++){const q=((t-T3)*0.55+i*0.13+n*0.5)%1;const x=X0+(i+0.5)*PW2;coinS(x,lerp(Y0+PH*0.5,Y0+60,q),1.1*Math.sin(q*Math.PI))}sfxOnce('m',T3,'tick')}}
+function haarBase(t,k,o={}){const v=VH();nlBaseOld(v,t);if(o.old){g.setLineDash([9,8]);g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],0.735);g.stroke();g.setLineDash([])}
+  let e=null;if(k>0.02)e=lakeLL(v,t,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],k);amsterdam(v,1,t);return{v,e}}
+function haarlem(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.38),T3=T(3,DUR*0.52),T4=T(4,DUR*0.76);const grow=ease(clamp((t-T1)/Math.max(2.2,T2-T1-0.2)));const k=lerp(0.735,1,grow);
+  const{v,e}=haarBase(t,k,{old:grow>0.05});
+  // 岸がけずれる（波が当たって、土がくずれ落ちる）
+  if(grow>0&&grow<1){const r=R(Math.floor(t*4));for(let i=0;i<16;i++){const a=r()*6.283;const x=e[0]+Math.cos(a)*e[2]*1.0,y=e[1]+Math.sin(a)*e[3]*1.0;g.save();g.translate(e[0],e[1]);g.rotate(HAA[4]);g.fillStyle='rgba(255,255,255,.8)';g.beginPath();g.arc(Math.cos(a)*e[2],Math.sin(a)*e[3],3+r()*4,0,7);g.fill();g.fillStyle='#b9a47a';g.beginPath();g.arc(Math.cos(a)*e[2]*1.03,Math.sin(a)*e[3]*1.03,3+r()*3,0,7);g.fill();g.restore()}sfxOnce('g',T1,'whoosh')}
+  numLabel(e[0]-e[2]-150,e[1]-40,'約2倍',clamp((t-T2)/0.35)*(1-clamp((t-T3+0.1)/0.3)),84);if(t>=T2)sfxOnce('n',T2,'pop');
+  // 1836年：嵐で水があふれ、アムステルダムの方へ
+  const fl=ease(clamp((t-T3)/1.5))*(1-ease(clamp((t-T4+0.3)/0.8)));if(fl>0){const[ax,ay]=pj(v,AMS[0],AMS[1]);g.fillStyle='rgba(77,134,168,.88)';g.beginPath();g.moveTo(e[0]+e[2]*0.2,e[1]-e[3]*0.75);g.quadraticCurveTo(lerp(e[0],ax,0.5*fl)+40,lerp(e[1],ay,0.5*fl)-90*fl,lerp(e[0]+e[2]*0.5,ax-50,fl),lerp(e[1]-e[3]*0.6,ay+10,fl));g.quadraticCurveTo(lerp(e[0],ax,0.5*fl)+90,lerp(e[1],ay,0.6*fl)+40,e[0]+e[2]*0.8,e[1]-e[3]*0.15);g.closePath();g.fill();g.fillStyle=`rgba(20,28,40,${0.25*fl})`;g.fillRect(0,0,W,H);rainS(t,fl,0.8)}
+  numLabel(e[0]-e[2]-160,e[1]-40,'1836年',clamp((t-T3)/0.35)*(1-clamp((t-T4+0.1)/0.3)),78);if(t>=T3)sfxOnce('s',T3,'whoosh');
+  // たまっていく計画の紙（200年以上）
+  if(t>=T4){for(let i=0;i<5;i++){const q=back(clamp((t-T4-i*0.3)/0.4));if(q<=0)continue;g.save();g.translate(250+i*14,560-i*16);g.rotate(-0.12+i*0.07);g.scale(q,q);g.fillStyle='rgba(0,0,0,.2)';g.fillRect(-96,-66,200,140);g.fillStyle='#f3ead6';g.fillRect(-100,-70,200,140);g.strokeStyle='#4d86a8';g.lineWidth=5;g.beginPath();g.ellipse(-10,-4,34,50,0.33,0,7);g.stroke();g.strokeStyle='#8a7a5a';g.lineWidth=3;for(let y=-50;y<60;y+=18){g.beginPath();g.moveTo(44,y);g.lineTo(86,y);g.stroke()}g.restore()}sfxOnce('p',T4,'pop')}}
+const ST=[[4.612,52.345],[4.60,52.215],[4.775,52.385]];
+function drain3(t){const T1=T(1,DUR*0.3),T2=T(2,DUR*0.55);const sh=ease(clamp((t-T2-0.4)/Math.max(2.4,DUR-T2-1.4)));const{v,e}=haarBase(t,1-sh);
+  if(sh>0){g.save();ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],1);g.clip();g.fillStyle=noisePat('bed','#cdbd8f',['#c3b383','#d6c79c','#b9c08a']);g.fillRect(0,0,W,H);g.restore();if(1-sh>0.02)lakeLL(v,t,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],1-sh);g.setLineDash([9,8]);g.strokeStyle='rgba(255,255,255,.8)';g.lineWidth=3;ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],1);g.stroke();g.setLineDash([])}
+  ST.forEach(([lo,la],i)=>{const k=back(clamp((t-T1-i*0.35)/0.4));if(k>0){const[x,y]=pj(v,lo,la);stationS(x,y+10,0.42*k,t+i,k>=1?1:0)}});if(t>=T1)sfxOnce('s',T1,'pop');
+  if(t>=T2){const yr=Math.round(lerp(1848,1852,sh));yearBox(yr+'年');sfxOnce('y',T2,'tick')}}
+function airport(t){const v=VH();nlBaseOld(v,t);g.save();ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],1);g.clip();g.fillStyle=noisePat('bed','#cdbd8f',['#c3b383','#d6c79c','#b9c08a']);g.fillRect(0,0,W,H);g.restore();g.setLineDash([9,8]);g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4],1);g.stroke();g.setLineDash([]);amsterdam(v,1,t);
+  const[x,y]=pj(v,4.76,52.31);const k=back(clamp((t-0.5)/0.45));if(k>0){g.save();g.translate(x,y);g.scale(k,k);g.fillStyle='#4a4f58';g.save();g.rotate(-0.5);g.fillRect(-70,-7,140,14);g.fillStyle='#fff';for(let i=-60;i<60;i+=22)g.fillRect(i,-1.5,12,3);g.restore();g.save();g.rotate(0.75);g.fillStyle='#4a4f58';g.fillRect(-60,-6,120,12);g.restore();g.restore();sfxOnce('a',0.5,'pop')}
+  // 飛行機（上から）が滑走路へ
+  const q=clamp((t-1.0)/Math.max(2.5,DUR-1.4));const px=lerp(x+520,x+40,ease(q)),py=lerp(y-300,y-22,ease(q));g.save();g.translate(px,py);g.rotate(Math.atan2(278,-480)+Math.PI/2);const s=lerp(1.5,0.8,q);g.scale(s,s);track(-40,-40,40,40);g.fillStyle='rgba(20,30,40,.25)';g.beginPath();g.ellipse(10,12,10,40,0,0,7);g.fill();g.fillStyle='#f4f6f8';g.beginPath();g.ellipse(0,0,9,40,0,0,7);g.fill();g.beginPath();g.moveTo(0,-8);g.lineTo(42,10);g.lineTo(42,18);g.lineTo(0,8);g.lineTo(-42,18);g.lineTo(-42,10);g.closePath();g.fill();g.beginPath();g.moveTo(0,28);g.lineTo(16,40);g.lineTo(-16,40);g.closePath();g.fill();g.restore()}
+function lakes(t){const T1=T(1,DUR*0.18),T2=T(2,DUR*0.36),T3=T(3,DUR*0.62),T4=T(4,DUR*0.82);const zo=ease(clamp((t-T2+0.3)/1.2));const v=view(lerp(4.95,5.3,zo),lerp(52.43,52.55,zo),lerp(900,420,zo));nlBaseOld(v,t);const G=window.GEO;
+  // 内海（残った海）
+  const hk=clamp((t-T2)/0.6);if(hk>0){const all=[G.lake[0],...G.prov.Flevoland];{const p=0.5+0.5*Math.sin(t*5);const strong=clamp((t-T4)/0.4);g.strokeStyle=`rgba(255,211,106,${(0.5+0.4*p)*hk})`;g.lineWidth=(8+strong*10);g.lineJoin='round';poly(v,all);g.stroke();g.fillStyle=SEA;poly(v,all);g.fill();
+    // 北の口（今の締め切り堤防の所）は、まだ海とつながっている：ふちの線を海の色で消す
+    {const[x0,y0]=pj(v,5.02,52.915),[x1,y1]=pj(v,5.43,53.085);g.strokeStyle=SEA;g.lineWidth=30;g.lineCap='butt';g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke()}}g.save();poly(v,all);g.clip();const storm=ease(clamp((t-T3)/1.0));g.fillStyle=`rgba(${Math.round(lerp(77,52,storm))},${Math.round(lerp(134,96,storm))},${Math.round(lerp(190,140,storm))},${0.9*hk})`;g.fillRect(0,0,W,H);
+    g.strokeStyle=`rgba(255,255,255,${0.25+0.45*storm})`;g.lineWidth=2+storm*2;const r=R(14);for(let i=0;i<90;i++){const[x,y]=pj(v,4.9+r()*1.1,52.2+r()*0.95);const w=14+r()*24,o=Math.sin(t*(1.2+storm*2.5)+i)*(6+storm*8);g.beginPath();g.moveTo(x+o,y);g.quadraticCurveTo(x+o+w/2,y-5-storm*5,x+o+w,y);g.stroke()}g.restore();
+    sfxOnce('h',T2,'pop');if(storm>0)sfxOnce('st',T3,'whoosh')}
+  // 小さな湖は陸に（風車）、大きな湖も陸に（蒸気）
+  const b1=ease(clamp((t-0.3)/1.0));const eb=ellLL(v,BEE[0],BEE[1],BEE[2],BEE[3]);g.fillStyle=b1<1?'#4d86a8':LAND;g.fill();if(b1>0){g.save();ellLL(v,BEE[0],BEE[1],BEE[2],BEE[3]);g.clip();g.fillStyle=HI;g.globalAlpha=0.9;g.fillRect(eb[0]-eb[2],eb[1]-eb[3],eb[2]*2*b1,eb[3]*2);g.restore()}
+  if(b1>=1&&zo<0.9)millIcon(eb[0],eb[1]-eb[3]-18,1.0*(1-zo),t*2);
+  const b2=ease(clamp((t-T1)/1.0));const eh=ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4]);g.fillStyle='#4d86a8';g.fill();if(b2>0){g.save();ellLL(v,HAA[0],HAA[1],HAA[2],HAA[3],HAA[4]);g.clip();g.fillStyle=HI;g.globalAlpha=0.9;g.fillRect(eh[0]-eh[3],eh[1]-eh[3],eh[3]*2*b2,eh[3]*2);g.restore()}
+  if(b2>=1&&zo<0.9)stationS(eh[0]-eh[2]-40,eh[1]+20,0.4*(1-zo),t,1);
+  if(t>=0.3)sfxOnce('a',0.3,'pop');if(t>=T1)sfxOnce('b',T1,'pop')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({find,plan,ring43,grid,plots,haarlem,drain3,airport,lakes}[P.mode]||find)(t)};
+</script></body></html>
