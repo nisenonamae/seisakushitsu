@@ -69,8 +69,8 @@ function compare(t){const T1=T(1,0.4),T2=T(2,DUR*0.42),T3=T(3,DUR*0.7);skyG();co
     const q2=clamp((t-T2-1.5)*0.04);const tx=lerp(W+200,M+180-240,q2);g.save();g.beginPath();g.rect(M+176,0,W-M-176,H);g.clip();g.translate(tx,SL-58);track(0,-26,190,0);for(let i=0;i<3;i++){g.fillStyle='#3d8f7a';g.beginPath();g.roundRect(i*64,-24,60,20,5);g.fill();g.fillStyle='#d6eef5';g.fillRect(i*64+6,-20,48,8)}g.restore()}
   // 地図の小窓
   const m=clamp((t-T3)/0.6);if(m>0){const box=(cx,draw)=>{g.save();g.globalAlpha=ease(m);g.translate(cx,lerp(-120,82,back(m)));g.fillStyle='#42667f';g.beginPath();g.roundRect(-100,-68,200,136,14);g.fill();g.save();g.beginPath();g.roundRect(-100,-68,200,136,14);g.clip();draw();g.restore();g.strokeStyle='#fff';g.lineWidth=5;g.beginPath();g.roundRect(-100,-68,200,136,14);g.stroke();g.restore()};
-    const G=window.GEO;const mp=(lon0,lat0,sc)=>(rs,col)=>{const kx=Math.cos(lat0*Math.PI/180);g.fillStyle=col;g.beginPath();for(const r of rs){for(let i=0;i<r.length;i++){const x=(r[i][0]-lon0)*sc*kx,y=-(r[i][1]-lat0)*sc;i?g.lineTo(x,y):g.moveTo(x,y)}g.closePath()}g.fill()};
-    box(M/2,()=>{const d=mp(5.3,52.2,44);d(G.nb,'#b9b196');for(const[n,rs] of Object.entries(G.prov))d(rs,n==='Flevoland'?'#f0b63e':'#e2d4ad');d(G.lake,'#7fb2c9')});
+    const G=window.GEO;const mp=(lon0,lat0,sc)=>(rs,col)=>{const kx=Math.cos(lat0*Math.PI/180);g.fillStyle=col;g.beginPath();for(const r of rs){for(let i=0;i<r.length;i++){const x=(r[i][0]-lon0)*sc*kx,y=-(r[i][1]-lat0)*sc;i?g.lineTo(x,y):g.moveTo(x,y)}g.closePath()}g.fill('evenodd')};
+    box(M/2,()=>{const d=mp(5.3,52.2,44);d(G.nb,'#b9b196');for(const[n,rs] of Object.entries(G.prov))d(rs,n==='Flevoland'?'#f0b63e':'#e2d4ad');d(G.lake,'#4d7892')});
     box(M+M/2,()=>{const d=mp(139.85,35.4,125);d(G.kanto,'#e2d4ad');g.strokeStyle='#f0b63e';g.lineWidth=6;g.beginPath();g.ellipse(-2,-8,28,34,0.25,0,7);g.stroke()});
     sfxOnce('m',T3,'pop')}}
 window.render=function(t){g.setTransform(1,0,0,1,0,0);(P.mode==='compare'?compare:sea3)(t)};

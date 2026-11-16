@@ -9,7 +9,7 @@
       ／flash（100年前の地図＝内海 → 一気に陸へ変わる）
       ／jpmap（日本 → ats[0] で東京湾へ寄る） */
 window.DEF={mode:'fields'};
-const SEA='#42667f',SEA2='#5b8198',LAND='#e2d4ad',LAND2='#cdbf9c',NB='#b9b196',FRESH='#7fb2c9',HI='#f0b63e';
+const SEA='#42667f',SEA2='#5b8198',LAND='#e2d4ad',LAND2='#cdbf9c',NB='#b9b196',FRESH='#7fb2c9',LAKE='#4d7892',HI='#f0b63e';
 let PAT={};
 function noisePat(key,base,spots,n=900,sz=256){if(PAT[key])return PAT[key];const c=document.createElement('canvas');c.width=c.height=sz;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,sz,sz);const r=R(key.length*13+7);
   for(let i=0;i<n;i++){x.fillStyle=spots[Math.floor(r()*spots.length)];x.globalAlpha=0.25+r()*0.4;const w=4+r()*26,h=3+r()*14;x.beginPath();x.ellipse(r()*sz,r()*sz,w,h,r()*3,0,7);x.fill()}
@@ -21,7 +21,11 @@ function seaBg(t){g.fillStyle=SEA;g.fillRect(0,0,W,H);g.strokeStyle='rgba(255,25
 function nlBase(v,t,old){seaBg(t);const G=window.GEO;
   g.fillStyle=NB;poly(v,G.nb);g.fill();
   for(const[n,rs] of Object.entries(G.prov)){if(old&&n==='Flevoland')continue;g.fillStyle=noisePat('land',LAND,['#d3c79a','#c9cf9c','#e9dcba','#bfc893']);poly(v,rs);g.fill();g.strokeStyle='rgba(120,105,70,.25)';g.lineWidth=1;g.stroke()}
-  g.fillStyle=old?SEA:FRESH;poly(v,G.lake);g.fill()}
+  g.fillStyle=old?SEA:LAKE;poly(v,[G.lake[0]]);if(old)g.fill();else{poly(v,G.lake);g.fill('evenodd');lakeWater(v,t,1)}}
+// 湖は「色を付けた区域」ではなく水に見えるように：海と同じ波と、小さな帆船（残った水は今も水、と絵だけで分かるように）
+function lakeWater(v,t,a){const G=window.GEO;g.save();poly(v,G.lake);g.clip('evenodd');g.globalAlpha=a;g.strokeStyle='rgba(255,255,255,.16)';g.lineWidth=2;const r=R(8);for(let i=0;i<60;i++){const[x,y]=pj(v,4.95+r()*0.95,52.25+r()*0.85);const w=14+r()*20,o=Math.sin(t*0.9+i)*6;g.beginPath();g.moveTo(x+o,y);g.quadraticCurveTo(x+o+w/2,y-4,x+o+w,y);g.stroke()}
+  for(const[lo,la,ph] of [[5.33,52.86,0],[5.13,52.6,2]]){const[x,y]=pj(v,lo+Math.sin(t*0.25+ph)*0.03,la);g.fillStyle='rgba(20,40,55,.35)';g.beginPath();g.ellipse(x+2,y+4,9,3,0,0,7);g.fill();g.fillStyle='#f4ecd8';g.beginPath();g.moveTo(x,y-11);g.lineTo(x+8,y+2);g.lineTo(x-5,y+2);g.closePath();g.fill();g.fillStyle='#7a4f2c';g.fillRect(x-7,y+2,15,3)}
+  g.restore();g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=1.5;poly(v,G.lake);g.stroke()}
 const NLV=()=>view(5.35,52.25,238);
 function fields(t){const T1=T(1,DUR*0.42);const r=R(11);
   // 畑（区画）
@@ -58,17 +62,21 @@ function fields(t){const T1=T(1,DUR*0.42);const r=R(11);
     sfxOnce('w',T1,'whoosh')}
   // 年（右上）：2026 → 1926
   const yr=Math.round(lerp(2026,1926,ease(clamp((t-T1)/1.7))));g.fillStyle='rgba(12,18,28,.72)';g.beginPath();g.roundRect(W-236,24,212,84,14);g.fill();g.fillStyle='#fff';g.font=`900 58px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(yr+'年',W-130,68)}
-function nlmap(t){const v=NLV();nlBase(v,t,false);const T1=T(1,DUR*0.35),T2=T(2,DUR*0.62);const u=clamp((t-T1)/0.9);const G=window.GEO;const lift=ease(clamp((t-T2)/0.7));
-  if(lift>0){const fl=G.prov.Flevoland;g.save();g.translate(10*lift,14*lift);g.fillStyle=`rgba(10,25,40,${0.4*lift})`;poly(v,fl);g.fill();g.restore();g.translate(-4*lift,-12*lift)}
-  if(u>0){const fl=G.prov.Flevoland;g.save();poly(v,fl);g.clip();const[x0]=pj(v,5.0,52.5),[x1]=pj(v,6.1,52.5);g.fillStyle=HI;g.fillRect(x0,0,(x1-x0)*ease(u)+2,H);
-     g.strokeStyle='rgba(120,80,10,.35)';g.lineWidth=1.5;for(let x=x0;x<x0+(x1-x0)*ease(u);x+=9){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()}for(let y=150;y<520;y+=14){g.beginPath();g.moveTo(x0,y);g.lineTo(x0+(x1-x0)*ease(u),y);g.stroke()}g.restore();
-     g.strokeStyle='#fff';g.lineWidth=4*ease(u);poly(v,fl);g.stroke();
-     const pulse=(t-T1-0.9)>0?0.5+0.5*Math.sin((t-T1-0.9)*4):0;g.strokeStyle=`rgba(255,255,255,${0.35*pulse})`;g.lineWidth=12;poly(v,fl);g.stroke();sfxOnce('p',T1,'pop')}
-  if(lift>0){sfxOnce('l',T2,'whoosh')}g.setTransform(g.getTransform().a,0,0,g.getTransform().d,0,0)}
-function flash(t){const v=NLV();nlBase(v,t,true);const G=window.GEO;const u=clamp((t-0.35)/0.55);
-  if(u>0){const fl=G.prov.Flevoland;const[cx,cy]=pj(v,5.55,52.5);g.save();poly(v,fl);g.clip();g.fillStyle=noisePat('land',LAND,['#d3c79a','#c9cf9c','#e9dcba','#bfc893']);g.beginPath();g.arc(cx,cy,ease(u)*200,0,7);g.fill();g.fillStyle=`rgba(240,182,62,${0.75*(1-clamp((t-1.2)/1.2)*0.5)})`;g.beginPath();g.arc(cx,cy,ease(u)*200,0,7);g.fill();g.restore();
-    g.fillStyle=FRESH;g.globalAlpha=ease(u);poly(v,G.lake);g.fill();g.globalAlpha=1;
-    g.save();poly(v,fl);g.clip();g.fillStyle=noisePat('land',LAND,['#d3c79a','#c9cf9c','#e9dcba','#bfc893']);g.globalAlpha=ease(u);g.fillRect(0,0,W,H);g.fillStyle='rgba(240,182,62,.6)';g.fillRect(0,0,W,H);g.restore();g.globalAlpha=1;
+// 州の形（行政の区域）は湖の水面も含むので、陸だけにするには「州の中」かつ「湖の外」で切り抜く
+function landClip(v,rings){const G=window.GEO;poly(v,rings);g.clip();g.beginPath();g.rect(-200,-200,W+400,H+400);for(const r of G.lake){for(let i=0;i<r.length;i++){const[x,y]=pj(v,r[i][0],r[i][1]);i?g.lineTo(x,y):g.moveTo(x,y)}g.closePath()}g.clip('evenodd')}
+function nlmap(t){const v=NLV();nlBase(v,t,false);const T1=T(1,DUR*0.35),T2=T(2,DUR*0.62);const u=clamp((t-T1)/0.9);const G=window.GEO;const lift=ease(clamp((t-T2)/0.7));const fl=G.prov.Flevoland;
+  if(u>0){const[x0]=pj(v,5.0,52.5),[x1]=pj(v,6.1,52.5);const xe=x0+(x1-x0)*ease(u);
+    if(lift>0){g.save();g.translate(9*lift,13*lift);landClip(v,fl);g.fillStyle=`rgba(10,25,40,${0.42*lift})`;g.fillRect(-200,-200,W+400,H+400);g.restore()}
+    g.save();g.translate(-3*lift,-10*lift);landClip(v,fl);g.fillStyle=HI;g.fillRect(x0,0,xe-x0+2,H);
+    g.strokeStyle='rgba(120,80,10,.35)';g.lineWidth=1.5;for(let x=x0;x<xe;x+=9){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()}for(let y=150;y<520;y+=14){g.beginPath();g.moveTo(x0,y);g.lineTo(xe,y);g.stroke()}
+    const pulse=(t-T1-0.9)>0?0.5+0.5*Math.sin((t-T1-0.9)*4):0;g.strokeStyle=`rgba(255,255,255,${(0.75+0.25*pulse)*ease(u)})`;g.lineWidth=7;poly(v,fl);g.stroke();poly(v,G.lake);g.stroke();g.restore();
+    sfxOnce('p',T1,'pop');if(lift>0)sfxOnce('l',T2,'whoosh')}}
+function flash(t){const v=NLV();nlBase(v,t,true);const G=window.GEO;const u=clamp((t-0.35)/0.55);const fl=G.prov.Flevoland;
+  if(u>0){const[cx,cy]=pj(v,5.55,52.5);
+    // 残る水は海の色から湖の色へ（水のまま）
+    g.fillStyle=LAKE;g.globalAlpha=ease(u);poly(v,G.lake);g.fill('evenodd');g.globalAlpha=1;lakeWater(v,t,ease(u));
+    // 陸になる所だけが広がる
+    g.save();landClip(v,fl);g.fillStyle=noisePat('land',LAND,['#d3c79a','#c9cf9c','#e9dcba','#bfc893']);g.beginPath();g.arc(cx,cy,ease(u)*230,0,7);g.fill();g.fillStyle='rgba(240,182,62,.62)';g.beginPath();g.arc(cx,cy,ease(u)*230,0,7);g.fill();g.restore();
     const ring=clamp((t-0.35)/1.1);if(ring<1){g.strokeStyle=`rgba(255,255,255,${0.8*(1-ring)})`;g.lineWidth=6;g.beginPath();g.arc(cx,cy,40+ring*260,0,7);g.stroke()}
     sfxOnce('w',0.35,'whoosh')}}
 function jpmap(t){const T1=T(1,DUR*0.5);const u=ease(clamp((t-T1+0.15)/1.3));const v=view(lerp(137.2,139.85,u),lerp(37.6,35.45,u),Math.exp(lerp(Math.log(50),Math.log(560),u)));
