@@ -57,7 +57,7 @@ function duty(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.26),T3=T(3,DUR*0.42);topBas
   if(t>=T3)sfxOnce('m',T3+0.2,'tick')}
 function vote(t){const T1=T(1,DUR*0.45);
   // 部屋の壁と大きな窓
-  g.fillStyle='#d9c9a8';g.fillRect(0,0,W,H);g.fillStyle='#b9a47a';g.fillRect(0,560,W,160);
+  g.fillStyle='#d9c9a8';g.fillRect(0,0,W,H);g.fillStyle='#b9a47a';g.fillRect(0,640,W,80);
   const wx=120,wy=40,ww=1040,wh=300;g.save();g.beginPath();g.rect(wx,wy,ww,wh);g.clip();const s=g.createLinearGradient(0,wy,0,wy+wh);s.addColorStop(0,'#a9cfe8');s.addColorStop(1,'#e6eef0');g.fillStyle=s;g.fillRect(wx,wy,ww,wh);
   const sc=ease(clamp((t-T1)/Math.max(3,DUR-T1-0.6)))*1500;const gy=wy+wh-40;g.fillStyle='#8fae6b';g.fillRect(wx,gy,ww,60);g.save();g.translate(-sc,0);
   // 昔：わらぶきの家と風車
@@ -66,13 +66,21 @@ function vote(t){const T1=T(1,DUR*0.45);
   for(const[x,w,h] of [[1500,70,150],[1600,90,210],[1720,64,130],[1820,80,180],[2360,84,170],[2480,70,120]]){g.fillStyle='#dfe5ec';g.fillRect(x,gy-h,w,h);g.fillStyle='#9fb3c6';for(let yy=gy-h+12;yy<gy-10;yy+=20)for(let xx=x+8;xx<x+w-10;xx+=16)g.fillRect(xx,yy,9,11)}
   for(const x of [1980,2120,2250]){g.fillStyle='#f4f6f8';g.fillRect(x-4,gy-200,8,200);g.save();g.translate(x,gy-200);g.rotate(t*1.5+x);for(let i=0;i<3;i++){g.rotate(Math.PI*2/3);g.beginPath();g.moveTo(0,0);g.lineTo(8,-10);g.lineTo(0,-86);g.closePath();g.fill()}g.restore()}
   g.restore();g.restore();g.strokeStyle='#7a5a3a';g.lineWidth=16;g.strokeRect(wx,wy,ww,wh);g.lineWidth=8;g.beginPath();g.moveTo(wx+ww/2,wy);g.lineTo(wx+ww/2,wy+wh);g.stroke();
-  // 机と投票箱
-  g.fillStyle='#7a5a3a';g.fillRect(360,560,560,26);g.fillRect(390,586,22,134);g.fillRect(868,586,22,134);
-  g.fillStyle='#3d6f8e';g.beginPath();g.roundRect(520,410,240,150,10);g.fill();g.fillStyle='#2c5672';g.fillRect(520,410,240,22);g.fillStyle='#14202e';g.fillRect(590,414,100,10);g.fillStyle='rgba(255,255,255,.9)';g.beginPath();g.moveTo(610,470);g.lineTo(632,500);g.lineTo(676,448);g.lineWidth=12;g.strokeStyle='rgba(255,255,255,.9)';g.stroke();
-  // 紙が入っていく（左右の手から）
-  for(let i=0;i<2;i++){const q=((t*0.5+i*0.5)%1);const side=i?1:-1;const hx=640+side*lerp(330,60,ease(clamp(q/0.55)));const hy=lerp(366,390,ease(clamp(q/0.55)));
-    if(q<0.8){g.fillStyle='#f1d3b0';g.beginPath();g.roundRect(hx+(side>0?0:-150),hy-16,150,32,16);g.fill();g.fillStyle=i?'#a34a3a':'#3b4a5c';g.fillRect(hx+(side>0?60:-150),hy-22,90,44)}
-    const py=q<0.55?hy+4:lerp(392,430,ease(clamp((q-0.55)/0.25)));const px=q<0.55?hx-side*16:640;if(q<0.82){g.save();g.translate(px,py);g.rotate(q<0.55?side*0.1:0);g.fillStyle='#fffdf5';g.fillRect(-30,-6,60,40*(q<0.55?1:1-clamp((q-0.55)/0.27)));g.restore()}}
+  // 全身の人が左から歩いてきて、箱に紙を入れ、右へ歩いていく（机の向こう側を通る）
+  const FL=700,BX=640,BT=470;const N=4,per=4.6;
+  for(let i=0;i<N;i++){const q=(((t+1.9)/per+i/N)%1);const x=lerp(-90,W+90,q);const near=1-clamp(Math.abs(x-(BX-70))/90);const col=['#3b4a5c','#a34a3a','#5a6b4a','#4a5a7a'][i];
+    g.save();g.translate(x,FL);track(-40,-250,40,0);g.scale(3.4,3.4);
+    g.strokeStyle='#2c2f36';g.lineWidth=5;g.lineCap='round';const a=Math.sin(t*6+i*2)*7;g.beginPath();g.moveTo(0,-22);g.lineTo(-a,0);g.moveTo(0,-22);g.lineTo(a,0);g.stroke();
+    g.fillStyle=col;g.beginPath();g.roundRect(-8,-50,16,30,6);g.fill();g.fillStyle='#f1d3b0';g.beginPath();g.arc(0,-58,8,0,7);g.fill();
+    // 腕（箱に近づくと前へのばす）と紙
+    const ax=lerp(6,22,near),ay=lerp(-26,-44,near);g.strokeStyle=col;g.lineWidth=5;g.beginPath();g.moveTo(4,-44);g.lineTo(ax,ay);g.stroke();g.lineCap='butt';
+    if(x<BX-64){g.fillStyle='#fffdf5';g.fillRect(ax-1,ay-9,9,11)}g.restore();
+    // 手を離れた紙が、箱の口へ落ちる
+    const d=clamp((x-(BX-64))/70);if(d>0&&d<1){g.fillStyle='#fffdf5';g.fillRect(lerp(BX-40,BX-15,d),lerp(FL-180,BT+6,ease(d)),30,34*(1-d*0.8))}}
+  // 机と投票箱（人の手前）
+  g.fillStyle='#7a5a3a';g.fillRect(BX-250,BT+130,500,24);g.fillRect(BX-222,BT+154,22,H);g.fillRect(BX+200,BT+154,22,H);
+  g.fillStyle='#3d6f8e';g.beginPath();g.roundRect(BX-110,BT,220,130,10);g.fill();g.fillStyle='#2c5672';g.fillRect(BX-110,BT,220,22);g.fillStyle='#14202e';g.fillRect(BX-48,BT+5,96,10);
+  g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=12;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(BX-30,BT+70);g.lineTo(BX-8,BT+98);g.lineTo(BX+36,BT+46);g.stroke();g.lineCap='butt';
   if(t>=T1)sfxOnce('s',T1,'whoosh')}
 window.render=function(t){g.setTransform(1,0,0,1,0,0);({break:brk,union,duty,vote}[P.mode]||brk)(t)};
 </script></body></html>
