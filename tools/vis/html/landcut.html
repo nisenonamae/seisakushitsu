@@ -1,0 +1,77 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="geo_land.js"></script>
+<script>
+/* 人工の土地の回・横から見た海の断面。
+ mode：sea3（海 → ats[0] でダンプが土を入れる → ats[1] でバツ → ats[2] で水位が下がり、船が泥の上に取り残される）
+      ／compare（左右に同じ海。ats[0] で左は水が下がり、右は底が積み上がる → ats[1] で同じ高さの海面の線と家 → ats[2] で左右の上に地図の小窓） */
+window.DEF={mode:'sea3'};
+function skyG(){const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,'#a9cfe8');s.addColorStop(0.55,'#e6eef0');g.fillStyle=s;g.fillRect(0,0,W,H)}
+function waterBody(x0,x1,top,bot,t,col1='#3f7ea6',col2='#1f4f73'){const s=g.createLinearGradient(0,top,0,bot);s.addColorStop(0,col1);s.addColorStop(1,col2);g.fillStyle=s;g.beginPath();g.moveTo(x0,bot);for(let x=x0;x<=x1;x+=8)g.lineTo(x,top+Math.sin(x*0.03+t*2)*4+Math.sin(x*0.011-t*1.3)*3);g.lineTo(x1,bot);g.closePath();g.fill();
+  g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.beginPath();for(let x=x0;x<=x1;x+=8){const y=top+Math.sin(x*0.03+t*2)*4+Math.sin(x*0.011-t*1.3)*3;x===x0?g.moveTo(x,y):g.lineTo(x,y)}g.stroke()}
+function bed(x0,x1,topf,col='#b9a47a',dark='#8f7a55'){g.fillStyle=sandPat(col);g.beginPath();g.moveTo(x0,H+10);for(let x=x0;x<=x1;x+=6)g.lineTo(x,topf(x));g.lineTo(x1,H+10);g.closePath();g.fill();g.strokeStyle=dark;g.lineWidth=4;g.beginPath();for(let x=x0;x<=x1;x+=6){x===x0?g.moveTo(x,topf(x)):g.lineTo(x,topf(x))}g.stroke()}
+function fish(x,y,s,dir){g.save();g.translate(x,y);g.scale(dir*s,s);g.fillStyle='rgba(235,245,250,.75)';g.beginPath();g.ellipse(0,0,18,8,0,0,7);g.fill();g.beginPath();g.moveTo(-16,0);g.lineTo(-30,-9);g.lineTo(-30,9);g.closePath();g.fill();g.restore()}
+function boat(x,y,rot){g.save();g.translate(x,y);g.rotate(rot);g.fillStyle='#7a4f2c';g.beginPath();g.moveTo(-70,-6);g.lineTo(70,-6);g.lineTo(50,22);g.lineTo(-50,22);g.closePath();g.fill();g.fillStyle='#5d3b20';g.fillRect(-70,-10,140,6);g.strokeStyle='#4a3120';g.lineWidth=5;g.beginPath();g.moveTo(0,-8);g.lineTo(0,-120);g.stroke();g.fillStyle='#f4ecd8';g.beginPath();g.moveTo(6,-116);g.lineTo(62,-20);g.lineTo(6,-20);g.closePath();g.fill();g.fillStyle='#e7dcc0';g.beginPath();g.moveTo(-6,-104);g.lineTo(-48,-20);g.lineTo(-6,-20);g.closePath();g.fill();g.restore()}
+function truck(x,y,tip){g.save();g.translate(x,y);g.scale(-1,1);track(-110,-90,110,10);g.fillStyle='#2c2f36';g.fillRect(-100,-26,200,14);
+  g.save();g.translate(-96,-28);g.rotate(-tip);g.fillStyle='#d98a1f';g.beginPath();g.moveTo(0,0);g.lineTo(128,0);g.lineTo(136,-52);g.lineTo(-6,-52);g.closePath();g.fill();g.fillStyle='rgba(0,0,0,.15)';g.fillRect(0,-12,128,12);g.restore();
+  g.fillStyle='#e2a53a';g.beginPath();g.roundRect(44,-84,58,58,8);g.fill();g.fillStyle='#bfe0f2';g.fillRect(62,-76,32,24);tire(-58,-4,22,-x*0.04);tire(64,-4,22,-x*0.04);g.restore()}
+function houseS(x,y,s=1,col='#f1e9d6'){g.fillStyle=col;g.fillRect(x-22*s,y-28*s,44*s,28*s);g.fillStyle='#b5533c';g.beginPath();g.moveTo(x-28*s,y-28*s);g.lineTo(x,y-52*s);g.lineTo(x+28*s,y-28*s);g.closePath();g.fill();g.fillStyle='#6b7c8a';g.fillRect(x-6*s,y-16*s,12*s,16*s)}
+function tower(x,y,w,h){g.fillStyle='#dfe5ec';g.fillRect(x,y-h,w,h);g.fillStyle='#9fb3c6';for(let yy=y-h+10;yy<y-8;yy+=18)for(let xx=x+7;xx<x+w-8;xx+=14)g.fillRect(xx,yy,8,10)}
+function cross(cx,cy,k,size=120){if(k<=0)return;g.strokeStyle='#e23a30';g.lineWidth=22;g.lineCap='round';const a=clamp(k*2),b=clamp(k*2-1);g.beginPath();g.moveTo(cx-size,cy-size);g.lineTo(cx-size+2*size*a,cy-size+2*size*a);g.stroke();if(b>0){g.beginPath();g.moveTo(cx+size,cy-size);g.lineTo(cx+size-2*size*b,cy-size+2*size*b);g.stroke()}g.lineCap='butt'}
+function sea3(t){const T1=T(1,DUR*0.28),T2=T(2,DUR*0.5),T3=T(3,DUR*0.68);skyG();const SL=300,BED=570;
+  const drop=ease(clamp((t-T3-0.2)/Math.max(1.6,DUR-T3-0.8)));const wl=lerp(SL,BED-6,drop);
+  // 左の岸
+  const shore=x=>x<230?250:(x<300?250+(x-230)*4.6:BED);
+  // ダンプと土
+  const TS=Math.max(0.2,T1-1.7);const tin=ease(clamp((t-TS)/1.5)),tout=ease(clamp((t-T2-1.0)/1.3));const tx=lerp(-140,118,tin)-tout*300;const tip=ease(clamp((t-T1+0.1)/0.5))*(1-ease(clamp((t-T2-0.45)/0.45)))*0.62;
+  const pile=ease(clamp((t-T1-0.35)/Math.max(0.7,T2-T1-0.3)))*(1-ease(clamp((t-T2-0.9)/0.9)));
+  waterBody(0,W,wl,H,t);
+  // 魚（水があるうち）
+  if(drop<0.75){const a=1-drop/0.75;g.globalAlpha=a;for(let i=0;i<5;i++){const q=((t*0.05*(1+i*0.2)+i*0.23)%1);const dir=i%2?1:-1;fish(dir>0?lerp(320,W+40,q):lerp(W+40,320,q),Math.max(wl+40,380+i*34+Math.sin(t*2+i)*8),0.9+i*0.1,dir)}g.globalAlpha=1}
+  bed(0,W,x=>shore(x)+(x>300?Math.sin(x*0.013)*8+Math.sin(x*0.041)*3:0));
+  // 泥のつや（水が引いたあと）
+  if(drop>0.5){g.globalAlpha=(drop-0.5)*2;g.fillStyle='rgba(60,50,40,.35)';for(let x=340;x<W;x+=90){g.beginPath();g.ellipse(x+20,BED+16+Math.sin(x)*6,34,6,0,0,7);g.fill()}g.fillStyle='rgba(180,215,235,.7)';for(let x=420;x<W;x+=210){g.beginPath();g.ellipse(x,BED+10,44,5,0,0,7);g.fill()}g.globalAlpha=1}
+  // 土の山（水の中に落ちる）
+  if(pile>0){g.fillStyle='#8b6a43';g.beginPath();g.moveTo(250,BED);g.quadraticCurveTo(330,BED-260*pile,470+60*pile,BED);g.closePath();g.fill();if(tip>0.3){g.fillStyle='#8b6a43';for(let i=0;i<9;i++){const q=((t*1.7+i/9)%1);g.beginPath();g.arc(lerp(214,300,q),lerp(238,SL+40+q*120,q*q),7,0,7);g.fill()}}}
+  if(t>TS-0.05)truck(tx,250,tip);
+  if(t>=T1&&t<T2)sfxOnce('d',T1+0.1,'puff');
+  // 船
+  const by=Math.min(wl,BED-18)+ (drop<0.98?Math.sin(t*1.6)*4*(1-drop):0);boat(860,by-14,lerp(Math.sin(t*1.3)*0.03,0.2,ease(clamp((drop-0.82)/0.18))));
+  // バツ
+  const ck=clamp((t-T2)/0.45)*(1-ease(clamp((t-T2-1.3)/0.5)));cross(360,BED-130,ck,105);if(t>=T2)sfxOnce('x',T2,'thump')}
+function compare(t){const T1=T(1,0.4),T2=T(2,DUR*0.42),T3=T(3,DUR*0.7);skyG();const SL=330,BED=590,M=W/2;
+  const u=ease(clamp((t-T1)/Math.max(2.0,(T2-T1)*0.85)));
+  // 左：堤防で仕切って水を下げる
+  waterBody(0,150,SL,H,t);const wlL=lerp(SL,BED-4,u);if(u<0.995)waterBody(150,M-6,wlL,H,t,'#4a8cb3','#2a5f86');
+  bed(0,M-6,x=>BED+Math.sin(x*0.02)*5);
+  g.fillStyle='#8a8271';g.beginPath();g.moveTo(96,BED+6);g.lineTo(132,SL-46);g.lineTo(176,SL-46);g.lineTo(214,BED+6);g.closePath();g.fill();g.fillStyle='#6f9a59';g.fillRect(132,SL-52,44,8);
+  // 右：底を積み上げる
+  waterBody(M+6,W,SL,H,t);const topR=lerp(BED,SL-58,u);
+  const layers=['#9a8a6a','#b39a6d','#8e7f6a','#c2ad82','#a58f66'];bed(M+6,W,x=>BED+Math.sin(x*0.02)*5);
+  if(u>0){const n=layers.length;for(let i=0;i<n;i++){const y0=BED-(BED-(SL-58))*(i/n),y1=BED-(BED-(SL-58))*((i+1)/n);const yy=Math.max(y1,topR);if(yy<y0){g.fillStyle=sandPat(layers[i]);g.fillRect(M+170,yy,W-M-170,y0-yy+1)}}g.fillStyle='#7d7a78';g.fillRect(M+160,topR-4,14,BED-topR+10)}
+  // 矢印（下げる／上げる）
+  const ak=clamp((t-T1)/0.4)*(1-clamp((t-T2+0.2)/0.4));if(ak>0){g.globalAlpha=ak;arrowLine(M/2+30,SL+30,M/2+30,SL+30+150*clamp(u*1.4+0.2),'#f0b63e',12);arrowLine(M+M/2+60,BED-20,M+M/2+60,BED-20-170*clamp(u*1.4+0.2),'#f0b63e',12);g.globalAlpha=1}
+  // 仕切り
+  g.fillStyle='#14202e';g.fillRect(M-6,0,12,H);
+  // 同じ高さの海面の線と、家・建物
+  const k=clamp((t-T2)/0.7);if(k>0){g.strokeStyle='rgba(255,255,255,.95)';g.lineWidth=4;g.setLineDash([16,12]);g.beginPath();g.moveTo(0,SL);g.lineTo(W*ease(k),SL);g.stroke();g.setLineDash([]);
+    const hk=i=>back(clamp((t-T2-0.5-i*0.18)/0.4));[270,380,500].forEach((x,i)=>{const s=hk(i);if(s>0){g.save();g.translate(x,BED+2);g.scale(s,s);houseS(0,0,1.15);g.restore()}});
+    [[M+230,60,84],[M+320,70,108],[M+420,56,70],[M+500,64,96]].forEach(([x,w,h],i)=>{const s=hk(i);if(s>0){g.save();g.translate(x,SL-58);g.scale(1,s);tower(0,0,w,h);g.restore()}});
+    if(t>=T2+0.5)sfxOnce('h',T2+0.5,'pop')}
+  const lk=clamp((t-T2-1.3)/0.5);if(lk>0){
+    // 左：風車（羽が回る）
+    g.save();g.translate(M-110,BED+2);g.scale(back(lk),back(lk));g.fillStyle='#8a5a3a';g.beginPath();g.moveTo(-20,0);g.lineTo(-9,-96);g.lineTo(9,-96);g.lineTo(20,0);g.closePath();g.fill();g.fillStyle='#5a3a26';g.beginPath();g.moveTo(-13,-96);g.lineTo(0,-114);g.lineTo(13,-96);g.closePath();g.fill();
+    g.translate(0,-100);g.rotate(t*1.1);for(let i=0;i<4;i++){g.rotate(Math.PI/2);g.fillStyle='#4a3120';g.fillRect(-2.5,0,5,74);g.fillStyle='#f3ead6';g.fillRect(3,14,13,58)}g.restore();
+    // 左：自転車の人が地面を横切る
+    const q=clamp((t-T2-1.3)*0.03);const bx=lerp(M+30,170,q);if(bx<M-14&&bx>222){g.save();g.translate(bx,BED-2);g.strokeStyle='#22303d';g.lineWidth=3;g.beginPath();g.arc(-11,-9,9,0,7);g.stroke();g.beginPath();g.arc(11,-9,9,0,7);g.stroke();g.beginPath();g.moveTo(-11,-9);g.lineTo(0,-22);g.lineTo(11,-9);g.stroke();g.fillStyle='#e2574c';g.fillRect(-5,-40,9,19);g.fillStyle='#f1d3b0';g.beginPath();g.arc(0,-46,6,0,7);g.fill();g.restore()}
+    // 右：電車が埋め立て地の上を走る
+    const q2=clamp((t-T2-1.5)*0.04);const tx=lerp(W+200,M+180-240,q2);g.save();g.beginPath();g.rect(M+176,0,W-M-176,H);g.clip();g.translate(tx,SL-58);track(0,-26,190,0);for(let i=0;i<3;i++){g.fillStyle='#3d8f7a';g.beginPath();g.roundRect(i*64,-24,60,20,5);g.fill();g.fillStyle='#d6eef5';g.fillRect(i*64+6,-20,48,8)}g.restore()}
+  // 地図の小窓
+  const m=clamp((t-T3)/0.6);if(m>0){const box=(cx,draw)=>{g.save();g.globalAlpha=ease(m);g.translate(cx,lerp(-120,82,back(m)));g.fillStyle='#42667f';g.beginPath();g.roundRect(-100,-68,200,136,14);g.fill();g.save();g.beginPath();g.roundRect(-100,-68,200,136,14);g.clip();draw();g.restore();g.strokeStyle='#fff';g.lineWidth=5;g.beginPath();g.roundRect(-100,-68,200,136,14);g.stroke();g.restore()};
+    const G=window.GEO;const mp=(lon0,lat0,sc)=>(rs,col)=>{const kx=Math.cos(lat0*Math.PI/180);g.fillStyle=col;g.beginPath();for(const r of rs){for(let i=0;i<r.length;i++){const x=(r[i][0]-lon0)*sc*kx,y=-(r[i][1]-lat0)*sc;i?g.lineTo(x,y):g.moveTo(x,y)}g.closePath()}g.fill()};
+    box(M/2,()=>{const d=mp(5.3,52.2,44);d(G.nb,'#b9b196');for(const[n,rs] of Object.entries(G.prov))d(rs,n==='Flevoland'?'#f0b63e':'#e2d4ad');d(G.lake,'#7fb2c9')});
+    box(M+M/2,()=>{const d=mp(139.85,35.4,125);d(G.kanto,'#e2d4ad');g.strokeStyle='#f0b63e';g.lineWidth=6;g.beginPath();g.ellipse(-2,-8,28,34,0.25,0,7);g.stroke()});
+    sfxOnce('m',T3,'pop')}}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);(P.mode==='compare'?compare:sea3)(t)};
+</script></body></html>
