@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・水の組合。上から見た、海ぞいの堤防と5軒の農家（海は上、堤防は横の帯、下が畑）
+ mode：break（1か所が切れて全部が水につかる → ats[0] で元に戻り、1軒が自分の前だけ直す → ats[1] でとなりの所が切れて、また全部つかる）
+      ／union（5軒が真ん中の集会所に集まり、堤防が1本につながる。ats[0] で旗と「12世紀」）
+      ／duty（堤防 → ats[0] 水路 → ats[1] 風車が光る。ats[2] で各家からお金が集まり、堤防と風車へ使われる）
+      ／vote（横から。投票箱に紙が入り続け、ats[0] で窓の外の景色が昔から今へ流れる） */
+window.DEF={mode:'break'};
+const DY=170,DH=40,PW=256;
+function topBase(t){g.fillStyle='#3f6f8e';g.fillRect(0,0,W,DY);g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=3;const r=R(21);for(let i=0;i<34;i++){const x=r()*W,y=r()*(DY-16)+6,w=40+r()*60,o=Math.sin(t*1.4+i)*12;g.beginPath();g.moveTo(x+o,y);g.quadraticCurveTo(x+o+w/2,y-8,x+o+w,y);g.stroke()}
+  const cols=['#9cbb6c','#b9c873','#d9c58a','#86a862','#a9c47a'];for(let i=0;i<5;i++){g.fillStyle=cols[i];g.fillRect(i*PW,DY+DH,PW,H-DY-DH);g.strokeStyle='rgba(60,80,40,.2)';g.lineWidth=2;for(let y=DY+DH+140;y<H;y+=13){g.beginPath();g.moveTo(i*PW+10,y);g.lineTo(i*PW+PW-10,y);g.stroke()}}
+  for(let i=1;i<5;i++){g.fillStyle='#d9d3c3';g.fillRect(i*PW-4,DY+DH,8,H)}}
+function houseTop(x,y,col='#b5533c',s=1){g.fillStyle='rgba(20,30,20,.3)';g.fillRect(x-34*s+9,y-24*s+9,68*s,48*s);g.fillStyle=col;g.fillRect(x-34*s,y-24*s,68*s,48*s);g.fillStyle='rgba(0,0,0,.18)';g.fillRect(x-34*s,y,68*s,24*s);g.fillStyle='rgba(255,255,255,.4)';g.fillRect(x-34*s,y-2,68*s,4)}
+function treeTop(x,y,s=1){g.fillStyle='rgba(20,40,20,.28)';g.beginPath();g.ellipse(x+9*s,y+8*s,15*s,10*s,0.5,0,7);g.fill();g.fillStyle='#3f7a45';g.beginPath();g.arc(x,y,13*s,0,7);g.fill();g.fillStyle='#5c9a55';g.beginPath();g.arc(x-4*s,y-4*s,7*s,0,7);g.fill()}
+function farms(){for(let i=0;i<5;i++){houseTop(i*PW+128,330,['#b5533c','#c9603f','#8e4a3a','#b5533c','#c9603f'][i]);treeTop(i*PW+60,300);treeTop(i*PW+200,372,0.9)}}
+function dike(t,o={}){for(let i=0;i<5;i++){const strong=o.strong&&o.strong[i],weak=o.weak&&o.weak[i];g.fillStyle=strong?'#9a9488':'#8a8271';g.fillRect(i*PW,DY,PW,DH);g.fillStyle=o.joined?'#6f9a59':'#6f9a59';g.fillRect(i*PW,DY+DH*0.38,PW,DH*0.24);
+    if(strong>0){g.fillStyle=`rgba(210,206,196,${strong})`;for(let x=i*PW+6;x<i*PW+PW-6;x+=26){g.fillRect(x,DY+4,20,13);g.fillRect(x+10,DY+22,20,13)}}
+    if(weak>0){g.strokeStyle=`rgba(50,40,30,${weak})`;g.lineWidth=3;const r=R(i+3);for(let k=0;k<5;k++){let x=i*PW+40+r()*180,y=DY+2;g.beginPath();g.moveTo(x,y);for(let m=0;m<4;m++){x+=(r()-0.5)*26;y+=DH/4;g.lineTo(x,y)}g.stroke()}}
+    if(!o.joined&&i){g.fillStyle='#4a3a2a';g.fillRect(i*PW-3,DY-4,6,DH+8)}}
+  if(o.joined>0){g.strokeStyle=`rgba(255,211,106,${0.95})`;g.lineWidth=7;g.beginPath();g.moveTo(0,DY+DH/2);g.lineTo(W*o.joined,DY+DH/2);g.stroke()}}
+function flood(t,bx,k){if(k<=0)return;g.save();g.beginPath();g.rect(0,DY+DH,W,H);g.clip();g.fillStyle='rgba(58,108,142,.86)';g.beginPath();g.ellipse(bx,DY+DH,k*1300,k*700,0,0,7);g.fill();g.save();g.beginPath();g.ellipse(bx,DY+DH,k*1300,k*700,0,0,7);g.clip();g.strokeStyle='rgba(255,255,255,.3)';g.lineWidth=3;const r=R(33);for(let i=0;i<60;i++){const x=r()*W,y=DY+DH+r()*(H-DY-DH),w=40+r()*60,o=Math.sin(t*1.6+i)*12;g.beginPath();g.moveTo(x+o,y);g.quadraticCurveTo(x+o+w/2,y-8,x+o+w,y);g.stroke()}g.restore();g.restore();
+  // 切れ目
+  g.fillStyle='#3f6f8e';g.beginPath();g.moveTo(bx-30,DY-2);g.lineTo(bx+30,DY-2);g.lineTo(bx+44,DY+DH+4);g.lineTo(bx-44,DY+DH+4);g.closePath();g.fill();g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=4;for(const dx of [-16,0,16]){const q=(t*1.8+dx*0.03)%1;g.beginPath();g.moveTo(bx+dx,DY+q*DH);g.lineTo(bx+dx*1.6,DY+q*DH+22);g.stroke()}}
+function manTop(x,y,col='#3b4a5c',hat='#c9a05a'){g.fillStyle='rgba(20,30,20,.3)';g.beginPath();g.ellipse(x+5,y+6,11,8,0,0,7);g.fill();g.fillStyle=col;g.beginPath();g.ellipse(x,y,12,9,0,0,7);g.fill();g.fillStyle=hat;g.beginPath();g.arc(x,y,7,0,7);g.fill()}
+function brk(t){const T1=T(1,DUR*0.36),T2=T(2,DUR*0.62);topBase(t);
+  const A=clamp((t-0.9)/1.5)*(1-ease(clamp((t-T1+0.55)/0.5)));   // 1回目：3軒目の前が切れる
+  const fix=ease(clamp((t-T1-0.2)/1.4));const wk=clamp((t-T1-0.4)/1.4);const B=ease(clamp((t-T2-0.5)/1.8));
+  const strong=[0,fix,0,0,0],weak=[0,0,Math.max(clamp((t-0.25)/0.6)*(1-clamp((t-T1+0.2)/0.3)),wk),0,0];
+  dike(t,{strong,weak});farms();
+  // 直す人（2軒目）と、何もしないとなり（3軒目）
+  if(t>=T1-0.1){const hx=1*PW+60+Math.sin(t*3)*40;manTop(hx,DY+DH+16);if(fix<1&&Math.sin(t*10)>0.6){g.fillStyle='#fff';g.beginPath();g.arc(hx+10,DY+DH-2,5,0,7);g.fill()}
+    manTop(2*PW+190,352,'#7a5a3a','#3d2a1c');g.fillStyle='#e9e0cb';g.fillRect(2*PW+168,362,46,12)}
+  flood(t,2*PW+128,ease(A));flood(t,2*PW+128,B);
+  if(A>0)sfxOnce('a',0.9,'whoosh');if(t>=T2+0.5)sfxOnce('b',T2+0.5,'whoosh');if(t>=T1-0.55&&t<T1)sfxOnce('r',T1-0.55,'pop')}
+function hall(k,flag,t){const x=W/2,y=520;g.save();g.translate(x,y);g.scale(back(clamp(k)),back(clamp(k)));houseTop(0,0,'#7d5a3c',1.7);g.fillStyle='#e9e0cb';g.fillRect(-10,-46,20,10);g.restore();
+  if(flag>0){g.fillStyle='#4a3a2a';g.fillRect(x+66,y-110*flag-10,5,110*flag+10);g.fillStyle='#e23a30';g.beginPath();const w=Math.sin(t*5)*5;g.moveTo(x+71,y-110*flag-8);g.lineTo(x+71+50,y-110*flag+6+w);g.lineTo(x+71,y-110*flag+22);g.closePath();g.fill()}}
+function union(t){const T1=T(1,DUR*0.6);topBase(t);const j=ease(clamp((t-2.4)/1.4));dike(t,{joined:j});farms();hall(clamp((t-0.2)/0.4),ease(clamp((t-T1)/0.6)),t);
+  for(let i=0;i<5;i++){const q=ease(clamp((t-0.5-i*0.12)/1.7));const a=i/5*6.283+0.6;manTop(lerp(i*PW+128,W/2+Math.cos(a)*96,q),lerp(366,520+Math.sin(a)*64,q),['#3b4a5c','#7a5a3a','#5a6b4a','#a34a3a','#4a5a7a'][i])}
+  if(t>=2.4)sfxOnce('j',2.4,'whoosh');numLabel(W/2+250,430,'12世紀',clamp((t-T1-0.2)/0.35),78);if(t>=T1)sfxOnce('f',T1,'pop')}
+function coin(x,y,k=1){g.fillStyle='#c98a1a';g.beginPath();g.arc(x+2,y+3,11*k,0,7);g.fill();g.fillStyle='#f3c545';g.beginPath();g.arc(x,y,11*k,0,7);g.fill();g.fillStyle='#fbe28a';g.beginPath();g.arc(x-3,y-3,4*k,0,7);g.fill()}
+function millTop(x,y,ang,s=1){g.save();g.translate(x,y);g.fillStyle='rgba(20,30,40,.3)';g.beginPath();g.arc(6,7,18*s,0,7);g.fill();g.fillStyle='#8a5a3a';g.beginPath();g.arc(0,0,17*s,0,7);g.fill();g.rotate(ang);for(let i=0;i<4;i++){g.rotate(Math.PI/2);g.fillStyle='#f3ead6';g.fillRect(3,6,10*s,44*s);g.fillStyle='#4a3120';g.fillRect(-2,0,4,50*s)}g.restore()}
+function duty(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.26),T3=T(3,DUR*0.42);topBase(t);
+  // 水路（2軒目と3軒目の間）
+  const ck=ease(clamp((t-T1)/0.7));if(ck>0){g.fillStyle='#5f9fc0';g.fillRect(2*PW-9,DY+DH,18,(H-DY-DH)*ck);g.fillStyle='rgba(255,255,255,.3)';g.fillRect(2*PW-2,DY+DH,4,(H-DY-DH)*ck)}
+  dike(t,{joined:1});farms();hall(1,1,t);
+  const pulse=(k)=>k>0?`rgba(255,211,106,${0.9*k*(0.6+0.4*Math.sin(t*9))})`:null;
+  const p0=clamp((t-0.15)/0.25)*(1-clamp((t-T1+0.1)/0.3));if(p0>0){g.strokeStyle=pulse(p0);g.lineWidth=9;g.strokeRect(6,DY-6,W-12,DH+12);sfxOnce('a',0.15,'pop')}
+  const p1=clamp((t-T1)/0.25)*(1-clamp((t-T2+0.1)/0.3));if(p1>0){g.strokeStyle=pulse(p1);g.lineWidth=8;g.strokeRect(2*PW-18,DY+DH+4,36,H);sfxOnce('b',T1,'pop')}
+  const mk=clamp((t-T2)/0.4);if(mk>0){millTop(2*PW,DY+DH+46,t*1.8,1.25*back(mk));const p2=1-clamp((t-T2-0.9)/0.4);if(p2>0){g.strokeStyle=pulse(p2);g.lineWidth=8;g.beginPath();g.arc(2*PW,DY+DH+46,62,0,7);g.stroke()}sfxOnce('c',T2,'pop')}
+  // お金：各家 → 集会所 → 堤防と風車
+  for(let i=0;i<5;i++)for(let n=0;n<3;n++){const q=clamp((t-T3-0.1-i*0.1-n*0.35)/0.9);if(q>0&&q<1){const x=lerp(i*PW+128,W/2,ease(q)),y=lerp(330,520,ease(q))-Math.sin(q*Math.PI)*60;coin(x,y)}}
+  const out=t-T3-2.0;if(out>0){for(let n=0;n<6;n++){const q=clamp((out-n*0.3)/0.9);if(q>0&&q<1){const tx=n%2?2*PW:[260,900,1100][n%3],ty=n%2?DY+DH+46:DY+DH/2;coin(lerp(W/2,tx,ease(q)),lerp(520,ty,ease(q))-Math.sin(q*Math.PI)*50)}}
+    for(const[x,y] of [[260,DY+DH/2],[900,DY+DH/2],[1100,DY+DH/2]]){const s=0.5+0.5*Math.sin(t*8+x);g.fillStyle=`rgba(255,255,255,${0.8*s*clamp(out-0.8)})`;g.beginPath();g.arc(x,y,6+s*5,0,7);g.fill()}}
+  if(t>=T3)sfxOnce('m',T3+0.2,'tick')}
+function vote(t){const T1=T(1,DUR*0.45);
+  // 部屋の壁と大きな窓
+  g.fillStyle='#d9c9a8';g.fillRect(0,0,W,H);g.fillStyle='#b9a47a';g.fillRect(0,560,W,160);
+  const wx=120,wy=40,ww=1040,wh=300;g.save();g.beginPath();g.rect(wx,wy,ww,wh);g.clip();const s=g.createLinearGradient(0,wy,0,wy+wh);s.addColorStop(0,'#a9cfe8');s.addColorStop(1,'#e6eef0');g.fillStyle=s;g.fillRect(wx,wy,ww,wh);
+  const sc=ease(clamp((t-T1)/Math.max(3,DUR-T1-0.6)))*1500;const gy=wy+wh-40;g.fillStyle='#8fae6b';g.fillRect(wx,gy,ww,60);g.save();g.translate(-sc,0);
+  // 昔：わらぶきの家と風車
+  for(const x of [260,470,820])houseS(x,gy,1.5,'#e6dcc6','#8a7a4e');windmillS(640,gy,1.3,t*1.2);treeS(360,gy,1.2);treeS(980,gy,1.1);
+  // 今：ビルと、まっすぐな堤防の上の風力発電
+  for(const[x,w,h] of [[1500,70,150],[1600,90,210],[1720,64,130],[1820,80,180],[2360,84,170],[2480,70,120]]){g.fillStyle='#dfe5ec';g.fillRect(x,gy-h,w,h);g.fillStyle='#9fb3c6';for(let yy=gy-h+12;yy<gy-10;yy+=20)for(let xx=x+8;xx<x+w-10;xx+=16)g.fillRect(xx,yy,9,11)}
+  for(const x of [1980,2120,2250]){g.fillStyle='#f4f6f8';g.fillRect(x-4,gy-200,8,200);g.save();g.translate(x,gy-200);g.rotate(t*1.5+x);for(let i=0;i<3;i++){g.rotate(Math.PI*2/3);g.beginPath();g.moveTo(0,0);g.lineTo(8,-10);g.lineTo(0,-86);g.closePath();g.fill()}g.restore()}
+  g.restore();g.restore();g.strokeStyle='#7a5a3a';g.lineWidth=16;g.strokeRect(wx,wy,ww,wh);g.lineWidth=8;g.beginPath();g.moveTo(wx+ww/2,wy);g.lineTo(wx+ww/2,wy+wh);g.stroke();
+  // 机と投票箱
+  g.fillStyle='#7a5a3a';g.fillRect(360,560,560,26);g.fillRect(390,586,22,134);g.fillRect(868,586,22,134);
+  g.fillStyle='#3d6f8e';g.beginPath();g.roundRect(520,410,240,150,10);g.fill();g.fillStyle='#2c5672';g.fillRect(520,410,240,22);g.fillStyle='#14202e';g.fillRect(590,414,100,10);g.fillStyle='rgba(255,255,255,.9)';g.beginPath();g.moveTo(610,470);g.lineTo(632,500);g.lineTo(676,448);g.lineWidth=12;g.strokeStyle='rgba(255,255,255,.9)';g.stroke();
+  // 紙が入っていく（左右の手から）
+  for(let i=0;i<2;i++){const q=((t*0.5+i*0.5)%1);const side=i?1:-1;const hx=640+side*lerp(330,60,ease(clamp(q/0.55)));const hy=lerp(366,390,ease(clamp(q/0.55)));
+    if(q<0.8){g.fillStyle='#f1d3b0';g.beginPath();g.roundRect(hx+(side>0?0:-150),hy-16,150,32,16);g.fill();g.fillStyle=i?'#a34a3a':'#3b4a5c';g.fillRect(hx+(side>0?60:-150),hy-22,90,44)}
+    const py=q<0.55?hy+4:lerp(392,430,ease(clamp((q-0.55)/0.25)));const px=q<0.55?hx-side*16:640;if(q<0.82){g.save();g.translate(px,py);g.rotate(q<0.55?side*0.1:0);g.fillStyle='#fffdf5';g.fillRect(-30,-6,60,40*(q<0.55?1:1-clamp((q-0.55)/0.27)));g.restore()}}
+  if(t>=T1)sfxOnce('s',T1,'whoosh')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({break:brk,union,duty,vote}[P.mode]||brk)(t)};
+</script></body></html>

@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="geo_land.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・オランダの低い土地の地図。型は img/nl_below.png・nl_flood.png（Commons の地図〔Reboelje、CC BY-SA 3.0〕から読み取り。表記が要る）
+ mode：tint（ふつうの地図 → 西から東へ、海面より低い所が青く塗られていく）
+      ／low（青い地図。ats：[0]「26%」の数字 [1] 国土の帯に4分の1の印 [2] アムステルダムへ寄る [3] 青い所が水にのまれる [4] 引いて、洪水の恐れがある所まで足す＝約6割） */
+window.DEF={mode:'tint'};
+const BLUE='#2f6fc4',BLUE2='#8fb7e6';
+function init(){const base=location.href.replace(/[^\/]*$/,'');loadImg('below',base+'img/nl_below.png');loadImg('flood',base+'img/nl_flood.png')}
+function blueLand(v,t,kBelow,kFlood,sweepX){g.save();nlLandClip(v);if(sweepX!=null){g.beginPath();g.rect(-400,-400,sweepX+400,H+800);g.clip()}
+  if(kFlood>0)drawMask(v,'flood',BLUE2,kFlood);if(kBelow>0)drawMask(v,'below',BLUE,kBelow);g.restore()}
+function pin(v,lo,la,k,t){if(k<=0)return;const[x,y]=pj(v,lo,la);g.save();g.translate(x,y);g.scale(back(clamp(k)),back(clamp(k)));g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(0,2,12,4,0,0,7);g.fill();g.fillStyle='#e23a30';g.beginPath();g.moveTo(0,0);g.bezierCurveTo(-22,-26,-16,-52,0,-52);g.bezierCurveTo(16,-52,22,-26,0,0);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(0,-34,7,0,7);g.fill();g.restore()}
+function tint(t){const v=view(5.35,52.25,238);nlBase(v,t);const u=ease(clamp((t-0.5)/Math.max(1.6,DUR-1.0)));const[xa]=pj(v,3.2,52),[xb]=pj(v,7.3,52);const sx=lerp(xa-10,xb+10,u);
+  blueLand(v,t,1,0,sx);if(u>0&&u<1){const gr=g.createLinearGradient(sx-70,0,sx,0);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(1,'rgba(255,255,255,.55)');g.fillStyle=gr;g.fillRect(sx-70,0,70,H);g.fillStyle='rgba(255,255,255,.9)';g.fillRect(sx-2,0,3,H);sfxOnce('s',0.5,'whoosh')}}
+function low(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.24),T3=T(3,DUR*0.36),T4=T(4,DUR*0.55),T5=T(5,DUR*0.76);
+  const zin=ease(clamp((t-T3)/1.1)),zout=ease(clamp((t-T5+0.2)/1.2));const z=zin*(1-zout);
+  const v=view(lerp(5.35,4.95,z),lerp(52.25,52.4,z),lerp(238,760,z));nlBase(v,t);
+  const fl=ease(clamp((t-T5-0.6)/1.2));blueLand(v,t,1,fl);
+  // 水にのまれる（堤防がなければ）
+  const wu=ease(clamp((t-T4)/1.6))*(1-ease(clamp((t-T5+0.3)/0.9)));
+  if(wu>0){g.save();nlLandClip(v);const[cx,cy]=pj(v,4.3,52.5);g.beginPath();g.arc(cx,cy,wu*1500,0,7);g.clip();drawMask(v,'below',SEA,1);
+    // 型の中だけに波を描く
+    const[x0,y0]=pj(v,3.2,53.6),[x1,y1]=pj(v,7.3,50.7);const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.drawImage(IMG.below,x0,y0,x1-x0,y1-y0);x.globalCompositeOperation='source-in';x.strokeStyle='rgba(255,255,255,.35)';x.lineWidth=2.5;const r=R(5);for(let i=0;i<260;i++){const px=r()*W,py=r()*H,w=26+r()*40,o=Math.sin(t*1.5+i)*9;x.beginPath();x.moveTo(px+o,py);x.quadraticCurveTo(px+o+w/2,py-7,px+o+w,py);x.stroke()}
+    g.drawImage(c,0,0);g.restore();sfxOnce('f',T4,'whoosh')}
+  // アムステルダム
+  const pk=clamp((t-T3-0.5)/0.4)*(1-clamp((t-T5)/0.4));pin(v,4.90,52.37,pk,t);
+  if(wu>0.5&&pk>0){const[x,y]=pj(v,4.90,52.37);const q=((t-T4)*0.9)%1;g.strokeStyle=`rgba(255,255,255,${0.7*(1-q)})`;g.lineWidth=4;g.beginPath();g.ellipse(x,y,20+q*50,7+q*16,0,0,7);g.stroke()}
+  if(z>0.02&&z<0.98)sfxOnce(zin<1?'zi':'zo',zin<1?T3:T5-0.2,'whoosh');
+  // 数字と帯（右の海の上）
+  const a1=clamp((t-T1)/0.35)*(1-clamp((t-T3+0.15)/0.3));if(a1>0){numLabel(1010,250,'26%',a1,120);sfxOnce('n',T1,'pop')}
+  const a2=clamp((t-T2)/0.5)*(1-clamp((t-T3+0.15)/0.3));if(a2>0){const bx=830,by=360,bw=360,bh=34;g.save();g.globalAlpha=clamp(a2*2);g.fillStyle=LAND;g.beginPath();g.roundRect(bx,by,bw,bh,8);g.fill();g.fillStyle=BLUE;g.beginPath();g.roundRect(bx,by,bw*0.26*ease(a2),bh,8);g.fill();g.strokeStyle='#14202e';g.lineWidth=4;for(const q of [0.25,0.5,0.75]){g.beginPath();g.moveTo(bx+bw*q,by-(q===0.25?16:8));g.lineTo(bx+bw*q,by+bh+(q===0.25?16:8));g.stroke()}g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();g.roundRect(bx,by,bw,bh,8);g.stroke();g.restore()}
+  const a5=clamp((t-T5-1.0)/0.4);if(a5>0){numLabel(1010,250,'約6割',a5,104);const bx=830,by=360,bw=360,bh=34;g.save();g.globalAlpha=a5;g.fillStyle=LAND;g.beginPath();g.roundRect(bx,by,bw,bh,8);g.fill();g.fillStyle=BLUE2;g.beginPath();g.roundRect(bx,by,bw*lerp(0.26,0.59,ease(clamp((t-T5-1.0)/0.9))),bh,8);g.fill();g.fillStyle=BLUE;g.beginPath();g.roundRect(bx,by,bw*0.26,bh,8);g.fill();g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();g.roundRect(bx,by,bw,bh,8);g.stroke();g.restore();sfxOnce('n2',T5+1.0,'pop')}}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);(P.mode==='low'?low:tint)(t)};
+</script></body></html>
