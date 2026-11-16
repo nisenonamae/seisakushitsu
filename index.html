@@ -77,7 +77,7 @@ table.vt{width:100%;border-collapse:collapse;font-size:13.5px}.vt td{border-bott
 details summary{cursor:pointer;color:var(--sub);font-size:14px}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 .empty{color:var(--sub);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;text-align:center}
-.step{background:var(--row);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;overflow:hidden}
+.step{background:var(--row);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;overflow:clip}
 .step>.sh{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer}
 .step .num{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;border:2px solid var(--line);color:var(--sub)}
 .step.done .num{background:var(--good);border-color:var(--good);color:#fff}
@@ -93,6 +93,16 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .chk{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.chk input{width:auto;margin-top:4px}
 .big{font-size:17px;font-weight:700;margin:4px 0 10px}
 .fix{display:grid;grid-template-columns:70px 1fr auto;gap:6px;margin:4px 0}
+.vkwrap{position:sticky;top:44px;z-index:4;background:var(--row);padding:6px 0 4px;border-bottom:1px solid var(--line);margin:0 0 8px}
+.vkwrap video{width:100%;max-height:36vh;border-radius:6px;background:#000;display:block}
+.chapbar{display:flex;gap:5px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch}
+.chapbar button{flex:none;font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--row);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+.chapbar button.ok{background:#d9f2e1;color:#1c6b37;border-color:#b5dfc3}.chapbar button.fix{background:#ffe5df;color:#9a2b1c;border-color:#f2c2b8}.chapbar button.busy{background:#fff1c7;color:#7a5a00;border-color:#ecd98f}.chapbar button.none{color:var(--sub);border-style:dashed}.chapbar button.cur{outline:2px solid var(--sea);outline-offset:1px}
+details.chap{padding:0}details.chap>summary{padding:10px 12px;cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}details.chap>summary b{font-size:15.5px}details.chap>.cb{padding:0 12px 12px}
+details.chap[open]{border:2px solid var(--sea)}
+.pill.ok{background:#d9f2e1;color:#1c6b37}.pill.fixn{background:#ffe5df;color:#9a2b1c}
+.scn{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;margin:3px 0;font-size:13px}.scn .b{padding:3px 9px;font-size:13px}
+.qchips{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;margin:0 0 4px;-webkit-overflow-scrolling:touch}.qchips button{flex:none;white-space:nowrap;font:inherit;font-size:12px;border:1px solid var(--line);background:var(--paper);color:var(--sub);border-radius:999px;padding:2px 8px;cursor:pointer}
 .help details{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px}
 .help summary{font-weight:700;font-size:15.5px;color:var(--ink)}
 .help ol,.help ul{padding-left:20px;margin:6px 0}.help li{margin:3px 0;font-size:14.5px}.help p{font-size:14.5px;margin:6px 0}
@@ -574,7 +584,7 @@ function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
 function renderMake0(){const mt=$('makeTop');const topDet=new Map([...mt.querySelectorAll('details')].map(x=>[(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent,x.open]));renderMake1();mt.querySelectorAll('details').forEach(x=>{const k=(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent;if(topDet.has(k))x.open=topDet.get(k)})}
 function migrateSteps(){let ch=false;for(const x of (D.projects||[])){if(x.sv!==2){if((x.step||0)>=4)x.step=(x.step||0)+1;x.sv=2;x.updatedAt=now();ch=true}}if(ch)save()}
-function renderMake1(){migrateSteps();ensureProj();const p=projOf();
+function renderMake1(){VK.was=!!(VK.el&&VK.el.isConnected&&!VK.el.paused);migrateSteps();ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
 if(!p){$('makeTop').innerHTML=jobsPanel()+`<p class="big">いま作っている動画はありません。</p>
@@ -653,7 +663,7 @@ ${p.kata?`<div class="item" style="background:var(--paper);margin-top:8px"><labe
 <div class="row"><button class="b main" data-finish>終わる</button></div>`];
 setTimeout(fillMedia,0);const ms=$('makeSteps');const keepOpen=ms.dataset.pid===p.id?new Set([...ms.querySelectorAll('.step.open')].map(x=>x.dataset.k)):null;const keepDet=new Map([...ms.querySelectorAll('details')].map(x=>[(x.querySelector('summary')||{}).textContent,x.open]));ms.dataset.pid=p.id;
 $('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now':''}" data-k="${k}" id="step${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div>${stepSum(p,k)?`<div class="st3">${stepSum(p,k)}</div>`:''}</div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('');
-if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));x.open=key!==undefined?keepDet.get(key):false});
+if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{if(x.classList.contains('chap'))return;const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));x.open=key!==undefined?keepDet.get(key):false});vkMount(p);
 renderStepNav(p,s)}
 function renderStepNav(p,s){const n=$('stepNav');if(!p){n.classList.remove('on');return}n.classList.add('on');const SH=['参考','構成','肉付け','図解','題名','サムネ','動画','音','本番','残す'];
  n.innerHTML=STEPS.map((st,k)=>`<button class="${k<s?'done':''} ${k===s?'now':''}" data-jump="${k}" title="${st.t}">${k<s?'✓':k+1}<span class="lb">${SH[k]}</span></button>`).join('')+`<button data-jump="top" title="いちばん上へ">▲</button>`}
@@ -664,6 +674,7 @@ function stepSum(p,k){try{const ob=(p.outline&&p.outline.blocks||[]).filter(b=>b
  if(k===1)return ob.length?`${ob.length} 段`:'';
  if(k===2)return fb.length?`${fb.length} 段・${fb.reduce((a,b)=>a+(b.narr||'').length,0)} 字`:'';
  if(k===3){const v=(p.visuals||[]).filter(v=>v.status==='決定'||v.status==='できた'||v.chosen).length;return v?`図解 ${v}`:''}
+ if(k===7){const cs=chapList(p);if(!cs.some(c=>c.built))return'';const n=cs.filter(c=>chapState(p,c).st==='ok').length;return `OK ${n}／${cs.length} 章`}
  if(k===4){const v=p.video;const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type==='video_make').sort((a,b)=>b.createdAt-a.createdAt)[0];return j&&(j.status==='待ち'||j.status==='作業中')?'頼んであります':(v&&v.path?`${v.ver||1}版ができています`:'')}
  if(k===5){const t=(p.titles||[]).find(t=>t.id===p.titleId);return t?'決定：'+esc(t.text):''}
  if(k===9){const f=p.final;return f&&f.done?`${esc(f.res||'')} 書き出し済み${f.uploaded?'・投稿済み':''}`:''}
@@ -779,18 +790,78 @@ ${pub.title||pub.desc||pub.tags?`<h3 style="font-size:15px;margin:14px 0 4px">Yo
 <div class="row"><button class="b main" data-next>上げた（または上げる準備ができた）</button></div>`}
 function makeVideoStep(p){const v=p.video;
 if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、ここで仮の動画を頼めます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
-return `<div class="how"><b>やること</b><ol><li>構成・肉付け・図解が決まったら、ここで「仮の動画を作ってもらう」を押す（作るのに時間がかかるので、先に頼んでおく）</li><li>できあがりを待たずに「次へ」。題名とサムネを決めている間に、Claude が作ります</li><li>できた動画は、あとの「動画を確かめる」の段で見ます</li></ol></div>
-<div class="row"><button class="b main" data-job="video_make">${v&&v.path?'今の構成・肉付け・図解で作り直してもらう':'仮の動画を作ってもらう'}</button></div>${jobLine(p,'video_make')}
-${v&&v.path?`<p class="lead" style="margin:4px 0">${v.ver||1}版ができています。「動画を確かめる」の段で見られます。</p>`:''}
+const cs=chapList(p);const next=cs.find(c=>!c.built);const busy=(D.jobs||[]).find(j=>!j.deleted&&j.projId===p.id&&j.type==='video_make'&&(j.status==='待ち'||j.status==='作業中'));
+return `<div class="how"><b>やること</b><ol><li>構成・肉付け・図解が決まったら、ここで最初の章を頼む（動画は<b>1章ずつ</b>作って、1章ずつ確かめます。前の章の直しが、次の章に最初から入ります）</li><li>できあがりを待たずに「次へ」。題名とサムネを決めている間に、Claude が作ります</li><li>できた章は、あとの「動画を確かめる」の段で見て、直して、OK にします。次の章もそこで頼めます</li></ol></div>
+${next?`<div class="row"><button class="b main" data-cmake="${esc(next.name)}" ${busy?'disabled':''}>${cs.some(c=>c.built)?'次の章（'+esc(next.name)+'）を作ってもらう':'最初の章（'+esc(next.name)+'）を作ってもらう'}</button></div>`:(cs.length?'<p class="lead" style="margin:4px 0">全部の章ができています。「動画を確かめる」の段で見られます。</p>':'<p class="lead" style="margin:4px 0">先に構成と肉付けを作ってください。</p>')}
+${busy?`<div class="chg">${busy.status==='作業中'?'Claude が作業中':'Claude に頼んであります'}${busy.chapter?'（'+esc(busy.chapter)+'）':'（全部の章）'}${busy.progress&&busy.progress.label?'：'+esc(busy.progress.label):''}</div>`:''}
+<details><summary style="font-size:13.5px">全部の章をまとめて作ってもらう</summary><p class="lead" style="margin:4px 0">1章ずつではなく、最初から最後まで一度に作ります（直す所が多くなりやすい）。</p><div class="row"><button class="b" data-job="video_make" ${busy?'disabled':''}>全部まとめて作ってもらう</button></div></details>
 <div class="row"><button class="b" data-next>次へ（題名）</button></div>`}
-function videoStep(p){const v=p.video;const open=(p.fixes||[]).filter(f=>f.text&&!f.done);
-return `<div class="how"><b>やること</b><ol><li>仮の動画を 1.5倍速で見る（声・図解・字幕まで入った下書き。図解がまだの所は「画面の指示」を書いた絵コンテになる）</li><li>直したい所を、時間（1:23）か画面の左上に出る場面の番号（3-4）と一緒に一行ずつ書く。どの段の話かが自動で出る。これからの動画でも同じにしてほしいことは「毎回そうする」に印（印がなくても、Claude が「これは毎回のことだ」と思ったら決まりに入れて知らせます）</li><li>「直しを頼む」で、Claude がその段の語り・構成・図解を直して動画を作り直す。気が済んだら「完成」</li></ol></div>
-${v&&v.path?`<div class="item"><div class="tags"><span>${v.ver||1}版</span><span>${secTxt(v.duration||0)}</span>${v.at?`<span>${md(v.at)}</span>`:''}</div><video data-gh="${esc(v.path)}" controls playsinline preload="metadata" style="width:100%;border-radius:6px;background:#000;margin-top:6px"></video>${v.reply?`<div class="chg">Claude：${esc(v.reply)}</div>`:''}</div>`:'<div class="empty">仮の動画はまだありません。下のボタンか、上の「情報を変えて作り直す」で作れます。</div>'}
-${syncOn()?`<div class="row"><button class="b" data-job="video_make">${v&&v.path?'今の構成・肉付け・図解で作り直してもらう':'仮の動画を作ってもらう'}</button></div>${jobLine(p,'video_make')}`:''}
-<h3 style="font-size:15px;margin:12px 0 4px">直したい所</h3>
-<div id="fixes">${(p.fixes||[]).map((f,k)=>{const sh=shotOf(p,f.sec);const t=sh?sh.start:secOf(f.sec);const b=sh?{role:sh.role+'の段・場面 '+sh.tag}:(t!=null?blockAt(p,t):null);return `<div class="fix ${f.done?'off':''}"><input data-fsec="${k}" value="${esc(f.sec||'')}" placeholder="1:23 か 3-4"><input data-ftxt="${k}" value="${esc(f.text||'')}" placeholder="直したいこと"><button class="b" data-fdel="${k}">×</button></div><label class="lead" style="display:flex;gap:6px;align-items:center;margin:-2px 0 4px;font-size:13px"><input type="checkbox" data-falw="${k}" ${f.always?'checked':''} style="width:auto">これからの動画でも毎回そうする（決まりにする）${f.ruled?' ・決まりに入りました':''}</label>${b?`<div class="lead" style="margin:-2px 0 4px">→ ${esc(b.role||'')}の段</div>`:''}${f.reply?`<div class="chg" style="margin:-2px 0 6px">Claude：${esc(f.reply)}</div>`:''}`}).join('')}</div>
-<div class="row"><button class="b" data-fadd>直しを一行足す</button></div>
-<div class="row">${syncOn()?`<button class="b" data-job="video_fix">直しを頼む（${open.length}件）</button>`:`<button class="b" data-copy="fix">直しをコピーして Claude を開く</button>`}<button class="b main" data-next>完成</button></div>${jobLine(p,'video_fix')}`}
+/* ---------- 動画を章ごとに確かめる ---------- */
+const chapPre=r=>{r=String(r||'');const i=r.indexOf('：');return i>0?r.slice(0,i):''};
+const vkClock=t=>{t=Math.floor(+t||0);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+let _cm={k:'',m:null};
+// 段の役割（「第1章：よくある説」）から章の名前を出す。「：」のない段は、同じ名前の章があればそれ、なければ直前の章に入れる
+function chapMap(p){const k=p.id+'|'+p.updatedAt;if(_cm.k===k)return _cm.m;const fb=((p.flesh||{}).blocks||[]),ob=((p.outline||{}).blocks||[]),vb=((p.video||{}).blocks)||[];const m=new Map();const known=new Set();
+ for(const l of [ob,fb,vb])for(const b of l){const c=chapPre(b.role);if(c)known.add(c)}
+ for(const l of [ob,fb,vb]){let last='';for(const b of l){const r=String(b.role||'');let c=chapPre(r);if(!c)c=(known.has(r)||/^(序|序章|結び|終章|第.{1,3}章)$/.test(r))?r:(last||(known.size?[...known][0]:'全体'));last=c;if(!m.has(r))m.set(r,c)}}
+ _cm={k,m};return m}
+function chapR(p,role){const m=chapMap(p);const r=String(role||'');return m.get(r)||chapPre(r)||'全体'}
+const QFIX=['文字が多い','分かりにくい','長い','一瞬で見えない','絵が話と合っていない','同じ絵の繰り返し','読み方がおかしい','間がほしい','ここはいい'];
+function chapList(p){const chapOf=r=>chapR(p,r);const fb=((p.flesh||{}).blocks||[]).filter(b=>b.mark!=='削る'),ob=((p.outline||{}).blocks||[]).filter(b=>b.mark!=='削る');const src=fb.length?fb:ob;const vb=((p.video||{}).blocks)||[];const names=[];
+ for(const b of [...src,...vb]){const n=chapOf(b.role);if(!names.includes(n))names.push(n)}
+ return names.map(n=>{const bl=vb.filter(b=>chapOf(b.role)===n);return{name:n,built:bl.length>0,start:bl.length?Math.min(...bl.map(b=>b.start)):0,end:bl.length?Math.max(...bl.map(b=>b.end)):0,nblk:src.filter(b=>chapOf(b.role)===n).length}})}
+function fixChap(p,f){const chapOf=r=>chapR(p,r);const sh=shotOf(p,f.sec);if(sh&&sh.role)return chapOf(sh.role);const t=secOf(f.sec);if(t!=null){const b=blockAt(p,t);if(b)return chapOf(b.role)}return f.chap||''}
+function chapState(p,c){const fx=(p.fixes||[]).map((f,k)=>({f,k})).filter(x=>fixChap(p,x.f)===c.name);const open=fx.filter(x=>!x.f.done),done=fx.filter(x=>x.f.done&&x.f.text);
+ const busy=(D.jobs||[]).find(j=>!j.deleted&&j.projId===p.id&&(j.type==='video_fix'||j.type==='video_make'||j.type==='rebuild')&&(j.status==='待ち'||j.status==='作業中')&&(!j.chapter||j.chapter===c.name));
+ const ok=!!((p.chapOk||{})[c.name]);const n=open.filter(x=>x.f.text).length;
+ const st=busy?'busy':!c.built?'none':n?'fix':ok?'ok':'new';
+ return{fx,open,done,busy,ok,n,st,label:{busy:busy&&busy.status==='作業中'?'Claude が作業中':'Claude に頼んである',none:'まだ作っていない',fix:'直し '+n+'件',ok:'OK',new:'まだ見ていない'}[st]}}
+function chapOpen(p,cs){const v=LS.get('vk_open_'+p.id,'');if(v==='-')return'';if(v&&cs.some(c=>c.name===v))return v;const a=cs.find(c=>['fix','new','busy'].includes(chapState(p,c).st))||cs.find(c=>!c.built);return a?a.name:''}
+function fixRow(p,f,k){const sh=shotOf(p,f.sec);const t=sh?sh.start:secOf(f.sec);const b=sh?{role:sh.role+'の段・場面 '+sh.tag}:(t!=null?blockAt(p,t):null);
+ return `<div class="fix"><input data-fsec="${k}" value="${esc(f.sec||'')}" placeholder="1:23 か 3-4"><input data-ftxt="${k}" value="${esc(f.text||'')}" placeholder="直したいこと"><button class="b" data-fdel="${k}">×</button></div>
+<div class="qchips">${QFIX.map(q=>`<button data-fchip="${k}">${q}</button>`).join('')}</div>
+<label class="lead" style="display:flex;gap:6px;align-items:center;margin:-2px 0 6px;font-size:13px"><input type="checkbox" data-falw="${k}" ${f.always?'checked':''} style="width:auto">毎回そうする（決まりにする）${b?`<span style="margin-left:auto;text-align:right">${esc(b.role||'')}</span>`:''}</label>`}
+function doneRow(f){return `<div style="font-size:13.5px;margin:4px 0;padding:4px 0;border-top:1px dashed var(--line)"><span class="lead">${esc(f.sec||'')}</span>　${esc(f.text)}${f.reply?`<div class="chg" style="margin:1px 0 0">Claude：${esc(f.reply)}${f.ruled?'':''}</div>`:''}</div>`}
+function chapCard(p,c,cs,openName){const chapOf=r=>chapR(p,r);const s=chapState(p,c);const shots=(((p.video||{}).shots)||[]).filter(x=>chapOf(x.role)===c.name);const next=cs.find(x=>!x.built);const prevOk=cs.slice(0,cs.indexOf(c)).every(x=>x.built);
+ const pill=`<span class="pill ${s.st==='ok'?'ok':s.st==='fix'?'fixn':s.st==='busy'?'busy':''}">${s.label}</span>`;
+ const jl=s.busy?`<div class="chg">${s.busy.status==='作業中'?'Claude が作業中':'Claude に頼んであります'}${s.busy.progress&&s.busy.progress.label?'：'+esc(s.busy.progress.label):''}</div>`:'';
+ let body;
+ if(!c.built){body=`<p class="lead" style="margin:4px 0">この章の動画は、まだ作っていません（${c.nblk}段）。</p>${syncOn()?(next&&next.name===c.name&&prevOk?`<div class="row"><button class="b main" data-cmake="${esc(c.name)}" ${s.busy?'disabled':''}>この章を作ってもらう</button></div>`:'<p class="lead" style="margin:4px 0">前の章を作ってから、この章を作ります。</p>'):''}${jl}`}
+ else{body=`<div class="row" style="margin-top:0"><button class="b" data-vkplay="${c.start}|${c.end}">▶ この章を見る（${secTxt(c.end-c.start)}）</button><button class="b" data-cadd="${esc(c.name)}">＋ 直しを書く</button></div>
+${shots.length?`<details><summary style="font-size:13.5px">場面 ${shots.length}個（▶ でそこへ飛ぶ・✎ でその場面の直しを書く）</summary>${shots.map(x=>`<div class="scn"><button class="b" data-vkseek="${x.start}">▶ ${esc(x.tag)}</button><span class="lead">${vkClock(x.start)}${x.at?'　「'+esc(x.at)+'」':''}</span><button class="b" data-sfix="${esc(x.tag)}">✎</button></div>`).join('')}</details>`:''}
+${s.open.length?`<h3 style="font-size:14px;margin:10px 0 2px">この章の直し</h3>${s.open.map(x=>fixRow(p,x.f,x.k)).join('')}`:'<p class="lead" style="margin:8px 0 2px">直しはまだありません。動画を見ながら、上の「✎ いま見ている所を直す」を押すと、ここに行が足されます。</p>'}
+${s.done.length?`<details><summary style="font-size:13.5px">済んだ直し ${s.done.length}件</summary>${s.done.map(x=>doneRow(x.f)).join('')}</details>`:''}
+${jl}<div class="row">${syncOn()?`<button class="b" data-cfix="${esc(c.name)}" ${s.busy||!s.n?'disabled':''}>この章の直しを頼む（${s.n}件）</button>`:''}${s.ok?`<button class="b" data-cunok="${esc(c.name)}">OK を取り消す</button>`:`<button class="b main" data-cok="${esc(c.name)}">この章は OK</button>`}</div>`}
+ return `<details class="item chap" data-chap="${esc(c.name)}" ${openName===c.name?'open':''}><summary><b>${esc(c.name)}</b><span class="lead">${c.built?vkClock(c.start)+'〜'+vkClock(c.end):c.nblk+'段'}</span>${pill}</summary><div class="cb">${body}</div></details>`}
+function videoStep(p){const v=p.video;const cs=chapList(p);const openName=chapOpen(p,cs);const sts=cs.map(c=>chapState(p,c));const okN=sts.filter(s=>s.st==='ok').length;
+const other=(p.fixes||[]).map((f,k)=>({f,k})).filter(x=>!cs.some(c=>c.name===fixChap(p,x.f)));const oOpen=other.filter(x=>!x.f.done),oDone=other.filter(x=>x.f.done&&x.f.text);
+const allOpen=(p.fixes||[]).filter(f=>f.text&&!f.done);
+return `<details class="how" style="margin-bottom:8px"><summary><b>やり方</b>（1章ずつ見て、直して、OK にしていく）</summary><ol><li>章の「▶ この章を見る」で、その章だけを見る（章の終わりで止まります）</li><li>気になった所で「✎ いま見ている所を直す」を押す。動画が止まり、その場面の番号が入った行ができるので、一言書く（下の小さいボタンを押すと、よくある直しが入ります）</li><li>「この章の直しを頼む」で、Claude がその章だけ直して作り直す。直しがなくなったら「この章は OK」→ 次の章へ</li><li>これからの動画でも同じにしてほしい直しは「毎回そうする」に印（印がなくても、Claude が「毎回のことだ」と思ったら決まりに入れて知らせます）</li></ol></details>
+${v&&v.path?`<div class="vkwrap"><div id="vkSlot" data-path="${esc(v.path)}"></div><div class="row" style="margin:6px 0 0;align-items:center"><button class="b main" data-vkfix>✎ いま見ている所を直す</button><span class="lead" id="vkNow" style="font-size:12.5px"></span></div></div>
+<div class="lead" style="margin:0 0 4px">${v.ver||1}版・${secTxt(v.duration||0)}${v.at?'・'+md(v.at):''}　章の進み具合：OK ${okN}／${cs.length}</div>${v.reply?`<details><summary style="font-size:13.5px">Claude から（この版について）</summary><div class="chg">${esc(v.reply)}</div></details>`:''}`:'<div class="empty">仮の動画はまだありません。下の最初の章から作ってもらえます。</div>'}
+<div class="chapbar">${cs.map((c,i)=>`<button data-cjump="${esc(c.name)}" class="${sts[i].st==='new'?'':sts[i].st} ${openName===c.name?'cur':''}">${sts[i].st==='ok'?'✓ ':sts[i].st==='fix'?'✎ ':sts[i].st==='busy'?'… ':''}${esc(c.name)}${sts[i].st==='fix'?' '+sts[i].n:''}</button>`).join('')}</div>
+${cs.map(c=>chapCard(p,c,cs,openName)).join('')}
+${other.length?`<details class="item"><summary>章が分からない直し ${oOpen.length}件${oDone.length?'・済み '+oDone.length+'件':''}</summary>${oOpen.map(x=>fixRow(p,x.f,x.k)).join('')}${oDone.map(x=>doneRow(x.f)).join('')}</details>`:''}
+<details class="item"><summary>まとめて頼む・全部作り直す</summary>
+<p class="lead" style="margin:4px 0">章ごとではなく、全部の章をいっぺんに作ったり直したりしたいとき。</p>
+<div class="row">${syncOn()?`<button class="b" data-job="video_make">${v&&v.path?'今の構成・肉付け・図解で、全部を作り直してもらう':'全部の章をまとめて作ってもらう'}</button>`:''}</div>${jobLine(p,'video_make')}
+<div class="row"><button class="b" data-fadd>直しを一行足す（章を決めずに）</button>${syncOn()?`<button class="b" data-job="video_fix">全部の直しをまとめて頼む（${allOpen.length}件）</button>`:`<button class="b" data-copy="fix">直しをコピーして Claude を開く</button>`}</div>${jobLine(p,'video_fix')}</details>
+<div class="row"><button class="b main" data-vknext>完成（全部の章が OK）</button></div>`}
+/* 動画のプレーヤーは描き直しても作り直さない（見ている位置が飛ばないように） */
+const VK={el:null,path:'',stop:null,was:false};
+function vkMount(p){const slot=document.getElementById('vkSlot');if(!slot)return;const path=slot.dataset.path;
+ if(!VK.el||VK.path!==path){const v=document.createElement('video');v.controls=true;v.playsInline=true;v.preload='metadata';v.dataset.gh=path;v.playbackRate=+LS.get('vk_rate','1.5')||1.5;
+  v.addEventListener('timeupdate',()=>{if(VK.stop!=null&&v.currentTime>=VK.stop-0.05){v.pause();VK.stop=null}vkNow()});
+  v.addEventListener('ratechange',()=>LS.set('vk_rate',String(v.playbackRate)));v.addEventListener('loadedmetadata',()=>{v.playbackRate=+LS.get('vk_rate','1.5')||1.5});
+  VK.el=v;VK.path=path;VK.stop=null}
+ slot.appendChild(VK.el);if(VK.was)VK.el.play().catch(()=>{});vkNow()}
+function vkShot(p,t){return (((p.video||{}).shots)||[]).find(x=>t>=x.start&&t<x.end)}
+function vkNow(){const el=document.getElementById('vkNow');const p=projOf();if(!el||!p||!VK.el)return;const chapOf=r=>chapR(p,r);const t=VK.el.currentTime||0;const sh=vkShot(p,t);const b=blockAt(p,t);el.textContent=(b?chapOf(b.role)+'・':'')+(sh?'場面 '+sh.tag+'・':'')+vkClock(t)}
+function vkSeek(t,stop,play){if(!VK.el)return;VK.stop=stop==null?null:stop;try{VK.el.currentTime=Math.max(0,t+0.02)}catch(e){}if(play)VK.el.play().catch(()=>{})}
+function vkAddFix(p,sec,chap){p.fixes=p.fixes||[];p.fixes.push({sec:sec||'',text:'',chap:chap||''});if(chap)LS.set('vk_open_'+p.id,chap);touchP(p);renderMake();const ins=document.querySelectorAll('[data-ftxt="'+(p.fixes.length-1)+'"]');if(ins[0]){ins[0].scrollIntoView({block:'center'});ins[0].focus()}}
+document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.matches||!d.matches('details.chap'))return;const p=projOf();if(!p)return;const k='vk_open_'+p.id;
+ if(d.open){LS.set(k,d.dataset.chap);document.querySelectorAll('details.chap').forEach(x=>{if(x!==d&&x.open)x.open=false});document.querySelectorAll('.chapbar button').forEach(b=>b.classList.toggle('cur',b.dataset.cjump===d.dataset.chap))}
+ else if(LS.get(k,'')===d.dataset.chap)LS.set(k,'-')},true);
 function omakaseHTML(p){if(!syncOn())return'';let sel={};try{sel=JSON.parse(LS.get('om_sel','{}'))||{}}catch(e){}
 const busy=(D.jobs||[]).some(j=>!j.deleted&&j.projId===p.id&&j.type==='rebuild'&&(j.status==='待ち'||j.status==='作業中'));
 const ch=changesSince(p);const mode=LS.get('om_mode','選んだ部分');
@@ -836,7 +907,18 @@ document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-gk]'
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;if(blkClick(e,p))return;
 if(el.closest('.sh')){el.closest('.step').classList.toggle('open');return}
+if(el.matches('[data-vknext]')){const cs=chapList(p);if(cs.some(c=>chapState(p,c).st!=='ok')&&!confirm('まだ OK になっていない章があります。それでも完成にしますか？'))return;p.step=(p.step||0)+1;touchP(p);renderMake();window.scrollTo(0,0);return}
 if(el.matches('[data-next]')){p.step=(p.step||0)+1;touchP(p);renderMake();window.scrollTo(0,0);return}
+if(el.matches('[data-vkfix]')){if(!VK.el)return;VK.el.pause();VK.was=false;const t=VK.el.currentTime||0;const sh=vkShot(p,t);const b=blockAt(p,t);vkAddFix(p,sh?sh.tag:vkClock(t),b?chapR(p,b.role):'');return}
+if(el.matches('[data-vkplay]')){const [a,b]=el.dataset.vkplay.split('|').map(Number);vkSeek(a,b,true);return}
+if(el.matches('[data-vkseek]')){vkSeek(+el.dataset.vkseek,null,true);return}
+if(el.matches('[data-sfix]')){const sh=shotOf(p,el.dataset.sfix);if(VK.el)VK.el.pause();VK.was=false;vkAddFix(p,el.dataset.sfix,sh?chapR(p,sh.role):'');return}
+if(el.matches('[data-cadd]')){vkAddFix(p,'',el.dataset.cadd);return}
+if(el.matches('[data-fchip]')){const f=p.fixes[+el.dataset.fchip];if(!f)return;const q=el.textContent;f.text=f.text?(f.text.includes(q)?f.text:f.text+'。'+q):q;touchP(p);const i=document.querySelector('[data-ftxt="'+el.dataset.fchip+'"]');if(i){i.value=f.text;i.focus()}return}
+if(el.matches('[data-cjump]')){const n=el.dataset.cjump;LS.set('vk_open_'+p.id,n);const c=chapList(p).find(x=>x.name===n);renderMake();const d=[...document.querySelectorAll('details.chap')].find(x=>x.dataset.chap===n);if(d)d.scrollIntoView({block:'nearest'});if(c&&c.built)vkSeek(c.start,c.end,false);return}
+if(el.matches('[data-cok]')||el.matches('[data-cunok]')){const n=el.dataset.cok||el.dataset.cunok;p.chapOk=p.chapOk||{};if(el.matches('[data-cok]')){const c0=chapList(p).find(c=>c.name===n);const st0=c0&&chapState(p,c0);if(st0&&st0.n){alert('この章には、まだ頼んでいない直しが '+st0.n+'件あります。先に「この章の直しを頼む」を押すか、要らない直しを × で消してください。');return}for(let k=(p.fixes||[]).length-1;k>=0;k--){const f=p.fixes[k];if(!f.done&&!f.text&&fixChap(p,f)===n)p.fixes.splice(k,1)}p.chapOk[n]={ver:(p.video||{}).ver||1,at:now()};const cs=chapList(p);const nx=cs.slice(cs.findIndex(c=>c.name===n)+1).find(c=>chapState(p,c).st!=='ok');LS.set('vk_open_'+p.id,nx?nx.name:'-')}else delete p.chapOk[n];touchP(p);renderMake();return}
+if(el.matches('[data-cfix]')){const n=el.dataset.cfix;const c=chapList(p).find(x=>x.name===n);const op=chapState(p,c).open.map(x=>x.f).filter(f=>f.text);if(!op.length){alert('直したいことを書いてください');return}queueJob({type:'video_fix',projId:p.id,chapter:n,notes:'',fixes:op.map(f=>({sec:f.sec,text:f.text,always:!!f.always}))});renderMake();return}
+if(el.matches('[data-cmake]')){queueJob({type:'video_make',projId:p.id,chapter:el.dataset.cmake,notes:''});renderMake();return}
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
 if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
 const extra={};if(type==='gather'){const g=gSel();if(!GK.some(([k])=>g[k].on)){alert('集めたいものに印を付けてください');return}extra.counts={};for(const [k] of GK)extra.counts[k]=g[k].on?g[k].n:0}

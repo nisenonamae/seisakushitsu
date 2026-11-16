@@ -23,7 +23,8 @@ ap.add_argument('--lead',type=float,default=0.0,help='動画のいちばん頭�
 ap.add_argument('--bgm',default='',help='BGM の指定。proj＝音の調整室で決めたもの（project.sound.bgm）。または JSON のファイル：[{"from":段の番号(1から) か "at":秒,"file":音のファイル,"vol":声に対する大きさ(既定0.12),"off":曲のどこから(秒),"fadeIn","fadeOut","none":true＝ここから音楽なし}] か {"duck":間で上げる倍率,"cues":[…]}')
 ap.add_argument('--lufs',type=float,default=-14.0,help='仕上げの大きさ（LUFS）。--bgm のとき')
 ap.add_argument('--base-out',default='',help='音の調整室用：BGM なし（声と効果音だけ）の軽い動画もここに書き出し、同じ名前の .json に段の時刻と「声の大きさの曲線」を置く')
-ap.add_argument('--subfont',type=int,default=4,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
+ap.add_argument('--subfont',type=int,default=4,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）')
+ap.add_argument('--chapters',default='',help='章ごとに作るとき：入れる章の名前をカンマ区切りで（例：序,第1章）。段の role の「：」より前が章の名前。空なら全部');a=ap.parse_args()
 K=a.res/720;OW,OH=int(round(1280*K))//2*2,int(round(720*K))//2*2;CRF='20' if K<=1 else '17'   # OW,OH＝書き出しの大きさ。絵の座標（W,H）は 1280×720 のまま
 os.environ['SS_SCALE']=str(K)
 D=json.load(open(a.data,encoding='utf-8'));DATA=D;P=[p for p in D['projects'] if p['id']==a.proj][0]   # D はあとで段の長さに使い回すので、データは DATA で持つ
@@ -35,6 +36,18 @@ if fb:
     seq=[{'id':b['id'],'oid':b['oid'],'role':b.get('role',''),'text':b.get('narr',''),'screen':b.get('screen',''),'visual':b.get('visual') or ob[oi[b['oid']]].get('visual'),'shots':b.get('shots')} for b in live]
 else:
     seq=[{'id':b['id'],'oid':b['id'],'role':b.get('role',''),'text':b.get('text',''),'screen':b.get('show',''),'visual':b.get('visual')} for b in ob if b.get('mark')!='削る']
+def chap_names(blocks):
+    """段の並びから、段ごとの章の名前を出す（アプリの chapMap と同じ決まり：「：」より前。ない段は、章らしい名前ならそれ、なければ直前の章）"""
+    import re as _re
+    known={b['role'].split('：')[0] for b in blocks if '：' in b.get('role','')};out=[];last=''
+    for b in blocks:
+        r=b.get('role','');c=r.split('：')[0] if '：' in r else (r if (r in known or _re.match(r'^(序|序章|結び|終章|第.{1,3}章)$',r)) else (last or (sorted(known)[0] if known else '全体')))
+        last=c;out.append(c)
+    return out
+if a.chapters:
+    _want=[x.strip() for x in a.chapters.split(',') if x.strip()];_cn=chap_names(seq)
+    seq=[b for b,c in zip(seq,_cn) if c in _want]
+    if not seq: raise SystemExit(f'--chapters {a.chapters} に当たる段がない（章の名前：{sorted(set(_cn))}）')
 from voicevox_core.blocking import Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile
 ort=Onnxruntime.load_once(filename=f'{V}/ort/voicevox_onnxruntime-linux-x64-1.17.3/lib/libvoicevox_onnxruntime.so.1.17.3')
 syn=Synthesizer(ort,OpenJtalk(f'{V}/dict/open_jtalk_dic_utf_8-1.11'))
