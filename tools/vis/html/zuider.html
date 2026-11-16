@@ -1,0 +1,156 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="geo_land.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・第3章「海を閉じる」。昔の地図（内海がまだ海）に、締め切りの堤防と4つの干拓地を重ねていく
+ 干拓地の形：2つ目は州の形から、3つ目・4つ目は島の形を1本の線で分けたもの、1つ目は手で引いたおおよその形
+ mode：storm（1916年の高潮。ats：[0] 堤防が切れる（岸が赤く光る） [1] 水が陸へ広がる [2] 計画の紙が出る [3] お金の山・紙がくすむ [4] 紙が光り、入口に点線）
+      ／lely（案の図。ats：[0] 入口に堤防① [1] 内側が湖の色に [2] 囲いが4つ② [3] 1つ目の水を抜く③ [4] 残りも順番に）
+      ／dike（入口へ寄る。ats：[0]「32km」 [1] 両側から堤防がのびる）
+      ／gap（上から見た最後のすき間。ats：[0] すき間がさらにせばまる [1] 閉じて「1932年」）
+      ／fresh（ats：[0] 川の真水が広がる [1] 全部が湖の色に）
+      ／four（ats：[0] 1つ目「1930年」 [1] 2つ目「1942年」 [2] 3つ目・4つ目 [3]「約1,000km²」 [4]「1968年」 [5] 全体が光る）
+      ／answer（横から。ats：[0] 堤防で閉じる [1] 水を抜く [2] むき出しの底へ寄る） */
+window.DEF={mode:'storm'};
+const G=window.GEO,LK=G.lake[0],ISL=G.lake[1],FL=G.prov.Flevoland[0];
+const WIER=[[5.065,52.923],[5.115,52.861],[5.120,52.839],[5.123,52.775],[5.075,52.752],[4.985,52.742],[4.915,52.770],[4.895,52.825],[4.925,52.872],[4.985,52.892],[5.035,52.905]];
+const NOP=[...LK.slice(124,140),...FL.slice(0,26).reverse(),FL[78]];
+const EAST=[...ISL.slice(0,15),...ISL.slice(36,49)],SOUTH=ISL.slice(14,37);
+const POL=[WIER,NOP,EAST,SOUTH],INNER=[LK,WIER,NOP];
+const PUMP=[[5.135,52.85],[5.585,52.70],[5.50,52.575],[5.215,52.44]];
+const DK=LK.slice(85,90);   // 締め切りの堤防（湖の形の北のふちに沿う）
+function dkPts(v){const p=pts(v,DK);const L=[0];for(let i=1;i<p.length;i++)L.push(L[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));return{p,L,tot:L[L.length-1]}}
+function dkAt(d,u){const s=clamp(u)*d.tot;let i=1;while(i<d.L.length-1&&d.L[i]<s)i++;const w=(s-d.L[i-1])/Math.max(1e-6,d.L[i]-d.L[i-1]);return[lerp(d.p[i-1][0],d.p[i][0],w),lerp(d.p[i-1][1],d.p[i][1],w)]}
+function dkPath(d,u0,u1){g.beginPath();const a=dkAt(d,u0);g.moveTo(a[0],a[1]);for(let i=0;i<d.L.length;i++){const u=d.L[i]/d.tot;if(u>u0&&u<u1)g.lineTo(d.p[i][0],d.p[i][1])}const b=dkAt(d,u1);g.lineTo(b[0],b[1])}
+const VZ=()=>view(5.32,52.66,720);
+const innerCol=fr=>`rgb(${[66,102,127].map((a,i)=>Math.round(lerp(a,[111,169,201][i],fr))).join(',')})`;
+function pts(v,ring){return ring.map(p=>pj(v,p[0],p[1]))}
+function bbox(v,ring){const p=pts(v,ring);const xs=p.map(q=>q[0]),ys=p.map(q=>q[1]);return[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]}
+function strokePart(v,ring,k,col,lw,dash){if(k<=0)return;const p=pts(v,ring);p.push(p[0]);let tot=0;const L=[];for(let i=1;i<p.length;i++){const d=Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]);L.push(d);tot+=d}
+  let rem=tot*clamp(k);g.strokeStyle=col;g.lineWidth=lw;g.lineJoin='round';if(dash)g.setLineDash(dash);g.beginPath();g.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length&&rem>0;i++){const d=L[i-1];if(d<=rem){g.lineTo(p[i][0],p[i][1]);rem-=d}else{const u=rem/d;g.lineTo(lerp(p[i-1][0],p[i][0],u),lerp(p[i-1][1],p[i][1],u));rem=0}}g.stroke();g.setLineDash([])}
+// 下地：昔の地図。o.flood＝陸の上に描く水（海でふちを切る）／o.storm 0〜1／o.fresh 0〜1（内側が湖の色に）／o.freshDraw＝広がり方を自分で描く／o.calm 0〜1（波をおだやかに）
+function zbase(v,t,o={}){seaBg(t);g.fillStyle=NB;poly(v,G.nb);g.fill();
+  for(const[n,rs] of Object.entries(G.prov)){if(n==='Flevoland')continue;g.fillStyle=noisePat('land',LAND,['#d3c79a','#c9cf9c','#e9dcba','#bfc893']);poly(v,rs);g.fill();g.strokeStyle='rgba(120,105,70,.14)';g.lineWidth=1;g.stroke()}
+  if(o.flood)o.flood();
+  for(const r of INNER){g.fillStyle=SEA;poly(v,[r]);g.fill()}
+  const dd=dkPts(v),da=dkAt(dd,0),db=dkAt(dd,1);{const sx=-0.012*v.sc*v.k,sy=-0.017*v.sc;g.fillStyle=SEA;dkPath(dd,0.03,0.97);const q=[];for(let i=dd.L.length-1;i>=0;i--){const u=clamp(dd.L[i]/dd.tot,0.03,0.97);q.push(dkAt(dd,u))}for(const[x,y] of q)g.lineTo(x+sx,y+sy);g.closePath();g.fill();g.strokeStyle=SEA;g.lineWidth=2;g.stroke()}   // 地図のデータに入っている今の堤防（細い陸）を海で消す
+  g.save();poly(v,INNER);g.clip();const st=o.storm||0,calm=o.calm||0;
+  if(o.fresh){g.fillStyle=`rgba(111,169,201,${o.fresh})`;g.fillRect(0,0,W,H)}if(o.freshDraw)o.freshDraw();
+  if(st>0){const dl=Math.hypot(db[0]-da[0],db[1]-da[1]),nx=-(db[1]-da[1])/dl,ny=(db[0]-da[0])/dl,mx=(da[0]+db[0])/2,my=(da[1]+db[1])/2,gl=150*v.sc/720;const gr=g.createLinearGradient(mx,my,mx+nx*gl,my+ny*gl);gr.addColorStop(0,'rgba(34,60,98,0)');gr.addColorStop(1,`rgba(34,60,98,${0.55*st})`);g.fillStyle=gr;g.fillRect(0,0,W,H)}   // 入口はまだ海とつながっているので、色の段を作らない
+  g.strokeStyle=`rgba(255,255,255,${(0.17+0.42*st)*(1-calm*0.5)})`;g.lineWidth=2+st*2;const r=R(14),zs=Math.sqrt(v.sc/720);for(let i=0;i<110;i++){const[x,y]=pj(v,4.85+r()*1.15,52.2+r()*0.95);const w=(14+r()*24)*zs,o2=Math.sin(t*(1.0+st*2.6)+i)*(5+st*9)*(1-calm*0.6);g.beginPath();g.moveTo(x+o2,y);g.quadraticCurveTo(x+o2+w/2,y-(4+st*5)*zs,x+o2+w,y);g.stroke()}
+  g.restore()}
+// 干拓地 i：ring＝囲いの線 0〜1、dry＝水が引く 0〜1（水がふちから中心へ引いていく）
+function polder(v,t,i,ring,dry,o={}){const rg=POL[i];
+  if(dry>0){const p=pts(v,rg);const cx=p.reduce((a,q)=>a+q[0],0)/p.length,cy=p.reduce((a,q)=>a+q[1],0)/p.length;g.save();poly(v,[rg]);g.clip();g.fillStyle=noisePat('newland','#d7de9f',['#c4d28a','#e4e3ae','#b8cc84','#dad69a']);g.fillRect(0,0,W,H);
+    if(o.hatch){g.strokeStyle='rgba(90,74,52,.35)';g.lineWidth=2;const b=bbox(v,rg);for(let x=b[0]-(b[3]-b[1]);x<b[2];x+=14){g.beginPath();g.moveTo(x,b[3]);g.lineTo(x+(b[3]-b[1]),b[1]);g.stroke()}}
+    const s=1-dry;if(s>0.01){g.fillStyle=o.col||innerCol(1);g.beginPath();p.forEach((q,j)=>{const x=cx+(q[0]-cx)*s,y=cy+(q[1]-cy)*s;j?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.fill();g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=2;g.stroke()}
+    if(o.hi>0){g.fillStyle=`rgba(240,182,62,${0.5*o.hi})`;g.fillRect(0,0,W,H)}g.restore()}
+  if(ring>0)strokePart(v,rg,ring,o.ink||'#4f4636',o.lw||4,o.dash);
+  if(o.hi>0){g.strokeStyle=`rgba(255,211,106,${o.hi})`;g.lineWidth=6;g.lineJoin='round';poly(v,[rg]);g.stroke()}}
+function dikeLine(v,dk,one){if(dk<=0)return;const d=dkPts(v);const lw=7*Math.pow(v.sc/720,0.75);
+  const seg=(u0,u1)=>{g.lineCap='round';g.lineJoin='round';g.strokeStyle='#2f343b';g.lineWidth=lw+4;dkPath(d,u0,u1);g.stroke();g.strokeStyle='#d8d0ba';g.lineWidth=lw*0.5;dkPath(d,u0,u1);g.stroke();g.lineCap='butt'};
+  if(one)seg(0,dk);else{seg(0,dk/2);seg(1-dk/2,1)}return u=>dkAt(d,u)}
+function dashMouth(v,k,alpha=1){if(k<=0||alpha<=0)return;const d=dkPts(v);g.setLineDash([14,10]);g.strokeStyle=`rgba(255,211,106,${alpha})`;g.lineWidth=5*Math.pow(v.sc/720,0.6);dkPath(d,0,clamp(k));g.stroke();g.setLineDash([])}
+function badge(x,y,n,k){if(k<=0)return;g.save();g.translate(x,y);g.scale(back(clamp(k)),back(clamp(k)));g.fillStyle='#1c2530';g.beginPath();g.arc(0,0,28,0,7);g.fill();g.strokeStyle='#ffd36a';g.lineWidth=4;g.stroke();g.fillStyle='#fff';g.font=`900 36px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText(String(n),0,2);g.restore()}
+function planPaper(x,y,s,rot,dim=0,glow=0){g.save();g.translate(x,y);g.rotate(rot);g.scale(s,s);g.fillStyle='rgba(0,0,0,.28)';g.fillRect(-124,-84,260,180);g.fillStyle='#f3ead2';g.fillRect(-130,-90,260,180);
+  g.fillStyle='rgba(90,140,180,.35)';g.beginPath();g.moveTo(-100,70);g.bezierCurveTo(-90,10,-60,-10,-66,-60);g.lineTo(40,-70);g.bezierCurveTo(60,-20,96,20,100,74);g.closePath();g.fill();
+  g.strokeStyle='#6b5a44';g.lineWidth=3;g.beginPath();g.moveTo(-100,70);g.bezierCurveTo(-90,10,-60,-10,-66,-60);g.moveTo(100,74);g.bezierCurveTo(96,20,60,-20,40,-70);g.stroke();
+  g.strokeStyle='#b23a2e';g.lineWidth=6;g.beginPath();g.moveTo(-64,-48);g.lineTo(44,-58);g.stroke();
+  g.setLineDash([7,5]);g.strokeStyle='#6b5a44';g.lineWidth=2.5;for(const[a,b,c,d] of [[-62,-32,36,30],[22,-36,38,34],[-6,8,52,32],[-58,22,40,30]])g.strokeRect(a,b,c,d);g.setLineDash([]);
+  if(dim>0){g.fillStyle=`rgba(96,96,102,${0.55*dim})`;g.fillRect(-130,-90,260,180)}
+  if(glow>0){g.strokeStyle=`rgba(255,211,106,${glow})`;g.lineWidth=9;g.strokeRect(-130,-90,260,180)}g.restore()}
+function boatTop(x,y,ang,s=1){g.save();g.translate(x,y);g.rotate(ang);g.scale(s,s);g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=2;g.beginPath();g.moveTo(-16,-5);g.lineTo(-42,-13);g.moveTo(-16,5);g.lineTo(-42,13);g.stroke();g.fillStyle='#5a4634';g.beginPath();g.moveTo(20,0);g.quadraticCurveTo(8,-10,-15,-9);g.lineTo(-15,9);g.quadraticCurveTo(8,10,20,0);g.fill();g.fillStyle='#b9a47a';g.fillRect(-10,-5,17,10);g.restore()}
+
+function storm(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.3),T3=T(3,DUR*0.46),T4=T(4,DUR*0.62),T5=T(5,DUR*0.82);const v=VZ();
+  const st=ease(clamp((t-0.2)/1.0))*(1-0.8*ease(clamp((t-T3+0.3)/1.2)));const fl=ease(clamp((t-T2)/2.4)),f0=clamp((t-T1)/0.4);
+  const BR=[[5.06,52.46,-0.075,0,15],[5.33,52.292,0,-0.04,11],[4.90,52.80,-0.06,0,10]];
+  zbase(v,t,{storm:st,flood:()=>{if(f0<=0)return;g.fillStyle='rgba(72,120,156,.92)';BR.forEach(([lo,la,dx,dy,km],b)=>{const k=0.14*f0+0.86*fl;const[x,y]=pj(v,lo+dx*k,la+dy*k);const rr=km*v.sc/111*k;const r=R(40+b);for(let j=0;j<6;j++){g.beginPath();g.ellipse(x+(r()-0.5)*rr*1.0,y+(r()-0.5)*rr*1.0,rr*(0.5+r()*0.4),rr*(0.38+r()*0.36),r()*3,0,7);g.fill()}})}});
+  // 切れた所（赤く点滅）
+  const bk=f0*(1-clamp((t-T3)/0.6));if(bk>0)for(const[lo,la] of BR){const[x,y]=pj(v,lo,la);const p=0.5+0.5*Math.sin((t-T1)*9);g.fillStyle=`rgba(226,58,48,${(0.55+0.45*p)*bk})`;g.beginPath();g.arc(x,y,9,0,7);g.fill();g.strokeStyle=`rgba(226,58,48,${(1-p)*bk})`;g.lineWidth=4;g.beginPath();g.arc(x,y,12+16*p,0,7);g.stroke()}
+  if(st>0){g.fillStyle=`rgba(18,26,44,${0.3*st})`;g.fillRect(0,0,W,H);rainS(t,st*0.9)}
+  numLabel(230,104,'1916年',clamp((t-0.3)/0.35),84);
+  // 前からあった計画（紙）と、かかるお金
+  const pk=clamp((t-T3)/0.5);if(pk>0){const dim=ease(clamp((t-T4-0.2)/0.6))*(1-ease(clamp((t-T5)/0.4)));const gl=clamp((t-T5)/0.3);const hop=gl>0?Math.sin(clamp((t-T5)/0.5)*Math.PI)*22:0;
+    planPaper(lerp(-200,250,eout(pk)),548-hop,1+0.08*ease(gl),-0.08,dim,gl*(0.7+0.3*Math.sin(t*6)));
+    const ck=1-ease(clamp((t-T5)/0.5));if(t>=T4&&ck>0){const n=Math.min(30,Math.floor((t-T4)/0.07));for(let i=0;i<n;i++){const c=i%3,rw=Math.floor(i/3);coinS(430+c*34,636-rw*13,1.25*ck)}}}
+  dashMouth(v,clamp((t-T5-0.15)/0.6),0.6+0.4*Math.sin(t*6));
+  if(t>=0.2)sfxOnce('s',0.2,'whoosh');if(t>=T1)sfxOnce('b',T1,'thump');if(t>=T2)sfxOnce('f',T2,'whoosh');if(t>=T3)sfxOnce('p',T3,'pop');if(t>=T4)sfxOnce('c',T4,'tick');if(t>=T5)sfxOnce('g',T5,'pop')}
+
+function lely(t){const T1=T(1,DUR*0.2),T2=T(2,DUR*0.32),T3=T(3,DUR*0.46),T4=T(4,DUR*0.6),T5=T(5,DUR*0.72);const v=VZ();const fr=ease(clamp((t-T2)/1.3))*0.9;
+  zbase(v,t,{fresh:fr,calm:fr*0.6});g.fillStyle='rgba(238,224,190,.2)';g.fillRect(0,0,W,H);
+  dashMouth(v,1,(0.6+0.4*Math.sin(t*6))*(1-clamp((t-T1)/0.6)));
+  POL.forEach((rg,i)=>{const rk=clamp((t-T3-i*0.42)/0.7);const d0=i===0?T4+0.3:T5+0.2+(i-1)*1.3;const dry=ease(clamp((t-d0)/1.4));polder(v,t,i,rk,dry,{dash:[9,6],col:innerCol(fr),hatch:1,ink:'#5a4a34'});
+    const pk=clamp((t-d0+0.3)/0.35);if(pk>0){const[x,y]=pj(v,PUMP[i][0],PUMP[i][1]);g.save();g.translate(x,y);g.scale(back(pk),back(pk));stationS(0,0,0.24,t,dry<1?1:0.25);g.restore();if(t>=d0)sfxOnce('d'+i,d0,'puff')}});
+  dikeLine(v,ease(clamp((t-T1)/0.9)),1);
+  {const m=dkAt(dkPts(v),0.5);badge(m[0]-58,m[1]-58,1,clamp((t-T1-0.2)/0.3))}
+  {const[x,y]=pj(v,6.02,52.46);badge(x,y,2,clamp((t-T3-0.2)/0.3))}
+  {const[x,y]=pj(v,4.80,52.79);badge(x,y,3,clamp((t-T4)/0.3))}
+  // 前の場面の紙が広がって、この図になる
+  const ik=ease(clamp((t-0.25)/1.1));if(ik<1){g.save();g.globalAlpha=1-ik;planPaper(lerp(250,640,ik),lerp(548,360,ik),lerp(1.08,5.2,ik),lerp(-0.08,0,ik));g.restore()}
+  if(t>=0.25)sfxOnce('i',0.25,'whoosh');if(t>=T1)sfxOnce('a',T1,'thump');if(t>=T2)sfxOnce('b',T2,'whoosh');if(t>=T3)sfxOnce('c',T3,'tick')}
+
+function dike(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.42);const u=ease(clamp((t-0.15)/1.3));const v=view(lerp(5.32,5.21,u),lerp(52.70,53.0,u),Math.exp(lerp(Math.log(720),Math.log(2500),u)));
+  zbase(v,t,{});dashMouth(v,1,0.85);
+  const dk=ease(clamp((t-T2)/Math.max(3.5,DUR-T2+0.6)))*0.8;const L=dikeLine(v,dk);
+  const d0=dkPts(v),a=dkAt(d0,0),b=dkAt(d0,1),ang=Math.atan2(b[1]-a[1],b[0]-a[0]);
+  if(t>=T2&&L){for(let s=0;s<2;s++)for(let j=0;j<2;j++){const q=((t-T2)*0.3+j*0.5)%1;const tip=s?L(1-dk/2):L(dk/2),st0=s?b:a;const nx=-Math.sin(ang),ny=Math.cos(ang);const go=q<0.5,w=go?q*2:(1-q)*2;const off=go?30:54;boatTop(lerp(st0[0],tip[0],ease(w))+nx*off,lerp(st0[1],tip[1],ease(w))+ny*off,(s?Math.PI:0)+ang+(go?0:Math.PI),1.5)}
+    sfxOnce('t1',T2+0.2,'thump');sfxOnce('t2',T2+1.9,'puff');sfxOnce('t3',T2+3.5,'puff')}
+  numLabel((a[0]+b[0])/2-150,(a[1]+b[1])/2-120,'32km',clamp((t-T1)/0.35),88);if(t>=T1)sfxOnce('n',T1,'pop');if(u>0&&u<1)sfxOnce('z',0.15,'whoosh')}
+
+function gap(t){const T1=T(1,DUR*0.5),T2=T(2,DUR*0.72);const CX=640,CY=372,TH=104;const TC=Math.max(T1+0.8,T2-0.25);
+  const gp=tt=>tt<T1?lerp(540,150,ease(clamp(tt/Math.max(2,T1-0.2)))):lerp(150,0,ease(clamp((tt-T1)/(TC-T1))));const gw=gp(t);
+  seaBg(t);
+  // 潮の流れ（すき間がせまいほど速い）
+  const spAt=tt=>Math.min(5,540/Math.max(70,gp(tt)));let ph=0;for(let tt=0;tt<t;tt+=0.04)ph+=0.04*spAt(tt)*0.2;const spd=spAt(t),fa=clamp(gw/46);
+  if(fa>0){const r=R(5);const FW=gw+520;const xf=(x0,y)=>CX+(x0-CX)*lerp(Math.max(0.02,gw*0.92/FW),1,ease(clamp(Math.abs(y-CY)/300)));for(let i=0;i<80;i++){const x0=CX+(r()-0.5)*FW,q=(ph+r())%1,y=lerp(-90,H+90,q);const near=1-clamp(Math.abs(y-CY)/400);const len=14+spd*20*near;g.strokeStyle=`rgba(200,230,246,${(0.08+0.15*spd*near)*fa})`;g.lineWidth=2+near*1.5;g.lineCap='round';g.beginPath();g.moveTo(xf(x0,y-len/2),y-len/2);g.lineTo(xf(x0,y+len/2),y+len/2);g.stroke();g.lineCap='butt'}
+    const fo=clamp((spd-1.6)/2.2)*fa;if(fo>0){const r2=R(9);for(let i=0;i<46;i++){const q=(ph*2.2+r2())%1;const x=CX+(r2()-0.5)*(gw+70+q*260),y=CY+TH/2-10+q*250;g.fillStyle=`rgba(255,255,255,${0.75*(1-q)*fo})`;g.beginPath();g.arc(x,y,3+r2()*5,0,7);g.fill()}}}
+  // 堤防（左右からのびる）
+  const body=(x0,x1,tipR)=>{g.fillStyle='#5f594f';g.beginPath();g.roundRect(Math.min(x0,x1),CY-TH/2,Math.abs(x1-x0),TH,tipR);g.fill();g.fillStyle='#8a8271';g.beginPath();g.roundRect(Math.min(x0,x1)+(x0<x1?0:10),CY-TH/2+12,Math.abs(x1-x0)-10,TH-24,tipR);g.fill();g.fillStyle='#d8d0ba';g.fillRect(Math.min(x0,x1)+(x0<x1?0:26),CY-13,Math.abs(x1-x0)-26,26);
+    const r=R(Math.round(x0)+77);g.fillStyle='rgba(40,36,30,.35)';for(let i=0;i<70;i++){const x=Math.min(x0,x1)+r()*Math.abs(x1-x0),y=CY+(r()<0.5?-1:1)*(TH/2-4-r()*10);g.beginPath();g.arc(x,y,2+r()*3,0,7);g.fill()}};
+  if(gw<=1)body(-40,W+40,0);else{body(-40,CX-gw/2,[0,24,24,0]);body(W+40,CX+gw/2,[24,0,0,24])}
+  // 土を運ぶ船（閉じたあとは、ゆっくり離れていく）
+  const dr=Math.max(0,t-TC);boatTop(CX-gw/2-70-dr*10,CY+TH/2+44+dr*16,-0.25,2.0);boatTop(CX+gw/2+80+dr*12,CY+TH/2+50+dr*14,Math.PI+0.3,2.0);
+  // 閉じた瞬間
+  const ck=clamp((t-TC)/0.9);if(t>=TC&&ck<1){g.strokeStyle=`rgba(255,255,255,${0.8*(1-ck)})`;g.lineWidth=6;g.beginPath();g.arc(CX,CY,30+ck*150,0,7);g.stroke()}
+  numLabel(CX,150,'1932年',clamp((t-Math.max(T2,TC))/0.35),96);
+  if(t>=0.2)sfxOnce('w',0.2,'whoosh');if(t>=T1)sfxOnce('w2',T1,'whoosh');if(t>=TC)sfxOnce('c',TC,'thump');if(t>=Math.max(T2,TC))sfxOnce('y',Math.max(T2,TC),'pop')}
+
+const RIV=[[[6.17,52.10],[6.19,52.25],[6.10,52.38],[6.07,52.46],[5.97,52.55],[5.87,52.595]],[[5.41,52.12],[5.375,52.21],[5.36,52.275]]];
+function fresh(t){const T1=T(1,DUR*0.3),T2=T(2,DUR*0.7);const v=VZ();const fr=ease(clamp((t-T1)/Math.max(3,T2-T1+0.6)));const M1=pj(v,5.86,52.60),M2=pj(v,5.36,52.275);
+  zbase(v,t,{calm:fr*0.7,fresh:fr>=1?1:0,freshDraw:()=>{if(fr<=0||fr>=1)return;for(const[m,rmax] of [[M1,820],[M2,300]]){const rr=rmax*fr;const gr=g.createRadialGradient(m[0],m[1],rr*0.55,m[0],m[1],rr);gr.addColorStop(0,'rgba(111,169,201,1)');gr.addColorStop(1,'rgba(111,169,201,0)');g.fillStyle=gr;g.beginPath();g.arc(m[0],m[1],rr,0,7);g.fill()}}});
+  // 川（真水）
+  const rk=clamp((t-T1+0.5)/0.6);RIV.forEach((rv,ri)=>{const p=pts(v,rv);g.lineCap='round';g.lineJoin='round';g.strokeStyle='#6fa9c9';g.lineWidth=ri?5:7;g.beginPath();p.forEach((q,j)=>j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.stroke();g.lineCap='butt';
+    if(rk>0)for(let i=0;i<7;i++){const q=((t*0.35+i/7)%1)*(p.length-1);const j=Math.min(p.length-2,Math.floor(q)),u=q-j;g.fillStyle=`rgba(225,244,252,${0.9*rk})`;g.beginPath();g.arc(lerp(p[j][0],p[j+1][0],u),lerp(p[j][1],p[j+1][1],u),ri?2.5:3.5,0,7);g.fill()}});
+  dikeLine(v,1);
+  const gk=clamp((t-0.3)/0.5)*(1-clamp((t-1.5)/0.5));if(gk>0){g.strokeStyle=`rgba(255,211,106,${0.9*gk})`;g.lineWidth=14;g.lineCap='round';dkPath(dkPts(v),0,1);g.stroke();g.lineCap='butt';dikeLine(v,1)}
+  if(t>=T1)sfxOnce('f',T1,'whoosh');if(t>=T2)sfxOnce('p',T2,'pop')}
+
+function four(t){const T1=T(1,DUR*0.14),T2=T(2,DUR*0.28),T3=T(3,DUR*0.42),T4=T(4,DUR*0.6),T5=T(5,DUR*0.74),T6=T(6,DUR*0.88);const v=VZ();zbase(v,t,{fresh:1,calm:0.7});
+  const t0=[T1,T2,T3,Math.min(T3+1.4,T4-1.3)];
+  POL.forEach((rg,i)=>{const rk=clamp((t-t0[i])/0.6),dry=ease(clamp((t-t0[i]-0.45)/1.2));const hi=(i>=2?clamp((t-T4)/0.4)*(1-clamp((t-T5+0.2)/0.5)):0)+clamp((t-T6)/0.4);polder(v,t,i,rk,dry,{hi:clamp(hi)*(0.55+0.3*Math.sin(t*5)),col:innerCol(1)});if(t>=t0[i])sfxOnce('r'+i,t0[i],'pop')});
+  dikeLine(v,1);
+  const out=1-clamp((t-T4+0.4)/0.4);
+  {const[x,y]=pj(v,4.50,52.86);numLabel(x,y,'1930年',clamp((t-T1-0.2)/0.35)*out,70)}
+  {const[x,y]=pj(v,6.44,52.78);numLabel(x,y,'1942年',clamp((t-T2-0.2)/0.35)*out,70)}
+  {const[x,y]=pj(v,6.33,52.40);numLabel(x,y,'約1,000km²',clamp((t-T4)/0.35)*(1-clamp((t-T5+0.3)/0.4)),62)}
+  {const[x,y]=pj(v,6.38,52.40);numLabel(x,y,'1968年',clamp((t-T5)/0.35),84)}
+  if(t>=T4)sfxOnce('k',T4,'pop');if(t>=T5)sfxOnce('y',T5,'pop')}
+
+function answer(t){const T1=T(1,DUR*0.36),T2=T(2,DUR*0.47),T3=T(3,DUR*0.75);const SL=300,BED=484,DX=430;
+  const zo=ease(clamp((t-T3)/Math.max(1.5,DUR-T3)));const sc=lerp(1,1.22,zo);g.save();g.translate(900,BED);g.scale(sc,sc);g.translate(-900,-BED);
+  skyG();cloudS(200+t*5,90,1.4);cloudS(880+t*4,120,1.5);
+  const dk=ease(clamp((t-T1)/0.6)),dr=ease(clamp((t-T2)/1.6));
+  waterBody(-400,DX,SL,BED+6,t);if(dr<1)waterBody(DX,W+400,lerp(SL,BED+2,dr),BED+6,t,'#3f7ea6','#1f4f73',1-dr);
+  soil(-400,W+400,x=>BED,'#a5967a','#7d6f55',H+300);
+  // むき出しの底（ぬれた泥・水たまり）
+  if(dr>0.5){const a=clamp((dr-0.5)*2);g.fillStyle=`rgba(70,62,50,${0.3*a})`;g.fillRect(DX+60,BED,W+400,26);const r=R(21);for(let i=0;i<9;i++){const x=DX+140+r()*900,w=30+r()*60;g.fillStyle=`rgba(84,132,164,${0.75*a})`;g.beginPath();g.ellipse(x,BED+6+r()*8,w,5,0,0,7);g.fill();g.fillStyle=`rgba(255,255,255,${0.35*a*(0.5+0.5*Math.sin(t*3+i))})`;g.fillRect(x-w*0.4,BED+4,w*0.5,2)}}
+  // 「埋めた」のではない
+  const k0=clamp((t-0.3)/0.7)*(1-clamp((t-(T1-0.7))/0.5));if(k0>0){g.save();g.globalAlpha=0.85*k0;const gh=ease(clamp((t-0.3)/0.9));soil(520,W+400,x=>BED-(BED-SL+26)*gh*ease(clamp((x-520)/160)),'#b9a47a','#8f7a55',BED+4);crossX(860,330,clamp((t-1.3)/0.45),70,18);g.restore()}
+  if(dk>0)dikeS(DX,BED,lerp(BED,SL-66,dk),300);
+  seaLine(SL,DX+52,W+400,clamp((dr-0.55)*2.4));
+  g.restore();
+  if(t>=1.3)sfxOnce('x',1.3,'tick');if(t>=T1)sfxOnce('d',T1,'thump');if(t>=T2)sfxOnce('w',T2,'whoosh')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({storm,lely,dike,gap,fresh,four,answer}[P.mode]||storm)(t)};
+</script></body></html>
