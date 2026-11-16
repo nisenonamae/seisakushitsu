@@ -407,6 +407,7 @@ for b_ in tl:
     if not _ch or _ch[-1][1]!=nm:_ch.append([b_['start'],nm,b_['role']])
 _ch=[c for i,c in enumerate(_ch) if i==0 or c[0]-_ch[i-1][0]>=10]
 _cl=lambda t:f"{int(t//60)}:{int(t%60):02d}" if t<3600 else f"{int(t//3600)}:{int(t%3600//60):02d}:{int(t%60):02d}"
-open(os.path.splitext(a.out)[0]+'.chapters.txt','w',encoding='utf-8').write(''.join(f"{_cl(0 if i==0 else c[0])} {c[2]}\n" for i,c in enumerate(_ch)) if len(_ch)>=3 else '')
+_lb=lambda i,c:'はじめに' if i==0 else (c[2].split('：',1)[1] if '：' in c[2] else c[2])   # 見る人向けの名前（「第1章：」などの内部の呼び方は外す）
+open(os.path.splitext(a.out)[0]+'.chapters.txt','w',encoding='utf-8').write(''.join(f"{_cl(0 if i==0 else c[0])} {_lb(i,c)}\n" for i,c in enumerate(_ch)) if len(_ch)>=3 else '')
 for _p,_d0,_d1 in LAST.get('tchk',[]):print(f'［点検］調整した文の長さが変わった：「{_p[:24]}」 {_d0:.1f}秒 → {_d1:.1f}秒。カットの切り替わりと字幕は語りに合わせて自動で動くが、その段の動きが急ぎすぎ・間延びしていないか見る',file=sys.stderr)
 print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB',(f"／調整室で調整した文 {LAST.get('tuned',0)} 文" if VK else ''))
