@@ -25,7 +25,10 @@ header h1{font-size:14px;margin:0 4px 0 0}header a{color:var(--sea);font-size:12
 .b{font-size:12.5px;border:1px solid var(--line);background:var(--row);border-radius:6px;padding:3px 9px;white-space:nowrap}
 .b:hover{background:var(--row2)}.b.main{background:var(--sea);color:var(--seaInk);border-color:var(--sea);font-weight:700}
 .b.on{background:var(--sea);border-color:var(--sea);color:#fff}
-#opts{display:flex;align-items:center;gap:8px;padding:4px 8px;border-bottom:1px solid #000;background:var(--paper);overflow-x:auto;white-space:nowrap;min-height:34px}
+#opts{display:flex;align-items:center;gap:8px;padding:4px 8px;border-bottom:1px solid #000;background:var(--paper);white-space:nowrap;min-height:34px;overflow:hidden}
+#opts .om{display:flex;align-items:center;gap:8px;overflow-x:auto;flex:1;min-width:0}
+#opts .of{display:flex;align-items:center;gap:5px;flex:none;padding-left:8px;border-left:1px solid var(--line)}
+#opts .of select{font-size:12.5px}
 #opts label{color:var(--sub);font-size:12px}
 #opts input[type=range]{width:110px;flex:none}
 #opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:none}
@@ -249,7 +252,7 @@ function renderOpts(){const o=OPT[tool]||{};let h='';
  else if(tool==='crop')h=crop?`<span class="lead">${Math.round(crop.w)}×${Math.round(crop.h)}</span><button class="b main" data-act="cropOk">切り抜く Enter</button><button class="b" data-act="cropCancel">やめる Esc</button>`:'<span class="lead">残す範囲をドラッグ</span>';
  else if(tool==='pick')h='<span class="lead">押した所の色を描画色にする（全レイヤーを合わせた色。ブラシ中は Alt+クリック）</span>';
  else h=`<span class="lead">${tool==='zoom'?'押すと拡大、Alt を押しながらで縮小':'ドラッグで画面を動かす（どの道具でもスペースを押しながらで同じ）'}</span><button class="b" data-act="fit">画面サイズ</button><button class="b" data-act="z100">100%</button>`;
- $('opts').innerHTML=h+`<span style="flex:1"></span><label>構図</label><select data-gsel="comp"><option value="none" ${comp==='none'?'selected':''}>なし</option><option value="center" ${comp==='center'?'selected':''}>中央</option><option value="thirds" ${comp==='thirds'?'selected':''}>三分割</option><option value="golden" ${comp==='golden'?'selected':''}>黄金比</option><option value="all" ${comp==='all'?'selected':''}>全部</option></select><button class="b ${snapOn?'on':''}" data-act="snapT" title="動かすときに中央・三分割・黄金比・端に吸いつく">吸着</button><button class="b ${showGuide?'on':''}" data-act="guide">ガイド</button>`}
+ $('opts').innerHTML=`<div class="om">${h}</div><div class="of">`+`<label style="color:var(--ink)">📐構図</label><select data-gsel="comp"><option value="none" ${comp==='none'?'selected':''}>なし</option><option value="center" ${comp==='center'?'selected':''}>中央</option><option value="thirds" ${comp==='thirds'?'selected':''}>三分割</option><option value="golden" ${comp==='golden'?'selected':''}>黄金比</option><option value="all" ${comp==='all'?'selected':''}>全部</option></select><button class="b ${snapOn?'on':''}" data-act="snapT" title="動かすときに中央・三分割・黄金比・端に吸いつく">吸着</button><button class="b ${showGuide?'on':''}" data-act="guide">ガイド</button></div>`}
 const selBtns=()=>`<button class="b" data-act="selAll">すべて</button><button class="b" data-act="deselect">解除</button><button class="b" data-act="selInv">反転</button>`;
 const xfBtns=()=>`<label>幅</label><input type="number" id="xfW" value="${Math.round(float.sx*100)}">%<label>高さ</label><input type="number" id="xfH" value="${Math.round(float.sy*100)}">%<label>角度</label><input type="number" id="xfR" value="${Math.round(float.rot*1800/Math.PI)/10}">°<button class="b" data-act="flipFH">左右反転</button><button class="b" data-act="flipFV">上下反転</button><button class="b main" data-act="xfOk">確定 Enter</button><button class="b" data-act="xfCancel">取り消し Esc</button><span class="lead">角を引くと比率を保って拡大縮小（Shift で自由）、角の外側で回転</span>`;
 $('opts').addEventListener('input',e=>{const t=e.target;const o=OPT[tool];
@@ -457,7 +460,7 @@ function paintText(cv,t){const c=g2(cv);c.clearRect(0,0,cv.width,cv.height);if(!
 function startText(p){for(const l of layers.slice().reverse()){if(l.text&&l.visible){const b=textBB(l.text);if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){activeId=l.id;snapBK(l.id);textEdit={...l.text,lid:l.id,isNew:false,before:{...l.text}};Object.assign(OPT.text,{font:l.text.font,size:l.text.size,edge:l.text.edge,align:l.text.align,warp:l.text.warp||'none',bend:l.text.bend??40});textEdit.bb=b;renderOpts();renderLayers();focusT();need();return}}}
  const o=OPT.text;const l=newLayer('文字');const i=layers.indexOf(act());structOp('文字レイヤー',()=>{layers.splice(i+1,0,l);activeId=l.id});
  snapBK(l.id);textEdit={str:'',font:o.font,size:o.size,edge:o.edge,align:o.align,warp:o.warp||'none',bend:o.bend??40,color:fg,edgeColor:bg,x:p.x,y:p.y,lid:l.id,isNew:true,before:null};textEdit.bb=textBB(textEdit);renderOpts();focusT();need()}
-function focusT(){setTimeout(()=>{const i=$('tIn');if(i){$('opts').scrollLeft=0;i.focus();i.select()}},30)}
+function focusT(){setTimeout(()=>{const i=$('tIn');if(i){const om=document.querySelector('#opts .om');if(om)om.scrollLeft=0;i.focus();i.select()}},30)}
 function drawTextLayer(){if(!textEdit)return;const l=byId(textEdit.lid);if(!l)return;paintText(l.cv,textEdit);textEdit.bb=textBB(textEdit);thumbLayers();need();const te=textEdit;ensureFont(te.font,te.str).then(()=>{if(textEdit===te){paintText(l.cv,te);te.bb=textBB(te);thumbLayers();need()}})}
 function dropNewTextLayer(l){layers=layers.filter(x=>x!==l);if(hist[hpos-1]&&hist[hpos-1].name==='文字レイヤー'){hist.splice(hpos-1,1);hpos--}activeId=(layers[layers.length-1]||{}).id;renderHist()}
 async function commitText(){if(!textEdit)return;const t=textEdit;textEdit=null;const l=byId(t.lid);if(!l){renderOpts();return}const meta={str:t.str,font:t.font,size:t.size,edge:t.edge,align:t.align,warp:t.warp||'none',bend:t.bend??40,color:t.color,edgeColor:t.edgeColor,x:t.x,y:t.y};
