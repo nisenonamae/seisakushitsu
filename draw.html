@@ -107,7 +107,12 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div id="tools"></div>
 <div id="stage"><canvas id="view"></canvas><div id="zoomLab"></div><div id="hint"></div></div>
 <aside id="side">
- <div class="panel"><h3>色</h3><div class="rowx" id="swatches"></div><div class="rowx"><span class="lead" style="margin:0">最近：</span><span id="recent" class="rowx" style="margin:0"></span></div></div>
+ <div class="panel"><h3>色</h3>
+ <div class="rowx"><span id="curSw" class="sw" style="width:34px;height:34px;display:inline-block"></span><button class="b main" id="pickNew">＋ 新しい色を作る</button><button class="b" id="saveMy">今の色を登録</button></div>
+ <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">自分の色：</span><span id="mycols" class="rowx" style="margin:0"></span></div>
+ <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">最近：</span><span id="recent" class="rowx" style="margin:0"></span></div>
+ <div class="rowx" id="swatches"></div>
+ <div class="lead" style="margin:2px 0 0">押すと描く色になります。自分の色は右クリック（スマホは長押し）で消せます</div></div>
  <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button></h3>
   <div class="rowx"><select id="lBlend" title="描画モード"></select><label style="min-width:0">不透明度</label><input type="range" id="lOp" min="0" max="100"><span class="num" id="lOpV"></span></div>
   <div class="rowx"><button class="b" id="lLockA" title="透明部分をロック（描いてある所だけに描ける）">▦ 透明部分を保護</button><button class="b" id="lNoExp" title="書き出し・仕上げに入れない">書き出さない</button></div>
@@ -245,9 +250,15 @@ $('opts').addEventListener('click',e=>{const s=e.target.closest('[data-seg]');if
 $('opts').addEventListener('keydown',e=>{if(e.target.id==='tIn'){if(e.key==='Enter'){e.preventDefault();commitText()}else if(e.key==='Escape')cancelText();e.stopPropagation()}});
 
 /* ===== 色 ===== */
-function renderColors(){$('swatches').innerHTML=SWATCH.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" title="${c}（Alt+クリックで背景色）"></button>`).join('');$('recent').innerHTML=recent.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');const f=$('fgSw'),b=$('bgSw');if(f){f.style.background=fg;b.style.background=bg}}
+function renderColors(){$('mycols').innerHTML=mycols.length?mycols.map(c=>`<button class="sw" data-c="${c}" data-my="${c}" style="background:${c}" title="${c}"></button>`).join(''):'<span class="lead" style="margin:0">まだありません</span>';$('curSw').style.background=fg;$('swatches').innerHTML=SWATCH.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" title="${c}（Alt+クリックで背景色）"></button>`).join('');$('recent').innerHTML=recent.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');const f=$('fgSw'),b=$('bgSw');if(f){f.style.background=fg;b.style.background=bg}}
 function setFg(c,live){fg=c;LS.set('pd_fg',c);if(!live){recent=[c,...recent.filter(x=>x!==c)].slice(0,10);LS.set('pd_recent',JSON.stringify(recent))}renderColors();if(textEdit){textEdit.color=fg;drawTextLayer()}}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b&&(b.closest('#swatches')||b.closest('#recent'))){if(e.altKey){bg=b.dataset.c;LS.set('pd_bg',bg);renderColors()}else setFg(b.dataset.c,true)}});
+let mycols=[];try{mycols=JSON.parse(LS.get('pd_mycols','[]')||'[]')}catch(e){}
+const saveMy=()=>{LS.set('pd_mycols',JSON.stringify(mycols));renderColors()};
+$('pickNew').onclick=()=>{const i=$('fgIn');i.value=fg;i.click()};
+$('saveMy').onclick=()=>{if(!mycols.includes(fg)){mycols.push(fg);saveMy();hint('「自分の色」に登録しました')}else hint('もう登録してあります')};
+let lpT=null;$('mycols').addEventListener('contextmenu',e=>{const b=e.target.closest('[data-my]');if(!b)return;e.preventDefault();mycols=mycols.filter(c=>c!==b.dataset.my);saveMy();hint('消しました')});
+$('mycols').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-my]');if(!b||e.pointerType==='mouse')return;lpT=setTimeout(()=>{mycols=mycols.filter(c=>c!==b.dataset.my);saveMy();hint('消しました')},650)});['pointerup','pointerleave','pointercancel'].forEach(t=>$('mycols').addEventListener(t,()=>clearTimeout(lpT)));
+document.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b&&(b.closest('#swatches')||b.closest('#recent')||b.closest('#mycols'))){if(e.altKey){bg=b.dataset.c;LS.set('pd_bg',bg);renderColors()}else setFg(b.dataset.c,true)}});
 
 /* ===== 画面 ===== */
 function resize(){const r=$('stage').getBoundingClientRect();dpr=Math.min(2,window.devicePixelRatio||1);view.width=Math.max(1,Math.round(r.width*dpr));view.height=Math.max(1,Math.round(r.height*dpr));need()}
