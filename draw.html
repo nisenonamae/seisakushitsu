@@ -453,12 +453,14 @@ function doBucket(p){const l=act();if(l.trace)return hint('なぞり用の画像
  let ok=same;const gap=o.gap||0;if(gap>0){const wall=new Uint8Array(W*H);for(let q=0;q<W*H;q++)wall[q]=same[q]?0:1;const thick=dilateMask(wall,W,H,gap);const s2=new Uint8Array(W*H);for(let q=0;q<W*H;q++)s2[q]=same[q]&&!thick[q]?1:0;if(s2[fy*W+fx])ok=s2}
  let m=new Uint8Array(W*H);if(!o.cont){m=ok.slice()}else{const st=[fx,fy];const sm=q=>ok[q]&&!m[q];while(st.length){const y=st.pop(),x0=st.pop();let x=x0;while(x>=0&&sm(y*W+x))x--;x++;let up=false,dn=false;while(x<W&&sm(y*W+x)){m[y*W+x]=1;if(y>0){const t=sm((y-1)*W+x);if(t&&!up){st.push(x,y-1);up=true}else if(!t)up=false}if(y<H-1){const t=sm((y+1)*W+x);if(t&&!dn){st.push(x,y+1);dn=true}else if(!t)dn=false}x++}}}
  let n=0;for(let q=0;q<W*H;q++)n+=m[q];if(!n)return hint('ここは塗れません');
- const grow=(ok!==same?gap:0)+(o.spread||0);if(grow>0){const g2m=dilateMask(m,W,H,grow);if(ok!==same){for(let q=0;q<W*H;q++)m[q]=g2m[q]&&(same[q]||(o.spread||0)>0)?1:0}else m=g2m}
+ const gapG=ok!==same?gap:0,sp=o.spread||0,grow=gapG+sp,seedClear=a0<8;
+ /* 広げてよいのは：隙間を閉じた分の戻し（同じ色の所）と、線や色のふち（何かが描いてある所）だけ。何もない透明な所には絶対に広げない＝円の外にはみ出さない */
+ if(grow>0){const g2m=dilateMask(m,W,H,grow);for(let q=0;q<W*H;q++){if(!g2m[q]||m[q])continue;const A=d[q*4+3];if((gapG&&same[q])||(sp&&(seedClear?A>=30:(A>0&&A<250))))m[q]=1}}
  if(n>W*H*0.97&&o.all)hint('ほぼ全体が塗られました。線が途切れていないか、「隙間を閉じる」を大きくしてみてください');
  const cv=mk(W,H);const x=g2(cv);const id=x.createImageData(W,H);const od=id.data;const col=hexRgb(fg);for(let q=0;q<W*H;q++)if(m[q]){od[q*4]=col[0];od[q*4+1]=col[1];od[q*4+2]=col[2];od[q*4+3]=255}x.putImageData(id,0,0);
  const seedOnLayer=g2(l.cv).getImageData(fx,fy,1,1).data[3];
  snapBK(l.id);const c=g2(l.cv);let src=cv;if(SEL){const t=mk(W,H);const tx=g2(t);tx.drawImage(cv,0,0);tx.globalCompositeOperation='destination-in';tx.drawImage(SEL,0,0);src=t}
- c.save();c.globalAlpha=o.op/100;c.globalCompositeOperation=l.lockAlpha?'source-atop':(seedOnLayer<8?'destination-over':'source-over');c.drawImage(src,0,0);c.restore();
+ c.save();c.globalAlpha=o.op/100;c.globalCompositeOperation=(l.lockAlpha||seedOnLayer>=250)?'source-atop':(seedOnLayer<8?'destination-over':'source-over');c.drawImage(src,0,0);c.restore();
  pushPatch('塗りつぶし',l.id,0,0,W,H);need()}
 function doPick(p){const c=mk(1,1);const x=g2(c);x.fillStyle=art.bg||'#fff';x.fillRect(0,0,1,1);x.translate(-Math.floor(p.x),-Math.floor(p.y));const keep=layers;layers=layers.filter(l=>!l.trace);compositeTo(x,{raw:true});layers=keep;const d=x.getImageData(0,0,1,1).data;setFg('#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join(''))}
 
