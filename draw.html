@@ -95,6 +95,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  .tsep{width:1px;height:auto;margin:2px 3px}
  #fgbg{margin-top:0}
  #side{border-left:0;border-top:1px solid #000;max-height:36vh}
+ #opts{flex-direction:column;align-items:stretch;gap:4px}#opts .om{width:100%}#opts .of{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:4px;overflow-x:auto}
 }
 </style></head>
 <body>
@@ -242,7 +243,7 @@ const chk=(id,lab,on)=>`<label><input type="checkbox" data-ck="${id}" ${on?'chec
 const sizeFromSlider=v=>Math.round(Math.pow(1.06,v)*10)/10; // 1〜1000
 const sliderFromSize=s=>Math.round(Math.log(Math.max(1,s))/Math.log(1.06));
 function renderOpts(){const o=OPT[tool]||{};let h='';
- if(tool==='brush'||tool==='eraser'){h=`<label>直径</label><input type="range" data-o="size" min="0" max="118" value="${sliderFromSize(o.size)}"><span class="num" data-ov="size">${o.size}px</span>`+rng('hard','硬さ',0,100,o.hard,'%')+rng('op','不透明度',1,100,o.op,'%')+rng('flow','流量',1,100,o.flow,'%')+rng('smooth','滑らかさ',0,10,o.smooth)+chk('pSize','筆圧で太さ',o.pSize)+chk('pOp','筆圧で濃さ',o.pOp)+`<span class="seg"><button data-act="lineToggle" class="${o.line?'on':''}">📏 まっすぐ引く</button></span>`+chk('snapA','15°ごとにそろえる',o.snapA)}
+ if(tool==='brush'||tool==='eraser'){h=`<span class="seg"><button data-act="lineToggle" class="${o.line?'on':''}" title="押した所から離した所まで、まっすぐ引く">📏 定規（まっすぐ）</button></span>`+(o.line?chk('snapA','15°ごと',o.snapA):'')+`<label>直径</label><input type="range" data-o="size" min="0" max="118" value="${sliderFromSize(o.size)}"><span class="num" data-ov="size">${o.size}px</span>`+rng('hard','硬さ',0,100,o.hard,'%')+rng('op','不透明度',1,100,o.op,'%')+rng('flow','流量',1,100,o.flow,'%')+rng('smooth','滑らかさ',0,10,o.smooth)+chk('pSize','筆圧で太さ',o.pSize)+chk('pOp','筆圧で濃さ',o.pOp)}
  else if(tool==='bucket')h=`<label>線を見る</label>`+seg('all',[[1,'全部のレイヤー'],[0,'このレイヤーだけ']],o.all)+rng('gap','隙間を閉じる',0,20,o.gap??3,'px')+rng('spread','線の下まで広げる',0,8,o.spread??2,'px')+rng('tol','許容値',0,255,o.tol)+chk('cont','つながった所だけ',o.cont)+rng('op','不透明度',1,100,o.op,'%');
  else if(tool==='grad')h=seg('type',[['linear','線形'],['radial','円形']],o.type)+seg('mode',[['fgbg','描画色→背景色'],['fgt','描画色→透明']],o.mode)+chk('rev','逆方向',o.rev)+rng('op','不透明度',1,100,o.op,'%')+'<span class="lead">ドラッグで方向を決める</span>';
  else if(tool==='sel')h=seg('shape',[['rect','長方形'],['ellipse','楕円形']],o.shape)+seg('mode',[['new','新規'],['add','追加'],['sub','削除'],['int','共通']],o.mode)+selBtns();
@@ -680,7 +681,7 @@ const MENUS={
  'フィルター':[['ぼかし（ガウス）…',()=>openAdj('blur')],['アンシャープマスク…',()=>openAdj('sharp')],['ノイズを加える…',()=>openAdj('noise')],['モザイク…',()=>openAdj('mosaic')]],
  '表示':[['ズームイン',()=>zoomAt(1.25),CMD+'+'],['ズームアウト',()=>zoomAt(0.8),CMD+'-'],['画面サイズに合わせる',fit,CMD+'0'],['100%',zoom100,CMD+'1'],['ガイドの表示／非表示',()=>ACT.guide()],'-',{h:'構図の線'},['なし',()=>{comp='none';LS.set('pd_comp',comp);renderOpts();need()}],['中央',()=>{comp='center';LS.set('pd_comp',comp);renderOpts();need()}],['三分割',()=>{comp='thirds';LS.set('pd_comp',comp);renderOpts();need()}],['黄金比',()=>{comp='golden';LS.set('pd_comp',comp);renderOpts();need()}],['全部',()=>{comp='all';LS.set('pd_comp',comp);renderOpts();need()}],['吸着のオン／オフ',()=>ACT.snapT()]]};
 ACT.snapT=()=>{snapOn=!snapOn;LS.set('pd_snap',snapOn?'1':'0');renderOpts();hint(snapOn?'吸着：オン（中央・三分割・黄金比・端に吸いつく）':'吸着：オフ')};
-ACT.lineToggle=()=>{const o=OPT[tool==='eraser'?'eraser':'brush'];o.line=o.line?0:1;saveOpt();renderOpts();hint(o.line?'まっすぐ引く：オン（押した所から離した所まで直線）':'まっすぐ引く：オフ')};
+ACT.lineToggle=()=>{const o=OPT[tool==='eraser'?'eraser':'brush'];o.line=o.line?0:1;saveOpt();renderOpts();hint(o.line?'定規：オン（押した所から離した所まで直線）':'定規：オフ')};
 function alignTo(fx,fy,name){compRegion();if(compBase.type==='sel'&&SEL){const keep=SEL,kp=selPath;SEL=null;selPath=null;try{alignTo0(fx,fy,name)}finally{SEL=keep;selPath=kp;need()}return}alignTo0(fx,fy,name)}
 function alignTo0(fx,fy,name){if(!art)return;if(float)commitFloat();if(textEdit)commitText();const tl=act();if(tl&&tl.text&&!SEL){const b=textBB(tl.text);const dx=fx?fx(b):0,dy=fy?fy(b):0;const before={...tl.text},after={...tl.text,x:tl.text.x+dx,y:tl.text.y+dy};snapBK(tl.id);paintText(tl.cv,after);tl.text=after;pushPatch(name,tl.id,0,0,art.w,art.h,{textBefore:before,textAfter:after});need();return}if(!lift(false))return;const b=floatBox();let dx=0,dy=0;if(fx!=null)dx=fx(b);if(fy!=null)dy=fy(b);float.cx+=dx;float.cy+=dy;float.name=name;commitFloat()}
 ACT.alL=()=>alignTo(b=>compRegion().x-b.x,null,'左に揃える');ACT.alC=()=>alignTo(b=>{const R=compRegion();return R.x+R.w/2-(b.x+b.w/2)},null,'左右中央に揃える');ACT.alR=()=>alignTo(b=>{const R=compRegion();return R.x+R.w-(b.x+b.w)},null,'右に揃える');
