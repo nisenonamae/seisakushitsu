@@ -74,7 +74,7 @@ function reed(t){const T1=T(1,DUR*0.3),T2=T(2,DUR*0.55),T3=T(3,DUR*0.8);const GY
 
 function colors(t){const T1=T(1,DUR*0.1),T2=T(2,DUR*0.24),T3=T(3,DUR*0.36),T4=T(4,DUR*0.5),T5=T(5,DUR*0.66),T6=T(6,DUR*0.82);const GY=470;
   const soilk=ease(clamp((t-T1)/Math.max(6,T5-T1)));skyG();cloudS(220+t*6,90,1.4);cloudS(900+t*5,120,1.5);
-  const N=34,FT=2.3;
+  const N=34,FT=1.5;
   for(let i=0;i<N;i++){const x=20+i*38,u=i/(N-1);const burnAt=T1+u*FT;
     // ヨシ（焼ける前）
     const bk=clamp((t-burnAt)/0.5);if(bk<1)reedPlant(x,GY,(150+((i*37)%50))*(1-bk*0.85),t,i,1,mix('#7c9a4c','#2c2620',bk));
