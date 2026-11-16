@@ -243,7 +243,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 </ol></details>
 
 <details><summary>▶ 制作（一本の動画を作る）</summary>
-<p>「作る」にした題材が並びます。「これを作る」を押すと、10の手順が上から順に出てきます。<b>何本でも並行して作れます</b>：上の「制作中の動画」から押して切り替え、「＋ 新しく作る」から次の題材も始められます。各動画に「Claude が作業中」か「あなたの番」かが出ます。いまやる手順が青い枠で開いています。</p><ol>
+<p>「作る」にした題材が並びます。「これを作る」を押すと、11の手順が上から順に出てきます。<b>何本でも並行して作れます</b>：上の「制作中の動画」から押して切り替え、「＋ 新しく作る」から次の題材も始められます。各動画に「Claude が作業中」か「あなたの番」かが出ます。いまやる手順が青い枠で開いています。</p><ol>
 <li><b>参考と資料を集める</b>：集めたいもの（見せ方の参考・中身の参考・調べた資料・使えそうな素材）に印を付けて数を選び、ボタンを押すと Claude が集めて置きます。足りないものだけ、あとから何度でも追加で頼めます。そのうえで、真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
 <li><b>構成を磨く</b>：Claude が骨組み（段ごとに「何を言う・画面で何を見せる・ねらい・秒数」）を出す。段ごとに「残す／差し替え案がほしい／削る」の印や一言の注文を付け、並べ替えや自分での書き換えもして、「次の版にしてもらう」。臨機応変に話したいときは「Claude と話し合う」でチャットへ（決まったことは自動でアプリに反映）。固まったら「決まり」</li>
 <li><b>肉付けを磨く</b>：決まりにすると自動で頼まれ、段ごとに語り（読み上げる文）と画面の指示が届く。「▶通しで聞く」で読み上げを流し、気になった所でその場で「ここ気になる」。段ごとに「いい／直す／書き直し案がほしい／削る」。磨き方は構成と同じ</li>
@@ -556,6 +556,7 @@ const STEPS=[
 {t:'構成を磨く',s:'Claude の骨組みに印を付け、残す・削る・差し替えで磨く'},
 {t:'肉付けを磨く',s:'語りと画面を通しで聞いて、段ごとに直す'},
 {t:'図解を選ぶ',s:'Claude の案から気に入った図解を選び、作って直す'},
+{t:'仮の動画を作ってもらう',s:'ここで頼んでおくと、題名とサムネを決めている間にできあがる'},
 {t:'題名',s:'人を惹きつける題名の案を出してもらい、選んで磨く'},
 {t:'サムネ',s:'題名に合うサムネを見本で出してもらい、選んで直す'},
 {t:'動画を確かめる',s:'1.5倍速で見て、直す所を書く'},
@@ -572,7 +573,8 @@ const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.so
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
 function renderMake0(){const mt=$('makeTop');const topDet=new Map([...mt.querySelectorAll('details')].map(x=>[(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent,x.open]));renderMake1();mt.querySelectorAll('details').forEach(x=>{const k=(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent;if(topDet.has(k))x.open=topDet.get(k)})}
-function renderMake1(){ensureProj();const p=projOf();
+function migrateSteps(){let ch=false;for(const x of (D.projects||[])){if(x.sv!==2){if((x.step||0)>=4)x.step=(x.step||0)+1;x.sv=2;x.updatedAt=now();ch=true}}if(ch)save()}
+function renderMake1(){migrateSteps();ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
 if(!p){$('makeTop').innerHTML=jobsPanel()+`<p class="big">いま作っている動画はありません。</p>
@@ -639,6 +641,7 @@ ${(()=>{const n=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m
 outlineStep(p),
 fleshStep(p),
 visualStep(p),
+makeVideoStep(p),
 titleStep(p),
 thumbStep(p),
 videoStep(p),
@@ -661,9 +664,10 @@ function stepSum(p,k){try{const ob=(p.outline&&p.outline.blocks||[]).filter(b=>b
  if(k===1)return ob.length?`${ob.length} 段`:'';
  if(k===2)return fb.length?`${fb.length} 段・${fb.reduce((a,b)=>a+(b.narr||'').length,0)} 字`:'';
  if(k===3){const v=(p.visuals||[]).filter(v=>v.status==='決定'||v.status==='できた'||v.chosen).length;return v?`図解 ${v}`:''}
- if(k===4){const t=(p.titles||[]).find(t=>t.id===p.titleId);return t?'決定：'+esc(t.text):''}
- if(k===8){const f=p.final;return f&&f.done?`${esc(f.res||'')} 書き出し済み${f.uploaded?'・投稿済み':''}`:''}
- if(k===5){const t=(p.thumbs||[]).find(t=>t.id===p.thumbId);return t?`${t.preview?`<img data-gh="${esc(t.preview)}" alt="">`:''}決定：${esc(t.title||t.text||t.id)}`:''}
+ if(k===4){const v=p.video;const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type==='video_make').sort((a,b)=>b.createdAt-a.createdAt)[0];return j&&(j.status==='待ち'||j.status==='作業中')?'頼んであります':(v&&v.path?`${v.ver||1}版ができています`:'')}
+ if(k===5){const t=(p.titles||[]).find(t=>t.id===p.titleId);return t?'決定：'+esc(t.text):''}
+ if(k===9){const f=p.final;return f&&f.done?`${esc(f.res||'')} 書き出し済み${f.uploaded?'・投稿済み':''}`:''}
+ if(k===6){const t=(p.thumbs||[]).find(t=>t.id===p.thumbId);return t?`${t.preview?`<img data-gh="${esc(t.preview)}" alt="">`:''}決定：${esc(t.title||t.text||t.id)}`:''}
  return ''}catch(e){return ''}}
 function orderText(p){const refs=(p.refs||[]).map(id=>D.ideas.find(i=>i.id===id)).filter(Boolean);const c=D.candidates.find(x=>x.id===p.candId)||{};
 const mats=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted);
@@ -773,6 +777,12 @@ ${f.srt?`<div class="row" style="margin:6px 0"><button class="b" data-fdl="${esc
 <label class="chk"><input type="checkbox" data-fup ${f.uploaded?'checked':''}><span>YouTube に上げた</span></label></div>`:''}
 ${pub.title||pub.desc||pub.tags?`<h3 style="font-size:15px;margin:14px 0 4px">YouTube に貼るもの</h3>${cp('pubTitle','題名',pub.title,1)}${cp('pubDesc','概要欄（チャプター・参考にした資料・クレジット入り）',pub.desc,10)}${cp('pubTags','タグ（カンマ区切り。YouTube の「タグ」欄にそのまま貼る）',pub.tags,2)}`:''}
 <div class="row"><button class="b main" data-next>上げた（または上げる準備ができた）</button></div>`}
+function makeVideoStep(p){const v=p.video;
+if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、ここで仮の動画を頼めます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
+return `<div class="how"><b>やること</b><ol><li>構成・肉付け・図解が決まったら、ここで「仮の動画を作ってもらう」を押す（作るのに時間がかかるので、先に頼んでおく）</li><li>できあがりを待たずに「次へ」。題名とサムネを決めている間に、Claude が作ります</li><li>できた動画は、あとの「動画を確かめる」の段で見ます</li></ol></div>
+<div class="row"><button class="b main" data-job="video_make">${v&&v.path?'今の構成・肉付け・図解で作り直してもらう':'仮の動画を作ってもらう'}</button></div>${jobLine(p,'video_make')}
+${v&&v.path?`<p class="lead" style="margin:4px 0">${v.ver||1}版ができています。「動画を確かめる」の段で見られます。</p>`:''}
+<div class="row"><button class="b" data-next>次へ（題名）</button></div>`}
 function videoStep(p){const v=p.video;const open=(p.fixes||[]).filter(f=>f.text&&!f.done);
 return `<div class="how"><b>やること</b><ol><li>仮の動画を 1.5倍速で見る（声・図解・字幕まで入った下書き。図解がまだの所は「画面の指示」を書いた絵コンテになる）</li><li>直したい所を、時間（1:23）か画面の左上に出る場面の番号（3-4）と一緒に一行ずつ書く。どの段の話かが自動で出る。これからの動画でも同じにしてほしいことは「毎回そうする」に印（印がなくても、Claude が「これは毎回のことだ」と思ったら決まりに入れて知らせます）</li><li>「直しを頼む」で、Claude がその段の語り・構成・図解を直して動画を作り直す。気が済んだら「完成」</li></ol></div>
 ${v&&v.path?`<div class="item"><div class="tags"><span>${v.ver||1}版</span><span>${secTxt(v.duration||0)}</span>${v.at?`<span>${md(v.at)}</span>`:''}</div><video data-gh="${esc(v.path)}" controls playsinline preload="metadata" style="width:100%;border-radius:6px;background:#000;margin-top:6px"></video>${v.reply?`<div class="chg">Claude：${esc(v.reply)}</div>`:''}</div>`:'<div class="empty">仮の動画はまだありません。下のボタンか、上の「情報を変えて作り直す」で作れます。</div>'}
@@ -821,7 +831,7 @@ if(e.target.id==='jobsNow'){copyOpen('制作室の頼みごとを今すぐ片づ
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
 const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
-const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;LS.set('mk_proj',p.id);save();renderMake();window.scrollTo(0,0)});
+const p={id:uid('p'),candId:c.id,step:0,sv:2,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;LS.set('mk_proj',p.id);save();renderMake();window.scrollTo(0,0)});
 document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-gk]')||t.matches('[data-gn]')){const g=gSel();const k=t.dataset.gk||t.dataset.gn;if(t.matches('[data-gk]'))g[k].on=t.checked;else g[k].n=+t.value;gSave(g)}});
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;if(blkClick(e,p))return;
