@@ -345,7 +345,7 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 
 ## 絵の仕上げ（art_finish）— お絵描き（draw.html）から
 作り手が自分の手で描いた絵（アイコン・バナー・透かし・サムネ）を、手書きの味を残したまま仕上げる。
-- 材料：`jobs[].whole`（今の絵を1枚にしたもの）と、`roadmap/apps/seisakushitsu/art/<artId>/` の `line.png`（線）・`color.png`（色）・`sketch.png`（下書き。書き出しには入れない）。`arts[]` に `{id,kind,name,w,h,bg,files,finished}`。`jobs[].notes` が作り手の希望
+- 材料：`jobs[].whole`（今の絵を1枚にしたもの。書き出さないレイヤーは入っていない）と、レイヤーごとの PNG（`arts[].files` の `レイヤーid → パス`、並び・名前・不透明度・描画モード・`trace`（なぞり用の画像。仕上げには使わない）などは `arts[].layers`。下から上の順）。`arts[]` に `{id,kind,name,w,h,bg,files,layers,finished}`。`jobs[].notes` が作り手の希望。古い絵は `files` が `sketch`/`color`/`line` のこともある
 - **描き直さない**。作り手の線の形を土台にする（線のガタつきを少しならす・途切れをつなぐ・太さをそろえる程度）。別の絵や素材・AI の画像に置き換えない。実在のキャラクターやロゴに似せない
 - 色：希望がなければ、チャンネルの見た目（決めてあれば Design System）に合わせる。決まっていなければ2〜3通りの配色を出す
 - 大きさ（YouTube の決まり）：
