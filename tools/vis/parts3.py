@@ -203,12 +203,16 @@ def html_scene(s,dur,out,repo=''):
     async def run():
         async with async_playwright() as p:
             b=await p.chromium.launch(args=['--allow-file-access-from-files','--disable-web-security']);pg=await b.new_page(viewport={'width':W,'height':H});await pg.goto('file://'+page)
+            if SCALE>1:   # 本番：キャンバスだけ大きくして、絵は 1280×720 の座標のまま拡大して描く（くっきり描ける）
+                await pg.evaluate('''k=>{const c=document.getElementById('c');c.width=Math.round(1280*k);c.height=Math.round(720*k);const g=c.getContext('2d');
+                 const st=CanvasRenderingContext2D.prototype.setTransform;g.setTransform=function(a,b,cc,d,e,f){if(a&&typeof a==='object')return st.call(this,a.a*k,a.b*k,a.c*k,a.d*k,a.e*k,a.f*k);return st.call(this,a*k,b*k,cc*k,d*k,e*k,f*k)};
+                 g.resetTransform=function(){return st.call(this,k,0,0,k,0,0)};st.call(g,k,0,0,k,0,0)}''',SCALE)
             await pg.evaluate(f"window.setup&&setup({json.dumps(params)},{dur})")
             await pg.wait_for_function("window.READY!==false",timeout=60000)
-            ff=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','image2pipe','-c:v','mjpeg','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE)
+            ff=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','image2pipe','-c:v','mjpeg','-r',str(FPS),'-i','-','-c:v','libx264','-preset','veryfast','-crf','16' if SCALE>1 else '20','-pix_fmt','yuv420p',out],stdin=subprocess.PIPE)
             TR=[]
             for n in range(max(1,int(round(dur*FPS)))):
-                u=await pg.evaluate(f"(window._trk=[],render({n/FPS}),[document.getElementById('c').toDataURL('image/jpeg',0.93),window._trk||[]])");ff.stdin.write(base64.b64decode(u[0].split(',')[1]));TR.append(u[1])
+                u=await pg.evaluate(f"(window._trk=[],render({n/FPS}),[document.getElementById('c').toDataURL('image/jpeg',0.96),window._trk||[]])");ff.stdin.write(base64.b64decode(u[0].split(',')[1]));TR.append(u[1])
             sfx=await pg.evaluate("window.SFX||[]");ff.stdin.close();ff.wait();await b.close();run.TR=TR;return sfx
     sfx=asyncio.run(run())
     pops=find_pops(run.TR)

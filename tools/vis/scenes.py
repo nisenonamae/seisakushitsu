@@ -357,6 +357,14 @@ def section(s,dur,c,repo):
                 d.text((W/2,120),'上下に揺れる車が、波を育てる',font=font(40),fill=WHITE,anchor='mm')
         c.add(im)
 def make(spec,dur,out,repo=''):
+    _make(spec,dur,out,repo)
+    if SCALE>1 and not spec.get('seq'):
+        import subprocess,json as _j
+        w=int(_j.loads(subprocess.run(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=width','-of','json',out],capture_output=True,text=True).stdout)['streams'][0]['width'])
+        tw=int(round(1280*SCALE))
+        if w!=tw:   # 写真・地図などの部品はまだ 1280×720 で描くので、本番の大きさに引き伸ばしてそろえる
+            tmp_=out+'.up.mp4';subprocess.run(['ffmpeg','-y','-loglevel','error','-i',out,'-vf',f'scale={tw}:{int(round(720*SCALE))}:flags=lanczos','-c:v','libx264','-preset','veryfast','-crf','16','-pix_fmt','yuv420p',tmp_],check=True);os.replace(tmp_,out)
+def _make(spec,dur,out,repo=''):
     """spec に seq（部品のリスト）があれば、dur を等分して順につなぐ（長い一文の途中で画面を変えたいとき）"""
     if spec.get('seq'):
         import subprocess,tempfile;tmp=tempfile.mkdtemp();L=spec['seq'];parts=[];sfx=[]

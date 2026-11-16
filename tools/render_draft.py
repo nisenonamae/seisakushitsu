@@ -16,6 +16,7 @@ V='/home/claude/vv'
 ap=argparse.ArgumentParser();ap.add_argument('--data');ap.add_argument('--proj');ap.add_argument('--repo',default='');ap.add_argument('--out')
 ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=float,default=1.1)
 ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない')
+ap.add_argument('--res',type=int,default=720,help='書き出しの高さ（720＝下書き、1080・1440＝本番）。図解は描く所から大きく描く')
 ap.add_argument('--kata',default='',help='声の調整室の型で読む（型のid か名前。main＝チャンネルの声）。エンジン（tools/setup_engine.sh）が要る')
 ap.add_argument('--vrules',action='store_true',help='声の調整室の決まり（読み方）を当てはめる')
 ap.add_argument('--lead',type=float,default=0.0,help='動画のいちばん頭の無音（秒）。--kata のとき')
@@ -23,7 +24,9 @@ ap.add_argument('--bgm',default='',help='BGM の指定。proj＝音の調整室�
 ap.add_argument('--lufs',type=float,default=-14.0,help='仕上げの大きさ（LUFS）。--bgm のとき')
 ap.add_argument('--base-out',default='',help='音の調整室用：BGM なし（声と効果音だけ）の軽い動画もここに書き出し、同じ名前の .json に段の時刻と「声の大きさの曲線」を置く')
 ap.add_argument('--subfont',type=int,default=4,help='字幕の見た目（1〜10。見本は字幕フォントの見本の画像）');a=ap.parse_args()
-D=json.load(open(a.data,encoding='utf-8'));P=[p for p in D['projects'] if p['id']==a.proj][0]
+K=a.res/720;OW,OH=int(round(1280*K))//2*2,int(round(720*K))//2*2;CRF='20' if K<=1 else '17'   # OW,OH＝書き出しの大きさ。絵の座標（W,H）は 1280×720 のまま
+os.environ['SS_SCALE']=str(K)
+D=json.load(open(a.data,encoding='utf-8'));DATA=D;P=[p for p in D['projects'] if p['id']==a.proj][0]   # D はあとで段の長さに使い回すので、データは DATA で持つ
 ob=(P.get('outline') or {}).get('blocks',[]);fb=(P.get('flesh') or {}).get('blocks',[])
 oi={b['id']:i for i,b in enumerate(ob)}
 if fb:
@@ -157,30 +160,31 @@ SUBST={1:(FB,44,'white',3,(0,0,0),(0,0,0,135),False),2:(_FD+'Zen_Maru_Gothic_wgh
 def sub_overlay(text):
     """字幕：1行。--subfont の番号の見た目で（見本の画像と同じ番号）"""
     from PIL import ImageFilter
-    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im)
+    im=Image.new('RGBA',(OW,OH),(0,0,0,0));d=ImageDraw.Draw(im)
     if not text:return im
     fp,size,fill,stroke,sc,box,shadow=SUBST.get(a.subfont,SUBST[1])
     if not os.path.exists(fp):fp,size,fill,stroke,sc,box,shadow=SUBST[1]
-    f=ImageFont.truetype(fp,size);tw=d.textlength(text,font=f);y=H-86
-    if box:d.rounded_rectangle([W/2-tw/2-22,y-10,W/2+tw/2+22,y+size+14],12,fill=box)
+    s_=lambda v:int(round(v*K));size=s_(size);stroke=s_(stroke)   # 書き出しの大きさに合わせて、字・縁・影も大きく
+    f=ImageFont.truetype(fp,size);tw=d.textlength(text,font=f);y=OH-s_(86);cx=OW/2
+    if box:d.rounded_rectangle([cx-tw/2-s_(22),y-s_(10),cx+tw/2+s_(22),y+size+s_(14)],s_(12),fill=box)
     if shadow:
-        sh=Image.new('RGBA',(W,H),(0,0,0,0));ImageDraw.Draw(sh).text((W/2+3,y+4),text,font=f,fill=(0,0,0,220),anchor='ma');im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(4)));d=ImageDraw.Draw(im)
-    d.text((W/2,y),text,font=f,fill=fill,anchor='ma',stroke_width=stroke,stroke_fill=sc)
+        sh=Image.new('RGBA',(OW,OH),(0,0,0,0));ImageDraw.Draw(sh).text((cx+s_(3),y+s_(4)),text,font=f,fill=(0,0,0,220),anchor='ma');im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(4*K)));d=ImageDraw.Draw(im)
+    d.text((cx,y),text,font=f,fill=fill,anchor='ma',stroke_width=stroke,stroke_fill=sc)
     return im
 
 import numpy as np
 SR=24000
 def wav_np(path):
     with wave.open(path) as w:return np.frombuffer(w.readframes(w.getnframes()),np.int16).astype(np.float32)/32768
-def enc(args,out):subprocess.run(['ffmpeg','-y','-loglevel','error',*args,'-an','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-r',str(FPS),out],check=True)
+def enc(args,out):subprocess.run(['ffmpeg','-y','-loglevel','error',*args,'-an','-c:v','libx264','-preset','veryfast','-crf',CRF,'-pix_fmt','yuv420p','-r',str(FPS),out],check=True)
 def tag_overlay(text):
-    im=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(im);f=ImageFont.truetype(FB,26);tw=d.textlength(text,font=f)
-    d.rounded_rectangle([14,12,14+tw+24,12+44],8,fill=(220,40,40,200));d.text((26,16),text,font=f,fill=(255,255,255));return im
+    s_=lambda v:int(round(v*K));im=Image.new('RGBA',(OW,OH),(0,0,0,0));d=ImageDraw.Draw(im);f=ImageFont.truetype(FB,s_(26));tw=d.textlength(text,font=f)
+    d.rounded_rectangle([s_(14),s_(12),s_(14)+tw+s_(24),s_(12)+s_(44)],s_(8),fill=(220,40,40,200));d.text((s_(26),s_(16)),text,font=f,fill=(255,255,255));return im
 def char_time(sx,i,ends):
     """文 sx の i 文字目が話され始める時刻（モーラの数で文の声に合わせる）"""
     if i<=0 or not ends:return 0.0
     tot=nmora(sx) or 1;m=int(round(nmora(sx[:i])/tot*len(ends)));return 0.0 if m<=0 else ends[min(len(ends)-1,m-1)]
-tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[]
+tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[];ALLSUBS=[]
 for k,b in enumerate(seq,1):
     raw=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
     sents=[s.replace('《','').replace('》','') for s in raw]   # 《》は強調の印（声だけに効く）
@@ -254,21 +258,22 @@ for k,b in enumerate(seq,1):
             allshots.append({'tag':f'{k}-{i+1}','block':b['id'],'role':b['role'],'start':round(T+vstarts[i],2),'end':round(T+vstarts[i]+d_,2),'t':sh.get('t') or 'seq','at':sh.get('at','')})
     else:
         cp=f'{tmp}/c{k:03d}_00.mp4'
-        if vpath and vpath.endswith('.mp4'):enc(['-stream_loop','-1','-i',vpath,'-t',f'{D:.3f}','-vf',f'scale={W}:{H},fps={FPS}'],cp)
+        if vpath and vpath.endswith('.mp4'):enc(['-stream_loop','-1','-i',vpath,'-t',f'{D:.3f}','-vf',f'scale={OW}:{OH}:flags=lanczos,fps={FPS}'],cp)
         else:
-            fr=f'{tmp}/f{k:03d}.png';(Image.open(vpath).convert('RGB').resize((W,H)) if vpath else card(b,k,n)).save(fr)
+            fr=f'{tmp}/f{k:03d}.png';(Image.open(vpath).convert('RGB').resize((OW,OH),Image.LANCZOS) if vpath else card(b,k,n).resize((OW,OH),Image.LANCZOS)).save(fr)
             enc(['-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{D:.3f}'],cp)
         clips.append(cp);allshots.append({'tag':f'{k}-1','block':b['id'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'t':'visual'})
     open(f'{tmp}/l{k}.txt','w').write(''.join(f"file '{x}'\n" for x in clips))
     raw=f'{tmp}/raw{k:03d}.mp4';subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l{k}.txt','-c','copy',raw],check=True)
     # 6) 字幕と場面の番号を重ねる
-    inp=['-i',raw];fc=f'[0:v]scale={W}:{H},fps={FPS},tpad=stop_mode=clone:stop_duration=2[v0]';last='v0';q=1
+    inp=['-i',raw];fc=f'[0:v]scale={OW}:{OH}:flags=lanczos,fps={FPS},tpad=stop_mode=clone:stop_duration=2[v0]';last='v0';q=1
     lays=[(sub_overlay(tx),st,en) for tx,st,en in subs]
     if not a.final:lays+=[(tag_overlay(f'場面 {k}-{i+1}'),vstarts[i],(vstarts[i+1] if i+1<len(vstarts) else D)) for i in range(len(vstarts) or 1)] if shots else [(tag_overlay(f'場面 {k}-1'),0,D)]
     for li,(im,st,en) in enumerate(lays):
         pth=f'{tmp}/ov{k:03d}_{li:03d}.png';im.save(pth);inp+=['-i',pth]
         fc+=f";[{last}][{q}:v]overlay=0:0:enable='between(t,{st:.3f},{max(st,en-0.001):.3f})'[v{q}]";last=f'v{q}';q+=1
     bv=f'{tmp}/b{k:03d}.mp4';enc([*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{D:.3f}'],bv);bvids.append(bv)
+    ALLSUBS+=[(T+st,T+en,tx) for tx,st,en in subs]
     tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'visual':vis or ''});T+=D
 open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in bvids))
 subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/v.txt','-c','copy',f'{tmp}/v.mp4'],check=True)
@@ -320,7 +325,7 @@ if a.bgm:
     def load(f):
         r=subprocess.run(['ffmpeg','-loglevel','error','-i',f,'-f','f32le','-ac','2','-ar',str(SR2),'-'],capture_output=True,check=True);return np.frombuffer(r.stdout,np.float32).reshape(-1,2).astype(np.float64)
     if a.bgm=='proj':   # 音の調整室で決めた BGM（project.sound.bgm）。soundId を音の保管庫のファイル／URL に置きかえる
-        _b=(P.get('sound') or {}).get('bgm') or {'cues':[]};_sd={x['id']:x for x in D.get('sounds',[])}
+        _b=(P.get('sound') or {}).get('bgm') or {'cues':[]};_sd={x['id']:x for x in DATA.get('sounds',[])}
         _f=lambda c:{**c,'file':(_sd.get(c.get('soundId')) or {}).get('file') or (_sd.get(c.get('soundId')) or {}).get('url')}
         spec={'duck':_b.get('duck',1.6),'lanes':_b.get('lanes') or [],**({'clips':[_f(c) for c in _b['clips']]} if 'clips' in _b else {'cues':[_f(c) for c in _b.get('cues',[])]})}
     else:spec=json.load(open(a.bgm,encoding='utf-8'))
@@ -393,5 +398,15 @@ if a.bgm:
     print(f'BGM：{len(spec)} 曲、仕上げの大きさ {a.lufs} LUFS（元 {lo:.1f}）',file=sys.stderr)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',f'{tmp}/v.mp4','-i',f'{tmp}/m.wav','-c:v','copy','-c:a','aac','-b:a','192k' if a.bgm else '128k','-shortest',a.out],check=True)
 json.dump({'duration':round(T,2),'voice':a.voice,'speed':a.speed,'blocks':tl,'shots':allshots},open(os.path.splitext(a.out)[0]+'.json','w',encoding='utf-8'),ensure_ascii=False)
+# YouTube 用：字幕ファイル（CC）とチャプター（段の役割の「：」より前が同じ間をひとまとめ。YouTube の決まり：0:00 から、3つ以上、それぞれ10秒以上）
+_ts=lambda t:f"{int(t//3600):02d}:{int(t%3600//60):02d}:{int(t%60):02d},{int(round((t-int(t))*1000))%1000:03d}"
+open(os.path.splitext(a.out)[0]+'.srt','w',encoding='utf-8').write(''.join(f"{i}\n{_ts(st)} --> {_ts(max(st+0.3,en))}\n{tx}\n\n" for i,(st,en,tx) in enumerate(sorted(ALLSUBS),1)))
+_ch=[]
+for b_ in tl:
+    nm=b_['role'].split('：')[0].strip() or b_['role']
+    if not _ch or _ch[-1][1]!=nm:_ch.append([b_['start'],nm,b_['role']])
+_ch=[c for i,c in enumerate(_ch) if i==0 or c[0]-_ch[i-1][0]>=10]
+_cl=lambda t:f"{int(t//60)}:{int(t%60):02d}" if t<3600 else f"{int(t//3600)}:{int(t%3600//60):02d}:{int(t%60):02d}"
+open(os.path.splitext(a.out)[0]+'.chapters.txt','w',encoding='utf-8').write(''.join(f"{_cl(0 if i==0 else c[0])} {c[2]}\n" for i,c in enumerate(_ch)) if len(_ch)>=3 else '')
 for _p,_d0,_d1 in LAST.get('tchk',[]):print(f'［点検］調整した文の長さが変わった：「{_p[:24]}」 {_d0:.1f}秒 → {_d1:.1f}秒。カットの切り替わりと字幕は語りに合わせて自動で動くが、その段の動きが急ぎすぎ・間延びしていないか見る',file=sys.stderr)
 print('ok',round(T,1),'sec',os.path.getsize(a.out)//1024,'KB',(f"／調整室で調整した文 {LAST.get('tuned',0)} 文" if VK else ''))

@@ -331,6 +331,13 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - **読み方の辞書**：`voice.json` の `dict[]`（`surface` 書き方、`yomi` カタカナ、`accent`）。調整室で作り手が登録すると、その Mac の VOICEVOX のユーザー辞書に入る。書き出し（`render_draft.py --kata`）のときは `voice_render.sync_dict` でクラウドのエンジンにも入れるので、同じ読みになる。読み間違いを見つけたら Claude もここに足してよい（作り手に一言伝える）
 - take に `recPath` があれば、作り手が録った声そのもの（`roadmap/apps/seisakushitsu/voice_rec/<id>.webm`）。録音の合わせ方（高さの測り方 YIN・時間の突き合わせ DTW）の精度を確かめ、直すときに使う
 
+## 本番の書き出し（final_render）
+制作の9番目の段。`jobs[].res`（1080 か 1440）。total は 3（書き出し→投稿の材料→届ける）。
+1. `render_draft.py --data … --proj … --repo <notion-daily> --out final_vN.mp4 --kata main --vrules --lead 0.3 --bgm proj --res <res> --final`。`--final`＝場面の番号を出さない。`--res`＝図解（HTML の部品）は描く所から大きく描き、写真などの部品と字幕も書き出しの大きさで作る。`final_vN.srt`（YouTube の字幕ファイル）と `final_vN.chapters.txt`（チャプター）も一緒にできる
+2. 動画は大きくて GitHub（1ファイル100MBまで）に置けないので、**チャットに送る**（作り手がいる会話で SendUserFile。名前は `<題名の短い形>_<res>.mp4`）。`.srt` は `videos/<projId>/final_vN.srt` に置く
+3. `projects[].final`＝`{done:true,res:"1080p",name,size,duration,srt:(.srt のパス),at,note}`。`projects[].publish`＝`{title（決めた題名）,desc（概要欄）,tags（カンマ区切り）}`。概要欄は：動画の紹介（2〜3行）→ チャプター → 参考にした資料（使った所の印があるもの）→ クレジット（声「VOICEVOX:青山龍星」、使った BGM・効果音・写真それぞれの `credit`。Kevin MacLeod は決まった英文）。タグは題材・分野の言葉を10個前後
+4. `rules` の「字幕の見た目」「BGM」などを守る。作り手がいない（チャットに送れない）ときは、書き出しと材料だけ作って `result` に「動画は次に話しかけたときにチャットで渡す」と書く
+
 ## 字幕の見た目
 - `render_draft.py` の `--subfont`（1〜10）。**いまの決まりは 4（UD ゴシック＋影）**で、これが既定値。`rules` に字幕の見た目の決まりがあれば、そちらに合わせる
 - 字幕なし（焼き込まない）案は保留中。作り手が決めたら `rules` に書く

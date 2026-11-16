@@ -2,6 +2,7 @@
 import math, os, subprocess, numpy as np
 from PIL import Image, ImageDraw, ImageFont
 W,H,FPS=1280,720,30
+SCALE=float(os.environ.get('SS_SCALE','1') or 1)   # 本番の書き出し（1080p＝1.5、1440p＝2）：図解は描く所から大きく描く。絵の座標は 1280×720 のまま
 FB='/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc';FM='/usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc'
 SAND=(214,186,140);SAND_D=(150,118,78);WHITE=(245,245,240);RED=(226,58,48);GREEN=(90,190,130);BLUE=(110,170,230);BG=(34,44,58);GREY=(150,165,180)
 _F={}
