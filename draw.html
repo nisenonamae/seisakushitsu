@@ -278,7 +278,7 @@ function render(){rq=0;const c=vctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,
  $('zoomLab').textContent=Math.round(V.s*1000)/10+'%'}
 function drawGuides(c){const w=art.w,h=art.h,k=art.kind;c.save();c.lineWidth=1.5/V.s;
  const dim=p=>{c.save();c.beginPath();c.rect(0,0,w,h);p();c.fillStyle='rgba(20,25,35,.4)';c.fill('evenodd');c.restore()};
- if(k==='icon'){dim(()=>{c.moveTo(w,h/2);c.arc(w/2,h/2,w/2,0,Math.PI*2,true)});c.setLineDash([8/V.s,6/V.s]);c.strokeStyle='rgba(61,142,240,.9)';c.beginPath();c.arc(w/2,h/2,w*0.35,0,7);c.stroke()}
+ if(k==='icon'){dim(()=>{c.moveTo(w,h/2);c.arc(w/2,h/2,w/2,0,Math.PI*2,true)});c.setLineDash([8/V.s,6/V.s]);c.strokeStyle='rgba(61,142,240,.75)';c.beginPath();c.arc(w/2,h/2,w*0.35,0,7);c.stroke();c.setLineDash([]);c.font=`${12/V.s}px sans-serif`;c.textAlign='center';c.fillStyle='rgba(61,142,240,.95)';c.fillText('ガイド：大事なものはこの円の中に（上の「ガイド」で消せます）',w/2,h/2-w*0.35-8/V.s);c.textAlign='start'}
  if(k==='banner'&&art.w===2560&&art.h===1440){const dh=423,dw=2560,sw=1546,tw=1855;dim(()=>{c.rect((w-dw)/2,(h-dh)/2,dw,dh)});c.strokeStyle='rgba(255,170,0,.95)';c.setLineDash([10/V.s,6/V.s]);c.strokeRect((w-tw)/2,(h-dh)/2,tw,dh);c.strokeStyle='rgba(230,40,40,.95)';c.setLineDash([]);c.lineWidth=3/V.s;c.strokeRect((w-sw)/2,(h-dh)/2,sw,dh);
   c.font=`${13/V.s}px sans-serif`;c.fillStyle='rgba(230,40,40,.95)';c.fillText('スマホでも見える範囲',(w-sw)/2+6/V.s,(h-dh)/2-6/V.s);c.fillStyle='rgba(255,170,0,.95)';c.fillText('タブレット',(w-tw)/2+6/V.s,(h+dh)/2+16/V.s);c.fillStyle='rgba(255,255,255,.9)';c.fillText('テレビだけで見える',12/V.s,22/V.s)}
  if(k==='thumb'){c.fillStyle='rgba(0,0,0,.55)';c.fillRect(w-150,h-62,130,44);c.fillStyle='#fff';c.font='bold 28px sans-serif';c.fillText('10:24',w-128,h-30)}
@@ -518,8 +518,9 @@ view.addEventListener('pointerdown',e=>{if(!art)return;try{view.setPointerCaptur
 view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt.x=e.clientX;pt.y=e.clientY}
  if(gest&&ptrs.size>=2){const[a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=view.getBoundingClientRect();const s=clamp(gest.s*d/gest.d,0.02,32);const dx=(gest.cx-r.left-gest.tx)/gest.s,dy=(gest.cy-r.top-gest.ty)/gest.s;V.s=s;V.tx=cx-r.left-dx*s;V.ty=cy-r.top-dy*s;gest.moved=Math.max(gest.moved,Math.abs(d-gest.d),Math.hypot(cx-gest.cx,cy-gest.cy));need();return}
  if(pan){V.tx=pan.tx+e.clientX-pan.x;V.ty=pan.ty+e.clientY-pan.y;need();return}
+ if(e.pointerType!=='touch'&&(tool==='brush'||tool==='eraser')){cursor=toDoc(e);clearTimeout(cursorFlash.t)}else if(e.pointerType==='touch')cursor=null;
  if(stroke&&e.pointerId===stroke.id&&(tool==='brush'||tool==='eraser')){moveStroke(e);return}
- if(e.pointerType==='mouse'&&(tool==='brush'||tool==='eraser')){cursor=toDoc(e);need()}
+ if(cursor)need()
  if(!drag)return;const p=toDoc(e);
  if(drag.kind==='grad'){drag.b=p;drawGrad(drag.a,p);need()}
  else if(drag.kind==='shape'){drag.b=p;drawShape(drag.a,p,e.shiftKey);need()}
@@ -553,7 +554,7 @@ function ptrEnd(e){ptrs.delete(e.pointerId);
  else if(d.kind==='crop'){if(!crop||crop.w<4||crop.h<4)crop=null;renderOpts()}
  need()}
 view.addEventListener('pointerup',ptrEnd);view.addEventListener('pointercancel',ptrEnd);
-view.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){cursor=null;need()}});
+view.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch'){cursor=null;need()}});
 view.addEventListener('contextmenu',e=>e.preventDefault());
 view.addEventListener('dblclick',()=>{if(tool==='hand')fit()});
 view.addEventListener('wheel',e=>{e.preventDefault();const r=view.getBoundingClientRect();const wheelMouse=e.deltaX===0&&(e.deltaMode!==0||(Math.abs(e.deltaY)>=50&&Number.isInteger(e.deltaY)));if(e.ctrlKey||e.metaKey||e.altKey||wheelMouse){zoomAt(Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX-r.left,e.clientY-r.top)}else{V.tx-=e.deltaX;V.ty-=e.deltaY;need()}},{passive:false});
