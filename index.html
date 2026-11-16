@@ -97,6 +97,8 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .help summary{font-weight:700;font-size:15.5px;color:var(--ink)}
 .help ol,.help ul{padding-left:20px;margin:6px 0}.help li{margin:3px 0;font-size:14.5px}.help p{font-size:14.5px;margin:6px 0}
 .help code{background:var(--paper);padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-all}
+.pcard{border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--paper)}.pcard.cur{border:2px solid var(--sea)}
+.pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;margin:2px 4px 0 0;background:var(--row);color:var(--sub)}.pill.busy{background:#fff1c7;color:#7a5a00}.pill.you{background:#d9f2e1;color:#1c6b37}
 </style></head><body>
 <header><h1>制作室</h1><span class="sync" id="sync">この端末だけに保存中</span><button class="b" id="helpBtn" style="padding:4px 10px;font-size:13px">使い方</button></header>
 <main>
@@ -241,7 +243,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 </ol></details>
 
 <details><summary>▶ 制作（一本の動画を作る）</summary>
-<p>「作る」にした題材が並びます。「これを作る」を押すと、10の手順が上から順に出てきます。いまやる手順が青い枠で開いています。</p><ol>
+<p>「作る」にした題材が並びます。「これを作る」を押すと、10の手順が上から順に出てきます。<b>何本でも並行して作れます</b>：上の「制作中の動画」から押して切り替え、「＋ 新しく作る」から次の題材も始められます。各動画に「Claude が作業中」か「あなたの番」かが出ます。いまやる手順が青い枠で開いています。</p><ol>
 <li><b>参考と資料を集める</b>：集めたいもの（見せ方の参考・中身の参考・調べた資料・使えそうな素材）に印を付けて数を選び、ボタンを押すと Claude が集めて置きます。足りないものだけ、あとから何度でも追加で頼めます。そのうえで、真似たい場面の録画を選んで送り、ひらめき帳のメモに印を付け、参考にする動画の文字起こしを貼る（量を選ぶと要約される）</li>
 <li><b>構成を磨く</b>：Claude が骨組み（段ごとに「何を言う・画面で何を見せる・ねらい・秒数」）を出す。段ごとに「残す／差し替え案がほしい／削る」の印や一言の注文を付け、並べ替えや自分での書き換えもして、「次の版にしてもらう」。臨機応変に話したいときは「Claude と話し合う」でチャットへ（決まったことは自動でアプリに反映）。固まったら「決まり」</li>
 <li><b>肉付けを磨く</b>：決まりにすると自動で頼まれ、段ごとに語り（読み上げる文）と画面の指示が届く。「▶通しで聞く」で読み上げを流し、気になった所でその場で「ここ気になる」。段ごとに「いい／直す／書き直し案がほしい／削る」。磨き方は構成と同じ</li>
@@ -559,13 +561,13 @@ const STEPS=[
 {t:'音',s:'BGM・効果音・始まりの音を付け、通しで聞いて直す'},
 {t:'本番の書き出し',s:'場面の番号なし・高画質で書き出し、YouTube に上げる材料をそろえる'},
 {t:'残して終わる',s:'次からも使う直しを工夫の棚へ'}];
-let curProj=null;
+let curProj=LS.get('mk_proj','')||null;   // 開いている制作（端末ごとに覚える）
 const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
 const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
-const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（Claude が毎時17分ごろに片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
+const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（下のボタンで Claude に頼むと片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${(()=>{const pj=j.projId&&D.projects.filter(x=>!x.deleted&&!x.finished).length>1&&D.projects.find(x=>x.id===j.projId);return pj?`<span class="pill">${esc(candQ(pj).slice(0,14))}</span>`:''})()}${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
 function renderMake0(){const mt=$('makeTop');const topDet=new Map([...mt.querySelectorAll('details')].map(x=>[(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent,x.open]));renderMake1();mt.querySelectorAll('details').forEach(x=>{const k=(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent;if(topDet.has(k))x.open=topDet.get(k)})}
@@ -575,11 +577,19 @@ const live=D.projects.filter(x=>!x.deleted&&!x.finished);
 if(!p){$('makeTop').innerHTML=jobsPanel()+`<p class="big">いま作っている動画はありません。</p>
 ${makeC.length?`<p class="lead">「作る」にした題材から一つ選ぶと、やることが順番に出てきます。</p>${makeC.map(c=>`<div class="item"><div class="q">${esc(c.q)}</div><div class="row"><button class="b main" data-start="${c.id}">これを作る</button><button class="b" data-unmake="${c.id}">制作から外す</button></div></div>`).join('')}`
 :`<div class="empty">候補の画面で、作りたい題材を「作る」にしてください。</div>`}`;$('makeSteps').innerHTML='';renderStepNav(null);return}
-const s=p.step||0;
-$('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">いま作っている動画</div><div class="q">${esc(candQ(p))}</div>
+const s=p.step||0;LS.set('mk_proj',p.id);
+// 制作中の動画を並べる（何本でも並行して進められる）。Claude が作業中か、自分の番かも出す
+const started=new Set(live.map(x=>x.candId));const newC=makeC.filter(c=>!started.has(c.id));
+const card=x=>{const st=x.step||0;const js=(D.jobs||[]).filter(j=>!j.deleted&&j.projId===x.id&&(j.status==='待ち'||j.status==='作業中'));
+ return `<div class="pcard ${x.id===p.id?'cur':''}" data-pick="${x.id}"><div class="q" style="font-size:15px">${esc(candQ(x))}</div>
+ <div class="lead" style="margin:2px 0">${st<STEPS.length?`${st+1}/${STEPS.length}　${esc(STEPS[st].t)}`:'完成'}</div>
+ ${js.length?`<span class="pill busy">Claude が作業中（${js.length}件）</span>`:`<span class="pill you">あなたの番</span>`}${x.id===p.id?'<span class="pill">開いている</span>':''}</div>`};
+$('makeTop').innerHTML=jobsPanel()+`<div class="item"><div class="tags">制作中の動画（${live.length}本）　押すと開く</div>
+${live.slice().sort((a,b)=>b.updatedAt-a.updatedAt).map(card).join('')}
+<details style="margin-top:6px"><summary>＋ 新しく作る（「作る」にした題材 ${newC.length}本）</summary>${newC.length?newC.map(c=>`<div class="item" style="margin:6px 0"><div class="q" style="font-size:14.5px">${esc(c.q)}</div><div class="row"><button class="b main" data-start="${c.id}">これも作る</button><button class="b" data-unmake="${c.id}">制作から外す</button></div></div>`).join(''):'<div class="empty">候補の画面で、作りたい題材を「作る」にすると、ここから始められます。</div>'}</details></div>
+<div class="item"><div class="tags">開いている動画</div><div class="q">${esc(candQ(p))}</div>
 <div class="big" style="margin-top:8px">次にやること：${s<STEPS.length?esc(STEPS[s].t):'完成'}</div>
-<div class="row"><button class="b" data-quit>この制作をやめる（候補にもどす）</button></div>
-${live.length>1?`<label>ほかの制作に切り替える</label><select id="projSel">${live.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(candQ(x))}</option>`).join('')}</select>`:''}</div>`+omakaseHTML(p);
+<div class="row"><button class="b" data-quit>この制作をやめる（候補にもどす）</button></div></div>`+omakaseHTML(p);
 const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const rel=p.related||[];const srcs=p.sources||[];const ast=p.assets||[];
 const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${footHTML(p,r.footage,'rel',r.url)}${usedIn(p,r.url)}${useBtn(p,'related',r.url,r.title,'r'+rel.indexOf(r))}
@@ -801,6 +811,7 @@ $('makeTop').addEventListener('change',e=>{if(e.target.id==='omKeep'){LS.set('om
 if(e.target.matches('[data-om]')){let sel={};try{sel=JSON.parse(LS.get('om_sel','{}'))||{}}catch(x){}sel[e.target.dataset.om]=e.target.checked;LS.set('om_sel',JSON.stringify(sel))}
 if(e.target.matches('[data-plen]')){const p=projOf();if(p){p.len=e.target.value;touchP(p)}}});
 $('makeTop').addEventListener('click',e=>{
+const pk=e.target.closest('[data-pick]');if(pk&&!e.target.closest('button,a,input,select')){if(pk.dataset.pick!==curProj){curProj=pk.dataset.pick;LS.set('mk_proj',curProj);$('makeSteps').dataset.pid='';renderMake();const st=$('makeSteps');if(st)st.scrollIntoView({block:'start'})}return}
 if(e.target.matches('[data-ommode]')){LS.set('om_mode',e.target.dataset.ommode);renderMake();return}
 if(e.target.matches('[data-omgo]')){const p=projOf();if(!p)return;const all=LS.get('om_mode','選んだ部分')==='全部';const parts=all?OM.map(x=>x[0]):[...document.querySelectorAll('[data-om]')].filter(x=>x.checked).map(x=>x.dataset.om);if(!parts.length){alert('作り直す部分を選んでください');return}
 const chk=new Set([...document.querySelectorAll('[data-omch]')].filter(x=>x.checked).map(x=>x.dataset.omch));const changes=changesSince(p).filter(c=>chk.has(c.k)).map(c=>c.t);
@@ -809,7 +820,7 @@ if(e.target.id==='jobsNow'){copyOpen('制作室の頼みごとを今すぐ片づ
 const un=e.target.closest('[data-unmake]');if(un){const c=D.candidates.find(x=>x.id===un.dataset.unmake);c.status='候補';c.updatedAt=now();save();renderAll();return}
 if(e.target.closest('[data-quit]')){const p=projOf();if(!p||!confirm('この制作をやめて、題材を候補にもどしますか？'))return;p.deleted=true;p.updatedAt=now();const c=D.candidates.find(x=>x.id===p.candId);if(c){c.status='候補';c.updatedAt=now()}curProj=null;save();renderAll();window.scrollTo(0,0);return}
 const b=e.target.closest('[data-start]');if(!b)return;const c=D.candidates.find(x=>x.id===b.dataset.start);
-const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;save();renderMake();window.scrollTo(0,0)});
+const p={id:uid('p'),candId:c.id,step:0,refs:[],scriptNotes:'',fixes:[],updatedAt:now()};D.projects.push(p);curProj=p.id;LS.set('mk_proj',p.id);save();renderMake();window.scrollTo(0,0)});
 document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-gk]')||t.matches('[data-gn]')){const g=gSel();const k=t.dataset.gk||t.dataset.gn;if(t.matches('[data-gk]'))g[k].on=t.checked;else g[k].n=+t.value;gSave(g)}});
 $('makeTop').addEventListener('change',e=>{if(e.target.id==='projSel'){curProj=e.target.value;renderMake()}});
 $('makeSteps').addEventListener('click',async e=>{const p=projOf();if(!p)return;const el=e.target;if(blkClick(e,p))return;

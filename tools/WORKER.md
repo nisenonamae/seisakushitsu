@@ -28,6 +28,7 @@
 
 ## 2. 仕事の種類ごとのやり方
 `candId` がない制作（`trial: true` のお試しなど）は、`projects[].title` を題材として使う。
+**制作は何本も並行して進む**。頼みごとはいつも `jobs[].projId` の制作に対して行い、「いちばん新しい制作」などで決めつけない。別の制作の頼みごとが並んでいたら、古い順に一つずつ片づける（書き出しのような重い仕事は、ほかの制作の軽い仕事を先に済ませてからでよい）。決まり・工夫の棚は全部の制作で共通に使う。
 JSON の中身はすべて ID でつながっている：`jobs[].projId` → `projects[].id`、`jobs[].matId` → `materials[].id`、`projects[].candId` → `candidates[].id`、`projects[].refs` → `ideas[].id`、`projects[].mats` → `materials[].id`、`projects[].recs[].path` → データのリポジトリの中の録画ファイル。
 
 ### summary（日本語のまとめ）
