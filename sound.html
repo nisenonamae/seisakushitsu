@@ -62,6 +62,7 @@ video{width:100%;display:block;max-height:max(170px,calc(100vh - 470px));backgro
 button.b.tb{padding:3px 10px;font-size:13px}
 #playBtn{min-width:44px;font-size:14px}
 #tc{font-variant-numeric:tabular-nums;font-size:13px;min-width:108px}
+.spd{display:inline-flex;align-items:center;gap:4px}.spd input{width:110px;padding:0;margin:0}.spd b{font-size:12.5px;min-width:52px;font-variant-numeric:tabular-nums}
 .sep{width:1px;height:20px;background:var(--line);margin:0 3px}
 .ab{display:inline-flex;gap:3px}.ab button[aria-pressed=true],#snapBtn[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 #stat{margin-left:6px;font-variant-numeric:tabular-nums}
@@ -79,7 +80,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);c
 .keys td{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}.keys td:first-child{white-space:nowrap;font-weight:600}
 :focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 </style></head><body>
-<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/16 14:40</span><span class="stat" id="syncStat">同期：—</span></header>
+<header><h1>音の調整室</h1><a href="./">← 制作室</a><a href="bgm.html">音楽の棚</a><a href="voice.html">声の調整室</a><span class="stat">版 11/16 12:00</span><span class="stat" id="syncStat">同期：—</span></header>
 <main>
 <div class="row" style="margin:0 0 8px"><label style="margin:0;display:inline">動画</label><select id="proj" style="width:auto;max-width:100%"></select><span class="hint">DaVinci のように：曲を掴んで動かす・端を引っ張って切る・白い線を上下して大きさ・角の□でフェード。<a href="#" id="helpLink">操作の一覧</a></span></div>
 <div id="noBase" class="empty" hidden></div>
@@ -106,6 +107,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);c
  <div id="bar">
   <button class="b tb" id="playBtn" title="再生・停止（スペース）">▶</button>
   <span id="tc">0:00.0 / 0:00</span>
+  <span class="spd" title="再生の速さ（1〜5倍）"><input type="range" id="spd" min="1" max="5" step="0.25" value="1"><b id="spdV">1.00 倍</b></span>
   <span class="ab"><button class="b tb" data-ab="mine" aria-pressed="true">自分の調整</button><button class="b tb" data-ab="claude">Claude の案</button><button class="b tb" data-ab="none">音楽なし</button></span>
   <span class="sep"></span>
   <button class="b tb" id="undoBtn" title="元に戻す（⌘Z）">↶</button><button class="b tb" id="redoBtn" title="やり直す（⇧⌘Z）">↷</button>
@@ -126,7 +128,8 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--paper);c
 </div>
 <dialog id="help"><h2 style="margin-top:0">操作の一覧</h2>
 <table class="keys">
-<tr><td>スペース ／ J・K・L</td><td>再生・停止 ／ 後ろへ・止める・前へ（L・J は押すたびに速く）</td></tr>
+<tr><td>スペース ／ J・K・L</td><td>再生・停止 ／ 後ろへ・止める・前へ（L は押すたびに 2→4→5 倍、J は押すたびに速く）</td></tr>
+<tr><td>上の「倍」のつまみ</td><td>再生の速さ（1〜5倍、0.25 ずつ）。スペースで再生しても、この速さで流れる</td></tr>
 <tr><td>← → ／ ⇧← →</td><td>1コマ ／ 1秒 動かす</td></tr>
 <tr><td>↑ ↓ ／ Home・End</td><td>前・次の切れ目（クリップの端・段の頭）へ ／ 頭・終わりへ</td></tr>
 <tr><td>上の目盛り・語りの段を押す・引きずる</td><td>再生ヘッドを動かす（語りの段をダブルクリックで、その段の頭へ）</td></tr>
@@ -281,7 +284,9 @@ const V=()=>$('vid');
 V().addEventListener('play',schedule);V().addEventListener('playing',schedule);V().addEventListener('pause',stopNodes);V().addEventListener('waiting',stopNodes);
 V().addEventListener('seeked',()=>{if(!V().paused)schedule();dirtyDraw=true});V().addEventListener('volumechange',resched);
 V().addEventListener('click',togglePlay);
-function togglePlay(){const v=V();if(v.paused){ac().resume();v.play()}else v.pause()}
+let SPD=clamp(+LS.get('snd_spd','1')||1,1,5);
+function setSpd(x){SPD=clamp(Math.round(x*4)/4,1,5);LS.set('snd_spd',String(SPD));$('spd').value=SPD;$('spdV').textContent=SPD.toFixed(2)+' 倍';V().playbackRate=SPD}
+function togglePlay(){const v=V();if(v.paused){ac().resume();if(v.playbackRate<1)v.playbackRate=SPD;v.play()}else v.pause()}
 // 試聴（曲を足すの一覧）
 let PREV=null;function stopPrev(){if(PREV){try{PREV.src.stop()}catch(e){}PREV.btn.textContent='▶';PREV=null}}
 async function preview(sid,btn){if(PREV&&PREV.sid===sid){stopPrev();return}stopPrev();btn.textContent='…';try{const b=await loadBuf(sid);const A=ac();A.resume();const s=A.createBufferSource();s.buffer=b;const g=A.createGain();g.gain.value=STD*(BASE?BASE.vr:0.1)/(RMS[sid]||0.15)*3;s.connect(g);g.connect(A.destination);s.start();PREV={sid,src:s,btn};btn.textContent='■';s.onended=()=>{if(PREV&&PREV.src===s)stopPrev()}}catch(e){btn.textContent='×'}}
@@ -489,9 +494,9 @@ function after(){SEL=new Set([...SEL].filter(id=>W.clips.some(c=>c.id===id)));cl
 function edges(){return [...new Set([0,BASE.duration,...BASE.blocks.map(b=>b.start),...cur().clips.flatMap(c=>[c.start,c.start+c.dur])])].sort((a,b)=>a-b)}
 // J・K・L（シャトル）：L＝前へ（押すたびに 1→2→4 倍）、K＝止める、J＝後ろへ（押すたびに速く）
 let JT=null,JR=0;function stopJ(){clearInterval(JT);JT=null;JR=0}
-function shuttle(k){const v=V();if(k==='k'){stopJ();v.pause();v.playbackRate=1;return}
- if(k==='l'){stopJ();if(v.paused){v.playbackRate=1;ac().resume();v.play()}else v.playbackRate=Math.min(4,v.playbackRate*2);return}
- if(k==='j'){v.pause();v.playbackRate=1;JR=JR?Math.min(4,JR*2):1;clearInterval(JT);JT=setInterval(()=>{v.currentTime=Math.max(0,v.currentTime-0.08*JR);if(v.currentTime<=0)stopJ()},80)}}
+function shuttle(k){const v=V();if(k==='k'){stopJ();v.pause();setSpd(SPD);return}
+ if(k==='l'){stopJ();if(v.paused){setSpd(SPD);ac().resume();v.play()}else{const r=v.playbackRate;setSpd(r<2?2:r<4?4:5)}return}
+ if(k==='j'){v.pause();JR=JR?Math.min(4,JR*2):1;clearInterval(JT);JT=setInterval(()=>{v.currentTime=Math.max(0,v.currentTime-0.08*JR);if(v.currentTime<=0)stopJ()},80)}}
 document.addEventListener('keydown',e=>{if(!BASE||$('room').hidden)return;const tg=e.target.tagName;if(/INPUT|TEXTAREA|SELECT/.test(tg)&&e.target.type!=='range')return;const mod=e.metaKey||e.ctrlKey;const v=V();const key=e.key.toLowerCase();
  if(e.code==='Space'){e.preventDefault();stopJ();togglePlay();return}
  if(mod&&key==='b'){e.preventDefault();blade();return}
@@ -511,7 +516,8 @@ document.addEventListener('keydown',e=>{if(!BASE||$('room').hidden)return;const 
  if(e.shiftKey&&key==='z'){fitZoom();return}
  if(e.key==='Escape'){SEL.clear();clrKf();hideMenu();renderInsp();dirtyDraw=true}});
 $('playBtn').onclick=()=>{stopJ();togglePlay()};V().addEventListener('play',()=>$('playBtn').textContent='❚❚');V().addEventListener('pause',()=>$('playBtn').textContent='▶');
-V().addEventListener('ratechange',()=>{$('stat').textContent=V().playbackRate!==1?V().playbackRate+' 倍':'';resched()});
+V().addEventListener('ratechange',()=>{const r=V().playbackRate;$('spd').value=r;$('spdV').textContent=r.toFixed(2)+' 倍';resched()});
+$('spd').oninput=e=>setSpd(+e.target.value);setSpd(SPD);
 $('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('bladeBtn').onclick=blade;$('zIn').onclick=()=>zoom(1.5);$('zOut').onclick=()=>zoom(1/1.5);$('zFit').onclick=fitZoom;
 function setSnap(v){SNAP=v;LS.set('snd_snap',v?'1':'0');$('snapBtn').setAttribute('aria-pressed',v)}$('snapBtn').onclick=()=>setSnap(!SNAP);setSnap(SNAP);
 $('helpLink').onclick=e=>{e.preventDefault();$('help').showModal()};
