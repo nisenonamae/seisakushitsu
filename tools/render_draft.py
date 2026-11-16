@@ -340,6 +340,16 @@ if a.bgm:
             clips.append({'start':st,'dur':en-st,'file':x.get('file') or x.get('url'),'off':float(x.get('off',0)),'gain':g,'kf':kf,
                 'fadeIn':float(x['fadeIn']) if x.get('fadeIn') is not None else (XFs if i>0 else 1.0),'fadeOut':float(x['fadeOut']) if x.get('fadeOut') is not None else (XFs if nx else 3.0),'lane':1})
     muted={i+1 for i,l in enumerate(lanes) if (l or {}).get('m')}
+    def _env(us,kf):
+        # 大きさの点：最初の点の前・最後の点の後はその値。間は直線、前の点が「out」（イーズアウト）なら出だしがゆっくり、次の点が「in」なら着きがゆっくり（音の調整室・DaVinci と同じ）
+        if not kf:return 0
+        out=np.full(len(us),float(kf[0]['db']))
+        for a_,z_ in zip(kf,kf[1:]):
+            m=(us>=a_['u'])&(us<=z_['u']);f=(us[m]-a_['u'])/max(1e-6,z_['u']-a_['u'])
+            so=a_.get('e') in('out','both');si=z_.get('e') in('in','both')
+            f=f*f*(3-2*f) if so and si else f*f if so else 1-(1-f)**2 if si else f
+            out[m]=a_['db']+(z_['db']-a_['db'])*f
+        out[us>kf[-1]['u']]=kf[-1]['db'];return out
     bg=np.zeros((N,2));_cache={}
     for x in clips:
         fpath=x.get('file') or x.get('url')
@@ -365,8 +375,8 @@ if a.bgm:
         if fa>0:fi[:fa]=np.linspace(0,1,fa)
         if fo>0:fi[-fo:]*=np.linspace(1,0,fo)
         # 大きさ：gain（dB、0＝標準 0.12）＋音量の線の点（kf：[{u:クリップの頭からの秒, db}]。最初の点の前・最後の点の後はその値のまま、点と点の間は直線）
-        kf=sorted(x.get('kf') or [],key=lambda q:q['u']);db=float(x.get('gain',0))+(np.interp(np.arange(L)/SR2,[q['u'] for q in kf],[q['db'] for q in kf]) if kf else 0)
-        bg[s0:s0+L]+=seg*(fi*0.12*10**(db/20))[:,None]
+        kf=sorted(x.get('kf') or [],key=lambda q:q['u']);db=float(x.get('gain',0))+_env(np.arange(L)/SR2,kf)+float((lanes[int(x.get('lane',1))-1] if int(x.get('lane',1))-1<len(lanes) else {}).get('g',0) if lanes else 0)
+        bg[s0:s0+L]+=seg*(fi*np.where(db<=-59.95,0,0.12*10**(db/20)))[:,None]
     spec=clips
     # 声のある間は下げ、0.6秒以上の間では少し上げる（なめらかに）
     hop=int(0.05*SR2);fr=np.sqrt(np.convolve(v48**2,np.ones(hop)/hop,'same')[::hop]);vref=np.percentile(fr[fr>1e-4],60) if (fr>1e-4).any() else 1
