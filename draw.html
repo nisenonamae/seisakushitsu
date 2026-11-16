@@ -208,9 +208,10 @@ let art=null,layers=[],activeId=null;
 const act=()=>layers.find(l=>l.id===activeId)||layers[layers.length-1];
 const byId=id=>layers.find(l=>l.id===id);
 let tool=LS.get('pd_tool','brush');
-const OPT0={brush:{size:16,hard:100,op:100,flow:100,smooth:4,pSize:1,pOp:0,line:0,snapA:1},eraser:{size:40,hard:100,op:100,flow:100,smooth:2,pSize:1,pOp:0,line:0,snapA:1},bucket:{tol:32,cont:1,all:0,op:100},grad:{type:'linear',mode:'fgbg',op:100,rev:0},wand:{tol:32,cont:1,all:0},sel:{mode:'new',shape:'rect'},lasso:{mode:'new'},shape:{type:'rect',fill:1,stroke:0,sw:12,newL:1},text:{font:'Zen Maru Gothic|900',size:120,edge:'0',align:'center',warp:'none',bend:40},crop:{},move:{},pick:{},hand:{},zoom:{}};
+const OPT0={brush:{size:16,hard:100,op:100,flow:100,smooth:4,pSize:1,pOp:0,line:0,snapA:1},eraser:{size:40,hard:100,op:100,flow:100,smooth:2,pSize:1,pOp:0,line:0,snapA:1},bucket:{tol:32,cont:1,all:1,op:100,gap:3,spread:2},grad:{type:'linear',mode:'fgbg',op:100,rev:0},wand:{tol:32,cont:1,all:0},sel:{mode:'new',shape:'rect'},lasso:{mode:'new'},shape:{type:'rect',fill:1,stroke:0,sw:12,newL:1},text:{font:'Zen Maru Gothic|900',size:120,edge:'0',align:'center',warp:'none',bend:40},crop:{},move:{},pick:{},hand:{},zoom:{}};
 const OPT=(()=>{let s={};try{s=JSON.parse(LS.get('pd_opt','{}')||'{}')}catch(e){}const o={};for(const k in OPT0)o[k]={...OPT0[k],...(s[k]||{})};return o})();
 const saveOpt=()=>LS.set('pd_opt',JSON.stringify(OPT));
+if(LS.get('pd_bucket_v2','')!=='1'){OPT.bucket.all=1;OPT.bucket.gap=OPT.bucket.gap??3;OPT.bucket.spread=OPT.bucket.spread??2;LS.set('pd_bucket_v2','1');saveOpt()}
 let fg=LS.get('pd_fg','#000000'),bg=LS.get('pd_bg','#ffffff');let recent=[];try{recent=JSON.parse(LS.get('pd_recent','[]')||'[]')}catch(e){}
 let showGuide=LS.get('pd_guide','1')==='1';let comp=LS.get('pd_comp','none');let snapOn=LS.get('pd_snap','1')==='1';let snapLines=[];
 const V={s:1,tx:0,ty:0};
@@ -242,7 +243,7 @@ const sizeFromSlider=v=>Math.round(Math.pow(1.06,v)*10)/10; // 1〜1000
 const sliderFromSize=s=>Math.round(Math.log(Math.max(1,s))/Math.log(1.06));
 function renderOpts(){const o=OPT[tool]||{};let h='';
  if(tool==='brush'||tool==='eraser'){h=`<label>直径</label><input type="range" data-o="size" min="0" max="118" value="${sliderFromSize(o.size)}"><span class="num" data-ov="size">${o.size}px</span>`+rng('hard','硬さ',0,100,o.hard,'%')+rng('op','不透明度',1,100,o.op,'%')+rng('flow','流量',1,100,o.flow,'%')+rng('smooth','滑らかさ',0,10,o.smooth)+chk('pSize','筆圧で太さ',o.pSize)+chk('pOp','筆圧で濃さ',o.pOp)+`<span class="seg"><button data-act="lineToggle" class="${o.line?'on':''}">📏 まっすぐ引く</button></span>`+chk('snapA','15°ごとにそろえる',o.snapA)}
- else if(tool==='bucket')h=rng('tol','許容値',0,255,o.tol)+chk('cont','隣接',o.cont)+chk('all','全レイヤーを対象',o.all)+rng('op','不透明度',1,100,o.op,'%');
+ else if(tool==='bucket')h=`<label>線を見る</label>`+seg('all',[[1,'全部のレイヤー'],[0,'このレイヤーだけ']],o.all)+rng('gap','隙間を閉じる',0,20,o.gap??3,'px')+rng('spread','線の下まで広げる',0,8,o.spread??2,'px')+rng('tol','許容値',0,255,o.tol)+chk('cont','つながった所だけ',o.cont)+rng('op','不透明度',1,100,o.op,'%');
  else if(tool==='grad')h=seg('type',[['linear','線形'],['radial','円形']],o.type)+seg('mode',[['fgbg','描画色→背景色'],['fgt','描画色→透明']],o.mode)+chk('rev','逆方向',o.rev)+rng('op','不透明度',1,100,o.op,'%')+'<span class="lead">ドラッグで方向を決める</span>';
  else if(tool==='sel')h=seg('shape',[['rect','長方形'],['ellipse','楕円形']],o.shape)+seg('mode',[['new','新規'],['add','追加'],['sub','削除'],['int','共通']],o.mode)+selBtns();
  else if(tool==='lasso')h=seg('mode',[['new','新規'],['add','追加'],['sub','削除'],['int','共通']],o.mode)+selBtns();
@@ -262,7 +263,7 @@ $('opts').addEventListener('input',e=>{const t=e.target;const o=OPT[tool];
  if(t.id==='tIn'&&textEdit){textEdit.str=t.value;drawTextLayer()}
  if(t.id==='xfW'&&float){float.sx=(+t.value||1)/100;need()}if(t.id==='xfH'&&float){float.sy=(+t.value||1)/100;need()}if(t.id==='xfR'&&float){float.rot=(+t.value||0)*Math.PI/180;need()}});
 $('opts').addEventListener('change',e=>{const t=e.target;if(t.dataset.gsel==='comp'){comp=t.value;LS.set('pd_comp',comp);need();return}if(t.dataset.gsel==='base'){setCompBase(t.value);return}if(t.dataset.ck){OPT[tool][t.dataset.ck]=t.checked?1:0;saveOpt()}});
-$('opts').addEventListener('click',e=>{const s=e.target.closest('[data-seg]');if(s){const o=tool==='wand'&&s.dataset.seg==='mode'?OPT.sel:OPT[tool];o[s.dataset.seg]=s.dataset.v;saveOpt();if(tool==='text'&&textEdit){textEdit[s.dataset.seg]=s.dataset.v;drawTextLayer()}renderOpts();return}
+$('opts').addEventListener('click',e=>{const s=e.target.closest('[data-seg]');if(s){const o=tool==='wand'&&s.dataset.seg==='mode'?OPT.sel:OPT[tool];o[s.dataset.seg]=s.dataset.seg==='all'?+s.dataset.v:s.dataset.v;saveOpt();if(tool==='text'&&textEdit){textEdit[s.dataset.seg]=s.dataset.v;drawTextLayer()}renderOpts();return}
  const a=e.target.closest('[data-act]');if(a&&ACT[a.dataset.act])ACT[a.dataset.act]()});
 $('opts').addEventListener('keydown',e=>{if(e.target.id==='tIn'){if(e.key==='Enter'){e.preventDefault();commitText()}else if(e.key==='Escape')cancelText();e.stopPropagation()}});
 
@@ -441,9 +442,23 @@ function regionMask(fx,fy,tol,cont,all){fx=Math.floor(fx);fy=Math.floor(fy);cons
  else{const st=[fx,fy];while(st.length){const y=st.pop(),x0=st.pop();let x=x0;while(x>=0&&!m[y*W+x]&&same((y*W+x)*4))x--;x++;let up=false,dn=false;
   while(x<W&&!m[y*W+x]&&same((y*W+x)*4)){m[y*W+x]=1;if(y>0){const s=!m[(y-1)*W+x]&&same(((y-1)*W+x)*4);if(s&&!up){st.push(x,y-1);up=true}else if(!s)up=false}if(y<H-1){const s=!m[(y+1)*W+x]&&same(((y+1)*W+x)*4);if(s&&!dn){st.push(x,y+1);dn=true}else if(!s)dn=false}x++}}}
  const out=mk(W,H);const id=g2(out).createImageData(W,H);const od=id.data;for(let p=0;p<W*H;p++)if(m[p]){od[p*4]=od[p*4+1]=od[p*4+2]=255;od[p*4+3]=255}g2(out).putImageData(id,0,0);return out}
-function doBucket(p){const l=act();if(l.trace)return hint('なぞり用の画像には塗れません');const o=OPT.bucket;const m=regionMask(p.x,p.y,o.tol,o.cont,o.all);if(!m)return;
- const g=mk(art.w,art.h);const x=g2(g);x.filter='blur(1px)';x.drawImage(m,0,0);x.drawImage(m,0,0);x.filter='none';x.globalCompositeOperation='source-in';x.fillStyle=fg;x.fillRect(0,0,art.w,art.h);
- snapBK(l.id);g2(SC).clearRect(0,0,art.w,art.h);g2(SC).drawImage(g,0,0);stroke={lid:l.id,erase:false,op:o.op/100,bb:[0,0,art.w,art.h]};commitSC('塗りつぶし',true);stroke=null;need()}
+/* 塗りつぶし：押した所と「同じような色」でつながった範囲を塗る。線は全部のレイヤーから見る（なぞり用は除く）。
+   隙間を閉じる＝線のすき間を一時的にふさいでから探す。線の下まで広げる＝線のふちに白い隙間が残らないよう、塗りを少し広げて線の下に入れる */
+function dilateMask(u8,W,H,r){if(r<=0)return u8;const c=mk(W,H);const x=g2(c);const id=x.createImageData(W,H);const d=id.data;for(let p=0;p<W*H;p++)if(u8[p])d[p*4+3]=255;x.putImageData(id,0,0);const c2=mk(W,H);const x2=g2(c2);x2.filter=`blur(${r/2}px)`;x2.drawImage(c,0,0);x2.drawImage(c,0,0);x2.drawImage(c,0,0);x2.filter='none';const d2=x2.getImageData(0,0,W,H).data;const out=new Uint8Array(W*H);for(let p=0;p<W*H;p++)out[p]=d2[p*4+3]>12?1:0;return out}
+function doBucket(p){const l=act();if(l.trace)return hint('なぞり用の画像には塗れません');const o=OPT.bucket;const fx=Math.floor(p.x),fy=Math.floor(p.y),W=art.w,H=art.h;if(fx<0||fy<0||fx>=W||fy>=H)return;
+ let d;if(o.all){const c=mk(W,H);const keep=layers;layers=layers.filter(x=>!x.trace&&x.visible);compositeTo(g2(c),{raw:true});layers=keep;d=g2(c).getImageData(0,0,W,H).data}else d=g2(l.cv).getImageData(0,0,W,H).data;
+ const i0=(fy*W+fx)*4;const r0=d[i0],g0=d[i0+1],b0=d[i0+2],a0=d[i0+3];const tol=o.tol;
+ const same=new Uint8Array(W*H);for(let q=0,i=0;q<W*H;q++,i+=4){const a=d[i+3];same[q]=(a0<8)?(a<=Math.max(tol,8)?1:0):(Math.max(Math.abs(d[i]-r0),Math.abs(d[i+1]-g0),Math.abs(d[i+2]-b0),Math.abs(a-a0))<=tol?1:0)}
+ let ok=same;const gap=o.gap||0;if(gap>0){const wall=new Uint8Array(W*H);for(let q=0;q<W*H;q++)wall[q]=same[q]?0:1;const thick=dilateMask(wall,W,H,gap);const s2=new Uint8Array(W*H);for(let q=0;q<W*H;q++)s2[q]=same[q]&&!thick[q]?1:0;if(s2[fy*W+fx])ok=s2}
+ let m=new Uint8Array(W*H);if(!o.cont){m=ok.slice()}else{const st=[fx,fy];const sm=q=>ok[q]&&!m[q];while(st.length){const y=st.pop(),x0=st.pop();let x=x0;while(x>=0&&sm(y*W+x))x--;x++;let up=false,dn=false;while(x<W&&sm(y*W+x)){m[y*W+x]=1;if(y>0){const t=sm((y-1)*W+x);if(t&&!up){st.push(x,y-1);up=true}else if(!t)up=false}if(y<H-1){const t=sm((y+1)*W+x);if(t&&!dn){st.push(x,y+1);dn=true}else if(!t)dn=false}x++}}}
+ let n=0;for(let q=0;q<W*H;q++)n+=m[q];if(!n)return hint('ここは塗れません');
+ const grow=(ok!==same?gap:0)+(o.spread||0);if(grow>0){const g2m=dilateMask(m,W,H,grow);if(ok!==same){for(let q=0;q<W*H;q++)m[q]=g2m[q]&&(same[q]||(o.spread||0)>0)?1:0}else m=g2m}
+ if(n>W*H*0.97&&o.all)hint('ほぼ全体が塗られました。線が途切れていないか、「隙間を閉じる」を大きくしてみてください');
+ const cv=mk(W,H);const x=g2(cv);const id=x.createImageData(W,H);const od=id.data;const col=hexRgb(fg);for(let q=0;q<W*H;q++)if(m[q]){od[q*4]=col[0];od[q*4+1]=col[1];od[q*4+2]=col[2];od[q*4+3]=255}x.putImageData(id,0,0);
+ const seedOnLayer=g2(l.cv).getImageData(fx,fy,1,1).data[3];
+ snapBK(l.id);const c=g2(l.cv);let src=cv;if(SEL){const t=mk(W,H);const tx=g2(t);tx.drawImage(cv,0,0);tx.globalCompositeOperation='destination-in';tx.drawImage(SEL,0,0);src=t}
+ c.save();c.globalAlpha=o.op/100;c.globalCompositeOperation=l.lockAlpha?'source-atop':(seedOnLayer<8?'destination-over':'source-over');c.drawImage(src,0,0);c.restore();
+ pushPatch('塗りつぶし',l.id,0,0,W,H);need()}
 function doPick(p){const c=mk(1,1);const x=g2(c);x.fillStyle=art.bg||'#fff';x.fillRect(0,0,1,1);x.translate(-Math.floor(p.x),-Math.floor(p.y));const keep=layers;layers=layers.filter(l=>!l.trace);compositeTo(x,{raw:true});layers=keep;const d=x.getImageData(0,0,1,1).data;setFg('#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join(''))}
 
 /* ===== グラデーション ===== */
