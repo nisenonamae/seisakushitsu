@@ -237,6 +237,10 @@ details.chap[open]{border:2px solid var(--sea)}
 <section data-tab="num">
 <h2>数字</h2>
 <p class="lead">自分のチャンネルの動画ごとの再生数を一覧にします。見るのをやめた場所やサムネイルが押された割合は、YouTube Studio の数字のつなぎ込みで次に足します。</p>
+<h3 style="font-size:16px;margin:10px 0 4px">A/B テスト</h3>
+<p class="lead">題名とサムネの A/B テストの結果を書いておく所。書いた結果から、Claude が「このチャンネルで効く題名・サムネの傾向」をまとめ、次からの案に使います。</p>
+<div id="abBox"></div>
+<h3 style="font-size:16px;margin:18px 0 4px">再生数</h3>
 <label>チャンネル ID（UC から始まる）</label><input id="chid">
 <div class="row"><button class="b main" id="loadNum">読み込む</button><span class="msg" id="nmsg"></span></div>
 <div id="numRes"></div>
@@ -430,7 +434,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 /* ---------- タブ（スクロール位置を保つ） ---------- */
 const scrollPos={};let curTab='make';
-function showTab(t){scrollPos[curTab]=window.scrollY;curTab=t;document.body.dataset.tab=t;document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));
+function showTab(t){scrollPos[curTab]=window.scrollY;curTab=t;document.body.dataset.tab=t;if(t==='num')renderAB();document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));
 document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.t===t));window.scrollTo(0,scrollPos[t]||0)}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));document.body.dataset.tab=curTab;
 $('helpBtn').onclick=()=>showTab('help');
@@ -584,7 +588,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
+const name={summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（下のボタンで Claude に頼むと片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${(()=>{const pj=j.projId&&D.projects.filter(x=>!x.deleted&&!x.finished).length>1&&D.projects.find(x=>x.id===j.projId);return pj?`<span class="pill">${esc(candQ(pj).slice(0,14))}</span>`:''})()}${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
@@ -721,12 +725,25 @@ return `<div class="how"><b>やること</b><ol><li>Claude が、見た人が思
 
 <label>案の数</label><select id="ttN">${[5,10,20].map(n=>`<option ${n===10?'selected':''}>${n}</option>`).join('')}</select>
 <label>こういう題名にしたい（任意）</label><input id="ttWish" placeholder="例：問いの形で／数字を入れて／30字以内">
+<label class="chk" style="border:0;padding:4px 0"><input type="checkbox" id="ttAB"><span>A/B テスト用（切り口のはっきり違う案をそろえてもらう）</span></label>
 <div class="row"><button class="b" data-ttjob="title_ideas">${ts.length?'もっと案を出してもらう':'題名の案を出してもらう'}</button></div>${jobLine(p,'title_ideas')}
 ${(()=>{const card=t=>`<div class="item ${p.titleId===t.id?'picked':''}" style="margin:6px 0"><div class="q" style="font-size:16px">${esc(t.text)}</div>
-<div class="tags">${t.hook?`<span>${esc(t.hook)}</span>`:''}<span>${(t.text||'').length}字</span>${t.parent?'<span>別案</span>':''}</div>${t.why?`<div class="lead" style="margin:2px 0">${esc(t.why)}</div>`:''}${usesHTML(t)}
-<div class="st" style="margin-top:4px"><button data-ttpick="${t.id}" class="${p.titleId===t.id?'on':''}">${p.titleId===t.id?'✓ これに決めた':'これにする'}</button>${p.titleId===t.id?'<button data-ttunpick>決定を取り消す</button>':''}<button data-ttdel="${t.id}">消す</button></div>
-<input data-ttnote="${t.id}" placeholder="この方向で別案を頼むときの一言（例：もっと短く／意外さを前に）" style="margin-top:6px;font-size:14px;padding:6px 8px"><div class="st" style="margin-top:4px"><button data-ttjob="title_fix" data-ttid="${t.id}">この方向で別案を出してもらう</button><button data-ttrule="${t.id}">この一言を、これからも守る決まりにする</button></div></div>`;const pk=ts.find(t=>t.id===p.titleId),rest=ts.filter(t=>t.id!==p.titleId);return pk?`${card(pk)}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'title_fix')}
+<div class="tags">${abTag(p,'t',t.id)}${t.hook?`<span>${esc(t.hook)}</span>`:''}<span>${(t.text||'').length}字</span>${t.parent?'<span>別案</span>':''}</div>${t.why?`<div class="lead" style="margin:2px 0">${esc(t.why)}</div>`:''}${usesHTML(t)}
+<div class="st" style="margin-top:4px"><button data-ttpick="${t.id}" class="${p.titleId===t.id?'on':''}">${p.titleId===t.id?'✓ これに決めた':'これにする'}</button>${p.titleId===t.id?'<button data-ttunpick>決定を取り消す</button>':abBtn(p,'t',t.id)}<button data-ttdel="${t.id}">消す</button></div>
+<input data-ttnote="${t.id}" placeholder="この方向で別案を頼むときの一言（例：もっと短く／意外さを前に）" style="margin-top:6px;font-size:14px;padding:6px 8px"><div class="st" style="margin-top:4px"><button data-ttjob="title_fix" data-ttid="${t.id}">この方向で別案を出してもらう</button><button data-ttrule="${t.id}">この一言を、これからも守る決まりにする</button></div></div>`;const abs=(p.abTitles||[]).map(id=>ts.find(t=>t.id===id)).filter(t=>t&&t.id!==p.titleId);const pk=ts.find(t=>t.id===p.titleId),rest=ts.filter(t=>t.id!==p.titleId&&!abs.includes(t));return pk?`${card(pk)}${abs.map(card).join('')}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'title_fix')}
 <div class="row"><button class="b main" data-next>題名はこれでいい</button></div>`}
+/* ===== A/B テスト（YouTube の「題名とサムネの A/B テスト」。3通りまで・公開の動画だけ・勝ち負けは総再生時間の割合） =====
+ p.titleId／p.thumbId＝本命（A）。p.abTitles／p.abThumbs＝足す題名・サムネ（それぞれ2つまで）。B＝それぞれの1つ目、C＝2つ目（片方しか足していなければ、もう片方は本命のまま）
+ p.ab＝{start,end,result（テスト中／勝ちが決まった／同じくらい／結論なし）,winner（A・B・C）,shares:[%…],note,vars:[テストに出した組み合わせの控え],insight（Claude が書く）} */
+const abList=(p,w)=>w==='t'?(p.abTitles=p.abTitles||[]):(p.abThumbs=p.abThumbs||[]);
+function abTag(p,w,id){const main=(w==='t'?p.titleId:p.thumbId)===id,L=(w==='t'?p.abTitles:p.abThumbs)||[];const i=L.indexOf(id);if(main)return (p.abTitles||[]).length||(p.abThumbs||[]).length?'<span style="border-color:var(--sea);color:var(--sea)">A/B：A（本命）</span>':'';return i>=0?`<span style="border-color:var(--sea);color:var(--sea)">A/B：${'BC'[i]}</span>`:''}
+function abBtn(p,w,id){const L=(w==='t'?p.abTitles:p.abThumbs)||[];const on=L.includes(id);return `<button data-ab${w}="${id}" class="${on?'on':''}">${on?'A/B テストから外す':'A/B テストに入れる'}</button>`}
+function abVars(p){const T=id=>(p.titles||[]).find(t=>t.id===id&&!t.deleted),Hh=id=>(p.thumbs||[]).find(t=>t.id===id);const mt=T(p.titleId),mh=Hh(p.thumbId);const at=(p.abTitles||[]).map(T).filter(t=>t&&t!==mt),ah=(p.abThumbs||[]).map(Hh).filter(t=>t&&t!==mh);
+ const v=[{k:'A',t:mt,h:mh}];for(let i=0;i<Math.max(at.length,ah.length);i++)v.push({k:'BC'[i],t:at[i]||mt,h:ah[i]||mh,tNew:!!at[i],hNew:!!ah[i]});return v}
+function abRows(v){return v.map(x=>`<div style="display:flex;gap:8px;align-items:center;margin:6px 0"><b style="width:1.3em;font-size:17px">${x.k}</b>${x.h&&x.h.preview?`<img data-gh="${esc(x.h.preview)}" style="width:120px;border-radius:4px;background:var(--line);min-height:40px">`:'<div style="width:120px" class="lead">（サムネ未定）</div>'}<div style="flex:1;font-size:14px">${x.t?esc(x.t.text):'（題名未定）'}<div class="lead" style="margin:0">${x.k==='A'?'本命（結論が出なかったときは、これが残る）':[x.tNew?'題名を変える':'',x.hNew?'サムネを変える':''].filter(Boolean).join('・')}</div></div></div>`).join('')}
+function abCard(p){const v=abVars(p);if(v.length<2)return `<details class="item" style="background:var(--paper)"><summary>A/B テストをするなら</summary><div class="lead" style="margin:6px 0 0">YouTube は、題名とサムネを合わせて3通りまで出し分けて、いちばん長く見られた組み合わせを選べます。試したい題名・サムネの「A/B テストに入れる」を押すと、ここに組み合わせが並びます。色ちがい程度の小さな差では勝ち負けが付かないので、切り口のちがうものを入れます。</div></details>`;
+ return `<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">A/B テストに出す組み合わせ（${v.length}通り）</div>${abRows(v)}
+<div class="lead" style="margin:6px 0 0">やり方：パソコンの YouTube Studio → 動画の編集画面 → 題名の横・サムネの下の「A/B Testing」に、上の順で入れる（A を1番目に）。動くのは動画を公開してから。結果は「数字」のページに書きこむ。</div></div>`}
 function ytThumbs(p){return (p.related||[]).filter(r=>r.kind==='見せ方'||r.kind==='中身').map(r=>{const m=/[?&]v=([\w-]{11})/.exec(r.url||'');return m?{id:m[1],r}:null}).filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.id===x.id)===i).slice(0,8)}
 function thumbStep(p){if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、サムネの案を見本つきで出してもらえます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
 const ts=(p.thumbs||[]);const yt=ytThumbs(p);const curT=(p.titles||[]).find(t=>t.id===p.titleId);
@@ -735,12 +752,14 @@ ${curT?`<div class="lead" style="margin:4px 0">組み合わせる題名：<b>${e
 ${yt.length?`<details><summary>参考動画のサムネ（${yt.length}）</summary><div class="ytt">${yt.map(x=>`<a href="${esc(x.r.url)}" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/${x.id}/mqdefault.jpg" loading="lazy" alt=""><div>${esc(x.r.title)}${x.r.views?'　'+fmt(x.r.views)+'回':''}</div></a>`).join('')}</div></details>`:''}
 <label>案の数</label><select id="tN">${[3,5,8].map(n=>`<option ${n===5?'selected':''}>${n}</option>`).join('')}</select>
 <label>こういうサムネにしたい（任意）</label><input id="tWish" placeholder="例：地図を大きく、文字は5字以内／驚きの数字を前に">
+<label class="chk" style="border:0;padding:4px 0"><input type="checkbox" id="tAB"><span>A/B テスト用（切り口のはっきり違う案をそろえてもらう）</span></label>
 <div class="row"><button class="b" data-tjob="thumb_ideas">${ts.length?'もっと案を出してもらう':'サムネの案を出してもらう'}</button></div>${jobLine(p,'thumb_ideas')}
-${(()=>{const card=t=>`<div class="item ${p.thumbId===t.id?'picked':''}" style="margin:8px 0">${t.title?`<div class="q" style="font-size:15.5px">${esc(t.title)}</div>`:''}<div class="lead" style="margin:2px 0">${esc(t.idea||'')}${t.text?'　サムネの文字：「'+esc(t.text)+'」':''}</div>
+${(()=>{const card=t=>`<div class="item ${p.thumbId===t.id?'picked':''}" style="margin:8px 0">${abTag(p,'h',t.id)?`<div class="tags">${abTag(p,'h',t.id)}</div>`:''}${t.title?`<div class="q" style="font-size:15.5px">${esc(t.title)}</div>`:''}<div class="lead" style="margin:2px 0">${esc(t.idea||'')}${t.text?'　サムネの文字：「'+esc(t.text)+'」':''}</div>
 ${t.preview?`<img data-gh="${esc(t.preview)}" style="width:100%;border-radius:6px;background:var(--line);min-height:60px">`:''}
 ${t.desc?`<div style="font-size:14px">${esc(t.desc)}</div>`:''}${usesHTML(t)}
-<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'✓ これに決めた':'これにする'}</button>${p.thumbId===t.id?'<button data-tunpick>決定を取り消す</button>':''}</div>
-${tfixHTML(p,t)}</div>`;const pk=ts.find(t=>t.id===p.thumbId),rest=ts.filter(t=>t.id!==p.thumbId);return pk?`<h3 style="font-size:15px;margin:12px 0 4px">決めたサムネ</h3>${card(pk)}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'thumb_fix')}
+<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'✓ これに決めた':'これにする'}</button>${p.thumbId===t.id?'<button data-tunpick>決定を取り消す</button>':abBtn(p,'h',t.id)}</div>
+${tfixHTML(p,t)}</div>`;const abs=(p.abThumbs||[]).map(id=>ts.find(t=>t.id===id)).filter(t=>t&&t.id!==p.thumbId);const pk=ts.find(t=>t.id===p.thumbId),rest=ts.filter(t=>t.id!==p.thumbId&&!abs.includes(t));return pk?`<h3 style="font-size:15px;margin:12px 0 4px">決めたサムネ</h3>${card(pk)}${abs.length?`<h3 style="font-size:15px;margin:12px 0 4px">A/B テストに入れるサムネ</h3>${abs.map(card).join('')}`:''}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'thumb_fix')}
+${abCard(p)}
 <div class="row"><button class="b main" data-next>サムネはこれでいい</button></div>`}
 function tfixHTML(p,t){const log=t.fixlog||[];const wait=log.some(f=>f.status==='待ち');
 return `${log.length?`<details ${wait?'open':''}><summary>直しの記録（${log.length}）</summary>${log.map(f=>`<div class="fixrec"><div>${esc(f.text)}　<span class="lead" style="margin:0">${f.at?md(f.at):''}　${esc(f.status||'')}</span></div>${f.reply?`<div class="chg">Claude：${esc(f.reply)}</div>`:''}
@@ -793,6 +812,7 @@ ${f.done?`<div class="item" style="background:var(--paper)"><div class="q" style
 ${f.srt?`<div class="row" style="margin:6px 0"><button class="b" data-fdl="${esc(f.srt)}" data-fname="${esc((f.name||'video').replace(/\.mp4$/,'')+'.srt')}">字幕ファイル（CC）をダウンロード</button></div>`:''}
 <label class="chk"><input type="checkbox" data-fup ${f.uploaded?'checked':''}><span>YouTube に上げた</span></label></div>`:''}
 ${pub.title||pub.desc||pub.tags?`<h3 style="font-size:15px;margin:14px 0 4px">YouTube に貼るもの</h3>${cp('pubTitle','題名',pub.title,1)}${cp('pubDesc','概要欄（チャプター・参考にした資料・クレジット入り）',pub.desc,10)}${cp('pubTags','タグ（カンマ区切り。YouTube の「タグ」欄にそのまま貼る）',pub.tags,2)}`:''}
+${abCard(p)}
 <div class="row"><button class="b main" data-next>上げた（または上げる準備ができた）</button></div>`}
 function makeVideoStep(p){const v=p.video;
 if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、ここで仮の動画を頼めます。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
@@ -1130,19 +1150,20 @@ if(type==='sound_ideas')extra.wish=($('sWish')?$('sWish').value.trim():'');
 if(type==='sound_fix'){const v=$('sFix')?$('sFix').value.trim():'';if(!v){alert('直したいことを書いてください');return true}extra.notes=v}
 queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return true}
 if(el.matches('[data-tjob]')){const type=el.dataset.tjob;const extra={};
-if(type==='thumb_ideas'){extra.n=+($('tN')?$('tN').value:5);extra.wish=($('tWish')?$('tWish').value.trim():'')}
+if(type==='thumb_ideas'){extra.n=+($('tN')?$('tN').value:5);extra.wish=($('tWish')?$('tWish').value.trim():'');if($('tAB')&&$('tAB').checked)extra.ab=true}
 if(type==='thumb_fix'){const t=(p.thumbs||[]).find(x=>x.id===el.dataset.tid);const ta=document.querySelector(`[data-tfix="${t.id}"]`);if(!ta||!ta.value.trim()){alert('直したいことを書いてください');return true}
 const fx={id:uid('x'),text:ta.value.trim(),stage:'サムネ',at:now(),before:t.preview||'',status:'待ち'};t.fixlog=t.fixlog||[];t.fixlog.push(fx);extra.thumbId=t.id;extra.notes=fx.text;extra.fixId=fx.id}
 queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return true}
 if(el.matches('[data-ttjob]')){const type=el.dataset.ttjob;const extra={};
-if(type==='title_ideas'){extra.n=+($('ttN')?$('ttN').value:10);extra.wish=($('ttWish')?$('ttWish').value.trim():'')}
+if(type==='title_ideas'){extra.n=+($('ttN')?$('ttN').value:10);extra.wish=($('ttWish')?$('ttWish').value.trim():'');if($('ttAB')&&$('ttAB').checked)extra.ab=true}
 if(type==='title_fix'){const inp=document.querySelector(`[data-ttnote="${el.dataset.ttid}"]`);extra.titleId=el.dataset.ttid;extra.notes=inp?inp.value.trim():''}
 queueJob({type,projId:p.id,...extra});touchP(p);renderMake();return true}
-if(el.matches('[data-ttpick]')){if(p.titleId===el.dataset.ttpick)return true;p.titleId=el.dataset.ttpick;touchP(p);renderMake();return true}
+if(el.matches('[data-abt]')||el.matches('[data-abh]')){const w=el.matches('[data-abt]')?'t':'h',id=w==='t'?el.dataset.abt:el.dataset.abh,L=abList(p,w);const i=L.indexOf(id);if(i>=0)L.splice(i,1);else{if(L.length>=2){alert('A/B テストは、本命を入れて3つまでです。先にどれかを外してください');return true}L.push(id)}touchP(p);renderMake();return true}
+if(el.matches('[data-ttpick]')){if(p.titleId===el.dataset.ttpick)return true;p.titleId=el.dataset.ttpick;p.abTitles=(p.abTitles||[]).filter(x=>x!==p.titleId);touchP(p);renderMake();return true}
 if(el.matches('[data-ttunpick]')){if(!confirm('題名の決定を取り消しますか？'))return true;p.titleId='';touchP(p);renderMake();return true}
-if(el.matches('[data-ttdel]')){const t=p.titles.find(x=>x.id===el.dataset.ttdel);t.deleted=true;if(p.titleId===t.id)p.titleId='';touchP(p);renderMake();return true}
+if(el.matches('[data-ttdel]')){const t=p.titles.find(x=>x.id===el.dataset.ttdel);t.deleted=true;if(p.titleId===t.id)p.titleId='';p.abTitles=(p.abTitles||[]).filter(x=>x!==t.id);touchP(p);renderMake();return true}
 if(el.matches('[data-ttrule]')){const inp=document.querySelector(`[data-ttnote="${el.dataset.ttrule}"]`);const v=inp?inp.value.trim():'';if(!v){alert('先に一言を書いてください');return true}const tx=prompt('決まりとして残す文（これからの題名で毎回守ります）',v);if(!tx||!tx.trim())return true;addRule({scope:'題名',do:tx.trim(),from:'題名の直しから'});alert('決まりごとに入れました');renderAll();return true}
-if(el.matches('[data-tpick]')){if(p.thumbId===el.dataset.tpick)return true;p.thumbId=el.dataset.tpick;touchP(p);renderMake();return true}
+if(el.matches('[data-tpick]')){if(p.thumbId===el.dataset.tpick)return true;p.thumbId=el.dataset.tpick;p.abThumbs=(p.abThumbs||[]).filter(x=>x!==p.thumbId);touchP(p);renderMake();return true}
 if(el.matches('[data-tunpick]')){if(!confirm('サムネの決定を取り消しますか？'))return true;p.thumbId='';touchP(p);renderMake();return true}
 if(el.matches('[data-trule]')){const [tid,fid]=el.dataset.trule.split(':');const t=p.thumbs.find(x=>x.id===tid);const f=(t.fixlog||[]).find(x=>x.id===fid);if(!f||f.rule)return true;const tx=prompt('決まりとして残す文（これからのサムネで毎回守ります）',f.text);if(!tx||!tx.trim())return true;addRule({scope:'サムネ',do:tx.trim(),from:'サムネの直しから',ex:{before:f.before||'',after:f.after||'',idea:t.idea}});f.rule=true;touchP(p);renderAll();return true}
 if(el.matches('[data-osok]')){const f=blsOf(p,'f')[+el.dataset.osok];const o=blsOf(p,'o').find(x=>x.id===f.oid);if(o)f.osnap={text:o.text||'',show:o.show||''};touchP(p);renderMake();return true}
@@ -1291,7 +1312,28 @@ $('ptQ').oninput=renderPoints;$('ptFilter').onclick=e=>{const b=e.target.closest
 $('ptList').onclick=e=>{const d=e.target.closest('[data-pt]');if(!d)return;const x=D.points.find(y=>y.id===d.dataset.pt);
  if(e.target.closest('[data-ptstar]')){x.star=!x.star;touch(x);renderPoints()}else if(e.target.matches('[data-ptdel]')&&confirm('消しますか？')){x.deleted=true;touch(x);renderPoints()}};
 $('ptAdd').onclick=()=>{const t=$('ptTitle').value.trim(),b=$('ptBody').value.trim();if(!t&&!b)return;D.points=D.points||[];D.points.push({id:uid('pt'),area:$('ptArea').value,title:t||b.slice(0,30),body:b,example:$('ptEx').value.trim(),by:'作り手',srcOrder:now(),updatedAt:now()});save();['ptTitle','ptBody','ptEx'].forEach(i=>$(i).value='');renderPoints()}}}
-function renderAll(){renderPoints();renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
+const AB_RES=['','テスト中','勝ちが決まった','同じくらい','結論なし'];
+function abSnap(p){return abVars(p).map(x=>({k:x.k,title:x.t?x.t.text:'',hook:x.t?(x.t.hook||x.t.idea||''):'',thumb:x.h?(x.h.preview||''):'',thumbIdea:x.h?(x.h.idea||''):'',thumbText:x.h?(x.h.text||''):''}))}
+function renderAB(){const box=$('abBox');if(!box)return;const ps=D.projects.filter(p=>!p.deleted&&(abVars(p).length>1||p.ab)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+ const rules=(D.rules||[]).filter(r=>r.ab&&!r.deleted&&r.active!==false);
+ const card=p=>{const ab=p.ab||{};const v=abVars(p);const sh=ab.shares||[];
+  return `<div class="item" data-abp="${p.id}"><div class="q" style="font-size:15px">${esc(candQ(p))}</div>${v.length>1?abRows(v):'<div class="lead">（組み合わせが外されています）</div>'}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:6px"><div><label>始めた日</label><input type="date" data-abf="start" value="${esc(ab.start||'')}"></div><div><label>終わった日</label><input type="date" data-abf="end" value="${esc(ab.end||'')}"></div></div>
+<label>結果</label><select data-abf="result">${AB_RES.map(r=>`<option value="${r}" ${(ab.result||'')===r?'selected':''}>${r||'まだ始めていない'}</option>`).join('')}</select>
+${ab.result==='勝ちが決まった'?`<label>勝った案</label><select data-abf="winner">${['',...v.map(x=>x.k)].map(k=>`<option ${(ab.winner||'')===k?'selected':''}>${k}</option>`).join('')}</select>`:''}
+${ab.result&&ab.result!=='テスト中'?`<label>総再生時間の割合（YouTube Studio の結果に出る ％）</label><div style="display:flex;gap:8px">${v.map((x,i)=>`<div style="flex:1"><span class="lead" style="margin:0">${x.k}</span><input type="number" min="0" max="100" step="0.1" data-abs="${i}" value="${sh[i]==null?'':sh[i]}" placeholder="%"></div>`).join('')}</div>`:''}
+<label>メモ（気づいたこと。任意）</label><textarea data-abf="note" rows="2">${esc(ab.note||'')}</textarea>
+${ab.insight?`<div class="chg" style="white-space:pre-wrap">Claude：${esc(ab.insight)}</div>`:''}
+${syncOn()&&ab.result&&ab.result!=='テスト中'?`<div class="row"><button class="b" data-ablearn>この結果から、分かる傾向を書いてもらう</button></div>${jobLine(p,'ab_learn')}`:''}</div>`};
+ box.innerHTML=(ps.length?ps.map(card).join(''):'<div class="empty">まだありません。制作の「題名」「サムネ」で「A/B テストに入れる」を押した動画が、ここに並びます。</div>')+
+ `<h3 style="font-size:15px;margin:14px 0 4px">分かってきた傾向</h3>${rules.length?rules.map(r=>`<div class="item" style="background:var(--paper)"><div class="tags"><span>${esc(r.scope||'')}</span></div><div style="font-size:14.5px">${esc(r.do||'')}</div><div class="lead" style="margin:2px 0 0">${esc(r.from||'')}</div></div>`).join(''):'<div class="empty">まだありません。結果を書いて「傾向を書いてもらう」と、ここにたまります（題名・サムネの案を出すとき、Claude が毎回読みます）。</div>'}`;
+ fillMedia()}
+function abKeep(f){const y=window.scrollY;f();window.scrollTo(0,y);requestAnimationFrame(()=>window.scrollTo(0,y))}
+document.addEventListener('change',e=>{const t=e.target,it=t.closest&&t.closest('[data-abp]');if(!it||!(t.matches('[data-abf]')||t.matches('[data-abs]')))return;const p=D.projects.find(x=>x.id===it.dataset.abp);if(!p)return;const ab=p.ab=p.ab||{};
+ if(t.matches('[data-abs]')){ab.shares=ab.shares||[];ab.shares[+t.dataset.abs]=t.value===''?null:+t.value}else ab[t.dataset.abf]=t.value;
+ if(!ab.vars||!ab.vars.length||t.dataset.abf==='start')ab.vars=abSnap(p);ab.updatedAt=now();touchP(p);if(t.dataset.abf==='result')abKeep(renderAB)});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ablearn]');if(!b)return;const p=D.projects.find(x=>x.id===b.closest('[data-abp]').dataset.abp);if(!p)return;queueJob({type:'ab_learn',projId:p.id});touchP(p);abKeep(renderAB)});
+function renderAll(){renderAB();renderPoints();renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script><div id="play" class="play" hidden><div class="pscr"><div class="prole" id="pRole"></div><div class="pshow" id="pShow"></div></div>
