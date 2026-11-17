@@ -8,6 +8,8 @@
       ／versus（左＝オランダ・右＝東京。ats：[0] 右を目立たせる [1] 船が物を入れ、底が上がる [2] 海面の上に出る [3] 左は水面が下がった印・右は地面が上がった印 [4] 両方が光る）
       ／versus2（まとめ。ats：[0] 左が水を抜く [1] 右が積む [2] 海面の線と、左の低さ [3] 右の高さ）
       ／layers（積んだ物の層。ats：[0] 山の土 [1] 海底の砂 [2] 工事の土 [3] がれき [4] ごみ [5] ごみを運ぶ車が来る）
+      ／higata（結び。遠浅の海で潮干狩り。ats：[0] 潮が引いて、浅い底が広く出る [1] 人が歩いてきて貝をとる）
+      ／final（結び。左右のまとめ。ats：[0] 左が水を抜く [1] 右が積む [2] 日が何度もめぐる中で、左はポンプ・右は船が動き続ける）
       ／dredge（ats：[0] 大きな船が浅い底につかえる [1] 底を掘る [2] 出た砂がとなりに積もる [3] 島になって「月島」・船が通る） */
 window.DEF={mode:'kanda'};
 const SOIL='#b9a47a',FILL='#a98f63';
@@ -112,5 +114,34 @@ function dredge(t){const T1=T(1,DUR*0.2),T2=T(2,DUR*0.42),T3=T(3,DUR*0.62),T4=T(
   if(pl>=1){const a=clamp((t-T4)/0.4);grassTop(940,1160,x=>prof(x),`rgba(111,154,89,${a})`);g.save();g.translate(1050,top+2);g.scale(back(a),back(a));houseS(0,0,1.2);g.restore();numLabel(1050,top-130,'月島',clamp((t-T4)/0.35),64)}
   if(stuck&&t<T2){const p=0.5+0.5*Math.sin(t*8);g.strokeStyle=`rgba(226,58,48,${0.5+0.5*p})`;g.lineWidth=6;g.beginPath();g.moveTo(sx+150,SL+70);g.lineTo(sx+230,BED-2);g.lineTo(sx+330,BED-2);g.stroke()}
   if(t>=T1)sfxOnce('s',T1,'thump');if(t>=T2)sfxOnce('d',T2,'puff');if(t>=T3)sfxOnce('p',T3,'whoosh');if(t>=T4)sfxOnce('i',T4,'pop')}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);({kanda,versus,versus2,layers,dredge}[P.mode]||kanda)(t)};
+function shellS(x,y,s=1){g.fillStyle='#f3ead6';g.beginPath();g.moveTo(x-9*s,y);g.quadraticCurveTo(x,y-15*s,x+9*s,y);g.closePath();g.fill();g.strokeStyle='#b9a47a';g.lineWidth=1.5;for(const d of [-4,0,4]){g.beginPath();g.moveTo(x,y);g.lineTo(x+d*s,y-9*s);g.stroke()}}
+function higata(t){const T1=T(1,DUR*0.3),T2=T(2,DUR*0.55);const prof=x=>x<210?392:392+(x-210)*0.075;
+  const tide=ease(clamp((t-T1+0.4)/Math.max(1.6,T2-T1+0.2)));const WL=lerp(396,468,tide);
+  skyG();cloudS(300+t*5,80,1.4);cloudS(900+t*4,110,1.5);
+  g.fillStyle='#6f9a59';g.beginPath();g.moveTo(-10,394);g.quadraticCurveTo(100,330,214,394);g.closePath();g.fill();treeS(70,372,1.5);houseS(150,384,1.4);
+  waterBody(180,W+200,WL,600,t,'#7fc0d8','#4a8fb5',0.5);
+  soil(-200,W+200,prof,'#d8c79a','#b9a47a');
+  // 潮が引いたあとの、ぬれた砂
+  const edge=210+(WL-392)/0.075;{const r=R(11);for(let i=0;i<12;i++){const x=240+r()*900;if(x<edge-30){g.fillStyle=`rgba(255,255,255,${0.25+0.2*Math.sin(t*2.4+i)})`;g.fillRect(x,prof(x)+8,40+r()*50,3)}}}
+  // 貝（砂の上に見えてくる）と、とる人（歩いてきて、最後まで居る）
+  const SH=[330,420,560,650,740,860,940,1080,1160];SH.forEach((x,i)=>{if(x<edge-20){const k=back(clamp((t-T1-0.2-i*0.12)/0.3));if(k>0)shellS(x,prof(x)+2,1.9*k)}});
+  const PP=[[490,'#3b5a7c','#b23a2e'],[800,'#7c4a3b','#e9d36a'],[1020,'#4a6b4a','#f1ede4']];PP.forEach(([tx,col,hat],i)=>{const w=ease(clamp((t-T2+0.6-i*0.3)/1.5));const x=lerp(-70-i*90,tx,w);const y=prof(Math.max(210,x));personS(x,y+3,2.1,{walk:w<1?t*9:0,col,hat});
+    g.fillStyle='#8a6a44';g.fillRect(x+16,y-52,26,26);g.strokeStyle='#5a4634';g.lineWidth=3.5;g.beginPath();g.arc(x+29,y-52,13,Math.PI,0);g.stroke();
+    if(w>=1)for(let k=0;k<2;k++){const q=((t-T2)*0.9+k*0.5+i*0.3)%1;g.save();g.translate(lerp(x+78,x+29,q),y-Math.sin(q*Math.PI)*70-lerp(0,44,q));shellS(0,0,1.3);g.restore()}});
+  if(t>=T1)sfxOnce('t',T1,'whoosh');if(t>=T2)sfxOnce('p',T2,'pop');if(t>=T2+1.6)sfxOnce('q',T2+1.6,'tick')}
+function final(t){const T1=T(1,DUR*0.22),T2=T(2,DUR*0.36),T3=T(3,DUR*0.48);
+  const d=ease(clamp((t-T1)/1.0)),p=ease(clamp((t-T2)/1.0));
+  const s=halves(t,{dike:ease(clamp((t-0.15)/0.45)),d,p,barge:clamp((t-T2+0.4)/0.3),houseL:(t-T1-0.9)/0.3,houseR:(t-T2-0.9)/0.3,grassR:(t-T2-0.8)/0.3});
+  seaLine(s.SL,0,W,clamp((t-T2-0.9)/0.5),'rgba(40,110,170,.95)');
+  // 年月：日が何度もめぐる。そのあいだ、左はポンプが水を出し続け、右は船が物を運び続ける
+  const yk=clamp((t-T3)/0.4);if(yk>0){for(const cx of [318,962]){const q=((t-T3)*0.55)%1;const x=cx-250+q*500,y=176-Math.sin(q*Math.PI)*70;g.fillStyle=`rgba(255,214,90,${0.95*yk*Math.sin(q*Math.PI)})`;g.beginPath();g.arc(x,y,22,0,7);g.fill();g.fillStyle=`rgba(255,214,90,${0.25*yk*Math.sin(q*Math.PI)})`;g.beginPath();g.arc(x,y,38,0,7);g.fill()}
+    // 左：ポンプ場と、堤防をこえて出ていく水
+    g.save();g.translate(262,s.BED);g.scale(back(yk),back(yk));g.fillStyle='#d9d4c8';g.fillRect(-26,-34,52,34);g.fillStyle='#6d7783';g.fillRect(-30,-40,60,8);g.restore();
+    g.strokeStyle=`rgba(58,66,80,${yk})`;g.lineWidth=9;g.lineCap='round';g.beginPath();g.moveTo(244,s.BED-24);g.lineTo(196,s.SL-70);g.lineTo(140,s.SL-70);g.stroke();g.lineCap='butt';
+    for(let i=0;i<7;i++){const q=(t*1.2+i/7)%1;g.fillStyle=`rgba(150,205,240,${0.95*yk})`;g.beginPath();g.arc(lerp(138,84,q),lerp(s.SL-66,s.SL,q*q),6,0,7);g.fill()}
+    // 右：船が運んできた物が、陸のはしに積まれ続ける
+    for(let i=0;i<5;i++){const q=(t*1.0+i/5)%1;g.fillStyle='#8f7650';g.beginPath();g.arc(lerp(1186,1128,q),s.SL-14-Math.sin(q*Math.PI)*56,7,0,7);g.fill()}
+    sfxOnce('y',T3,'pop')}
+  if(t>=0.15)sfxOnce('d',0.15,'thump');if(t>=T1)sfxOnce('w',T1,'whoosh');if(t>=T2)sfxOnce('p',T2,'puff')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({kanda,versus,versus2,layers,dredge,higata,final}[P.mode]||kanda)(t)};
 </script></body></html>

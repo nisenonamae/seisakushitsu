@@ -57,5 +57,19 @@ for k,b in enumerate(live,1):
     for pat,why in [(r'第[0-9０-９一二三四五六七八九十]+章','「第○章」と言わない'),(r'冒頭の|先ほど|さっきの|前にお話し|覚えて(い|ま)','視聴者が前の内容を覚えている前提の言い方。中身をもう一度言う')]:
         m_=re.search(pat,sents)
         if m_:W.append((f'{k}-語り',f'「{m_.group(0)}」：{why}'))
+# 場面の切り替えの間：字幕がとぎれる所（作り手の決まり・2026-11-17「字幕が常に続くぐらいのテンポ」。止まった画面で待たない）
+import os
+_srt=sys.argv[3][:-5]+'.srt' if len(sys.argv)>3 else ''
+GAPS=[]
+if tl and os.path.exists(_srt):
+    _t=lambda x:int(x[0:2])*3600+int(x[3:5])*60+int(x[6:8])+int(x[9:12])/1000
+    cues=[(_t(m.group(1)),_t(m.group(2))) for m in re.finditer(r'(\d\d:\d\d:\d\d,\d{3}) --> (\d\d:\d\d:\d\d,\d{3})',open(_srt,encoding='utf-8').read())]
+    _only=set((sys.argv[4] if len(sys.argv)>4 else '').split(','))-{''}   # 4つ目に章の名前（コンマ区切り）を書くと、その章だけ見る
+    for (a0,a1),(b0,b1) in zip(cues,cues[1:]):
+        if b0-a1>=0.6:
+            sh=[x for x in tl['shots'] if x['start']-0.01<=a1<x['end']+0.01]
+            tag=sh[-1]['tag'] if sh else '?';role=(sh[-1].get('role') or '') if sh else ''
+            if _only and not any(role.startswith(c) for c in _only):continue
+            GAPS.append((tag,b0-a1));W.append((tag,f'字幕が {b0-a1:.1f} 秒とぎれる（{int(a1//60)}分{a1%60:04.1f}秒〜）。待ち（hold）をやめ、アニメは語りの中で終わらせる'))
 for tag,msg in W:print(f'場面 {tag}: {msg}')
-print(f'— 指摘 {len(W)} 件')
+print(f'— 指摘 {len(W)} 件'+(f'（うち字幕のとぎれ {len(GAPS)} か所・合わせて {sum(x for _,x in GAPS):.0f} 秒）' if GAPS else ''))

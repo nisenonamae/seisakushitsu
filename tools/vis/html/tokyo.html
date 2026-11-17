@@ -12,6 +12,7 @@
       ／fire（ats：[0] 町が燃える [1] がれきが残る [2] がれきが東の海へ [3] 今の江東区のあたりが陸に [4] 沖へ広がる）
       ／tsuki（月島が光る。ats：[0] 島が光る）
       ／gomi（ats：[0]「1900年」 [1] 枝川・塩浜のあたり [2]「1923年」 [3] 豊洲 [4]「戦後」夢の島 [5] 今の処分場に「最後」 [6] 寄る）
+      ／lost（結び。昔の浅い海〔うすい水色〕が、埋め立てで陸に置きかわる。ats：[0] 埋め立てが広がる）
       ／area（ats：[0] 明治からの埋め立てが広がる [1]「約5,800ha」 [2] 4つの区の形 [3] 形を埋め立て地の上へ動かす [4] 両方が光る） */
 window.DEF={mode:'ask'};
 const BB=[139.66,139.945,35.57,35.70],GOLD='#f0b63e',LAND2='#d9d3a4',GHOST='#4d7592';
@@ -36,10 +37,10 @@ function edoWest(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.74,13
 function edoEast(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.7885,139.8475,35.64,35.70);/* 東は荒川まで（その先は江戸川区なので、ここでは塗らない） */g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'edo',1,LAND2);if(gold>0)tk(v,'edo',GOLD,gold);g.restore()}
 function rim(v,key,col,w,a){if(a<=0)return;for(let i=0;i<8;i++){const an=i*Math.PI/4;g.save();g.translate(Math.cos(an)*w,Math.sin(an)*w);tk(v,key,col,a);g.restore()}}
 
-function ask(t){const T1=T(1,DUR*0.35),T2=T(2,DUR*0.6);const u=ease(clamp((t-T2)/1.6));const v=vmix(VA(),VM(),u);
+function ask(t){const T1=T(1,DUR*0.35),T2=T(2,DUR*0.6);const u=ease(clamp((t-T2)/Math.max(0.9,DUR-T2-0.15)));const v=vmix(VA(),VM(),u);
   seaBg(t);const rk=clamp((t-T1)/0.5)*(1-clamp((t-T2)/0.8));rim(v,'now',GOLD,5,rk*(0.7+0.3*Math.sin(t*6)));land(v,'now');
-  const ck=clamp((t-T2-0.5)/0.4);if(ck>0){const[x,y]=pj(v,139.7528,35.6852);g.save();g.translate(x,y);g.scale(back(ck),back(ck));castleS(0,0,1.1);g.restore();const[qx,qy]=pj(v,139.768,35.662);numLabel(qx+40,qy,'？',clamp((t-T2-1.0)/0.35),130)}
-  if(t>=T1)sfxOnce('r',T1,'pop');if(t>=T2)sfxOnce('z',T2,'whoosh');if(t>=T2+1.0)sfxOnce('q',T2+1.0,'pop')}
+  const ck=clamp((t-T2-0.2)/0.4);if(ck>0){const[x,y]=pj(v,139.7528,35.6852);g.save();g.translate(x,y);g.scale(back(ck),back(ck));castleS(0,0,1.1+0.4*u);g.restore()}
+  if(t>=T1)sfxOnce('r',T1,'pop');if(t>=T2)sfxOnce('z',T2,'whoosh')}
 
 function hibiya(t){const T1=T(1,DUR*0.22),T2=T(2,DUR*0.36),T3=T(3,DUR*0.5),T4=T(4,DUR*0.66),T5=T(5,DUR*0.84);const v=vmix(VM(),VB(),ease(clamp((t-0.1)/1.3)));
   const old=ease(clamp((t-0.5)/Math.max(1.6,T1-0.9)));base(v,t,{old});
@@ -47,7 +48,7 @@ function hibiya(t){const T1=T(1,DUR*0.22),T2=T(2,DUR*0.36),T3=T(3,DUR*0.5),T4=T(
   // 入り江（海が入り込んでいた所）
   const ik=clamp((t-T1)/0.5)*(1-fk);if(ik>0){g.save();polyLL(v,INLET);g.fillStyle=`rgba(111,169,201,${0.85*ik})`;g.fill();g.clip();g.strokeStyle=`rgba(255,255,255,${0.5*ik})`;g.lineWidth=2.5;const r=R(3);for(let i=0;i<26;i++){const[x,y]=pj(v,139.752+r()*0.014,35.662+r()*0.026);const o2=Math.sin(t*1.6+i)*6;g.beginPath();g.moveTo(x+o2,y);g.quadraticCurveTo(x+o2+10,y-5,x+o2+20,y);g.stroke()}g.restore();polyLL(v,INLET);g.strokeStyle=`rgba(255,255,255,${ik*(0.5+0.4*Math.sin(t*5))})`;g.lineWidth=4;g.stroke()}
   inletFill(v,fk,(1-0.75*ease(clamp((t-T5)/1.2))));
-  {const[x,y]=pj(v,139.7528,35.6852);const ck=clamp((t-0.2)/0.4);g.save();g.translate(x,y);g.scale(back(ck),back(ck));castleS(0,0,1.5);g.restore()}
+  {const[x,y]=pj(v,139.7528,35.6852);castleS(x,y,1.5)}
   {const[x,y]=pj(v,139.7655,35.679);numLabel(x+150,y-10,'日比谷入江',clamp((t-T2)/0.35)*(1-clamp((t-T4-0.6)/0.5)),50)}
   pinL(v,139.756,35.672,clamp((t-T3)/0.35),'今の日比谷',-130,-30,38);
   if(t>=0.5)sfxOnce('o',0.5,'whoosh');if(t>=T1)sfxOnce('i',T1,'pop');if(t>=T2)sfxOnce('l',T2,'tick');if(t>=T3)sfxOnce('p',T3,'pop');if(t>=T4)sfxOnce('f',T4,'thump')}
@@ -100,5 +101,12 @@ function area(t){const T1=T(1,DUR*0.1),T2=T(2,DUR*0.3),T3=T(3,DUR*0.46),T4=T(4,D
     if(mv>0){g.translate((b[0]-a[0])*mv,(b[1]-a[1])*mv);polyLL(v,WARDS4);g.fillStyle=`rgba(255,255,255,${0.16*mv})`;g.fill();g.setLineDash([14,9]);g.strokeStyle=`rgba(255,255,255,${0.95})`;g.lineWidth=5;g.stroke();g.setLineDash([])}g.restore();
     const[x,y]=pj(v,139.70,35.668);numLabel(x-10,y+40,'4つの区',clamp((t-T3-0.5)/0.35),54,'#fff')}
   if(t>=T1)sfxOnce('g',T1,'whoosh');if(t>=T2)sfxOnce('n',T2,'pop');if(t>=T3)sfxOnce('w',T3,'tick');if(t>=T4)sfxOnce('m',T4,'whoosh');if(t>=T5)sfxOnce('p',T5,'pop')}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);({ask,hibiya,nihon,fire,tsuki,gomi,area}[P.mode]||ask)(t)};
+function lost(t){const T1=T(1,DUR*0.4);const v=VA();seaBg(t);
+  // 昔の遠浅の海（のちに埋め立てられた所を、浅い海として見せる模式）
+  tk(v,'g5','#8fd6d4',0.85);{const r=R(9);g.save();const b=rect(v);for(let i=0;i<70;i++){const x=b[0]+r()*b[2]*0.8,y=b[1]+b[3]*0.3+r()*b[3]*0.7;g.strokeStyle=`rgba(255,255,255,${0.35+0.25*Math.sin(t*2+i)})`;g.lineWidth=2;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+9,y-4,x+18,y);g.stroke()}g.restore();tk(v,'now',SEA,0);}
+  land(v,'1868');
+  const gp=clamp((t-T1)/Math.max(1.6,DUR-T1-0.3))*5;for(let i=1;i<=5;i++){const a=clamp(gp-(i-1));if(a>0)land(v,'g'+i,a,'#cfc7b4')}
+  {const[x,y]=pj(v,139.80,35.64);numLabel(x,y,'江戸前',clamp((t-0.25)/0.35)*(1-clamp(gp/2.5)),76,'#fff')}
+  if(t>=0.25)sfxOnce('e',0.25,'pop');if(t>=T1)sfxOnce('f',T1,'whoosh')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({ask,hibiya,nihon,fire,tsuki,gomi,area,lost}[P.mode]||ask)(t)};
 </script></body></html>
