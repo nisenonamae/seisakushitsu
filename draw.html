@@ -85,6 +85,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .card img{width:100%;aspect-ratio:16/10;object-fit:contain;background:repeating-conic-gradient(#888 0 25%,#bbb 0 50%) 0 0/12px 12px;border-radius:5px;display:block}
 .card .t{font-size:13px;font-weight:700;margin-top:3px}.card .m{font-size:11px;color:var(--sub)}
 .card .del{position:absolute;right:6px;top:6px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;font-size:11px;padding:1px 6px}
+.card .reuse{display:block;width:100%;margin-top:5px;border:1px solid var(--sea);background:transparent;color:var(--sea);border-radius:6px;font-size:12px;padding:3px 4px;cursor:pointer}
+.imp{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}.imp canvas{width:64px;height:40px;border-radius:4px;background:repeating-conic-gradient(#888 0 25%,#bbb 0 50%) 0 0/10px 10px;flex:none}.imp span{font-size:13px}
 .lead{font-size:12px;color:var(--sub);margin:4px 0}
 .fin img{width:100%;border-radius:6px;border:1px solid var(--line);background:repeating-conic-gradient(#888 0 25%,#bbb 0 50%) 0 0/12px 12px}
 #dlgBody .rowx>label{min-width:7em}
@@ -118,7 +120,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">最近：</span><span id="recent" class="rowx" style="margin:0"></span></div>
  <div class="rowx" id="swatches"></div>
  <div class="lead" style="margin:2px 0 0">押すと描く色になります。自分の色は右クリック（スマホは長押し）で消せます</div></div>
- <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button></h3>
+ <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button></h3>
   <div class="rowx"><select id="lBlend" title="描画モード"></select><label style="min-width:0">不透明度</label><input type="range" id="lOp" min="0" max="100"><span class="num" id="lOpV"></span></div>
   <div class="rowx"><button class="b" id="lLockA" title="透明部分をロック（描いてある所だけに描ける）">▦ 透明部分を保護</button><button class="b" id="lNoExp" title="書き出し・仕上げに入れない">書き出さない</button></div>
   <div id="layers"></div>
@@ -132,8 +134,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </div>
 
 <dialog id="gal">
- <div class="rowx" style="justify-content:space-between"><b>作品一覧</b><button class="b" id="galClose">閉じる</button></div>
- <div class="lead">新しく描く：</div><div class="rowx" id="newKinds"></div>
+ <div class="rowx" style="justify-content:space-between"><b id="galTitle">作品一覧</b><button class="b" id="galClose">閉じる</button></div>
+ <div class="lead" id="galLead">新しく描く：</div><div class="rowx" id="newKinds"></div>
  <div class="gal" id="galList"></div>
 </dialog>
 <dialog id="dlg"><b id="dlgTitle"></b><div id="dlgBody"></div><div class="rowx" style="justify-content:flex-end;margin-top:10px"><button class="b" id="dlgCancel">キャンセル</button><button class="b main" id="dlgOk">OK</button></div></dialog>
@@ -158,7 +160,7 @@ const cloneCv=c=>{const n=mk(c.width,c.height);g2(n).drawImage(c,0,0);return n};
 const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);const CMD=isMac?'⌘':'Ctrl+';
 
 /* ===== 描くもの（YouTube の決まりの大きさ） ===== */
-const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},free:{n:'自由',w:1200,h:1200,note:''}};
+const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},free:{n:'自由',w:1200,h:1200,note:''}};
 const FONT_LIST=[
  ['丸い','Zen Maru Gothic',900,'丸ゴシック 太'],['丸い','Zen Maru Gothic',500,'丸ゴシック'],['丸い','M PLUS Rounded 1c',800,'M+ 丸ゴシック 太'],['丸い','Kosugi Maru',400,'小杉丸ゴシック'],['丸い','Kiwi Maru',500,'キウイ丸'],
  ['ポップ','Mochiy Pop One',400,'もちもちポップ'],['ポップ','Hachi Maru Pop',400,'はちまるポップ'],['ポップ','Potta One',400,'ぽってり'],['ポップ','Darumadrop One',400,'だるまドロップ'],['ポップ','RocknRoll One',400,'ロックンロール'],
@@ -333,6 +335,9 @@ function drawGuides(c){const w=art.w,h=art.h,k=art.kind;c.save();c.lineWidth=1.5
  if(k==='icon'){dim(()=>{c.moveTo(w,h/2);c.arc(w/2,h/2,w/2,0,Math.PI*2,true)});c.setLineDash([8/V.s,6/V.s]);c.strokeStyle='rgba(61,142,240,.75)';c.beginPath();c.arc(w/2,h/2,w*0.35,0,7);c.stroke();c.setLineDash([]);c.font=`${12/V.s}px sans-serif`;c.textAlign='center';c.fillStyle='rgba(61,142,240,.95)';c.fillText('ガイド：大事なものはこの円の中に（上の「ガイド」で消せます）',w/2,h/2-w*0.35-8/V.s);c.textAlign='start'}
  if(k==='banner'&&art.w===2560&&art.h===1440){const dh=423,dw=2560,sw=1546,tw=1855;dim(()=>{c.rect((w-dw)/2,(h-dh)/2,dw,dh)});c.strokeStyle='rgba(255,170,0,.95)';c.setLineDash([10/V.s,6/V.s]);c.strokeRect((w-tw)/2,(h-dh)/2,tw,dh);c.strokeStyle='rgba(230,40,40,.95)';c.setLineDash([]);c.lineWidth=3/V.s;c.strokeRect((w-sw)/2,(h-dh)/2,sw,dh);
   c.font=`${13/V.s}px sans-serif`;c.fillStyle='rgba(230,40,40,.95)';c.fillText('スマホでも見える範囲',(w-sw)/2+6/V.s,(h-dh)/2-6/V.s);c.fillStyle='rgba(255,170,0,.95)';c.fillText('タブレット',(w-tw)/2+6/V.s,(h+dh)/2+16/V.s);c.fillStyle='rgba(255,255,255,.9)';c.fillText('テレビだけで見える',12/V.s,22/V.s)}
+ if(k==='ending'&&w===1920&&h===1080){const E=END_SLOTS;c.font=`${13/V.s}px sans-serif`;c.setLineDash([10/V.s,6/V.s]);
+  for(const[b,col,t] of [[E.msg,'rgba(255,255,255,.75)','ここにメッセージ（文字はあとで重ねる）'],[E.left,'rgba(255,170,0,.95)','ここに関連動画（YouTube が重ねる）'],[E.right,'rgba(255,170,0,.5)','2つ目の枠（使うかは未定）']]){c.strokeStyle=col;c.strokeRect(b.x,b.y,b.w,b.h);c.fillStyle=col;c.fillText(t,b.x+6/V.s,b.y-6/V.s)}
+  c.strokeStyle='rgba(61,142,240,.8)';c.beginPath();c.arc(E.earth.x,E.earth.y,E.earth.r,0,7);c.stroke();c.fillStyle='rgba(61,142,240,.95)';c.textAlign='center';c.fillText('地球の目安',E.earth.x,E.earth.y+E.earth.r+18/V.s);c.textAlign='start';c.setLineDash([])}
  if(k==='thumb'){c.fillStyle='rgba(0,0,0,.55)';c.fillRect(w-150,h-62,130,44);c.fillStyle='#fff';c.font='bold 28px sans-serif';c.fillText('10:24',w-128,h-30)}
  c.restore()}
 let antOff=0;
@@ -682,7 +687,7 @@ document.addEventListener('paste',async e=>{if(imgPickOn){const it=[...((e.clipb
 
 /* ===== メニュー ===== */
 const MENUS={
- 'ファイル':[['新規・作品一覧…',()=>openGal()],['画像・写真を開く（新しいレイヤーに）…',()=>pickFile('layer')],['なぞり用の画像を置く…',()=>pickFile('trace')],['紙の絵を線として取り込む…',()=>pickFile('lines')],['PSD を開く…',()=>pickFile('psd')],'-',['保存',()=>{flushSave(true);hint('保存しました')},CMD+'S'],['PNG で書き出す',()=>exportImg('png')],['JPEG で書き出す',()=>exportImg('jpeg')],['PSD で書き出す（Photoshop・アイビス用）',()=>exportPSD()]],
+ 'ファイル':[['新規・作品一覧…',()=>openGal()],['画像・写真を開く（新しいレイヤーに）…',()=>pickFile('layer')],['前に描いた絵から取り込む（レイヤーとして）…',()=>openGal('pick')],['なぞり用の画像を置く…',()=>pickFile('trace')],['紙の絵を線として取り込む…',()=>pickFile('lines')],['PSD を開く…',()=>pickFile('psd')],'-',['保存',()=>{flushSave(true);hint('保存しました')},CMD+'S'],['PNG で書き出す',()=>exportImg('png')],['JPEG で書き出す',()=>exportImg('jpeg')],['PSD で書き出す（Photoshop・アイビス用）',()=>exportPSD()]],
  '編集':[['取り消し',undo,CMD+'Z'],['やり直し',redo,'⇧'+CMD+'Z'],'-',['カット',ACT.cut,CMD+'X'],['コピー',ACT.copy,CMD+'C'],['ペースト',ACT.paste,CMD+'V'],['消去',()=>ACT.clear(),'Delete'],'-',['描画色で塗りつぶし',ACT.fillFg,'⌥Delete'],['背景色で塗りつぶし',ACT.fillBg,CMD+'Delete'],['境界線を描く…',ACT.strokeSel],'-',['自由変形',startXform,CMD+'T'],['左右に反転（レイヤー）',ACT.flipH],['上下に反転（レイヤー）',ACT.flipV]],
  'イメージ':[{h:'色調補正'},['明るさ・コントラスト…',()=>openAdj('bc')],['レベル補正…',()=>openAdj('lv'),CMD+'L'],['色相・彩度…',()=>openAdj('hs'),CMD+'U'],['カラーバランス…',()=>openAdj('cb'),CMD+'B'],['彩度を下げる',()=>openAdj('desat'),'⇧'+CMD+'U'],['階調の反転',()=>openAdj('inv'),CMD+'I'],['2階調化…',()=>openAdj('th')],['ポスタリゼーション…',()=>openAdj('post')],'-',['画像解像度…',()=>ACT.imgSize()],['カンバスサイズ…',()=>ACT.canvasSize()],['選択範囲で切り抜き',ACT.cropSel],'-',['画像の回転 90°（時計回り）',ACT.rot90],['画像の回転 90°（反時計回り）',ACT.rot270],['画像の回転 180°',ACT.rot180],['カンバスを左右に反転',ACT.cflipH],['カンバスを上下に反転',ACT.cflipV],'-',['背景（紙）の色…',()=>bgDialog()]],
  'レイヤー':[['新規レイヤー',()=>LA.new(),'⇧'+CMD+'N'],['レイヤーを複製',()=>LA.dup(),CMD+'J'],['レイヤーを削除',()=>LA.del()],'-',['クリッピングマスクを作成／解除',()=>LA.clip(),'⌥'+CMD+'G'],['重ね順：前面へ',()=>LA.up(),CMD+']'],['重ね順：背面へ',()=>LA.down(),CMD+'['],'-',['下のレイヤーと結合',()=>LA.merge(),CMD+'E'],['表示レイヤーを結合',()=>LA.mergeVis(),'⇧'+CMD+'E'],['画像を統合',()=>LA.flatten()]],
@@ -727,6 +732,7 @@ function bgDialog(){dialog('背景（紙）の色',`<div class="rowx"><label><in
 /* ===== 画像の読み込み・紙の絵の線取り込み・なぞり用 ===== */
 let pickMode='layer';function pickFile(m){pickMode=m;$('fileIn').click()}
 $('traceBtn').onclick=()=>pickFile('trace');
+$('reuseBtn').onclick=()=>{if(!art)return;openGal('pick')};
 $('fileIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(pickMode==='psd'||/\.psd$/i.test(f.name))return openPSD(f);if(!art)return;let bm;try{bm=await createImageBitmap(f)}catch(x){return hint('この画像は開けません')}const c=mk(bm.width,bm.height);g2(c).drawImage(bm,0,0);
  if(pickMode==='trace'){const l=newLayer('なぞり用：'+f.name.replace(/\.[^.]+$/,'').slice(0,12),{opacity:.3,noExport:true,trace:true});const s=Math.min(art.w/c.width,art.h/c.height);g2(l.cv).drawImage(c,(art.w-c.width*s)/2,(art.h-c.height*s)/2,c.width*s,c.height*s);
   structOp('なぞり用の画像',()=>{layers.unshift(l);if(layers.length===1||layers.every(x=>x.trace)){const nl=newLayer('レイヤー 1');layers.push(nl);activeId=nl.id}else if(!act()||act().trace)activeId=layers[layers.length-1].id});hint('なぞり用の画像をうすく後ろに置きました。濃さはレイヤーの不透明度で変えられます');return}
@@ -753,6 +759,7 @@ async function openPSD(f){hint('PSD を開いています…');try{const ag=awai
 function composite(exp){const c=mk(art.w,art.h);const k=g2(c);if(art.bg){k.fillStyle=art.bg;k.fillRect(0,0,art.w,art.h)}compositeTo(k,{raw:true,exp});return c}
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
 /* バナー：スマホでも見える範囲（中央 1546×423）。はみ出しを直す・調べる */
+const END_SLOTS={msg:{x:460,y:66,w:1000,h:120},left:{x:130,y:400,w:620,h:349},right:{x:1170,y:400,w:620,h:349},earth:{x:960,y:540,r:150}};   // エンディング（1920×1080）で、あとから重なる物の場所（目安）
 const SAFE=()=>({x:(art.w-1546)/2,y:(art.h-423)/2,w:1546,h:423});
 ACT.fitSafe=()=>{if(!art||art.kind!=='banner')return;if(float)commitFloat();if(textEdit)commitText();const l=act();if(!l||l.trace)return hint('なぞり用の画像は動かせません');const R=SAFE(),m=0.9;
  if(l.text){const b=textBB(l.text);const k=Math.min(1,R.w*m/b.w,R.h*m/b.h);const before={...l.text};const after={...l.text,size:Math.max(8,Math.floor(l.text.size*k))};const b2=textBB(after);after.x+=(R.x+R.w/2)-(b2.x+b2.w/2);after.y+=(R.y+R.h/2)-(b2.y+b2.h/2);snapBK(l.id);paintText(l.cv,after);l.text=after;pushPatch('スマホの枠に収める',l.id,0,0,art.w,art.h,{textBefore:before,textAfter:after});need();schedulePreview();return hint('文字を赤い枠に収まる大きさにしました')}
@@ -767,6 +774,7 @@ function renderPreview(){if(!art)return;thumbLayers();const src=composite(true);
  else if(art.kind==='banner'&&art.w===2560&&art.h===1440){const W=240;fig('テレビ',W,Math.round(W*1440/2560),(k,w,h)=>k.drawImage(src,0,0,w,h));fig('パソコン',W,Math.round(W*423/2560),(k,w,h)=>k.drawImage(src,0,(1440-423)/2,2560,423,0,0,w,h));fig('スマホ',180,Math.round(180*423/1546),(k,w,h)=>k.drawImage(src,(2560-1546)/2,(1440-423)/2,1546,423,0,0,w,h))}
  else if(art.kind==='mark'){fig('動画の右下',220,124,(k,w,h)=>{const g=k.createLinearGradient(0,0,w,h);g.addColorStop(0,'#5b7aa8');g.addColorStop(1,'#26324a');k.fillStyle=g;k.fillRect(0,0,w,h);k.globalAlpha=.9;k.drawImage(src,w-32,h-32,24,24)})}
  else if(art.kind==='thumb'){fig('おすすめ欄',220,124,(k,w,h)=>{k.drawImage(src,0,0,w,h);k.fillStyle='rgba(0,0,0,.75)';k.fillRect(w-34,h-17,30,13);k.fillStyle='#fff';k.font='bold 9px sans-serif';k.fillText('10:24',w-31,h-7)});fig('小さい欄',112,63,(k,w,h)=>k.drawImage(src,0,0,w,h))}
+ else if(art.kind==='ending'&&art.w===1920&&art.h===1080){fig('動画の最後（文字と枠を重ねた見本）',240,135,(k,w,h)=>{k.drawImage(src,0,0,w,h);const z=w/1920,E=END_SLOTS;k.fillStyle='#fff';k.font='bold 9px sans-serif';k.textAlign='center';k.fillText('ここまでご視聴ありがとうございました',w/2,(E.msg.y+E.msg.h/2)*z+3);const b=E.left;k.fillStyle='rgba(40,46,70,.92)';k.beginPath();k.roundRect(b.x*z,b.y*z,b.w*z,b.h*z,4);k.fill();k.strokeStyle='#fff';k.lineWidth=1;k.stroke();k.fillStyle='#fff';k.beginPath();k.moveTo((b.x+b.w/2)*z-5,(b.y+b.h/2)*z-6);k.lineTo((b.x+b.w/2)*z+7,(b.y+b.h/2)*z);k.lineTo((b.x+b.w/2)*z-5,(b.y+b.h/2)*z+6);k.fill();k.textAlign='start'});fig('絵だけ',160,90,(k,w,h)=>k.drawImage(src,0,0,w,h))}
  else fig('縮小',150,Math.round(150*art.h/art.w),(k,w,h)=>k.drawImage(src,0,0,w,h))}
 
 /* ===== 開く・新しく・保存・同期 ===== */
@@ -777,8 +785,8 @@ async function openArt(rec){if(art)await flushSave(true);float=null;adj=null;tex
  else if(rec.layers&&!Array.isArray(rec.layers)){for(const[k,n]of[['sketch','なぞり用（下書き）'],['color','色'],['line','線']]){const l=newLayer(n,k==='sketch'?{opacity:rec.sketchAlpha??.45,noExport:true,trace:true}:{});if(rec.layers[k]){try{const bm=await createImageBitmap(rec.layers[k]);g2(l.cv).drawImage(bm,0,0)}catch(e){}}layers.push(l)}}
  if(!layers.length)layers=[newLayer('レイヤー 1')];activeId=(rec.activeId&&layers.some(l=>l.id===rec.activeId))?rec.activeId:layers[layers.length-1].id;if(byId(activeId).trace&&layers.some(l=>!l.trace))activeId=layers.filter(l=>!l.trace).pop().id;
  LS.set('pd_open',art.id);$('artName').value=art.name||'';updKindTag();changedIds=new Set();resize();fit();renderLayers();renderHist();renderPreview();renderFin();renderOpts();if(KINDS[art.kind].note)hint(KINDS[art.kind].note)}
-function newArt(kind){const k=KINDS[kind];const n=(D.arts||[]).filter(a=>a.kind===kind&&!a.deleted).length+1;return{id:uid('art'),kind,name:k.n+(n>1?n:''),w:k.w,h:k.h,bg:kind==='icon'||kind==='mark'?'':'#ffffff',rev:0,updatedAt:now(),layerData:[]}}
-async function startNew(kind){await openArt(newArt(kind));OPT.brush.size={icon:14,banner:24,mark:12,thumb:14,free:14}[kind];saveOpt();renderOpts();markAll();await flushSave(false)}
+function newArt(kind){const k=KINDS[kind];const n=(D.arts||[]).filter(a=>a.kind===kind&&!a.deleted).length+1;return{id:uid('art'),kind,name:k.n+(n>1?n:''),w:k.w,h:k.h,bg:kind==='icon'||kind==='mark'?'':kind==='ending'?'#0a0f2c':'#ffffff',rev:0,updatedAt:now(),layerData:[]}}
+async function startNew(kind){await openArt(newArt(kind));OPT.brush.size=({icon:14,banner:24,mark:12,thumb:14,ending:18,free:14}[kind]||14);saveOpt();renderOpts();markAll();await flushSave(false)}
 function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(()=>flushSave(false),900);clearTimeout(upT);upT=setTimeout(()=>upload(),600000)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
@@ -805,20 +813,51 @@ $('gal').addEventListener('close',()=>{setTimeout(()=>{if(!art&&!newPending)star
 $('newKinds').innerHTML=Object.entries(KINDS).map(([k,v])=>`<button class="b" data-new="${k}">＋ ${v.n} <small class="lead">${v.w}×${v.h}</small></button>`).join('');
 $('newKinds').onclick=async e=>{const b=e.target.closest('[data-new]');if(!b)return;const k=b.dataset.new;newPending=true;$('gal').close();await startNew(k);newPending=false};
 let newPending=false;
-async function openGal(){const loc=await dbAll();const ids=new Set(loc.map(a=>a.id));const cloud=(D.arts||[]).filter(a=>!a.deleted&&!ids.has(a.id)&&a.files&&Object.keys(a.files).length);
- const all=[...loc.filter(a=>!(D.arts||[]).some(c=>c.id===a.id&&c.deleted)).map(a=>({...a,_loc:true})),...cloud.map(a=>({...a,_loc:false}))].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
- $('galList').innerHTML=all.length?all.map(a=>`<div class="card" data-open="${a.id}"><img src="${a.thumb||''}" alt=""><div class="t">${esc(a.name||'')}</div><div class="m">${KINDS[a.kind]?KINDS[a.kind].n:''}・${new Date(a.updatedAt||0).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}${a._loc?'':'・ほかの端末で描いた絵'}</div><button class="del" data-del="${a.id}">消す</button></div>`).join(''):'<div class="lead">まだ絵がありません。上のボタンから始めてください。</div>';$('gal').showModal()}
+let galMode='open';   // open＝ふつうの一覧／pick＝今の絵に取り込む作品を選ぶ
+async function openGal(mode){galMode=mode==='pick'?'pick':'open';const pick=galMode==='pick';const loc=await dbAll();const ids=new Set(loc.map(a=>a.id));const cloud=(D.arts||[]).filter(a=>!a.deleted&&!ids.has(a.id)&&a.files&&Object.keys(a.files).length);
+ let all=[...loc.filter(a=>!(D.arts||[]).some(c=>c.id===a.id&&c.deleted)).map(a=>({...a,_loc:true})),...cloud.map(a=>({...a,_loc:false}))].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+ if(pick)all=all.filter(a=>!art||a.id!==art.id);
+ $('galTitle').textContent=pick?'取り込む作品を選ぶ':'作品一覧';$('galLead').textContent=pick?'前に描いた絵のレイヤーを、今の絵に取り込みます。元の絵は変わりません。':'新しく描く：';$('newKinds').style.display=pick?'none':'';
+ $('galList').innerHTML=all.length?all.map(a=>`<div class="card" data-open="${a.id}"><img src="${a.thumb||''}" alt=""><div class="t">${esc(a.name||'')}</div><div class="m">${KINDS[a.kind]?KINDS[a.kind].n:''}・${new Date(a.updatedAt||0).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}${a._loc?'':'・ほかの端末で描いた絵'}</div>${pick?'':`<button class="reuse" data-reuse="${a.id}">これを元に新しく作る</button><button class="del" data-del="${a.id}">消す</button>`}</div>`).join(''):`<div class="lead">${pick?'取り込める絵がまだありません。':'まだ絵がありません。上のボタンから始めてください。'}</div>`;$('gal').showModal()}
 $('galList').onclick=async e=>{const d=e.target.closest('[data-del]');if(d){e.stopPropagation();if(!d.dataset.sure){d.dataset.sure=1;d.textContent='本当に消す';setTimeout(()=>{delete d.dataset.sure;d.textContent='消す'},2500);return}const id=d.dataset.del;await dbDel(id);const m=D.arts.find(a=>a.id===id);if(m){m.deleted=true;m.updatedAt=now();saveD()}if(art&&art.id===id){art=null;layers=[];need()}openGal();return}
- const c=e.target.closest('[data-open]');if(!c)return;const id=c.dataset.open;newPending=true;$('gal').close();await loadAny(id);newPending=false};
-async function loadAny(id){let loc=await dbGet(id);const m=(D.arts||[]).find(a=>a.id===id);
+ const ru=e.target.closest('[data-reuse]');if(ru){e.stopPropagation();newPending=true;$('gal').close();try{await reuseAsNew(ru.dataset.reuse)}finally{newPending=false}return}
+ const c=e.target.closest('[data-open]');if(!c)return;const id=c.dataset.open;if(galMode==='pick'){$('gal').close();importFrom(id);return}newPending=true;$('gal').close();await loadAny(id);newPending=false};
+// 作品の中身（レイヤーの画像つき）を取り出す。ほかの端末で描いた新しい版があれば、先に読み込む
+async function getRec(id){getRec.failed=false;let loc=await dbGet(id);const m=(D.arts||[]).find(a=>a.id===id);
  if(m&&m.files&&Object.keys(m.files).length&&(!loc||((m.rev||0)>(loc.rev||0)&&!loc.localDirty))){lab('ほかの端末の絵を読み込んでいます…');try{const layerData=[];
    if(m.layers&&m.layers.length){for(const d of m.layers)layerData.push({...d,blob:m.files[d.id]?await ghBlob(m.files[d.id]):null})}
    else{const nm={sketch:'なぞり用（下書き）',color:'色',line:'線'};for(const k of ['sketch','color','line'])if(m.files[k])layerData.push({id:uid('ly'),name:nm[k],opacity:k==='sketch'?.45:1,blend:'source-over',visible:true,noExport:k==='sketch',trace:k==='sketch',blob:await ghBlob(m.files[k])})}
-   loc={id:m.id,kind:m.kind,name:m.name,w:m.w,h:m.h,bg:m.bg,rev:m.rev,updatedAt:m.updatedAt,thumb:m.thumb,layerData,localDirty:false};await dbPut(loc);lab('読み込みました','okk')}catch(e){lab('読み込めません：'+e.message,'bad');if(!loc)return}}
- if(loc)await openArt(loc);else if(!art)await startNew('icon')}
+   loc={id:m.id,kind:m.kind,name:m.name,w:m.w,h:m.h,bg:m.bg,rev:m.rev,updatedAt:m.updatedAt,thumb:m.thumb,layerData,localDirty:false};await dbPut(loc);lab('読み込みました','okk')}catch(e){lab('読み込めません：'+e.message,'bad');if(!loc){getRec.failed=true;return null}}}
+ return loc||null}
+async function loadAny(id){const loc=await getRec(id);if(loc)await openArt(loc);else if(!art&&!getRec.failed)await startNew('icon')}
+
+/* ===== 流用：前に描いた絵を、今の絵に取り込む／元にして新しく作る ===== */
+async function recLayers(rec){const out=[];const bmOf=async b=>{if(!b)return null;try{return await createImageBitmap(b)}catch(e){return null}};
+ if(Array.isArray(rec.layerData)){for(const d of rec.layerData){const{blob,...meta}=d;out.push({meta,bm:await bmOf(blob)})}}
+ else if(rec.layers&&!Array.isArray(rec.layers)){for(const[k,n]of[['sketch','なぞり用（下書き）'],['color','色'],['line','線']])if(rec.layers[k])out.push({meta:{name:n,opacity:k==='sketch'?(rec.sketchAlpha??.45):1,trace:k==='sketch',noExport:k==='sketch'},bm:await bmOf(rec.layers[k])})}
+ return out.filter(x=>x.bm)}
+const FITS=[['keep','そのままの大きさで、真ん中に置く'],['in','画面に収まるように合わせる'],['fill','画面いっぱいに広げる（はみ出した所は切れる）']];
+const fitHtml=d=>`<div class="lead" style="margin-top:8px">置き方（あとで ⌘T の自由変形でも変えられます）</div>`+FITS.map(([v,n])=>`<div class="rowx"><label><input type="radio" name="impFit" value="${v}" ${v===d?'checked':''}> ${n}</label></div>`).join('');
+const fitVal=()=>(document.querySelector('input[name="impFit"]:checked')||{}).value||'keep';
+function placeOf(rec,fit){const s=fit==='in'?Math.min(art.w/rec.w,art.h/rec.h):fit==='fill'?Math.max(art.w/rec.w,art.h/rec.h):1;return{s,x:(art.w-rec.w*s)/2,y:(art.h-rec.h*s)/2}}
+function importedLayers(rec,Ls,fit,flat){const P=placeOf(rec,fit);const put=(c,bm)=>{c.imageSmoothingQuality='high';c.drawImage(bm,P.x,P.y,rec.w*P.s,rec.h*P.s)};
+ if(flat){const l=newLayer((rec.name||'絵')+'（まとめ）');const c=g2(l.cv);for(const{meta,bm}of Ls){if(meta.visible===false||meta.trace)continue;c.globalAlpha=meta.opacity??1;c.globalCompositeOperation=meta.blend||'source-over';put(c,bm)}c.globalAlpha=1;c.globalCompositeOperation='source-over';return[l]}
+ return Ls.map(({meta,bm})=>{const l=newLayer(meta.name||'レイヤー',{opacity:meta.opacity??1,blend:meta.blend||'source-over',visible:meta.visible!==false,lockAlpha:!!meta.lockAlpha,clip:!!meta.clip,noExport:!!meta.noExport,trace:!!meta.trace});put(g2(l.cv),bm);return l})}
+async function importFrom(id){if(!art)return;if(float)commitFloat();if(textEdit)await commitText();lab('絵を読み込んでいます…');const rec=await getRec(id);if(!rec){hint('読み込めませんでした');return}const Ls=await recLayers(rec);lab('');if(!Ls.length){hint('取り込めるレイヤーがありません');return}
+ const rows=Ls.slice().reverse().map((x,k)=>{const i=Ls.length-1-k;return`<label class="imp"><input type="checkbox" data-imp="${i}" ${x.meta.trace?'':'checked'}><canvas data-impc="${i}" width="128" height="80"></canvas><span>${esc(x.meta.name||'レイヤー')}${x.meta.trace?'（なぞり用）':''}${x.meta.text?'（文字 → 絵として取り込みます）':''}</span></label>`}).join('');
+ dialog(`「${rec.name||'絵'}」から取り込む`,`<div class="lead">取り込むレイヤーを選びます（上にあるほど手前）。元の絵は変わりません。</div><div style="max-height:38vh;overflow:auto">${rows}</div><div class="rowx" style="margin-top:6px"><label><input type="checkbox" id="impFlat"> まとめて1枚のレイヤーにする</label></div>${fitHtml('keep')}`,
+  ()=>{const ids=[...document.querySelectorAll('[data-imp]')].filter(c=>c.checked).map(c=>+c.dataset.imp).sort((a,b)=>a-b);if(!ids.length)return hint('レイヤーが選ばれていません');const nl=importedLayers(rec,ids.map(i=>Ls[i]),fitVal(),$('impFlat').checked);
+   structOp('前の絵から取り込む',()=>{const i=layers.indexOf(act());if(nl[0].clip)nl[0].clip=false;layers.splice(i+1,0,...nl);activeId=nl[nl.length-1].id});setTool('move');schedulePreview();scheduleSave();hint(`${nl.length}枚を取り込みました。編集 → 自由変形（⌘T）で大きさと位置を変えられます`)},
+  ()=>{document.querySelectorAll('[data-impc]').forEach(cv=>{const bm=Ls[+cv.dataset.impc].bm;const k=g2(cv);const z=Math.min(128/bm.width,80/bm.height);k.drawImage(bm,(128-bm.width*z)/2,(80-bm.height*z)/2,bm.width*z,bm.height*z)})})}
+async function reuseAsNew(id){lab('絵を読み込んでいます…');const rec=await getRec(id);lab('');if(!rec){hint('読み込めませんでした');if(!art)await startNew('icon');return}const Ls=await recLayers(rec);
+ const back=async()=>{if(!art)await openGal()};
+ dialog(`「${rec.name||'絵'}」を元に新しく作る`,`<div class="lead">元の絵は変わりません。レイヤーを写した新しい絵を作ります。</div><div class="rowx"><label><input type="radio" name="ruKind" value="same" checked> 同じ大きさのまま（${rec.w}×${rec.h}）</label></div>`+Object.entries(KINDS).map(([k,v])=>`<div class="rowx"><label><input type="radio" name="ruKind" value="${k}"> ${v.n}の大きさにする（${v.w}×${v.h}）</label></div>`).join('')+fitHtml('keep'),
+  async()=>{const kv=(document.querySelector('input[name="ruKind"]:checked')||{}).value||'same';const fit=fitVal();const kind=kv==='same'?(KINDS[rec.kind]?rec.kind:'free'):kv;const base=newArt(kind);if(kv==='same'){base.w=rec.w;base.h=rec.h;base.bg=rec.bg??''}base.name=(rec.name||KINDS[kind].n)+' を元に';
+   await openArt(base);if(Ls.length){layers=importedLayers(rec,Ls,fit,false);if(layers[0].clip)layers[0].clip=false;activeId=(layers.filter(l=>!l.trace).pop()||layers[layers.length-1]).id}
+   hist=[];hpos=0;histBytes=0;markAll();renderLayers();renderHist();need();renderPreview();await flushSave(false);hint('元の絵を写しました。ここから描き足せます')},null,back)}
 
 /* ===== Claude に仕上げてもらう ===== */
-const FIN_DEF={icon:'線を整えて色を付け、チャンネルのアイコン（丸く切り取られる）に仕上げて。手書きの味は残す',banner:'線を整えて色を付け、YouTube のバナーに仕上げて。スマホで見える範囲に大事なものを収める',mark:'動画の右下に小さく出る透かしにして。小さくても形が分かるように',thumb:'サムネとして仕上げて',free:'整えて仕上げて'};
+const FIN_DEF={icon:'線を整えて色を付け、チャンネルのアイコン（丸く切り取られる）に仕上げて。手書きの味は残す',banner:'線を整えて色を付け、YouTube のバナーに仕上げて。スマホで見える範囲に大事なものを収める',mark:'動画の右下に小さく出る透かしにして。小さくても形が分かるように',thumb:'サムネとして仕上げて',ending:'動画の最後に出すエンディングの背景に仕上げて。手書きの味は残す',free:'整えて仕上げて'};
 $('finBtn').onclick=()=>{if(!art)return;if(!syncOn())return hint('制作室の設定で同期をつなぐと頼めます');$('finNote').placeholder=FIN_DEF[art.kind];$('finDlg').showModal()};
 $('finCancel').onclick=()=>$('finDlg').close();
 $('finSend').onclick=async()=>{$('finDlg').close();lab('絵を送っています…');await flushSave(false);await upload(true);
