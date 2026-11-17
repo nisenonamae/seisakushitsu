@@ -1,0 +1,104 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script src="polderlib.js"></script>
+<script>
+/* 人工の土地の回・第5章「東京湾」の地図
+ 今の陸の型は、地理院タイル（淡色地図）から読み取ったもの（img/tk_*.png。出典の表記が要る）。経度 139.66〜139.945・緯度 35.57〜35.70
+ 昔の海岸線（1590年ごろ・江戸の終わり）は、資料の記述をもとに手で引いたおおよその線。明治から今までの広がり方（g1〜g5）は「昔の岸からの遠さ」の順で、本当の年の順ではない
+ mode：ask（今の地図。ats：[0] 海岸線が光る [1] 皇居の前へ寄って「？」）
+      ／hibiya（ats：[0] 入り江が光る [1]「日比谷入江」 [2]「今の日比谷」の印 [3] 入り江が北から埋まる [4] 光がおさまる）
+      ／nihon（日本橋〜新橋のあたりが塗られる）
+      ／fire（ats：[0] 町が燃える [1] がれきが残る [2] がれきが東の海へ [3] 今の江東区のあたりが陸に [4] 沖へ広がる）
+      ／tsuki（月島が光る。ats：[0] 島が光る）
+      ／gomi（ats：[0]「1900年」 [1] 枝川・塩浜のあたり [2]「1923年」 [3] 豊洲 [4]「戦後」夢の島 [5] 今の処分場に「最後」 [6] 寄る）
+      ／area（ats：[0] 明治からの埋め立てが広がる [1]「約5,800ha」 [2] 4つの区の形 [3] 形を埋め立て地の上へ動かす [4] 両方が光る） */
+window.DEF={mode:'ask'};
+const BB=[139.66,139.945,35.57,35.70],GOLD='#f0b63e',LAND2='#d9d3a4',GHOST='#4d7592';
+const INLET=[[139.754,35.662],[139.7525,35.670],[139.753,35.678],[139.757,35.685],[139.761,35.688],[139.765,35.686],[139.7655,35.678],[139.765,35.670],[139.763,35.663]];
+const WARDS4=[[139.6841,35.7204],[139.7159,35.7204],[139.7352,35.7126],[139.7477,35.7049],[139.7642,35.702],[139.7835,35.6972],[139.7912,35.6895],[139.7883,35.675],[139.7931,35.6663],[139.7883,35.6509],[139.7767,35.6432],[139.769,35.6509],[139.7622,35.6576],[139.7613,35.649],[139.7564,35.6393],[139.7526,35.6297],[139.7381,35.6287],[139.7227,35.6393],[139.713,35.6605],[139.7159,35.675],[139.7063,35.6827],[139.7014,35.6856],[139.687,35.6895],[139.6821,35.6991],[139.6841,35.7126]];   // 千代田・中央・港・新宿を合わせたおおよその形（手で引いた。広さは約60km²に合わせてある）
+const VA=()=>view(139.8025,35.635,5560),VB=()=>view(139.770,35.673,14400),VM=()=>view(139.775,35.659,9000);
+const vmix=(a,b,u)=>view(lerp(a.lon,b.lon,u),lerp(a.lat,b.lat,u),Math.exp(lerp(Math.log(a.sc),Math.log(b.sc),u)));
+function init(){const base=location.href.replace(/[^\/]*$/,'');for(const k of ['now','1590','1868','edo','g1','g2','g3','g4','g5','tsuki','s1','s2','s3','last'])loadImg(k,base+'img/tk_'+k+'.png')}
+function rect(v){const[x0,y0]=pj(v,BB[0],BB[3]),[x1,y1]=pj(v,BB[1],BB[2]);return[x0,y0,x1-x0,y1-y0]}
+function tk(v,key,col,a=1){if(a<=0)return;const r=rect(v);g.save();g.globalAlpha*=a;g.imageSmoothingEnabled=true;g.drawImage(tinted(key,col),r[0],r[1],r[2],r[3]);g.restore()}
+let OFF=null;function land(v,key,a=1,col=LAND){if(a<=0)return;if(!OFF){OFF=document.createElement('canvas');OFF.width=W;OFF.height=H}const x=OFF.getContext('2d'),r=rect(v);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(0,0,W,H);x.imageSmoothingEnabled=true;x.drawImage(tinted(key,col),r[0],r[1],r[2],r[3]);x.globalCompositeOperation='source-atop';x.globalAlpha=0.5;x.fillStyle=noisePat('land',LAND,['#d3c79a','#c9cf9c','#e9dcba','#bfc893']);x.fillRect(0,0,W,H);g.save();g.globalAlpha*=a;g.drawImage(OFF,0,0);g.restore()}
+function boxClip(v,lo0,lo1,la0,la1){const[x0,y0]=pj(v,lo0,la1),[x1,y1]=pj(v,lo1,la0);g.beginPath();g.rect(x0,y0,x1-x0,y1-y0);g.clip();return[x0,y0,x1,y1]}
+function polyLL(v,ring){g.beginPath();ring.forEach((p,i)=>{const[x,y]=pj(v,p[0],p[1]);i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath()}
+function castleS(x,y,s=1){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.ellipse(0,3,34,7,0,0,7);g.fill();g.fillStyle='#8d8b84';g.beginPath();g.moveTo(-32,0);g.lineTo(-24,-18);g.lineTo(24,-18);g.lineTo(32,0);g.closePath();g.fill();
+  for(const[w,yy,h] of [[40,-18,16],[30,-40,14],[20,-60,12]]){g.fillStyle='#f4f1e8';g.fillRect(-w/2,yy-h,w,h);g.fillStyle='#4a5a63';g.beginPath();g.moveTo(-w/2-9,yy-h+2);g.lineTo(-w/2+3,yy-h-9);g.lineTo(w/2-3,yy-h-9);g.lineTo(w/2+9,yy-h+2);g.closePath();g.fill()}g.restore()}
+function pinL(v,lo,la,k,txt,dx=0,dy=-84,size=40){if(k<=0)return;const[x,y]=pj(v,lo,la);pinS(x,y,k);if(txt)numLabel(x+dx,y+dy,txt,clamp(k),size,'#fff')}
+function lumps(v,from,to,t,t0,n,col,spread=0.004,dur=1.0,gap=0.12){const r=R(Math.round(from[0]*1000+to[1]*777));for(let i=0;i<n;i++){const a=pj(v,from[0]+(r()-0.5)*spread,from[1]+(r()-0.5)*spread),b=pj(v,to[0]+(r()-0.5)*spread,to[1]+(r()-0.5)*spread);const u=clamp((t-t0-i*gap)/dur);if(u<=0)continue;const e=ease(u),x=lerp(a[0],b[0],e),y=lerp(a[1],b[1],e)-Math.sin(e*Math.PI)*46,fa=u<1?1:1-clamp((t-t0-i*gap-dur)/0.5);if(fa<=0)continue;g.fillStyle=col;g.globalAlpha=fa;g.beginPath();g.arc(x,y,6+r()*4,0,7);g.fill();g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.arc(x+2,y+2,3,0,7);g.fill();g.globalAlpha=1}}
+// 下地。o.old 0〜1（1＝1590年ごろの陸だけ。今の陸は「昔は海だった所」のうすい青で残す）
+function base(v,t,o={}){seaBg(t);const old=o.old==null?1:o.old;if(old>0)tk(v,'now',GHOST,old*(o.ghost==null?1:o.ghost));land(v,'1590');if(old<1)land(v,'now',1-old)}
+function inletFill(v,k,gold=0){if(k<=0)return;g.save();polyLL(v,INLET);g.clip();const b=boxClip(v,139.745,139.775,35.655,35.69);g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'now',1,LAND2);if(gold>0)tk(v,'now',GOLD,gold);g.restore()}
+function edoWest(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.74,139.7885,35.64,35.699);g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'edo',1,LAND2);if(gold>0)tk(v,'edo',GOLD,gold);g.restore()}
+function edoEast(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.7885,139.95,35.64,35.70);g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'edo',1,LAND2);if(gold>0)tk(v,'edo',GOLD,gold);g.restore()}
+function rim(v,key,col,w,a){if(a<=0)return;for(let i=0;i<8;i++){const an=i*Math.PI/4;g.save();g.translate(Math.cos(an)*w,Math.sin(an)*w);tk(v,key,col,a);g.restore()}}
+
+function ask(t){const T1=T(1,DUR*0.35),T2=T(2,DUR*0.6);const u=ease(clamp((t-T2)/1.6));const v=vmix(VA(),VM(),u);
+  seaBg(t);const rk=clamp((t-T1)/0.5)*(1-clamp((t-T2)/0.8));rim(v,'now',GOLD,5,rk*(0.7+0.3*Math.sin(t*6)));land(v,'now');
+  const ck=clamp((t-T2-0.5)/0.4);if(ck>0){const[x,y]=pj(v,139.7528,35.6852);g.save();g.translate(x,y);g.scale(back(ck),back(ck));castleS(0,0,1.1);g.restore();const[qx,qy]=pj(v,139.768,35.662);numLabel(qx+40,qy,'？',clamp((t-T2-1.0)/0.35),130)}
+  if(t>=T1)sfxOnce('r',T1,'pop');if(t>=T2)sfxOnce('z',T2,'whoosh');if(t>=T2+1.0)sfxOnce('q',T2+1.0,'pop')}
+
+function hibiya(t){const T1=T(1,DUR*0.22),T2=T(2,DUR*0.36),T3=T(3,DUR*0.5),T4=T(4,DUR*0.66),T5=T(5,DUR*0.84);const v=vmix(VM(),VB(),ease(clamp((t-0.1)/1.3)));
+  const old=ease(clamp((t-0.5)/Math.max(1.6,T1-0.9)));base(v,t,{old});
+  const fk=ease(clamp((t-T4)/Math.max(1.8,T5-T4)));
+  // 入り江（海が入り込んでいた所）
+  const ik=clamp((t-T1)/0.5)*(1-fk);if(ik>0){g.save();polyLL(v,INLET);g.fillStyle=`rgba(111,169,201,${0.85*ik})`;g.fill();g.clip();g.strokeStyle=`rgba(255,255,255,${0.5*ik})`;g.lineWidth=2.5;const r=R(3);for(let i=0;i<26;i++){const[x,y]=pj(v,139.752+r()*0.014,35.662+r()*0.026);const o2=Math.sin(t*1.6+i)*6;g.beginPath();g.moveTo(x+o2,y);g.quadraticCurveTo(x+o2+10,y-5,x+o2+20,y);g.stroke()}g.restore();polyLL(v,INLET);g.strokeStyle=`rgba(255,255,255,${ik*(0.5+0.4*Math.sin(t*5))})`;g.lineWidth=4;g.stroke()}
+  inletFill(v,fk,(1-0.75*ease(clamp((t-T5)/1.2))));
+  {const[x,y]=pj(v,139.7528,35.6852);const ck=clamp((t-0.2)/0.4);g.save();g.translate(x,y);g.scale(back(ck),back(ck));castleS(0,0,1.5);g.restore()}
+  {const[x,y]=pj(v,139.7655,35.679);numLabel(x+150,y-10,'日比谷入江',clamp((t-T2)/0.35)*(1-clamp((t-T4-0.6)/0.5)),50)}
+  pinL(v,139.756,35.672,clamp((t-T3)/0.35),'今の日比谷',-130,-30,38);
+  if(t>=0.5)sfxOnce('o',0.5,'whoosh');if(t>=T1)sfxOnce('i',T1,'pop');if(t>=T2)sfxOnce('l',T2,'tick');if(t>=T3)sfxOnce('p',T3,'pop');if(t>=T4)sfxOnce('f',T4,'thump')}
+
+function nihon(t){const v=VB();base(v,t,{});inletFill(v,1,0.25);const k=ease(clamp((t-0.3)/Math.max(1.6,DUR-1.6)));edoWest(v,k,0.95);
+  {const[x,y]=pj(v,139.7528,35.6852);castleS(x,y,1.5)}
+  pinL(v,139.7745,35.684,clamp((t-0.4)/0.35),'日本橋',96,-30,40);pinL(v,139.759,35.666,clamp((t-1.3)/0.35),'新橋',-84,-30,40);
+  if(t>=0.3)sfxOnce('f',0.3,'whoosh');if(t>=0.4)sfxOnce('a',0.4,'pop');if(t>=1.3)sfxOnce('b',1.3,'pop')}
+
+function fire(t){const T1=T(1,DUR*0.08),T2=T(2,DUR*0.28),T3=T(3,DUR*0.46),T4=T(4,DUR*0.62),T5=T(5,DUR*0.82);const v=vmix(VB(),view(139.795,35.664,10500),ease(clamp((t-0.1)/1.2)));
+  base(v,t,{});inletFill(v,1,0);edoWest(v,1,0);const ek=ease(clamp((t-T4)/Math.max(3,DUR-T4-0.5)));edoEast(v,ek,0.9);
+  const SP=[[139.768,35.689],[139.775,35.693],[139.779,35.686],[139.771,35.682],[139.783,35.691]],DS=[[139.802,35.683],[139.812,35.680],[139.822,35.678],[139.808,35.674],[139.818,35.671]];
+  const fk=clamp((t-T1)/0.5)*(1-clamp((t-T2)/0.9));
+  SP.forEach((p,i)=>{const[x,y]=pj(v,p[0],p[1]);
+    if(fk>0){const fl=0.8+0.2*Math.sin(t*23+i*2);g.fillStyle=`rgba(226,70,40,${0.35*fk})`;g.beginPath();g.arc(x,y,34*fl,0,7);g.fill();for(let k=0;k<3;k++){g.fillStyle=['#f6a23c','#f1672e','#ffd36a'][k];g.globalAlpha=fk;const fx=x+(k-1)*11,fh=(34+k*9)*fl;g.beginPath();g.moveTo(fx-9,y+6);g.quadraticCurveTo(fx-6,y-fh*0.5,fx,y-fh);g.quadraticCurveTo(fx+6,y-fh*0.5,fx+9,y+6);g.fill()}g.globalAlpha=1;
+      for(let k=0;k<3;k++){const q=(t*0.5+k/3+i*0.2)%1;g.fillStyle=`rgba(70,70,76,${0.4*(1-q)*fk})`;g.beginPath();g.arc(x+q*26,y-30-q*80,9+q*18,0,7);g.fill()}}
+    // がれき（焼けあと）→ 東の海へ
+    const rk=clamp((t-T2+0.3)/0.5),mv=ease(clamp((t-T3-i*0.25)/1.3));if(rk>0){const b=pj(v,DS[i][0],DS[i][1]);const cx=lerp(x,b[0],mv),cy=lerp(y,b[1],mv)-Math.sin(mv*Math.PI)*50;const a=mv<1?1:1-clamp((t-T4-0.3)/0.8);if(a>0){g.globalAlpha=a*rk;const r=R(i+90);for(let k=0;k<6;k++){g.fillStyle=['#6f6a62','#8a847a','#5a554e'][k%3];g.beginPath();const px=cx+(r()-0.5)*26,py=cy+(r()-0.5)*14;g.moveTo(px-7,py+5);g.lineTo(px-3,py-6);g.lineTo(px+6,py-3);g.lineTo(px+8,py+5);g.closePath();g.fill()}g.globalAlpha=1}}});
+  pinL(v,139.817,35.673,clamp((t-T4-0.3)/0.35),'今の江東区',120,-28,38);
+  if(t>=T1)sfxOnce('f',T1,'whoosh');if(t>=T2)sfxOnce('r',T2,'thump');if(t>=T3)sfxOnce('m',T3,'whoosh');if(t>=T4)sfxOnce('l',T4,'pop')}
+
+function tsuki(t){const T1=T(1,DUR*0.45);const v=vmix(view(139.795,35.664,10500),view(139.782,35.662,20000),ease(clamp((t-0.1)/1.2)));
+  seaBg(t);
+  // 掘って深くした水の道（隅田川の河口）。陸を上から描くので、水の所だけに見える
+  const ck=clamp((t-0.5)/0.6);if(ck>0){const p=[[139.7835,35.6725],[139.781,35.669],[139.7775,35.6645],[139.772,35.6605],[139.766,35.657],[139.760,35.653]].map(q=>pj(v,q[0],q[1]));g.lineCap='round';g.lineJoin='round';g.strokeStyle=`rgba(24,50,84,${0.9*ck})`;g.lineWidth=46;g.beginPath();p.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.stroke();g.lineCap='butt'}
+  tk(v,'now',GHOST,0.6);land(v,'1868');
+  const ik=ease(clamp((t-T1)/0.9));if(ik>0){land(v,'tsuki',ik,LAND2);tk(v,'tsuki',GOLD,ik*(0.78+0.18*Math.sin(t*5)));const[x,y]=pj(v,139.781,35.663);numLabel(x+200,y-90,'月島',clamp((t-T1-0.3)/0.35),64)}
+  if(t>=0.5)sfxOnce('c',0.5,'whoosh');if(t>=T1)sfxOnce('i',T1,'pop')}
+
+function spot(v,key,k,t,pulse=1){if(k<=0)return;land(v,key,clamp(k),LAND2);tk(v,key,GOLD,clamp(k)*(pulse?0.75+0.22*Math.sin(t*5):0.4))}
+function gomi(t){const T1=T(1,DUR*0.04),T2=T(2,DUR*0.16),T3=T(3,DUR*0.28),T4=T(4,DUR*0.4),T5=T(5,DUR*0.52),T6=T(6,DUR*0.64),T7=T(7,DUR*0.86);
+  const V1=view(139.81,35.652,10500),V2=view(139.812,35.622,7200);const v=vmix(vmix(VA(),V1,ease(clamp((t-0.1)/1.3))),V2,ease(clamp((t-T6+1.6)/1.5)));   // はじめは北の岸へ寄り、最後の処分場の前に引く
+  seaBg(t);tk(v,'now',GHOST,0.55);land(v,'1868');
+  const all=ease(clamp((t-T6+1.2)/1.0));if(all>0)land(v,'g5',all,LAND2);
+  const S=[['s1',T2],['s2',T4],['s3',T5],['last',T6]];
+  S.forEach((s,i)=>{const k=clamp((t-s[1]-0.5)/0.8);const cur=i===3||t<(S[i+1]?S[i+1][1]:1e9);spot(v,s[0],k,t,cur)});
+  // 町から運ばれる物（ごみ・がれき）
+  lumps(v,[139.775,35.684],[139.805,35.662],t,T2,7,'#4f4a44');lumps(v,[139.772,35.682],[139.794,35.657],t,T4,9,'#8a847a');lumps(v,[139.78,35.68],[139.829,35.650],t,T5,7,'#4f4a44');lumps(v,[139.79,35.67],[139.815,35.596],t,T6,8,'#4f4a44',0.004,1.3);
+  const yr=[['1900年',T1,T3],['1923年',T3,T5],['戦後',T5,T6]];for(const[tx,a,b] of yr)numLabel(230,104,tx,clamp((t-a)/0.35)*(1-clamp((t-b+0.3)/0.3)),84);
+  {const[x,y]=pj(v,139.815,35.596);numLabel(x+190,y-60,'最後',clamp((t-T6-0.9)/0.35),72,'#fff')}
+  for(const[k,tt,kind] of [['a',T1,'pop'],['b',T2,'whoosh'],['c',T3,'thump'],['d',T4,'whoosh'],['e',T5,'pop'],['f',T6,'whoosh'],['g',T6+0.9,'pop']])if(t>=tt)sfxOnce(k,tt,kind)}
+
+function area(t){const T1=T(1,DUR*0.1),T2=T(2,DUR*0.3),T3=T(3,DUR*0.46),T4=T(4,DUR*0.7),T5=T(5,DUR*0.86);const v=VA();
+  seaBg(t);tk(v,'now',GHOST,0.5);land(v,'1868');
+  const gp=clamp((t-T1)/Math.max(2.5,T2-T1+1.2))*5;for(let i=1;i<=5;i++){const a=clamp(gp-(i-1));if(a>0){land(v,'g'+i,a,LAND2);tk(v,'g'+i,GOLD,a*(0.8+0.15*Math.sin(t*4)*(t>=T4?1:0)))}}
+  numLabel(1010,560,'約5,800ha',clamp((t-T2)/0.35),78);
+  // 4つの区（おおよその形）
+  const wk=clamp((t-T3)/1.0);if(wk>0){const mv=ease(clamp((t-T4)/1.4));const a=pj(v,139.74,35.675),b=pj(v,139.812,35.625);g.save();g.lineJoin='round';
+    polyLL(v,WARDS4);g.fillStyle=`rgba(255,255,255,${0.2*wk})`;g.fill();g.strokeStyle=`rgba(255,255,255,${wk})`;g.lineWidth=5;g.stroke();
+    if(mv>0){g.translate((b[0]-a[0])*mv,(b[1]-a[1])*mv);polyLL(v,WARDS4);g.fillStyle=`rgba(255,255,255,${0.16*mv})`;g.fill();g.setLineDash([14,9]);g.strokeStyle=`rgba(255,255,255,${0.95})`;g.lineWidth=5;g.stroke();g.setLineDash([])}g.restore();
+    const[x,y]=pj(v,139.70,35.668);numLabel(x-10,y+40,'4つの区',clamp((t-T3-0.5)/0.35),54,'#fff')}
+  if(t>=T1)sfxOnce('g',T1,'whoosh');if(t>=T2)sfxOnce('n',T2,'pop');if(t>=T3)sfxOnce('w',T3,'tick');if(t>=T4)sfxOnce('m',T4,'whoosh');if(t>=T5)sfxOnce('p',T5,'pop')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({ask,hibiya,nihon,fire,tsuki,gomi,area}[P.mode]||ask)(t)};
+</script></body></html>
