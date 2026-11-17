@@ -41,7 +41,7 @@ function marsh(t,gy,a){if(a<=0)return;g.save();g.globalAlpha=a;const r=R(17);for
   g.fillStyle='rgba(120,176,200,.8)';for(const x of [520,790,1080]){g.beginPath();g.ellipse(x,gy+5,46,6,0,0,7);g.fill()}
   // 鳥
   for(let i=0;i<3;i++){const bx=((t*60+i*420)%(W+200))-100,by=150+i*40+Math.sin(t*2+i)*10;g.strokeStyle='rgba(40,50,60,.8)';g.lineWidth=3;g.beginPath();const f=Math.sin(t*9+i)*8;g.moveTo(bx-14,by-f);g.quadraticCurveTo(bx-6,by-8,bx,by);g.quadraticCurveTo(bx+6,by-8,bx+14,by-f);g.stroke()}g.restore()}
-function now(t){const T1=T(1,DUR*0.45);const rew=ease(clamp((t-T1)/2.4));skyG();const gy=lerp(NOW,OLD,rew);
+function now(t){const T1=T(1,DUR*0.45);const RW=Math.min(2.4,Math.max(1.2,DUR-T1-0.35)) /* 巻き戻しは場面の中で終える */;const rew=ease(clamp((t-T1)/RW));skyG();const gy=lerp(NOW,OLD,rew);
   cloudS(((300-t*(8+rew*260))%1500+1500)%1500-100,110,1.3);cloudS(((900-t*(6+rew*200))%1500+1500)%1500-100,160,1.6);
   cam(1.2,()=>{waterBody(-300,330,SLV,H,t);soil(-300,W+300,x=>x<330?lerp(SLV+120,gy,ease(clamp((x-190)/140))):gy,rew>0.5?PEAT:'#b9a47a',rew>0.5?PEATD:'#8f7a55');grassTop(330,W+200,x=>gy,rew>0.5?'#7f9a4f':'#6f9a59');
   g.save();g.globalAlpha=1-rew;dikeS(330,NOW,SLV-52,220);g.restore();
