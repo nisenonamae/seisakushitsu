@@ -394,8 +394,10 @@ const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','roadmap/a
 const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
-function merge(a,b){a=a||{};b=b||{};const out={};const byId=(x,y)=>{const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w||(v.updatedAt||0)>(w.updatedAt||0))m.set(v.id,v)}return[...m.values()]};
- for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points'])out[k]=byId(a[k],b[k]);
+/* 制作（projects）は、新しい方を採ったうえで、新しい方に無い項目を古い方から残す（作りかけの古い控えが勝っても、肉付けや動画の記録が消えないように） */
+const keepFields=(w,l)=>{let o=w;for(const k in l){if(!(k in w)){if(o===w)o={...w};o[k]=l[k]}}return o};
+function merge(a,b){a=a||{};b=b||{};const out={};const byId=(x,y,un)=>{const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w)m.set(v.id,v);else{const nw=(v.updatedAt||0)>(w.updatedAt||0);m.set(v.id,un?(nw?keepFields(v,w):keepFields(w,v)):(nw?v:w))}}return[...m.values()]};
+ for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points'])out[k]=byId(a[k],b[k],k==='projects');
  // ほかのページが使う項目（お絵描きの arts など）は、知らなくても消さずに合わせて残す（2026-11-17：ここで落としていて、ほかの端末から絵が見えなくなっていた）
  for(const k of new Set([...Object.keys(a),...Object.keys(b)])){if(k in out)continue;const x=a[k],y=b[k];if(Array.isArray(x)||Array.isArray(y))out[k]=[...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)?(y||x):byId(x,y);else out[k]=y!==undefined?y:x}
  return out}
@@ -587,7 +589,7 @@ const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.so
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
 function renderMake0(){const mt=$('makeTop');const topDet=new Map([...mt.querySelectorAll('details')].map(x=>[(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent,x.open]));renderMake1();mt.querySelectorAll('details').forEach(x=>{const k=(x.querySelector('summary b')||x.querySelector('summary')||{}).textContent;if(topDet.has(k))x.open=topDet.get(k)})}
-function migrateSteps(){let ch=false;for(const x of (D.projects||[])){if(x.sv!==2){if((x.step||0)>=4)x.step=(x.step||0)+1;x.sv=2;x.updatedAt=now();ch=true}}if(ch)save()}
+function migrateSteps(){let ch=false;for(const x of (D.projects||[])){if(x.sv!==2){if((x.step||0)>=4)x.step=(x.step||0)+1;x.sv=2;ch=true}}if(ch)save()}   /* 更新時刻は進めない（人が変えたのではないので）。進めると、古い端末に残っていた古い中身が「いちばん新しい」ことになり、同期でほかの端末の中身を消す（2026-11-17 に「人工の土地」が消えた原因） */
 function renderMake1(){VK.was=!!(VK.el&&VK.el.isConnected&&!VK.el.paused);migrateSteps();ensureProj();const p=projOf();
 const makeC=D.candidates.filter(c=>!c.deleted&&c.status==='作る');
 const live=D.projects.filter(x=>!x.deleted&&!x.finished);
