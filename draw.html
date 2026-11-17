@@ -291,7 +291,7 @@ let rq=0;function need(){if(!rq)rq=requestAnimationFrame(render)}
 let checker=null;function checkerPat(){if(checker)return checker;const c=mk(16,16),x=g2(c);x.fillStyle='#fff';x.fillRect(0,0,16,16);x.fillStyle='#cfd3d9';x.fillRect(0,0,8,8);x.fillRect(8,8,8,8);return checker=vctx.createPattern(c,'repeat')}
 function allocTemps(){SC=mk(art.w,art.h);BK=mk(art.w,art.h);TMP=mk(art.w,art.h);TMP2=mk(art.w,art.h);TMPG=mk(art.w,art.h)}
 /* レイヤーの今の見た目（描いている途中・変形中・補正の見本を含む） */
-function layerView(l){if(adj&&adj.cvs&&adj.cvs[l.id])return adj.cvs[l.id];if(float&&float.more&&l.id!==float.lid){const m=float.more.find(x=>x.lid===l.id);if(m){const t=g2(TMP);t.globalCompositeOperation='source-over';t.clearRect(0,0,art.w,art.h);drawFloat(t,m.src);return TMP}}if(l.id!==activeId)return l.cv;
+function layerView(l){if(adj&&adj.cvs&&adj.cvs[l.id])return adj.cvs[l.id];if(float&&float.more&&l.id!==float.lid){const m=float.more.find(x=>x.lid===l.id);if(m){const t=g2(TMP);t.globalCompositeOperation='source-over';t.clearRect(0,0,art.w,art.h);t.drawImage(m.base,0,0);drawFloat(t,m.src);return TMP}}if(l.id!==activeId)return l.cv;
  if(float&&float.lid===l.id){const t=g2(TMP);t.clearRect(0,0,art.w,art.h);t.drawImage(float.base,0,0);drawFloat(t);return TMP}
  if(stroke&&stroke.lid===l.id){const t=g2(TMP);t.globalCompositeOperation='copy';t.drawImage(l.cv,0,0);let s=SC;if(SEL){const t2=g2(TMP2);t2.globalCompositeOperation='copy';t2.drawImage(SC,0,0);t2.globalCompositeOperation='destination-in';t2.drawImage(SEL,0,0);t2.globalCompositeOperation='source-over';s=TMP2}
   t.globalCompositeOperation=stroke.erase?'destination-out':(l.lockAlpha?'source-atop':'source-over');t.globalAlpha=stroke.op;t.drawImage(s,0,0);t.globalAlpha=1;t.globalCompositeOperation='source-over';return TMP}
@@ -559,15 +559,20 @@ ACT.tOk=commitText;ACT.tCancel=cancelText;
 /* ===== 移動・自由変形 ===== */
 let grpOn=LS.get('pd_grp','1')==='1';
 const grpOf=l=>l&&l.grp?layers.filter(x=>x.grp===l.grp&&!x.trace):[];
-function lift(dup){const l=act();const region=SEL;const G=(!dup&&!region&&grpOn)?grpOf(l):[];
- if(G.length>1){   // 組：全部の描いてある範囲を合わせた枠で、いっしょに持ち上げる
-  let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const m of G){const b=maskBBox(m.cv);if(!b)continue;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.w);y1=Math.max(y1,b.y+b.h)}
-  if(x1<0){hint('動かすものがありません');return false}const bw=x1-x0,bh=y1-y0;const cut=m=>{const c=mk(bw,bh);g2(c).drawImage(m.cv,-x0,-y0);return c};const E0=mk(art.w,art.h);const empty=()=>E0;
-  float={lid:l.id,src:cut(l),bw,bh,cx:x0+bw/2,cy:y0+bh/2,sx:1,sy:1,rot:0,base:empty(),direct:true,hadSel:false,dup:false,name:'自由変形',more:G.filter(m=>m!==l).map(m=>({lid:m.id,src:cut(m),base:empty()}))};return true}
+function lift(dup){const l=act();const region=SEL;const G0=dup?[]:grpOf(l);const G=grpOn?G0:[];
+ /* まとめて動かせないときは、理由を出す（気づかずに1枚だけ動かしてしまわないように） */
+ if(!dup&&G0.length>1&&!grpOn)hint('このレイヤーだけ動かします。取り込んだ絵をまとめて動かすには、上の帯の「🔗 まとめて：切」を押して「入」に');
+ else if(!dup&&!l.grp&&layers.some(x=>x.grp)&&lift.told!==art.id&&(lift.told=art.id))hint(`今選んでいるのは「${l.name}」です。取り込んだ絵を動かすには、右のレイヤーの一覧で 🔗 の付いたレイヤーを押してから`);
+ if(G.length>1){   // 組：全部の描いてある範囲を合わせた枠で、いっしょに持ち上げる（選択範囲があれば、全部のレイヤーのその中身だけ）
+  const part=m=>{if(!region)return m.cv;const c=cloneCv(m.cv);const x=g2(c);x.globalCompositeOperation='destination-in';x.drawImage(region,0,0);return c};const P=new Map(G.map(m=>[m,part(m)]));
+  let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const m of G){const b=maskBBox(P.get(m));if(!b)continue;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.w);y1=Math.max(y1,b.y+b.h)}
+  if(x1<0){hint('動かすものがありません');return false}const bw=x1-x0,bh=y1-y0;const cut=m=>{const c=mk(bw,bh);g2(c).drawImage(P.get(m),-x0,-y0);return c};const E0=mk(art.w,art.h);
+  const rest=m=>{if(!region)return E0;const c=cloneCv(m.cv);const x=g2(c);x.globalCompositeOperation='destination-out';x.drawImage(region,0,0);return c};   // 選択範囲の外は、その場に残す
+  float={lid:l.id,src:cut(l),bw,bh,cx:x0+bw/2,cy:y0+bh/2,sx:1,sy:1,rot:0,base:rest(l),direct:!region,hadSel:!!region,dup:false,name:'自由変形',more:G.filter(m=>m!==l).map(m=>({lid:m.id,src:cut(m),base:rest(m)}))};return true}
  const src0=cloneCv(l.cv);if(region){const x=g2(src0);x.globalCompositeOperation='destination-in';x.drawImage(region,0,0)}const bb=maskBBox(src0);if(!bb){hint('動かすものがありません');return false}
  const src=mk(bb.w,bb.h);g2(src).drawImage(src0,-bb.x,-bb.y);const base=cloneCv(l.cv);if(!dup){const x=g2(base);if(region){x.globalCompositeOperation='destination-out';x.drawImage(region,0,0)}else x.clearRect(0,0,art.w,art.h)}
  float={lid:l.id,src,bw:bb.w,bh:bb.h,cx:bb.x+bb.w/2,cy:bb.y+bb.h/2,sx:1,sy:1,rot:0,base,direct:!region&&!dup,hadSel:!!SEL,dup,name:'自由変形'};return true}
-function drawFloat(c,src,q){c.save();c.imageSmoothingQuality=q||'high';c.translate(float.cx,float.cy);c.rotate(float.rot);c.scale(float.sx,float.sy);c.drawImage(src||float.src,-float.bw/2,-float.bh/2);c.restore()}
+function drawFloat(c,src,q){c.save();c.imageSmoothingQuality=q||'high';if(float.rot===0&&float.sx===1&&float.sy===1){c.drawImage(src||float.src,Math.round(float.cx-float.bw/2),Math.round(float.cy-float.bh/2))}else{c.translate(float.cx,float.cy);c.rotate(float.rot);c.scale(float.sx,float.sy);c.drawImage(src||float.src,-float.bw/2,-float.bh/2)}c.restore()}
 function toFloatWorld(lx,ly){const c=Math.cos(float.rot),s=Math.sin(float.rot);return{x:float.cx+lx*c-ly*s,y:float.cy+lx*s+ly*c}}
 function toFloatLocal(p){const c=Math.cos(-float.rot),s=Math.sin(-float.rot);const dx=p.x-float.cx,dy=p.y-float.cy;return{x:dx*c-dy*s,y:dx*s+dy*c}}
 function floatCorners(){const w=float.bw*float.sx/2,h=float.bh*float.sy/2;return[[-w,-h],[w,-h],[w,h],[-w,h]].map(([x,y])=>toFloatWorld(x,y))}
@@ -583,7 +588,7 @@ function commitFloat(){if(!float)return;const f=float;const l=byId(f.lid);const 
 function cancelFloat(){float=null;renderOpts();need()}
 ACT.xfOk=commitFloat;ACT.xfCancel=cancelFloat;ACT.flipFH=()=>{if(float){float.sx*=-1;need()}};ACT.flipFV=()=>{if(float){float.sy*=-1;need()}};
 ACT.flipH=()=>flipLayer(true);ACT.flipV=()=>flipLayer(false);
-function flipLayer(h){const l=act();structOp(h?'左右に反転':'上下に反転',()=>{const c=mk(art.w,art.h);const x=g2(c);x.translate(h?art.w:0,h?0:art.h);x.scale(h?-1:1,h?1:-1);x.drawImage(l.cv,0,0);l.cv=c;l.text=null})}
+function flipLayer(h){const a=act();const G=grpOn&&grpOf(a).length>1?grpOf(a):[a];structOp((h?'左右に反転':'上下に反転')+(G.length>1?`（${G.length}枚まとめて）`:''),()=>{for(const l of G){const c=mk(art.w,art.h);const x=g2(c);x.translate(h?art.w:0,h?0:art.h);x.scale(h?-1:1,h?1:-1);x.drawImage(l.cv,0,0);l.cv=c;l.text=null}})}
 function nudge(dx,dy){if(float){float.cx+=dx;float.cy+=dy;need();return}if(!lift(false))return;float.name='移動';float.cx+=dx;float.cy+=dy;commitFloat()}
 
 /* ===== 画像全体（切り抜き・大きさ・回転） ===== */
