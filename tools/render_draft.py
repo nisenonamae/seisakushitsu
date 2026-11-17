@@ -264,6 +264,7 @@ for k,b in enumerate(seq,1):
                     if ci<0:print('見つからない言葉:',k,w_,file=sys.stderr);tms.append(tms[-1]+1);continue
                     ps=ci;tms.append(round(sh_(t_of_char(ci))-vstarts[i],3))
                 spec['times']=tms
+            if os.environ.get('SS_DUMP'):open(os.environ['SS_DUMP'],'a').write(json.dumps({'tag':f'{k}-{i+1}','dur':d_,'spec':spec},ensure_ascii=False)+'\n')   # 点検用：場面ごとの指定（言葉の時刻つき）を書き出す
             cp=f'{tmp}/c{k:03d}_{i:02d}.mp4';scenes.make(spec,d_,cp,a.repo);clips.append(cp)
             if os.path.exists(cp+'.sfx.json'):
                 for e in json.load(open(cp+'.sfx.json')):
