@@ -240,12 +240,12 @@ function fifth(t){const TT=[1,2,3,4,5,6,7].map(i=>T(i,DUR*(0.06+0.12*i)));const[
  proud（横から。海より低い土地を、堤防が守っている。人が堤防をのぼって、スコップを立て、旗を立てる。日がのぼる。fade＝最後に暗くする秒〔動画のいちばん最後なので暗転してエンディングへ〕） */
 function saying(t){const T1=T(1,DUR*0.35),T2=T(2,DUR*0.6);const v=VZ();const mk=ease(clamp((t-T2)/1.2));
   const n=clamp((t-T1)/0.45)*(1-clamp((t-T2+0.35)/0.5));
-  zbase(v,t,{fresh:mk,calm:0.7,flood:n>0?()=>{g.fillStyle=`rgba(255,255,255,${0.34*n*(0.82+0.18*Math.sin(t*5))})`;g.fillRect(0,0,W,H)}:null});
+  zbase(v,t,{fresh:mk,calm:0.7,flood:n>0?()=>{g.fillStyle=`rgba(255,250,225,${0.62*n*(0.85+0.15*Math.sin(t*5))})`;g.fillRect(0,0,W,H)}:null});
   /* 昔の内海を行く船（土地が現れる前に北へ出ていく） */
   {const a=1-clamp((t-T2+0.5)/0.5);if(a>0){g.save();g.globalAlpha=a;[[5.30,52.72,0.9],[5.52,52.56,0.75],[5.18,52.52,0.8]].forEach(([lo,la,s],i)=>{const[x,y]=pj(v,lo-0.012*t,la+0.02*t);sailS(x,y,s,t,i)});g.restore()}}
   if(t>=T1)sfxOnce('n',T1,'whoosh');
   /* 人が作った土地 */
-  POL.forEach((rg,i)=>{const t0=T2+0.2+i*0.4;const rk=clamp((t-t0)/0.3),dry=ease(clamp((t-t0-0.1)/0.7));const hi=clamp((t-t0-0.45)/0.5);polder(v,t,i,rk,dry,{hi:hi*(0.5+0.25*Math.sin(t*4+i)),col:innerCol(1)});if(t>=t0)sfxOnce('p'+i,t0,'pop');
+  POL.forEach((rg,i)=>{const t0=T2+0.15+i*0.3;const rk=clamp((t-t0)/0.3),dry=ease(clamp((t-t0-0.1)/0.7));const hi=clamp((t-t0-0.45)/0.5);polder(v,t,i,rk,dry,{hi:hi*(0.5+0.25*Math.sin(t*4+i)),col:innerCol(1)});if(t>=t0)sfxOnce('p'+i,t0,'pop');
     const k=back(clamp((t-t0-0.5)/0.35));if(k>0){const[x,y]=pj(v,PUMP[i][0],PUMP[i][1]);millIcon(x,y,1.5*k,t*2.2+i)}});
   const dl=dikeLine(v,ease(clamp((t-T2)/0.8)));if(t>=T2)sfxOnce('d',T2,'thump')}
 function proud(t){const BED=548,SL=BED-92,DX=450,TOP=SL-40,DW=460,FD=P.fade==null?0.8:P.fade;const day=ease(clamp(t/Math.max(3,DUR-1)));
