@@ -8,9 +8,10 @@
    地球：陸は左から右へ流れ、雲はそれより遅く流れる。左半分が昼・右半分が夜（色は作り手の絵のまま）。
    指定：sph＝回し方 "f"（平らに流す。作り手が選んだ）／"m"（少し球）／"s"（球）、land＝陸が一周する秒、cloud＝雲が一周する秒、bubbles＝吹き出しを出すか、fade＝出てくる秒、
         items＝その回に出てきた物の名前の並び（SPR にある名前。下の帯をゆっくり横切る）、orbit＝true で1つ目が地球のまわりを回る（**今は使わない**：部品の絵だと小さくてごみに見える、と作り手。作り手が描いた絵を使うときだけ）、
+        empty＝動画の枠の所に、四角と「まだないよ」を描く（初期値 true。YouTube の終了画面の動画を重ねれば隠れる。重ねる動画がまだないときに、枠が空に見えないように。作り手の案・2026-11-17）、
         slots＝true で、YouTube の動画（終了画面）が重なる場所を点線で出す（見本用。本番の動画には出さない）
    置き場所（1920×1080 の絵の座標）：動画の枠＝SLOT（左＝ほかの動画、右＝最新の動画）。吹き出しは枠の真上。流れる物は枠の下の帯だけを通す（枠の所は YouTube の動画で隠れるので） */
-window.DEF={sph:'f',land:44,cloud:80,bubbles:true,fade:0.9,items:[],orbit:false,slots:false};
+window.DEF={sph:'f',land:44,cloud:80,bubbles:true,fade:0.9,items:[],orbit:false,slots:false,empty:true};
 const K=1280/1920,EB=[840,430,1096,672],TERM=120,ECX=126.5,ECY=120.5,ERX=110,ERY=105,Q=2,TW=720;
 const COL={seaD:[0x20,0x87,0xd0],seaN:[0x07,0x61,0xa0],landD:[0x45,0xc5,0x5b],landN:[0x27,0x97,0x3b],cloudD:[0xf7,0xf7,0xf7],cloudN:[0xc2,0xc2,0xc2]},LAND_OP=0.59;
 const SLOT=[[120,400,560,315],[1240,400,560,315]];                       /* 動画の枠（x,y,幅,高さ）。YouTube Studio の終了画面で、動画をここに合わせて置く */
@@ -27,7 +28,7 @@ function drifters(t){const it=(P.items||[]).slice(P.orbit?1:0);const n=it.length
 function orbiter(t,front){if(!P.orbit||!(P.items||[]).length)return;const ph=t/22*2*Math.PI+2.5,sn=Math.sin(ph);if((sn>0)!==front)return;const tilt=-0.3,a=150,b=40,cx=(EB[0]+ECX)*K,cy=(EB[1]+ECY)*K;
   const ox=a*Math.cos(ph),oy=b*sn;sprite(P.items[0],cx+ox*Math.cos(tilt)-oy*Math.sin(tilt),cy+ox*Math.sin(tilt)+oy*Math.cos(tilt),0.78*(1+0.14*sn),t*0.35,t)}
 let ecv=null,ex=null,eimg=null,seaA=null,landT=null,cloudT=null,EW=0,EH=0,TH=0;
-function init(){ecv=null;loadImg('back','img/end_back.png');loadImg('sea','img/end_sea.png');loadImg('land','img/end_land_'+P.sph+'.png');loadImg('cloud','img/end_cloud_'+P.sph+'.png');loadImg('msg','img/end_msg.png');loadImg('lab1','img/end_lab1.png');loadImg('lab2','img/end_lab2.png')}
+function init(){ecv=null;loadImg('back','img/end_back.png');loadImg('sea','img/end_sea.png');loadImg('land','img/end_land_'+P.sph+'.png');loadImg('cloud','img/end_cloud_'+P.sph+'.png');loadImg('msg','img/end_msg.png');loadImg('lab1','img/end_lab1.png');loadImg('lab2','img/end_lab2.png');loadImg('none','img/end_none.png')}
 function alphaOf(im,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(im,0,0,w,h);const d=x.getImageData(0,0,w,h).data;const a=new Float32Array(w*h);for(let i=0;i<w*h;i++)a[i]=d[i*4+3]/255;return a}
 function prep(){EW=(EB[2]-EB[0])*Q;EH=(EB[3]-EB[1])*Q;ecv=document.createElement('canvas');ecv.width=EW;ecv.height=EH;ex=ecv.getContext('2d');eimg=ex.createImageData(EW,EH);
   seaA=alphaOf(IMG.sea,EW,EH);TH=IMG.land.height;landT=alphaOf(IMG.land,TW,TH);cloudT=alphaOf(IMG.cloud,TW,TH)}
@@ -55,6 +56,7 @@ window.render=function(t){
   orbiter(t,true);
   if(P.slots){g.save();g.setLineDash([10,8]);g.lineWidth=2;g.strokeStyle='rgba(255,210,80,.9)';g.fillStyle='rgba(255,210,80,.9)';g.font='600 17px '+FONT;g.textAlign='center';for(const [x,y,w,h] of SLOT){g.beginPath();g.roundRect(x*K,y*K,w*K,h*K,8);g.stroke();g.fillText('ここに YouTube の動画が重なる',(x+w/2)*K,(y+h/2)*K+6)}g.restore()}
   img('msg',ease((t-P.fade*0.6)/0.8));
+  if(P.empty){const ke=ease((t-P.fade-0.3)/0.6);if(ke>0){g.save();g.globalAlpha=ke;for(const [x,y,w,h] of SLOT){g.fillStyle='rgba(120,140,220,.10)';g.strokeStyle='rgba(196,208,246,.55)';g.lineWidth=2.5;g.beginPath();g.roundRect(x*K,y*K,w*K,h*K,10);g.fill();g.stroke();const im=IMG.none,iw=im.width*K,ih=im.height*K;g.globalAlpha=ke*0.85;g.drawImage(im,(x+w/2)*K-iw/2,(y+h/2)*K-ih/2,iw,ih);g.globalAlpha=ke}g.restore()}}
   if(P.bubbles){const k1=(t-P.fade-0.5)/0.4,k2=(t-P.fade-0.8)/0.4;bubble(BOX.lab1,k1);img('lab1',k1);bubble(BOX.lab2,k2);img('lab2',k2)}
   const f=1-ease(t/P.fade);if(f>0){g.fillStyle=`rgba(0,0,0,${f})`;g.fillRect(0,0,W,H)}
 };
