@@ -195,8 +195,9 @@ async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`
 async function ghBlob(path){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});if(!r.ok)throw new Error('GitHub '+r.status);return r.blob()}
 let sBusy=false,sTimer=null,sDirty=false;
 function lab(t,c){const e=$('syncStat');e.textContent=t;e.className='stat '+(c||'')}
-async function sync(){if(!syncOn()){lab('この端末だけに保存中');return}if(sBusy)return;sBusy=true;
- try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();D=merge(data,D);LS.set('ss_data',JSON.stringify(D));if(!sDirty)break;if(await ghPut(D,sha)){sDirty=false;break}}lab('同期済み '+new Date().toTimeString().slice(0,5),'okk');renderFin()}catch(e){lab('同期できません：'+e.message,'bad')}sBusy=false}
+let sP=null,syncOK=false;function sync(){return sP||(sP=sync0().finally(()=>{sP=null}))}   // 同時に2つ走らせない。待てば、終わった同期の結果が使える
+async function sync0(){if(!syncOn()){lab('この端末だけに保存中');return}sBusy=true;
+ try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();D=merge(data,D);LS.set('ss_data',JSON.stringify(D));if(!sDirty)break;if(await ghPut(D,sha)){sDirty=false;break}}syncOK=true;lab('同期済み '+new Date().toTimeString().slice(0,5),'okk');renderFin()}catch(e){lab('同期できません：'+e.message,'bad')}sBusy=false}
 function saveD(){sDirty=true;LS.set('ss_data',JSON.stringify(D));clearTimeout(sTimer);sTimer=setTimeout(sync,1200)}
 
 /* ===== この端末の保存（IndexedDB） ===== */
@@ -791,18 +792,32 @@ function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(()=>flushSave(false
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
 const META=l=>({id:l.id,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text});
-let pendUp=new Set(),saving=null;
-async function flushSave(alsoUp){if(!art)return;if(saving)await saving;saving=(async()=>{const old=await dbGet(art.id);const ob=new Map(((old&&old.layerData)||[]).map(d=>[d.id,d.blob]));const layerData=[];
- for(const l of layers){let blob=ob.get(l.id);if(!blob||changedIds.has(l.id)){blob=await toBlob(l.cv);pendUp.add(l.id)}layerData.push({...META(l),blob})}
- const dirty=!!(changedIds.size||art.structDirty||(old&&old.localDirty)||!old);const rec={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,rev:art.rev,updatedAt:art.updatedAt,activeId,thumb:thumbOf(),layerData,localDirty:dirty};await dbPut(rec);art.thumb=rec.thumb;changedIds=new Set();art.structDirty=false;upsertMeta()})();await saving;saving=null;if(alsoUp)upload()}
+let saving=null;
+// 保存：レイヤーごとに「版（v）」と「まだ送っていない印（up）」を付けて覚える（ページを開き直しても、送り残しを忘れない）
+async function flushSave(alsoUp){if(!art)return;if(saving)await saving;saving=(async()=>{const old=await dbGet(art.id);const om=new Map(((old&&old.layerData)||[]).map(d=>[d.id,d]));const layerData=[];
+ for(const l of layers){const o=om.get(l.id);let blob=o&&o.blob,v=(o&&o.v)||0,up=o?o.up:true;if(!blob||changedIds.has(l.id)){blob=await toBlob(l.cv);v++;up=true}layerData.push({...META(l),blob,v,up})}
+ const changed=!!(changedIds.size||art.structDirty||!old);const dirty=changed||!!(old&&old.localDirty);const rec={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,rev:art.rev,updatedAt:art.updatedAt,activeId,thumb:thumbOf(),layerData,localDirty:dirty,sv:((old&&old.sv)||0)+(changed?1:0)};await dbPut(rec);art.thumb=rec.thumb;changedIds=new Set();art.structDirty=false;upsertMeta()})();await saving;saving=null;if(alsoUp)upload()}
 function upsertMeta(){const m=(D.arts||[]).find(a=>a.id===art.id);const meta={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,thumb:art.thumb,rev:art.rev||0,files:(m&&m.files)||{},layers:(m&&m.layers)||[],finished:(m&&m.finished)||[],updatedAt:art.updatedAt||now()};if(m)Object.assign(m,meta);else D.arts.push(meta);LS.set('ss_data',JSON.stringify(D))}
+// 送る：開いている絵でなくても送れる。送っている間に描き足した分は消さない（版が変わっていたら「まだ送っていない」のまま残す）
+let upChain=Promise.resolve();
+function uploadRec(id,force){const p=upChain.then(()=>uploadRec0(id,force));upChain=p.catch(()=>{});return p}
+async function uploadRec0(id,force){if(!syncOn())return false;const rec=await dbGet(id);if(!rec||!(rec.layerData||[]).length||(!rec.localDirty&&!force))return false;
+ const m0=(D.arts||[]).find(a=>a.id===id);if(m0&&m0.deleted)return false;const dir=`${ROOT()}art/${id}/`;const old=(m0&&m0.files)||{};const files={},sent={};
+ for(const d of rec.layerData){if(!d.blob)continue;const need=force||!old[d.id]||d.up===true||(d.up===undefined&&rec.localDirty);if(!need){files[d.id]=old[d.id];continue}
+  await ghPutFile(dir+d.id+'.png',await blobB64(d.blob),`お絵描き ${rec.name||id} ${d.name}`);files[d.id]=dir+d.id+'.png';sent[d.id]=d.v||0}
+ const cur=(await dbGet(id))||rec;let still=false;for(const d of cur.layerData||[]){if(d.id in sent){if((d.v||0)===sent[d.id])d.up=false}else if(d.id in files&&d.up===undefined)d.up=false;if(d.up)still=true}
+ const m1=(D.arts||[]).find(a=>a.id===id);cur.rev=Math.max(cur.rev||0,(m1&&m1.rev)||0)+1;cur.localDirty=still||(cur.sv||0)!==(rec.sv||0);await dbPut(cur);
+ let mm=m1;if(!mm){mm={id};D.arts.push(mm)}Object.assign(mm,{kind:rec.kind,name:rec.name,w:rec.w,h:rec.h,bg:rec.bg,thumb:rec.thumb,files,layers:rec.layerData.map(d=>{const{blob,up,v,...r}=d;return r}),finished:mm.finished||[],rev:cur.rev,updatedAt:now()});
+ if(art&&art.id===id)art.rev=cur.rev;saveD();return true}
 let upBusy=false;
 async function upload(force){if(!art||!syncOn()||upBusy)return;const rec=await dbGet(art.id);if(!rec||(!rec.localDirty&&!force))return;upBusy=true;lab('絵を送っています…');
- try{const dir=`${ROOT()}art/${art.id}/`;const m=D.arts.find(a=>a.id===art.id)||{};const files={};const old=m.files||{};
-  for(const d of rec.layerData){if(!pendUp.has(d.id)&&old[d.id]&&!force){files[d.id]=old[d.id];continue}await ghPutFile(dir+d.id+'.png',await blobB64(d.blob),`お絵描き ${art.name||art.id} ${d.name}`);files[d.id]=dir+d.id+'.png';pendUp.delete(d.id)}
-  art.rev=(art.rev||0)+1;rec.localDirty=false;rec.rev=art.rev;await dbPut(rec);upsertMeta();const mm=D.arts.find(a=>a.id===art.id);mm.files=files;mm.layers=rec.layerData.map(d=>{const{blob,...r}=d;return r});mm.rev=art.rev;mm.updatedAt=now();saveD();lab('絵を保存しました '+new Date().toTimeString().slice(0,5),'okk')}
- catch(e){lab('絵を送れません：'+e.message,'bad')}upBusy=false}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave(true);else sync()});
+ try{if(await uploadRec(art.id,force))lab('絵を保存しました '+new Date().toTimeString().slice(0,5),'okk')}catch(e){lab('絵を送れません：'+e.message,'bad')}upBusy=false}
+// この端末にある絵のうち、まだ届いていないもの（一覧から消えている・送り残しがある）を自動で送り直す。人の手は要らない
+async function healArts(){if(!syncOn()||!syncOK||healArts.busy)return;healArts.busy=true;try{const first=LS.get('pd_heal','')!=='1';let n=0;
+  for(const r of await dbAll()){if(!(r.layerData||[]).length)continue;const m=(D.arts||[]).find(a=>a.id===r.id);if(m&&m.deleted)continue;const has=!!(m&&m.files&&Object.keys(m.files).length);
+   const all=!has||(first&&(r.rev||0)>=((m&&m.rev)||0));if(!all&&!r.localDirty)continue;if(art&&art.id===r.id)await flushSave(false);lab('この端末の絵を送っています…');if(await uploadRec(r.id,all))n++}
+  LS.set('pd_heal','1');if(n)lab(`この端末の絵を ${n} 枚ぶん送りました `+new Date().toTimeString().slice(0,5),'okk')}catch(e){lab('絵を送れません：'+e.message,'bad')}healArts.busy=false}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave(true);else sync().then(healArts)});
 window.addEventListener('pagehide',()=>flushSave(false));
 $('artName').onchange=e=>{if(!art)return;art.name=e.target.value.trim()||KINDS[art.kind].n;art.updatedAt=now();art.structDirty=true;flushSave(false);saveD()};
 $('artName').addEventListener('keydown',e=>e.stopPropagation());
@@ -879,6 +894,7 @@ $('hUndo').onclick=()=>undo();$('hRedo').onclick=()=>redo();
   if(want&&KINDS[want])await startNew(want);
   else if(id&&(await dbGet(id)||(D.arts||[]).some(a=>a.id===id&&!a.deleted)))await loadAny(id);
   else{const loc=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));if(loc[0])await openArt(loc[0])}}catch(e){console.error(e)}
- if(!art)await startNew('icon')})();
+ if(!art)await startNew('icon');
+ try{await sync();await healArts()}catch(e){}})();
 </script>
 </body></html>

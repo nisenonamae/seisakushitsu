@@ -394,7 +394,11 @@ const S=()=>({o:LS.get('gh_o',''),r:LS.get('gh_r',''),p:LS.get('gh_p','roadmap/a
 const bytesToB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const b64e=s=>bytesToB64(new TextEncoder().encode(s));
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
-function merge(a,b){const out={};for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points']){const m=new Map();for(const x of [...(a[k]||[]),...(b[k]||[])]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}out[k]=[...m.values()]}return out}
+function merge(a,b){a=a||{};b=b||{};const out={};const byId=(x,y)=>{const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w||(v.updatedAt||0)>(w.updatedAt||0))m.set(v.id,v)}return[...m.values()]};
+ for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points'])out[k]=byId(a[k],b[k]);
+ // ほかのページが使う項目（お絵描きの arts など）は、知らなくても消さずに合わせて残す（2026-11-17：ここで落としていて、ほかの端末から絵が見えなくなっていた）
+ for(const k of new Set([...Object.keys(a),...Object.keys(b)])){if(k in out)continue;const x=a[k],y=b[k];if(Array.isArray(x)||Array.isArray(y))out[k]=[...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)?(y||x):byId(x,y);else out[k]=y!==undefined?y:x}
+ return out}
 let pushTimer=null,busy=false;
 function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
 async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
