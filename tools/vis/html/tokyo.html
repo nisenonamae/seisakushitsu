@@ -33,7 +33,7 @@ function lumps(v,from,to,t,t0,n,col,spread=0.004,dur=1.0,gap=0.12){const r=R(Mat
 function base(v,t,o={}){seaBg(t);const old=o.old==null?1:o.old;if(old>0)tk(v,'now',GHOST,old*(o.ghost==null?1:o.ghost));land(v,'1590');if(old<1)land(v,'now',1-old)}
 function inletFill(v,k,gold=0){if(k<=0)return;g.save();polyLL(v,INLET);g.clip();const b=boxClip(v,139.745,139.775,35.655,35.69);g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'now',1,LAND2);if(gold>0)tk(v,'now',GOLD,gold);g.restore()}
 function edoWest(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.74,139.7885,35.64,35.699);g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'edo',1,LAND2);if(gold>0)tk(v,'edo',GOLD,gold);g.restore()}
-function edoEast(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.7885,139.95,35.64,35.70);g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'edo',1,LAND2);if(gold>0)tk(v,'edo',GOLD,gold);g.restore()}
+function edoEast(v,k,gold=0){if(k<=0)return;g.save();const b=boxClip(v,139.7885,139.8475,35.64,35.70);/* 東は荒川まで（その先は江戸川区なので、ここでは塗らない） */g.beginPath();g.rect(b[0],b[1],b[2]-b[0],(b[3]-b[1])*clamp(k));g.clip();land(v,'edo',1,LAND2);if(gold>0)tk(v,'edo',GOLD,gold);g.restore()}
 function rim(v,key,col,w,a){if(a<=0)return;for(let i=0;i<8;i++){const an=i*Math.PI/4;g.save();g.translate(Math.cos(an)*w,Math.sin(an)*w);tk(v,key,col,a);g.restore()}}
 
 function ask(t){const T1=T(1,DUR*0.35),T2=T(2,DUR*0.6);const u=ease(clamp((t-T2)/1.6));const v=vmix(VA(),VM(),u);
