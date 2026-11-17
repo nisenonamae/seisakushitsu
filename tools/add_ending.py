@@ -3,15 +3,16 @@
 - エンディングの絵：tools/vis/html/ending.html（items＝その回に出てきた物。下の帯を横切る）。本編と同じ大きさ・コマ数で描く
 - 曲：data.json の rules「エンディングの曲」＝音の棚の snd-ot20981（They）。出だしの無音を飛ばし、最初と最後をなめらかにして、大きさを --lufs（初期値 −15.5。試作で作り手が聞いた大きさ）に合わせる
 - 長さ：--dur（初期値 20 秒。YouTube の終了画面が置けるのは最後の 5〜20 秒）
-- 本編の終わりが暗くなって終わっていること（暗転）を前提にしている。つないだあと、全体を一度読み通して壊れていないかを確かめる（だめなら全体を作り直す道に切り替える）
+- --fade 秒：本編が暗くならずに終わっているとき（仮の動画など）に、最後をその秒数で暗くしてからつなぐ。このときは全体を作り直す（本編と形式が違っても平気）。付けないときは、
+  本編の終わりが暗くなって終わっていること（暗転）を前提にしている。つないだあと、全体を一度読み通して壊れていないかを確かめる（だめなら全体を作り直す道に切り替える）
 """
 import argparse,json,os,subprocess,sys,tempfile,re
 ap=argparse.ArgumentParser();ap.add_argument('main');ap.add_argument('out');ap.add_argument('--data',required=True);ap.add_argument('--repo',required=True)
-ap.add_argument('--items',default='');ap.add_argument('--dur',type=float,default=20.0);ap.add_argument('--lufs',type=float,default=-15.5);ap.add_argument('--sound',default='snd-ot20981');ap.add_argument('--skip',type=float,default=1.2,help='曲の出だしを飛ばす秒')
+ap.add_argument('--items',default='');ap.add_argument('--dur',type=float,default=20.0);ap.add_argument('--lufs',type=float,default=-15.5);ap.add_argument('--sound',default='snd-ot20981');ap.add_argument('--skip',type=float,default=1.2,help='曲の出だしを飛ばす秒');ap.add_argument('--fade',type=float,default=0.0,help='本編の最後を暗くする秒（付けると全体を作り直す）')
 a=ap.parse_args()
 def sh(*c,**k):return subprocess.run(c,capture_output=True,text=True,**k)
 def probe(f,sel,ent):return sh('ffprobe','-v','error','-select_streams',sel,'-show_entries',ent,'-of','csv=p=0',f).stdout.strip().split('\n')[0]
-w,h,fr=probe(a.main,'v:0','stream=width,height,r_frame_rate').split(',')[:3];w,h=int(w),int(h);fps=eval(fr);ar=int(probe(a.main,'a:0','stream=sample_rate').split(',')[0]);md=float(probe(a.main,'v:0','format=duration') or sh('ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',a.main).stdout.strip())
+w,h,fr=probe(a.main,'v:0','stream=width,height,r_frame_rate').split(',')[:3];w,h=int(w),int(h);fps=eval(fr);ar=int(probe(a.main,'a:0','stream=sample_rate').split(',')[0]);ar=ar if a.fade<=0 else 48000;md=float(probe(a.main,'v:0','format=duration') or sh('ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',a.main).stdout.strip())
 assert abs(fps-30)<0.01,'本編が 30 コマ/秒ではない'
 os.environ['SS_SCALE']=str(h/720);sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'vis'));import scenes
 D=json.load(open(a.data));snd=[s for s in D['sounds'] if s['id']==a.sound][0];mus=os.path.join(a.repo,snd['file'])
@@ -22,11 +23,16 @@ ew,eh=probe(ev,'v:0','stream=width,height').split(',')[:2];assert (int(ew),int(e
 flt=f"afade=t=in:st=0:d=1.0,afade=t=out:st={a.dur-3.5}:d=3.5"
 m=sh('ffmpeg','-hide_banner','-nostats','-ss',str(a.skip),'-t',str(a.dur),'-i',mus,'-af',flt+',ebur128=framelog=quiet','-f','null','-').stderr
 I=float(re.findall(r'I:\s+(-?[\d.]+) LUFS',m)[-1]);gain=a.lufs-I
-r=sh('ffmpeg','-y','-loglevel','error','-ss',str(a.skip),'-t',str(a.dur),'-i',mus,'-af',f"{flt},volume={gain:.2f}dB,alimiter=limit=0.89:level=disabled",'-ar',str(ar),'-ac','2','-c:a','aac','-b:a','192k',ea);assert r.returncode==0,r.stderr
+r=sh('ffmpeg','-y','-loglevel','error','-ss',str(a.skip),'-t',str(a.dur),'-i',mus,'-af',f"{flt},volume={gain:.2f}dB,alimiter=limit=0.89:level=disabled",'-ar',str(max(ar,44100)),'-ac','2','-c:a','aac','-b:a','192k',ea);assert r.returncode==0,r.stderr
 r=sh('ffmpeg','-y','-loglevel','error','-i',ev,'-i',ea,'-map','0:v','-map','1:a','-c','copy','-t',str(a.dur),em);assert r.returncode==0,r.stderr
 # つなぐ（本編はそのまま写す）
-lst=T+'/list.txt';open(lst,'w').write(f"file '{os.path.abspath(a.main)}'\nfile '{em}'\n")
-r=sh('ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',lst,'-c','copy','-movflags','+faststart',a.out);assert r.returncode==0,r.stderr
+if a.fade>0:   # 本編の最後を暗くして、全体を作り直してつなぐ
+    fc=(f"[0:v]fade=t=out:st={md-a.fade:.3f}:d={a.fade}[v0];[0:a]aresample={ar},aformat=channel_layouts=stereo,afade=t=out:st={md-a.fade:.3f}:d={a.fade}[a0];"
+        f"[1:a]aresample={ar},aformat=channel_layouts=stereo[a1];[v0][a0][1:v][a1]concat=n=2:v=1:a=1[v][a]")
+    r=sh('ffmpeg','-y','-loglevel','error','-i',a.main,'-i',em,'-filter_complex',fc,'-map','[v]','-map','[a]','-c:v','libx264','-preset','veryfast','-crf','16' if h>720 else '20','-pix_fmt','yuv420p','-r','30','-c:a','aac','-b:a','192k','-movflags','+faststart',a.out);assert r.returncode==0,r.stderr
+else:
+    lst=T+'/list.txt';open(lst,'w').write(f"file '{os.path.abspath(a.main)}'\nfile '{em}'\n")
+    r=sh('ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',lst,'-c','copy','-movflags','+faststart',a.out);assert r.returncode==0,r.stderr
 # 点検：全体を読み通す・長さ・つなぎ目の音
 chk=sh('ffmpeg','-v','error','-i',a.out,'-f','null','-').stderr.strip();od=float(sh('ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',a.out).stdout.strip())
 ok=(not chk) and abs(od-(md+a.dur))<0.5
