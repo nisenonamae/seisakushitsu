@@ -21,6 +21,7 @@
       ／power（水が管を落ちて水車を回す。ats[0] で電気が街へ）
       ／build（砂漠の工事。ats：[0] 年 [1] 人が端から並ぶ [2] 工場が3つ建つ）
       ／musashi（関東の地図。はじめに広い地図から寄る。ats：[0] 利根川 [1] 短い水路 [2] 荒川から街へ [3] 坂の印 [4] ポンプの印）
+      ／arrive（カリフォルニアの地図から、水路の終点へ寄る。東京の話から主役に戻る合図）
       ／cascade（斜面の階段を水が流れ落ちる。ats[0] で人が集まってコップをかかげる） */
 window.DEF={mode:'height'};
 function skyD(h=440){const s=g.createLinearGradient(0,0,0,h);s.addColorStop(0,'#6fb4e6');s.addColorStop(1,'#f5e2bb');g.fillStyle=s;g.fillRect(0,0,W,h+4)}
@@ -121,5 +122,6 @@ function cascade(t){const T1=T(1,6);skyD(520);ridge(330,'#c9b08c',11,110);const 
   const k=ease(clamp((t-0.5)/2.2));g.fillStyle=WAT;g.fillRect(0,120,250,14);const fi=k*(n+1);for(let i=0;i<Math.min(n,Math.ceil(fi));i++){const a=clamp(fi-i);const x=250+i*46,y=132+i*33;g.fillStyle=WAT;g.fillRect(x,y-12,46*a,12);g.fillStyle='rgba(255,255,255,.85)';if(a>=1){g.fillRect(x+40,y-12,8,33);for(let m=0;m<3;m++){const q=(t*3+i*0.4+m/3)%1;g.beginPath();g.arc(x+48+q*14,y+20-q*6,3+2*q,0,7);g.fill()}}}
   if(k>=1){g.fillStyle=WAT;g.fillRect(802,528,clamp((t-2.7)/1.0)*480,14)}sfxOnce('w',0.5,'whoosh');
   const P=[[330,214,1],[420,282,1],[520,350,1.05],[610,412,1],[930,592,1.25],[1010,604,1.3],[1090,594,1.25],[1170,606,1.3],[860,612,1.3],[1240,598,1.25],[700,470,1.05]];P.forEach(([x,y,s],i)=>{const a=clamp((t-T1-i*0.12)/0.3);if(a<=0)return;const xx=x;const yy=i<4||i===10?150+(xx-230)*0.661+78:y;g.save();g.globalAlpha=a;personS(xx,yy,s*1.05,{col:['#3b4a5c','#7a4a34','#4f6b4a','#8c2f22','#5a4a7a'][i%5]});const up=Math.sin(t*4+i)*4;g.strokeStyle='#2c2f36';g.lineWidth=4*s;g.lineCap='round';g.beginPath();g.moveTo(xx+6*s,yy-44*s);g.lineTo(xx+18*s,yy-66*s+up);g.stroke();g.fillStyle='#e9eef2';g.fillRect(xx+13*s,yy-80*s+up,11*s,13*s);g.restore()});if(t>T1)sfxOnce('c',T1,'pop');yearBox('1913年')}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);({drift,height,flatten,contour,seep,cover,siphon,pressure,ship,tunnel,power,build,musashi,cascade}[P.mode]||height)(t)};
+function arrive(t){const u=ease(clamp(t/Math.max(2,DUR-0.3)));const v=vmix(VR(),view(-118.42,34.42,560),u);caBase(v,t);ranges(v,1,0);const a=aqPts(v);aqLine(a,0,a.len,6+3*u);aqFlow(a,t);const[lx,ly]=pj(v,LA[0],LA[1]);const cs=0.9+1.3*u;cityIcon(lx,ly+6*cs,cs);const[ex,ey]=pj(v,-118.49,34.32);const pu=0.5+0.5*Math.sin(t*6);g.strokeStyle=`rgba(255,211,106,${0.9-0.4*pu})`;g.lineWidth=6;g.beginPath();g.arc(ex,ey,14+16*pu,0,7);g.stroke();pinS(ex,ey,clamp((t-0.5)/0.35),'#ffd36a');sfxOnce('a',0.05,'whoosh')}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({drift,height,flatten,contour,seep,cover,siphon,pressure,ship,tunnel,power,build,musashi,cascade,arrive}[P.mode]||height)(t)};
 </script></body></html>
