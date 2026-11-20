@@ -77,4 +77,10 @@ await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;setTo
 await E(()=>ACT.xfOk());await chk('warp ok');await E(()=>undo());await chk('warp undo');await E(()=>setTool('brush'));
 // 形ペン（2026-11-20）
 await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace).id;setTool('pen');renderLayers();penPath={pts:[{x:300,y:300,c:false},{x:700,y:250,c:false},{x:800,y:600,c:true},{x:350,y:650,c:false}],lastI:-1,lastT:0};need()});await chk('pen preview');await E(()=>penCommit());await chk('pen fill');await E(()=>undo());await chk('pen undo');await E(()=>setTool('brush'));
+// レイヤーが多いとき、さわっていないレイヤーを小さくしまう（2026-11-20）
+await E(()=>{for(let i=0;i<10;i++){const l=newLayer('多 '+i);const c=g2(l.cv);c.fillStyle=`hsl(${i*36},60%,50%)`;c.beginPath();c.arc(200+i*150,300+(i%3)*200,90,0,7);c.fill();if(i===2)l.blur=10;if(i===4)l.clip=true;if(i===6){l.clip=true;l.blend='multiply'}layers.push(l)}markAll();renderLayers();for(const l of layers)if(l.id!==activeId)lHib(l);bump();need()});await chk('hib all');
+{const n=await pg.evaluate(()=>layers.filter(l=>l._sm).length);if(n<8){fails++;console.log('FAIL hib count',n)}}
+await E(()=>{activeId=layers.find(l=>l.name==='多 3').id;renderLayers();need()});await chk('hib switch');await strokeMid(25);await chk('hib stroke mid');await pg.mouse.up();await chk('hib stroke done');await E(()=>undo());await chk('hib undo');
+await E(()=>{for(const l of layers)if(l.id!==activeId&&l._cv)lHib(l);activeId=layers.find(l=>l.name==='多 5').id;renderLayers();need()});await chk('hib clip child active');await strokeMid(-25);await chk('hib clip stroke mid');await pg.mouse.up();await chk('hib clip stroke done');
+await E(()=>{const l=layers.find(l=>l.name==='多 2');l.blur=20;renderLayers();need()});await chk('hib blur change');
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();
