@@ -127,6 +127,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 #popM button small{color:var(--sub);font-size:11px}
 #pickPin{position:fixed;width:22px;height:22px;margin:-14px 0 0 -14px;border-radius:50%;border:3px solid #3d8ef0;background:#3d8ef044;pointer-events:none;z-index:59;display:none}
 @media(any-pointer:coarse){.lay .ar{width:34px;font-size:15px}.lay .more{font-size:18px;padding:0 8px}#popM button{padding:10px 10px;font-size:14px}#sideTabs button{padding:9px 0}}
+#loupe{position:fixed;width:130px;height:130px;pointer-events:none;z-index:58;display:none;filter:drop-shadow(0 4px 10px #000a)}
+#loupeTag{position:fixed;transform:translateX(-50%);pointer-events:none;z-index:58;display:none;background:rgba(0,0,0,.8);color:#fff;border-radius:6px;padding:1px 8px;font-size:12px;white-space:nowrap}
 @media(max-width:820px){
  header{gap:4px;padding:4px 6px}header h1{display:none}#artName{width:7em}.long{display:none}
  #wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
@@ -185,7 +187,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </aside>
 </div>
 
-<div id="popM"></div><div id="pickPin"></div><div id="dropLine"></div>
+<div id="popM"></div><canvas id="loupe" width="260" height="260"></canvas><div id="loupeTag"></div><div id="pickPin"></div><div id="dropLine"></div>
 <dialog id="gal">
  <div class="rowx" style="justify-content:space-between"><b id="galTitle">作品一覧</b><button class="b" id="galClose">閉じる</button></div>
  <div class="lead" id="galLead">新しく描く：</div><div class="rowx" id="newKinds"></div>
@@ -297,7 +299,7 @@ function renderTools(){$('tools').innerHTML=TOOLS.map(t=>t?`<button class="tb" d
  $('fgSw').onclick=()=>{$('fgIn').value=fg;$('fgIn').click()};$('bgSw').onclick=()=>{$('bgIn').value=bg;$('bgIn').click()};
  $('fgIn').oninput=e=>setFg(e.target.value,true);$('fgIn').onchange=e=>setFg(e.target.value);$('bgIn').oninput=e=>{bg=e.target.value;LS.set('pd_bg',bg);renderColors()};
  $('swapC').onclick=()=>{[fg,bg]=[bg,fg];LS.set('pd_fg',fg);LS.set('pd_bg',bg);renderColors()};$('defC').onclick=()=>{fg='#000000';bg='#ffffff';LS.set('pd_fg',fg);LS.set('pd_bg',bg);renderColors()}}
-function setTool(t){if(!OPT[t])t='brush';if(t!==tool){if(textEdit)commitText();if(penPath){if(penPath.pts.length>=3)penCommit();else penPath=null}if(crop&&t!=='crop')crop=null}tool=t;LS.set('pd_tool',t);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));renderOpts();setCursor();need()}
+function setTool(t){if(!OPT[t])t='brush';if(t!=='pick'){PK.drag=null;try{loupeHide()}catch(x){}}if(t!==tool){if(textEdit)commitText();if(penPath){if(penPath.pts.length>=3)penCommit();else penPath=null}if(crop&&t!=='crop')crop=null}tool=t;LS.set('pd_tool',t);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));renderOpts();setCursor();need()}
 function setCursor(){view.style.cursor={hand:'grab',zoom:'zoom-in',pick:'crosshair',move:'move',text:'text'}[tool]||'crosshair'}
 
 /* ===== オプションバー（道具ごと） ===== */
@@ -318,7 +320,7 @@ function renderOpts(){const o=OPT[tool]||{};let h='';
  else if(tool==='shape')h=seg('type',[['rect','長方形'],['round','角丸'],['ellipse','楕円'],['line','直線']],o.type)+chk('fill','塗り',o.fill)+chk('stroke','線',o.stroke)+rng('sw','線の太さ',1,200,o.sw,'px')+chk('newL','新しいレイヤーに',o.newL);
  else if(tool==='text')h=(textEdit?`<input id="tIn" value="${esc(textEdit.str)}" style="width:14em;padding:3px 6px;font-size:15px" placeholder="ここに文字を入れる"><button class="b main" data-act="tOk">確定</button><button class="b" data-act="tCancel">取り消し</button>`:'')+`<button class="b" data-act="fontPick" style="font-family:'${fontOf(o.font).family}';font-weight:${fontOf(o.font).w}">字体：${esc(fontOf(o.font).name)} ▾</button>`+rng('size','大きさ',8,600,o.size,'px')+`<label>縁取り</label><select data-sel="edge"><option value="0" ${o.edge==='0'?'selected':''}>なし</option><option value="w" ${o.edge==='w'?'selected':''}>白</option><option value="k" ${o.edge==='k'?'selected':''}>黒</option><option value="bg" ${o.edge==='bg'?'selected':''}>背景色</option></select>`+seg('align',[['left','左'],['center','中'],['right','右']],o.align)+`<label>曲げ</label>`+seg('warp',[['none','まっすぐ'],['arc','アーチ ⌒'],['arcd','逆アーチ ◡'],['wave','波 〜']],o.warp||'none')+((o.warp&&o.warp!=='none')?rng('bend',o.warp==='wave'?'波の高さ':'曲げ具合（100%で円）',5,100,o.bend??40,'%'):'')+(textEdit?'':'<span class="lead">絵の上を押すと、上の段に文字を入れる欄が出ます。置いた文字を押すと直せます</span>');
  else if(tool==='crop')h=crop?`<span class="lead">${Math.round(crop.w)}×${Math.round(crop.h)}</span><button class="b main" data-act="cropOk">切り抜く Enter</button><button class="b" data-act="cropCancel">やめる Esc</button>`:'<span class="lead">残す範囲をドラッグ</span>';
- else if(tool==='pick')h='<button class="b main" data-act="screenPick">🎯 画面のどこからでも</button><button class="b" data-act="pickFloat">📌 浮かせる</button><button class="b" data-act="imgPick">🖼 画像から</button><span class="lead">押した所の色を描画色にする（全レイヤーを合わせた色。ブラシ中は Alt+クリック）</span>';
+ else if(tool==='pick')h='<button class="b main" data-act="screenPick">🎯 画面のどこからでも</button><button class="b" data-act="pickFloat">📌 浮かせる</button><button class="b" data-act="imgPick">🖼 画像から</button><span class="lead">押したまま動かすと、指の上の丸い窓（ルーペ）に取る所が大きく出ます。真ん中の四角の色を、離した所で取ります（輪の上＝取る色・下＝今の色。全レイヤーを合わせた色。ブラシ中は Alt+クリック）</span>';
  else h=`<span class="lead">${tool==='zoom'?'押すと拡大、Alt を押しながらで縮小':'ドラッグで画面を動かす（どの道具でもスペースを押しながらで同じ）'}</span><button class="b" data-act="fit">画面サイズ</button><button class="b" data-act="z100">100%</button>`;
  const om0=document.querySelector('#opts .om'),sl0=om0&&renderOpts.last===tool?om0.scrollLeft:0;renderOpts.last=tool;
  $('opts').innerHTML=`<div class="om">${h}</div><div class="of">`+`${navigator.maxTouchPoints>0?`<button class="b ${fingerPan?'':'on'}" data-act="fingerT" title="指で絵にさわったとき：描く／画面を動かすだけ（勝手に線が入るときは「動かす」に）">✋ 指：${fingerPan?'動かすだけ':'描く'}</button>`:''}<label style="color:var(--ink)">📐構図</label><select data-gsel="comp"><option value="none" ${comp==='none'?'selected':''}>なし</option><option value="center" ${comp==='center'?'selected':''}>中央</option><option value="thirds" ${comp==='thirds'?'selected':''}>三分割</option><option value="golden" ${comp==='golden'?'selected':''}>黄金比</option><option value="all" ${comp==='all'?'selected':''}>全部</option></select><select data-gsel="base" title="構図の線をどこの中に引くか"><option value="canvas" ${compBase.type==='canvas'?'selected':''}>画面全体</option><option value="sel" ${compBase.type==='sel'?'selected':''}>選択範囲の中</option><option value="layer" ${compBase.type==='layer'?'selected':''}>${compBase.type==='layer'&&byId(compBase.lid)?'「'+esc(byId(compBase.lid).name).slice(0,8)+'」の中':'今のレイヤーの中'}</option></select><button class="b ${snapOn?'on':''}" data-act="snapT" title="動かすときに中央・三分割・黄金比・端に吸いつく">吸着</button><button class="b ${showGuide?'on':''}" data-act="guide">ガイド</button></div>`;
@@ -989,7 +991,21 @@ function doBucket(p){const l=act();if(l.trace)return hint('なぞり用の画像
  snapBK(l.id);const c=g2(l.cv);let src=cv;if(SEL){const t=mk(W,H);const tx=g2(t);tx.drawImage(cv,0,0);tx.globalCompositeOperation='destination-in';tx.drawImage(SEL,0,0);src=t}
  c.save();c.globalAlpha=o.op/100;c.globalCompositeOperation=(l.lockAlpha||seedOnLayer>=250)?'source-atop':(seedOnLayer<8?'destination-over':'source-over');c.drawImage(src,0,0);c.restore();
  pushPatch('塗りつぶし',l.id,0,0,W,H);need()}
-function doPick(p){const c=mk(1,1);const x=g2(c);x.fillStyle=art.bg||'#fff';x.fillRect(0,0,1,1);x.translate(-Math.floor(p.x),-Math.floor(p.y));const keep=layers;layers=layers.filter(l=>!l.trace);compositeTo(x,{raw:true});layers=keep;const d=x.getImageData(0,0,1,1).data;setFg('#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join(''))}
+/* ===== スポイトのルーペ（作り手・2026-11-20「スポイトがいまどこなのか分からなくなる」）=====
+ 押している間（マウスは押していなくても）指の少し上に、取る所を拡大した丸い窓を出す。真ん中の四角が取る点。輪の上半分＝取る色、下半分＝今の色。
+ 指を離した所の色を取る（指で隠れても、ルーペを見ながら合わせられる）。絵全体は最初に1回だけ合成して覚えておく */
+const PK={k:'',c:null,drag:null};
+function pkSrc(){const k=[GV,RC.mSeq,art.w,art.h,art.bg].join('~');if(k!==PK.k||!PK.c){PK.k=k;PK.c=fitCv(PK.c,art.w,art.h);const x=g2(PK.c);x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.fillStyle=art.bg||'#fff';x.fillRect(0,0,art.w,art.h);const keep=layers;layers=layers.filter(l=>!l.trace);compositeTo(x,{raw:true});layers=keep}return PK.c}
+function pkColor(p){const x=Math.floor(p.x),y=Math.floor(p.y);if(x<0||y<0||x>=art.w||y>=art.h)return null;const d=g2(pkSrc()).getImageData(x,y,1,1).data;return'#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}
+function loupeShow(e,p){const L=$('loupe'),c=pkColor(p);if(!c){loupeHide();return}const S=L.width,N=15,z=S/N,x=g2(L);x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,S,S);
+ x.save();x.beginPath();x.arc(S/2,S/2,S/2-9,0,7);x.clip();x.fillStyle='#777';x.fillRect(0,0,S,S);x.imageSmoothingEnabled=false;const fx=Math.floor(p.x)-(N>>1),fy=Math.floor(p.y)-(N>>1);x.drawImage(pkSrc(),fx,fy,N,N,0,0,S,S);
+ x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=2;x.strokeRect((N>>1)*z,(N>>1)*z,z,z);x.strokeStyle='rgba(0,0,0,.8)';x.lineWidth=1;x.strokeRect((N>>1)*z-1.5,(N>>1)*z-1.5,z+3,z+3);x.restore();
+ x.lineWidth=12;x.strokeStyle=c;x.beginPath();x.arc(S/2,S/2,S/2-7,Math.PI,0);x.stroke();x.strokeStyle=fg;x.beginPath();x.arc(S/2,S/2,S/2-7,0,Math.PI);x.stroke();x.lineWidth=1.5;x.strokeStyle='#000';x.beginPath();x.arc(S/2,S/2,S/2-1,0,7);x.stroke();x.beginPath();x.arc(S/2,S/2,S/2-13,0,7);x.stroke();
+ const touch=e.pointerType!=='mouse';const W=130;let lx=e.clientX-W/2,ly=e.clientY-W-(touch?60:24);if(ly<4)ly=e.clientY+(touch?60:24);L.style.left=Math.max(4,Math.min(innerWidth-W-4,lx))+'px';L.style.top=ly+'px';L.style.display='block';
+ const t=$('loupeTag');t.textContent=(nameOf(c)||'')+' '+c;t.style.left=(parseFloat(L.style.left)+W/2)+'px';t.style.top=(ly+W+2)+'px';t.style.display='block';
+ const pin=$('pickPin');if(touch){pin.style.left=e.clientX+'px';pin.style.top=e.clientY+'px';pin.style.display='block'}else pin.style.display='none';return c}
+function loupeHide(){$('loupe').style.display='none';$('loupeTag').style.display='none';if($('popM').style.display!=='block')$('pickPin').style.display='none'}
+function doPick(p){const c=pkColor(p);if(c)setFg(c)}
 
 /* ===== グラデーション ===== */
 const hexRgb=h=>{h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]};
@@ -1177,7 +1193,7 @@ const SHAPEN={rect:'長方形',round:'角丸長方形',ellipse:'楕円',line:'�
 view.addEventListener('pointerdown',e=>{if(!art)return;
  /* 手のひら・大きく当たった指は無視する（勝手に線が入らないように） */if(e.pointerType==='touch'&&(e.width>42||e.height>42))return;
  try{view.setPointerCapture(e.pointerId)}catch(x){}ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,t:e.pointerType});if(e.pointerType==='pen'&&!penSeen){penSeen=true;if(!fingerPan){fingerPan=true;LS.set('pd_fingerPan','1');renderOpts();hint('ペンで描いたので、これからは指では描かず、画面を動かすだけにします（上の帯の「✋ 指」で切りかえ）',6000)}}
- /* 指で長押し → ここにあるレイヤーの一覧（ペンは右ボタン。ペンで止まりながら描くのをじゃましないよう、指だけ） */lpCancel();if(e.pointerType==='touch'&&ptrs.size===1&&!['pen','text','crop'].includes(tool)){lpress.x=e.clientX;lpress.y=e.clientY;lpress.t=setTimeout(()=>{lpress.t=0;if(ptrs.size!==1)return;abortStroke();if(drag&&drag.kind==='moveL'&&float)cancelFloat();drag=null;pan=null;view.style.cursor='';layerPickMenu(lpress.x,lpress.y)},600)}
+ /* 指で長押し → ここにあるレイヤーの一覧（ペンは右ボタン。ペンで止まりながら描くのをじゃましないよう、指だけ） */lpCancel();if(e.pointerType==='touch'&&ptrs.size===1&&!['pen','text','crop','pick'].includes(tool)){lpress.x=e.clientX;lpress.y=e.clientY;lpress.t=setTimeout(()=>{lpress.t=0;if(ptrs.size!==1)return;abortStroke();if(drag&&drag.kind==='moveL'&&float)cancelFloat();drag=null;pan=null;view.style.cursor='';layerPickMenu(lpress.x,lpress.y)},600)}
  if(ptrs.size===2&&[...ptrs.values()].every(p=>p.t==='touch')){abortStroke();if(drag&&(drag.kind==='grad'||drag.kind==='shape')){g2(SC).clearRect(0,0,art.w,art.h);stroke=null}drag=null;pan=null;const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,s:V.s,tx:V.tx,ty:V.ty,t0:now(),moved:0};need();return}
  if(ptrs.size>1)return;
  if(tool==='hand'||spaceDown||e.button===1||(fingerPan&&e.pointerType==='touch')){pan={x:e.clientX,y:e.clientY,tx:V.tx,ty:V.ty};view.style.cursor='grabbing';return}
@@ -1187,7 +1203,7 @@ view.addEventListener('pointerdown',e=>{if(!art)return;
  if((tool==='brush'||tool==='bucket'||tool==='grad'||tool==='shape')&&alt){doPick(p);return}
  if(tool==='brush'||tool==='eraser'){if(startStroke(e,p))need();return}
  if(tool==='pen'){penDown(p);need();return}
- if(tool==='pick'){doPick(p);return}
+ if(tool==='pick'){PK.drag={id:e.pointerId};PK.drag.c=loupeShow(e,p);return}
  if(tool==='bucket'){doBucket(p);return}
  if(tool==='grad'){const l=act();if(l.trace)return hint('なぞり用の画像には描けません');snapBK(l.id);stroke={lid:l.id,erase:false,op:OPT.grad.op/100,bb:[0,0,art.w,art.h],id:e.pointerId};drag={kind:'grad',a:p,b:p};drawGrad(p,p);need();return}
  if(tool==='shape'){let l=act();if(OPT.shape.newL){const nl=newLayer(SHAPEN[OPT.shape.type]);const at=l;if(at.grp&&!at.trace){nl.grp=at.grp;nl.gname=at.gname}structOp('新規レイヤー',()=>{layers.splice(layers.indexOf(at)+1,0,nl);activeId=nl.id});l=nl}if(l.trace)return hint('なぞり用の画像には描けません');snapBK(l.id);stroke={lid:l.id,erase:false,op:1,bb:[0,0,art.w,art.h],id:e.pointerId};drag={kind:'shape',a:p,b:p};return}
@@ -1204,6 +1220,7 @@ view.addEventListener('pointerdown',e=>{if(!art)return;
 view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt.x=e.clientX;pt.y=e.clientY}if(lpress.t&&Math.hypot(e.clientX-lpress.x,e.clientY-lpress.y)>10)lpCancel();
  if(gest&&ptrs.size>=2){const[a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=view.getBoundingClientRect();const s=clamp(gest.s*d/gest.d,0.02,32);const dx=(gest.cx-r.left-gest.tx)/gest.s,dy=(gest.cy-r.top-gest.ty)/gest.s;V.s=s;V.tx=cx-r.left-dx*s;V.ty=cy-r.top-dy*s;gest.moved=Math.max(gest.moved,Math.abs(d-gest.d),Math.hypot(cx-gest.cx,cy-gest.cy));need();return}
  if(pan){V.tx=pan.tx+e.clientX-pan.x;V.ty=pan.ty+e.clientY-pan.y;need();return}
+ if(PK.drag&&e.pointerId===PK.drag.id){PK.drag.c=loupeShow(e,toDoc(e));return}if(tool==='pick'&&e.pointerType!=='touch'&&!ptrs.size&&art)loupeShow(e,toDoc(e));
  if(e.pointerType!=='touch'&&(tool==='brush'||tool==='eraser')){cursor=toDoc(e);clearTimeout(cursorFlash.t)}else if(e.pointerType==='touch')cursor=null;
  if(stroke&&e.pointerId===stroke.id&&(tool==='brush'||tool==='eraser')){const tc=stroke.tch;if(tc)tc.m=Math.max(tc.m,Math.hypot(e.clientX-tc.x,e.clientY-tc.y));moveStroke(e);return}
  if(cursor)need()
@@ -1230,7 +1247,7 @@ view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt
   need();renderOptsLite()}});
 function renderOptsLite(){clearTimeout(renderOptsLite.t);renderOptsLite.t=setTimeout(()=>{if(tool==='move'&&float){const w=$('xfW');if(w&&document.activeElement!==w){w.value=Math.round(float.sx*100);$('xfH').value=Math.round(float.sy*100);$('xfR').value=Math.round(float.rot*1800/Math.PI)/10}}else if(tool==='crop')renderOpts()},60)}
 function cropHit(p){const t=16/V.s,c=crop;const nl=Math.abs(p.x-c.x)<t,nr=Math.abs(p.x-c.x-c.w)<t,nt=Math.abs(p.y-c.y)<t,nb=Math.abs(p.y-c.y-c.h)<t;const inX=p.x>c.x-t&&p.x<c.x+c.w+t,inY=p.y>c.y-t&&p.y<c.y+c.h+t;let h='';if(inY){if(nl)h+='l';else if(nr)h+='r'}if(inX){if(nt)h+='t';else if(nb)h+='b'}if(h)return h;if(p.x>c.x&&p.x<c.x+c.w&&p.y>c.y&&p.y<c.y+c.h)return'in';return null}
-function ptrEnd(e){ptrs.delete(e.pointerId);
+function ptrEnd(e){ptrs.delete(e.pointerId);if(PK.drag&&e.pointerId===PK.drag.id){const c=PK.drag.c;PK.drag=null;if(e.type==='pointerup'&&c){setFg(c);hint('色を取りました：'+(nameOf(c)||c),1500)}if(e.pointerType==='touch'||tool!=='pick')loupeHide();return}
  if(gest){if(ptrs.size===0){if(now()-gest.t0<260&&gest.moved<12)undo();gest=null}return}
  if(pan){pan=null;setCursor();return}
  if(stroke&&e.pointerId===stroke.id&&(tool==='brush'||tool==='eraser')){endStroke(e.type==='pointercancel'?null:e);return}
@@ -1245,7 +1262,7 @@ function ptrEnd(e){ptrs.delete(e.pointerId);
  else if(d.kind==='crop'){if(!crop||crop.w<4||crop.h<4)crop=null;renderOpts()}
  need()}
 view.addEventListener('pointerup',e=>{lpCancel();ptrEnd(e)});view.addEventListener('pointercancel',e=>{lpCancel();ptrEnd(e)});
-view.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch'){cursor=null;need()}});
+view.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch'){cursor=null;need()}if(!PK.drag)loupeHide()});
 view.addEventListener('contextmenu',e=>e.preventDefault());
 view.addEventListener('dblclick',()=>{if(tool==='hand')fit()});
 view.addEventListener('wheel',e=>{e.preventDefault();const r=view.getBoundingClientRect();const wheelMouse=e.deltaX===0&&(e.deltaMode!==0||(Math.abs(e.deltaY)>=50&&Number.isInteger(e.deltaY)));if(e.ctrlKey||e.metaKey||e.altKey||wheelMouse){zoomAt(Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX-r.left,e.clientY-r.top)}else{V.tx-=e.deltaX;V.ty-=e.deltaY;need()}},{passive:false});
