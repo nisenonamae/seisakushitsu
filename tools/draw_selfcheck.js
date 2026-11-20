@@ -83,4 +83,11 @@ await E(()=>{for(let i=0;i<10;i++){const l=newLayer('多 '+i);const c=g2(l.cv);c
 await E(()=>{activeId=layers.find(l=>l.name==='多 3').id;renderLayers();need()});await chk('hib switch');await strokeMid(25);await chk('hib stroke mid');await pg.mouse.up();await chk('hib stroke done');await E(()=>undo());await chk('hib undo');
 await E(()=>{for(const l of layers)if(l.id!==activeId&&l._cv)lHib(l);activeId=layers.find(l=>l.name==='多 5').id;renderLayers();need()});await chk('hib clip child active');await strokeMid(-25);await chk('hib clip stroke mid');await pg.mouse.up();await chk('hib clip stroke done');
 await E(()=>{const l=layers.find(l=>l.name==='多 2');l.blur=20;renderLayers();need()});await chk('hib blur change');
+// フォルダ（2026-11-20）：作る・中に落とす・フォルダごと重ね順・1枚にまとめる・戻す
+await E(()=>{activeId=layers.find(l=>l.name==='多 1').id;renderLayers();folderNew();document.activeElement&&document.activeElement.blur()});await chk('folder new');
+await E(()=>{const g=act().grp;lyDrop({l:layers.find(l=>l.name==='多 7').id},{row:{f:g},pos:'into'})});await chk('folder drop into');
+{const ok=await pg.evaluate(()=>{const a=layers.find(l=>l.name==='多 7'),b=layers.find(l=>l.name==='多 1');return !!a.grp&&a.grp===b.grp});if(!ok){fails++;console.log('FAIL folder drop')}}
+await E(()=>{fMove(act().grp,1)});await chk('folder move up');await E(()=>{fMove(act().grp,-1)});await chk('folder move down');
+await E(()=>{fMerge(act().grp)});await chk('folder merge');await E(()=>undo());await chk('folder merge undo');
+await E(()=>{const l=layers.find(l=>l.name==='多 7');lyOut(l)});await chk('folder out');await E(()=>{setSideTab('col');setSideTab('lay')});
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();

@@ -105,6 +105,28 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .lead{font-size:12px;color:var(--sub);margin:4px 0}
 .fin img{width:100%;border-radius:6px;border:1px solid var(--line);background:repeating-conic-gradient(#888 0 25%,#bbb 0 50%) 0 0/12px 12px}
 #dlgBody .rowx>label{min-width:7em}
+#sideTabs{position:sticky;top:0;z-index:5;display:flex;gap:3px;padding:5px 6px 0;background:var(--paper);border-bottom:1px solid #000}
+#sideTabs button{flex:1;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:var(--row);color:var(--sub);font-size:12.5px;padding:6px 0;cursor:pointer}
+#sideTabs button.on{background:#2e4a6d;color:#fff;font-weight:700;border-color:var(--sea)}
+#side .panel.tabOff{display:none!important}
+#layWrap{max-height:max(220px,calc(100vh - 330px));overflow:auto;overscroll-behavior:contain;margin-top:4px;border-radius:6px}
+.lay.fold{background:#3a3550}.lay.fold .nm{font-weight:700}.lay.fold .cnt{color:var(--sub);font-weight:400;font-size:11px;margin-left:4px}
+.lay.fold.on{border-color:var(--sea);background:#40416d}
+.lay .ar{border:0;background:none;color:#c9b8ff;font-size:12px;width:22px;padding:6px 0;flex:none;cursor:pointer}
+.lay.inF{margin-left:16px}.lay.inF.clip{margin-left:30px}
+.lay .fic{font-size:15px}
+.lay .more{border:0;background:none;color:var(--sub);font-size:15px;padding:0 4px;cursor:pointer}
+.lay.drag{opacity:.35}
+#dropLine{position:fixed;height:3px;background:#3d8ef0;border-radius:2px;pointer-events:none;z-index:50;display:none;box-shadow:0 0 0 1px #0008}
+#dropLine.into{height:auto;background:#3d8ef033;border:2px solid #3d8ef0}
+#popM{position:fixed;z-index:60;min-width:200px;max-width:280px;background:var(--paper);border:1px solid var(--sea);border-radius:10px;box-shadow:0 8px 24px #0009;padding:6px;display:none;max-height:70vh;overflow:auto}
+#popM h4{margin:2px 4px 6px;font-size:11.5px;color:var(--sub);font-weight:400}
+#popM button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--row);border:1px solid transparent;border-radius:6px;padding:6px 8px;margin:0 0 3px;color:var(--ink);font-size:13px;cursor:pointer}
+#popM button.on{border-color:var(--sea);background:#2e4a6d}
+#popM button i{width:22px;height:22px;border-radius:4px;border:1px solid #000;flex:none}
+#popM button small{color:var(--sub);font-size:11px}
+#pickPin{position:fixed;width:22px;height:22px;margin:-14px 0 0 -14px;border-radius:50%;border:3px solid #3d8ef0;background:#3d8ef044;pointer-events:none;z-index:59;display:none}
+@media(any-pointer:coarse){.lay .ar{width:34px;font-size:15px}.lay .more{font-size:18px;padding:0 8px}#popM button{padding:10px 10px;font-size:14px}#sideTabs button{padding:9px 0}}
 @media(max-width:820px){
  header{gap:4px;padding:4px 6px}header h1{display:none}#artName{width:7em}.long{display:none}
  #wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
@@ -128,7 +150,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div id="tools"></div>
 <div id="stage"><canvas id="view"></canvas><div id="zoomLab"></div><div id="hint"></div></div>
 <aside id="side">
- <div class="panel" id="colPanel"><h3>色<span class="sp"></span><button class="b" id="colDel" title="押してから色を押すと、その色を消せます（取った色・最近・色のセット）">✕ いらない色を消す</button></h3>
+ <div id="sideTabs"><button data-st="col">🎨 色</button><button data-st="lay">📚 レイヤー</button><button data-st="etc">🕘 ほか</button></div>
+ <div class="panel" id="colPanel" data-tab="col"><h3>色<span class="sp"></span><button class="b" id="colDel" title="押してから色を押すと、その色を消せます（取った色・最近・色のセット）">✕ いらない色を消す</button></h3>
  <div class="rowx"><span id="curSw" class="sw" style="width:34px;height:34px;display:inline-block"></span><button class="b main" id="pickNew">＋ 新しい色を作る</button><button class="b" id="saveMy" title="今の描画色を、選んでいる色のセットに足す（名前を付けられます）">＋ 今の色をセットに足す</button></div>
  <div class="rowx"><button class="b" id="screenPick" title="ほかのタブやアプリに出ている色も取れます">🎯 画面のどこからでも色を取る</button><button class="b" id="pickFloat" title="小さなスポイトの窓を、ほかのタブ・アプリの上に浮かせておく。ほかの画面を見ながら、いつでも押して色を取れる">📌 スポイトを浮かせる</button><button class="b" id="imgPick" title="スクショや画像を貼って、押した所の色を取る">🖼 画像から色を取る</button></div>
  <div class="rowx" title="同じ色の、暗い〜明るい段（深緑・緑・黄緑のように）。暗い段は少し青みに、明るい段は少し黄みに寄せてあります"><span class="lead" style="margin:0;min-width:3.5em">明暗の段：</span><span id="toneRow" class="rowx" style="margin:0;gap:2px"></span></div>
@@ -136,28 +159,33 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  <div class="rowx" title="暗い夜空・宇宙に映える、鮮やかな色の組み合わせ（Claude が選んだ見本）"><span class="lead" style="margin:0;min-width:3.5em">映える色：</span><span id="popRow" class="rowx" style="margin:0;gap:2px"></span></div>
  <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">色のセット：</span><select id="palSel" style="flex:1;min-width:0"></select><button class="b" id="palNew" title="新しい色のセットを作る（回ごと・物ごとなど）">＋ セット</button><button class="b" id="palEdit" title="セットの名前を変える・セットを消す">✎</button></div>
  <div id="palBox" class="palbox"></div>
- <textarea id="palMemo" placeholder="このセットのメモ（色の使い方など。例：島は主役なので一番鮮やかに。影は「島の影」）" style="width:100%;box-sizing:border-box;min-height:44px;margin:0 0 6px;font-size:12.5px;resize:vertical"></textarea>
  <textarea id="palMemo" rows="2" placeholder="このセットのメモ（色の使い方など。例：島は主役なので一番あざやかに。影は「島の影」、光は白30%）" style="width:100%;box-sizing:border-box;font-size:12px;background:var(--row);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px;resize:vertical;margin:0 0 6px"></textarea>
  <div class="rowx" id="pickedWrap"><span class="lead" style="margin:0;min-width:3.5em">取った色：</span><span id="pickedRow" class="rowx" style="margin:0;gap:2px"></span><button class="b" id="pickedAll" title="スポイトで取った色を全部、選んでいる色のセットに入れる">全部をセットに入れる</button><button class="b" id="pickedSet" title="取った色で、新しい色のセットを作る">新しいセットにする</button><button class="b" id="pickedClr">空にする</button></div>
  <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">最近：</span><span id="recent" class="rowx" style="margin:0"></span></div>
  <div class="rowx" id="swatches"></div>
  <div class="lead" style="margin:2px 0 0">押すと描く色になります。セットの色は右クリック（さわる画面は長押し）で、名前を変える・置き換える・消す・並べかえができます</div></div>
- <div class="panel"><h3>レイヤー<span id="lyMeter" class="lead" style="margin:0 0 0 4px;font-weight:400" title="レイヤーの数と、端末の記憶をどれくらい使っているかの目安"></span><span class="sp"></span><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="partPutBtn" title="保存しておいた素材を、今の絵に置く">＋ 素材を置く</button><button class="b" id="partSaveBtn" title="選んでいるレイヤー（選択範囲があればその中だけ）を、ほかの絵でも使える素材として保存する">⭐ 素材にする</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></h3>
+ <div class="panel" data-tab="lay"><div class="rowx" id="miniCol" title="描く色（くわしくは上の「🎨 色」）"><span id="curSw2" class="sw" style="width:26px;height:26px;display:inline-block"></span><span id="recent2" class="rowx" style="margin:0;gap:2px"></span></div>
+ <h3>レイヤー<span id="lyMeter" class="lead" style="margin:0 0 0 4px;font-weight:400" title="レイヤーの数と、端末の記憶をどれくらい使っているかの目安"></span><span class="sp"></span></h3>
+ <div class="rowx"><input id="lySearch" type="search" placeholder="🔍 名前で探す" style="flex:1;min-width:0"><button class="b" id="folderNew" title="選んでいるレイヤー（＋クリップした影・光）を、新しいフォルダに入れる">＋📁 フォルダ</button></div>
+ <div id="layWrap"><div id="layers"></div></div>
+  <div class="lbtns"><button class="b" data-la="new" title="新規レイヤー">＋新規</button><button class="b" data-la="dup" title="複製">複製</button><button class="b" data-la="up" title="前面へ">↑</button><button class="b" data-la="down" title="背面へ">↓</button><button class="b" data-la="clip" title="クリッピングマスク">クリップ</button><button class="b" data-la="merge" title="下と結合">下と結合</button><button class="b" data-la="del" title="削除">🗑</button></div>
+  <div class="lead" style="margin:6px 0 2px;font-weight:700">選んでいるレイヤー</div>
   <div class="rowx"><select id="lBlend" title="描画モード"></select><label style="min-width:0">不透明度</label><input type="range" id="lOp" min="0" max="100"><span class="num" id="lOpV"></span></div>
   <div class="rowx"><label style="min-width:0" title="手前の物・奥の物をぼかす。絵そのものは変わらないので、あとから何度でも変えられます">ぼかし</label><input type="range" id="lBl" min="0" max="60" step="1"><span class="num" id="lBlV"></span></div>
   <div class="rowx"><label style="min-width:0" title="このレイヤーの形のまわりを、ぼかした濃い紺で暗くする。サムネの文字の後ろを暗くして、字を浮かせるときに（あとから何度でも変えられます）">後ろを暗く</label><input type="range" id="lGl" min="0" max="100" step="1"><span class="num" id="lGlV"></span></div>
   <div class="rowx"><button class="b" id="lShD" title="このレイヤーの上に、紫がかった紺の「影」のレイヤー（薄め・クリップ）を足す。塗った所だけ暗くなり、はみ出さない">🌑 影のレイヤー</button><button class="b" id="lShL" title="このレイヤーの上に、白い「光」のレイヤー（薄め・クリップ）を足す。塗った所だけ明るくなり、はみ出さない">☀ 光のレイヤー</button><button class="b" id="lShA" title="形のふちに沿って、影と光を自動で付ける">✨ 形に沿って明暗</button><button class="b" id="lVig" title="画面の四すみ・はしを暗くするレイヤーを足す（文字より下に入る）（サムネで真ん中に目を集める）。強さは不透明度で">◎ 周りを暗く</button></div>
   <div class="rowx"><button class="b" id="lLockA" title="透明部分をロック（描いてある所だけに描ける）">▦ 透明部分を保護</button><button class="b" id="lNoExp" title="書き出し・仕上げに入れない">書き出さない</button></div>
-  <div id="layers"></div>
-  <div class="lbtns"><button class="b" data-la="new" title="新規レイヤー">＋新規</button><button class="b" data-la="dup" title="複製">複製</button><button class="b" data-la="up" title="前面へ">↑</button><button class="b" data-la="down" title="背面へ">↓</button><button class="b" data-la="clip" title="クリッピングマスク">クリップ</button><button class="b" data-la="merge" title="下と結合">下と結合</button><button class="b" data-la="del" title="削除">🗑</button></div>
+  <div class="lead" style="margin:6px 0 2px;font-weight:700">絵や素材を足す</div>
+  <div class="rowx"><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="partPutBtn" title="保存しておいた素材を、今の絵に置く">＋ 素材を置く</button><button class="b" id="partSaveBtn" title="選んでいるレイヤー（選択範囲があればその中だけ）を、ほかの絵でも使える素材として保存する">⭐ 素材にする</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></div>
  </div>
- <div class="panel"><h3>ヒストリー</h3><div id="hist"></div></div>
- <div class="panel"><h3>見え方（実際の大きさ）</h3><div class="pv" id="pv"></div></div>
- <div class="panel" id="finPanel" style="display:none"><h3 id="finPanelT">Claude の仕上げ</h3><div id="finBox"></div></div>
- <div class="panel"><h3>使い方</h3><div class="lead">ショートカットは Photoshop と同じです（B ブラシ、E 消しゴム、V 移動、M 選択、⌘T 自由変形、⌘Z 戻す など。メニューに書いてあります）。<br>スマホ・タブレット：2本指でつまむと拡大縮小、2本指で動かすと画面移動、2本指でトンと叩くと1つ戻ります。ペンで描くと、指は画面を動かすだけになります。<br>描いた絵は自動で保存され、制作室の同期をつないだ端末どうしで同じ絵を開けます。</div></div>
+ <div class="panel" data-tab="etc"><h3>ヒストリー</h3><div id="hist"></div></div>
+ <div class="panel" data-tab="etc"><h3>見え方（実際の大きさ）</h3><div class="pv" id="pv"></div></div>
+ <div class="panel" data-tab="etc" id="finPanel" style="display:none"><h3 id="finPanelT">Claude の仕上げ</h3><div id="finBox"></div></div>
+ <div class="panel" data-tab="etc"><h3>使い方</h3><div class="lead">ショートカットは Photoshop と同じです（B ブラシ、E 消しゴム、V 移動、M 選択、⌘T 自由変形、⌘Z 戻す など。メニューに書いてあります）。<br>スマホ・タブレット：2本指でつまむと拡大縮小、2本指で動かすと画面移動、2本指でトンと叩くと1つ戻ります。ペンで描くと、指は画面を動かすだけになります。<br>描いた絵は自動で保存され、制作室の同期をつないだ端末どうしで同じ絵を開けます。</div></div>
 </aside>
 </div>
 
+<div id="popM"></div><div id="pickPin"></div><div id="dropLine"></div>
 <dialog id="gal">
  <div class="rowx" style="justify-content:space-between"><b id="galTitle">作品一覧</b><button class="b" id="galClose">閉じる</button></div>
  <div class="lead" id="galLead">新しく描く：</div><div class="rowx" id="newKinds"></div>
@@ -335,7 +363,7 @@ let accBase=null,accLock=false;function renderAcc(){if(!accLock||!accBase)accBas
 document.addEventListener('click',e=>{const b=e.target.closest('[data-c2]');if(b){if(e.altKey){bg=b.dataset.c2;LS.set('pd_bg',bg);renderColors()}else{accLock=!!b.closest('#accRow');setFg(b.dataset.c2,true);accLock=false}}});
 function renderTone(){const r=$('toneRow');if(!r)return;if(!toneBase)toneBase=fg;r.innerHTML=[-3,-2,-1,0,1,2,3].map(k=>{const c=k?toneHex(toneBase,k):toneBase;return`<button class="sw" data-tc="${c}" style="background:${c};${c===fg?'outline:2px solid var(--sea);outline-offset:1px':''}" title="${k<0?'暗い':k>0?'明るい':'もとの色'}${k?Math.abs(k)+'段':''} ${c}"></button>`}).join('')}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tc]');if(b){const keep=toneBase;setFg(b.dataset.tc,true);toneBase=keep;renderTone()}});
-function renderColors(){if(fg!==toneBase&&!(toneBase&&[-3,-2,-1,1,2,3].some(k=>toneHex(toneBase,k)===fg)))toneBase=fg;renderTone();renderAcc();try{if(pickWin&&!pickWin.closed&&pickWin.pdShow)pickWin.pdShow()}catch(e){}renderPal();$('curSw').style.background=fg;$('swatches').innerHTML=SWATCH.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" title="${c}（Alt+クリックで背景色）"></button>`).join('');$('recent').innerHTML=recent.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');const f=$('fgSw'),b=$('bgSw');if(f){f.style.background=fg;b.style.background=bg}}
+function renderColors(){if(fg!==toneBase&&!(toneBase&&[-3,-2,-1,1,2,3].some(k=>toneHex(toneBase,k)===fg)))toneBase=fg;renderTone();renderAcc();try{if(pickWin&&!pickWin.closed&&pickWin.pdShow)pickWin.pdShow()}catch(e){}renderPal();$('curSw').style.background=fg;$('swatches').innerHTML=SWATCH.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" title="${c}（Alt+クリックで背景色）"></button>`).join('');$('recent').innerHTML=recent.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');{const c2=$('curSw2');if(c2){c2.style.background=fg;$('recent2').innerHTML=recent.slice(0,9).map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('')}}const f=$('fgSw'),b=$('bgSw');if(f){f.style.background=fg;b.style.background=bg}}
 function setFg(c,live){fg=c;LS.set('pd_fg',c);if(!live){recent=[c,...recent.filter(x=>x!==c)].slice(0,10);LS.set('pd_recent',JSON.stringify(recent))}renderColors();if(textEdit){textEdit.color=fg;drawTextLayer()}}
 let mycols=[];try{mycols=JSON.parse(LS.get('pd_mycols','[]')||'[]')}catch(e){}
 /* ===== 色の組（作り手・2026-11-20「名前を付けて管理したい・楽に使いたい」） =====
@@ -596,11 +624,111 @@ function newLayer(name,o={}){const{cv,...rest}=o;const l=lcopy({id:uid('ly'),nam
 function lyMeter(){const e=$('lyMeter');if(!e||!art)return;const n=layers.length;let px=0,big=0;for(const l of layers){if(l._cv){px+=art.w*art.h;big++}else if(l._sm)px+=l._sm.c.width*l._sm.c.height}const mb=Math.round(px*4/1e6);const lim=COARSE?250:400;e.textContent=`${n}枚・約${mb}MB`;e.style.color=mb>lim*1.5?'#ff6b6b':mb>lim?'#ffb547':'';e.title=`レイヤーの数と、端末の記憶をどれくらい使っているかの目安。さわっていないレイヤーは、手が止まると描いてある所だけに縮めてしまうので、枚数が多くても軽くなります（いま絵の大きさのままなのは${big}枚）。${mb>lim?'記憶を多く使っています。大きく塗ったレイヤーが多いと縮められません。仕上がった物は「下と結合」や、素材にして「1枚にまとめて置く」と軽くなります':'まだ大丈夫です'}`}
 function renderLayers(){bump();hibSweep();lyMeter();const l0=act();$('lBlend').innerHTML=BLENDS.map(([v,n])=>`<option value="${v}" ${l0&&l0.blend===v?'selected':''}>${n}</option>`).join('');$('lOp').value=l0?Math.round(l0.opacity*100):100;$('lOpV').textContent=$('lOp').value+'%';$('lBl').value=l0?(l0.blur||0):0;$('lBlV').textContent=$('lBl').value+'px';$('lGl').value=l0?(l0.glow||0):0;$('lGlV').textContent=$('lGl').value;
  $('lLockA').classList.toggle('on',!!(l0&&l0.lockAlpha));{const tb=$('traceTopBtn'),hasT=layers.some(l=>l.trace);if(tb){tb.style.display=hasT?'':'none';tb.classList.toggle('on',traceTop)}const tx=$('traceXfBtn');if(tx)tx.style.display=hasT?'':'none'}$('lNoExp').classList.toggle('on',!!(l0&&l0.noExport));
- $('layers').innerHTML=layers.slice().reverse().map(l=>`<div class="lay ${l.id===activeId?'on':''} ${l.clip?'clip':''}" data-l="${l.id}"><button class="ic" data-eye="${l.id}">${l.visible?'👁':'　'}</button><canvas width="80" height="60" data-th="${l.id}"></canvas><span class="nm">${l.clip?'↳ ':''}${l.text?'T ':''}${esc(l.name)}${l.trace?'<br><small>なぞり用・書き出さない</small>':l.noExport?'<br><small>書き出さない</small>':''}${l.blend!=='source-over'||l.opacity<1?`<br><small>${BLENDS.find(b=>b[0]===l.blend)[1]} ${Math.round(l.opacity*100)}%</small>`:''}${l.blur>0?`<br><small>ぼかし ${l.blur}px</small>`:''}${l.glow>0?`<br><small>後ろを暗く ${l.glow}</small>`:''}</span>${l.grp?'<span class="ic" title="いっしょに動かす組">🔗</span>':''}${l.lockAlpha?'<span class="ic">▦</span>':''}</div>`).join('');thumbLayers()}
+ buildLayerList()}
 function thumbLayers(only){document.querySelectorAll('[data-th]').forEach(cv=>{if(only&&cv.dataset.th!==only)return;const l=byId(cv.dataset.th);const x=g2(cv);x.clearRect(0,0,80,60);if(!l)return;const s=Math.min(80/art.w,60/art.h),ox=(80-art.w*s)/2,oy=(60-art.h*s)/2;if(l._cv)x.drawImage(l._cv,ox,oy,art.w*s,art.h*s);else if(l._sm){const m=l._sm;x.drawImage(m.c,ox+m.x*s,oy+m.y*s,m.c.width*s,m.c.height*s)}})}
-$('layers').addEventListener('click',e=>{const ey=e.target.closest('[data-eye]');if(ey){const l=byId(ey.dataset.eye);structOp(l.visible?'レイヤーを非表示':'レイヤーを表示',()=>{l.visible=!l.visible});return}
- const d=e.target.closest('[data-l]');if(d&&!e.target.closest('input')){if(textEdit)commitText();if(float)commitFloat();activeId=d.dataset.l;renderLayers();if(tool==='move')renderOpts()}});
-$('layers').addEventListener('dblclick',e=>{const d=e.target.closest('[data-l]');if(!d)return;const l=byId(d.dataset.l);const nm=d.querySelector('.nm');nm.innerHTML=`<input value="${esc(l.name)}">`;const inp=nm.querySelector('input');inp.focus();inp.select();const done=()=>{const v=inp.value.trim();if(v&&v!==l.name)structOp('レイヤー名の変更',()=>{l.name=v});else renderLayers()};inp.onblur=done;inp.onkeydown=k=>{k.stopPropagation();if(k.key==='Enter')inp.blur();if(k.key==='Escape'){inp.value=l.name;inp.blur()}}});
+/* ===== フォルダ（作り手・2026-11-20「レイヤーが増えると探すのが大変」）=====
+ フォルダ＝今までの「🔗 組」と同じもの（l.grp が同じで並んでいるレイヤー）。名前は l.gname（全部のレイヤーに同じ名前を持たせる。履歴・保存にそのまま乗る）。
+ 開いている・閉じているは、この端末だけで覚える（pd_fopen_<絵>）。重ね方は今までどおり（フォルダは見せ方とまとめて動かすためだけ。絵の見た目は変わらない） */
+let fOpen=new Set(),fOpenFor='',lastAct='',fNoOpen=false;
+function fLoad(){if(!art||fOpenFor===art.id)return;fOpenFor=art.id;try{fOpen=new Set(JSON.parse(LS.get('pd_fopen_'+art.id,'[]')))}catch(e){fOpen=new Set()}}
+function fSave(){if(art)LS.set('pd_fopen_'+art.id,JSON.stringify([...fOpen].slice(-200)))}
+const fMembers=g=>layers.filter(l=>l.grp===g);
+function fName(g){const m=layers.find(l=>l.grp===g&&l.gname);return m?m.gname:'フォルダ'}
+function fTop(g){const M=fMembers(g);return M[M.length-1]}
+function fPick(g){const M=fMembers(g);for(let i=M.length-1;i>=0;i--)if(!M[i].clip&&!M[i].trace)return M[i];return M[M.length-1]}
+/* 構造を変えたあとに整える：クリップした影・光は下の形と同じフォルダに。同じフォルダにはさまれたレイヤーはそのフォルダに。名前はそろえる */
+function fixFolders(){for(let i=0;i<layers.length;i++){const l=layers[i];if(l.trace)continue;if(l.clip&&i>0){let j=i;while(j>0&&layers[j].clip)j--;const b=layers[j];if(b!==l&&b.grp!==l.grp){l.grp=b.grp;l.gname=b.gname}}
+  else if(!l.grp&&i>0&&i<layers.length-1&&layers[i-1].grp&&layers[i-1].grp===layers[i+1].grp){l.grp=layers[i-1].grp;l.gname=layers[i-1].gname}}
+ const nm={};for(const l of layers)if(l.grp&&l.gname&&!nm[l.grp])nm[l.grp]=l.gname;for(const l of layers){if(l.grp)l.gname=nm[l.grp]||l.gname;else if(l.gname)l.gname=undefined}}
+function layRow(l,cls,pre){return `<div class="lay ${l.id===activeId?'on':''} ${l.clip?'clip':''} ${cls||''}" data-l="${l.id}"><button class="ic" data-eye="${l.id}">${l.visible?'👁':'　'}</button><canvas width="80" height="60" data-th="${l.id}"></canvas><span class="nm">${pre?`<small>${esc(pre)} ／ </small>`:''}${l.clip?'↳ ':''}${l.text?'T ':''}${esc(l.name)}${l.trace?'<br><small>なぞり用・書き出さない</small>':l.noExport?'<br><small>書き出さない</small>':''}${l.blend!=='source-over'||l.opacity<1?`<br><small>${BLENDS.find(b=>b[0]===l.blend)[1]} ${Math.round(l.opacity*100)}%</small>`:''}${l.blur>0?`<br><small>ぼかし ${l.blur}px</small>`:''}${l.glow>0?`<br><small>後ろを暗く ${l.glow}</small>`:''}</span>${l.lockAlpha?'<span class="ic">▦</span>':''}</div>`}
+function buildLayerList(){fLoad();const W=$('layWrap'),st=W.scrollTop;const a=act();const changed=activeId!==lastAct;
+ if(changed&&a&&a.grp&&!fNoOpen&&!fOpen.has(a.grp)){fOpen.add(a.grp);fSave()}fNoOpen=false;
+ const q=($('lySearch').value||'').trim().toLowerCase();let h='';
+ if(q){for(let i=layers.length-1;i>=0;i--){const l=layers[i];const gn=l.grp?fName(l.grp):'';if((l.name+' '+gn).toLowerCase().includes(q))h+=layRow(l,'',gn)}if(!h)h='<div class="lead">見つかりません</div>'}
+ else{let i=layers.length-1;while(i>=0){const l=layers[i];if(l.grp){const g=l.grp;let j=i;while(j-1>=0&&layers[j-1].grp===g)j--;const M=layers.slice(j,i+1),open=fOpen.has(g),has=M.some(m=>m.id===activeId),vis=M.some(m=>m.visible);
+   h+=`<div class="lay fold ${has&&!open?'on':''}" data-f="${g}"><button class="ar" data-fa="${g}" title="開く・閉じる">${open?'▾':'▸'}</button><span class="fic">📁</span><span class="nm">${esc(fName(g))}<span class="cnt">${M.length}枚${grpOn?'・🔗':''}</span></span><button class="more" data-fm="${g}" title="フォルダのメニュー（名前・解く・1枚にまとめる・複製・消す・重ね順）">⋯</button><button class="ic" data-fe="${g}" title="フォルダの中を全部 見せる・隠す">${vis?'👁':'　'}</button></div>`;
+   if(open)for(let k=i;k>=j;k--)h+=layRow(layers[k],'inF');i=j-1}else{h+=layRow(l);i--}}}
+ $('layers').innerHTML=h;thumbLayers();W.scrollTop=st;
+ if(changed){const r=$('layers').querySelector(`[data-l="${activeId}"]`)||(a&&a.grp&&$('layers').querySelector(`[data-f="${a.grp}"]`));if(r){const wr=W.getBoundingClientRect(),rr=r.getBoundingClientRect();if(rr.top<wr.top)W.scrollTop+=rr.top-wr.top-6;else if(rr.bottom>wr.bottom)W.scrollTop+=rr.bottom-wr.bottom+6}}
+ lastAct=activeId}
+$('lySearch').addEventListener('input',()=>buildLayerList());$('lySearch').addEventListener('keydown',e=>e.stopPropagation());
+function selectLayer(id,why){if(textEdit)commitText();if(float)commitFloat();activeId=id;setSideTab('lay',true);renderLayers();if(tool==='move')renderOpts();MB.k=''}
+/* フォルダの操作 */
+function fRenameInline(g){const r=$('layers').querySelector(`[data-f="${g}"] .nm`);if(!r){fRenameDlg(g);return}const old=fName(g);r.innerHTML=`<input value="${esc(old)}">`;const inp=r.querySelector('input');inp.focus();inp.select();let done=false;
+ const fin=()=>{if(done)return;done=true;const v=inp.value.trim();if(v&&v!==old)structOp('フォルダの名前',()=>{fMembers(g).forEach(l=>l.gname=v)});else renderLayers()};inp.onblur=fin;inp.onkeydown=k=>{k.stopPropagation();if(k.key==='Enter')inp.blur();if(k.key==='Escape'){inp.value=old;inp.blur()}};inp.onclick=e=>e.stopPropagation()}
+function fRenameDlg(g){dialog('フォルダの名前',`<div class="rowx"><label>名前</label><input id="fnI" value="${esc(fName(g))}" style="flex:1"></div>`,()=>{const v=$('fnI').value.trim();if(v)structOp('フォルダの名前',()=>{fMembers(g).forEach(l=>l.gname=v)})},()=>{const i=$('fnI');i.focus();i.select()})}
+function fUngroup(g){structOp('フォルダを解く',()=>{fMembers(g).forEach(l=>{l.grp=null;l.gname=undefined})});fOpen.delete(g);fSave();hint('フォルダを解きました（中のレイヤーはそのまま残っています）')}
+function fMerge(g){const M=fMembers(g);if(!M.length)return;const nm=fName(g);structOp('フォルダを1枚にまとめる',()=>{const c=mk(art.w,art.h);const keep=layers;layers=M;compositeTo(g2(c),{raw:true});layers=keep;const nl=newLayer(nm,{cv:c});layers[layers.indexOf(M[M.length-1])]=nl;layers=layers.filter(l=>!M.includes(l));activeId=nl.id;if(layers[0].clip)layers[0].clip=false});hint(`「${nm}」を1枚にまとめました（隠していたレイヤーは入りません）。戻すときは「戻す」`)}
+function fDup(g){const M=fMembers(g);const ng=uid('g'),nm=fName(g)+' のコピー';structOp('フォルダを複製',()=>{const C=M.map(s=>{const l=lcopy(s);l.id=uid('ly');l.cv=cloneCv(s.cv);l.grp=ng;l.gname=nm;l.trace=false;return l});const i=layers.indexOf(M[M.length-1]);layers.splice(i+1,0,...C);activeId=C[C.length-1].id});fOpen.add(ng);fSave()}
+function fDel(g){const M=fMembers(g);if(M.length>=layers.length)return hint('全部のレイヤーが入っているので消せません');structOp('フォルダを消す',()=>{const i=layers.indexOf(M[0]);layers=layers.filter(l=>!M.includes(l));activeId=(layers[i]||layers[i-1]||layers[0]).id;if(layers[0].clip)layers[0].clip=false})}
+function unitAt(i,dir){/* i にあるレイヤーを含む「ひとまとまり」（フォルダ全部か、下の形＋クリップ）の [lo,hi] */const l=layers[i];if(l.grp){let lo=i,hi=i;while(lo>0&&layers[lo-1].grp===l.grp)lo--;while(hi<layers.length-1&&layers[hi+1].grp===l.grp)hi++;return[lo,hi]}let lo=i;while(lo>0&&layers[lo].clip)lo--;return[lo,groupEnd(layers[lo])]}
+function fMove(g,dir){const M=fMembers(g);const lo=layers.indexOf(M[0]),hi=layers.indexOf(M[M.length-1]);if(dir>0?hi>=layers.length-1:lo<=0)return;
+ structOp('フォルダの重ね順',()=>{const[ulo,uhi]=unitAt(dir>0?hi+1:lo-1);const rest=layers.filter(l=>!M.includes(l));const at=dir>0?rest.indexOf(layers[uhi])+1:rest.indexOf(layers[ulo]);rest.splice(at,0,...M);layers=rest;if(layers[0].clip)layers[0].clip=false})}
+function fMenu(g,x,y){popMenu(x,y,'📁 '+fName(g),[{label:'名前を変える',act:()=>fRenameDlg(g)},{label:fOpen.has(g)?'閉じる':'開く',act:()=>{fOpen.has(g)?fOpen.delete(g):fOpen.add(g);fSave();renderLayers()}},{label:'↑ 前面へ（フォルダごと）',act:()=>fMove(g,1)},{label:'↓ 背面へ（フォルダごと）',act:()=>fMove(g,-1)},{label:'複製',act:()=>fDup(g)},{label:'1枚にまとめる',act:()=>fMerge(g)},{label:'フォルダを解く（中は残す）',act:()=>fUngroup(g)},{label:'🗑 中身ごと消す',act:()=>fDel(g)}])}
+/* ＋📁：選んでいるレイヤー（＋クリップした影・光）を新しいフォルダに入れる。すでにフォルダの中なら、そのフォルダの上に出してから */
+function folderNew(){if(!art)return;if(textEdit)commitText();if(float)commitFloat();const a=act();if(!a||a.trace)return hint('なぞり用の画像はフォルダに入れられません');
+ const g=uid('g'),n=new Set(layers.filter(l=>l.gname).map(l=>l.grp)).size+1,nm='フォルダ '+n;
+ structOp('フォルダを作る',()=>{const[lo,hi]=(()=>{let i=layers.indexOf(a);while(i>0&&layers[i].clip)i--;return[i,groupEnd(layers[i])]})();const U=layers.slice(lo,hi+1);
+  if(a.grp){const old=fMembers(a.grp);if(old.length>U.length){const rest=layers.filter(l=>!U.includes(l));const top=old.filter(l=>!U.includes(l)).pop();rest.splice(rest.indexOf(top)+1,0,...U);layers=rest}}
+  U.forEach(l=>{l.grp=g;l.gname=nm})});fOpen.add(g);fSave();fNoOpen=true;renderLayers();fRenameInline(g);hint('フォルダを作りました。名前を入れて Enter。ほかのレイヤーは、一覧で引っぱってこのフォルダの中に落とすと入ります',7000)}
+$('folderNew').onclick=()=>folderNew();
+/* 一覧を押す */
+$('layers').addEventListener('click',e=>{if(lyDrag.on||performance.now()-lyDrag.end<250)return;const ey=e.target.closest('[data-eye]');if(ey){const l=byId(ey.dataset.eye);structOp(l.visible?'レイヤーを非表示':'レイヤーを表示',()=>{l.visible=!l.visible});return}
+ const fe=e.target.closest('[data-fe]');if(fe){const M=fMembers(fe.dataset.fe),v=!M.some(m=>m.visible);structOp(v?'フォルダを表示':'フォルダを非表示',()=>{M.forEach(m=>m.visible=v)});return}
+ const fa=e.target.closest('[data-fa]');if(fa){const g=fa.dataset.fa;fOpen.has(g)?fOpen.delete(g):fOpen.add(g);fSave();buildLayerList();return}
+ const fm=e.target.closest('[data-fm]');if(fm){const r=fm.getBoundingClientRect();fMenu(fm.dataset.fm,r.left-160,r.bottom);return}
+ if(e.target.closest('input'))return;
+ const f=e.target.closest('[data-f]');if(f){const p=fPick(f.dataset.f);if(p){if(textEdit)commitText();if(float)commitFloat();activeId=p.id;fNoOpen=true;renderLayers();if(tool==='move')renderOpts()}return}
+ const d=e.target.closest('[data-l]');if(d){if(textEdit)commitText();if(float)commitFloat();activeId=d.dataset.l;fNoOpen=true;renderLayers();if(tool==='move')renderOpts()}});
+$('layers').addEventListener('dblclick',e=>{const f=e.target.closest('[data-f]');if(f&&!e.target.closest('button')){fRenameInline(f.dataset.f);return}const d=e.target.closest('[data-l]');if(!d||e.target.closest('button'))return;const l=byId(d.dataset.l);const nm=d.querySelector('.nm');nm.innerHTML=`<input value="${esc(l.name)}">`;const inp=nm.querySelector('input');inp.focus();inp.select();const done=()=>{const v=inp.value.trim();if(v&&v!==l.name)structOp('レイヤー名の変更',()=>{l.name=v});else renderLayers()};inp.onblur=done;inp.onkeydown=k=>{k.stopPropagation();if(k.key==='Enter')inp.blur();if(k.key==='Escape'){inp.value=l.name;inp.blur()}}});
+$('layers').addEventListener('contextmenu',e=>{const f=e.target.closest('[data-f]');if(f){e.preventDefault();fMenu(f.dataset.f,e.clientX,e.clientY);return}const d=e.target.closest('[data-l]');if(!d)return;e.preventDefault();const l=byId(d.dataset.l);
+ popMenu(e.clientX,e.clientY,l.name,[{label:'名前を変える',act:()=>{d.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}))}},{label:'新しいフォルダに入れる',act:()=>{activeId=l.id;folderNew()}},...(l.grp?[{label:'フォルダから出す',act:()=>lyOut(l)}]:[]),{label:'複製',act:()=>{activeId=l.id;LA.dup()}},{label:'🗑 消す',act:()=>{activeId=l.id;LA.del()}}])});
+function lyOut(l){const g=l.grp;const M=fMembers(g);structOp('フォルダから出す',()=>{let i=layers.indexOf(l);while(i>0&&layers[i].clip)i--;const U=layers.slice(i,groupEnd(layers[i])+1);const rest=layers.filter(x=>!U.includes(x));const top=M.filter(x=>!U.includes(x)).pop();rest.splice(top?rest.indexOf(top)+1:rest.length,0,...U);U.forEach(x=>{x.grp=null;x.gname=undefined});layers=rest})}
+/* 一覧で引っぱって並べかえ・フォルダに入れる／出す（マウスは引くだけ。指・ペンは少し長押ししてから引く） */
+const lyDrag={on:false,end:0,src:null,tgt:null,t:0,x:0,y:0,pid:null,rows:null};
+$('layers').addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('button,input'))return;const r=e.target.closest('[data-l],[data-f]');if(!r)return;clearTimeout(lyDrag.t);
+ Object.assign(lyDrag,{src:r.dataset.f?{f:r.dataset.f}:{l:r.dataset.l},x:e.clientX,y:e.clientY,pid:e.pointerId,mouse:e.pointerType==='mouse',armed:e.pointerType==='mouse',el:r});
+ if(!lyDrag.mouse)lyDrag.t=setTimeout(()=>{lyDrag.armed=true;lyStart();try{navigator.vibrate&&navigator.vibrate(15)}catch(x){}},380)});
+function lyStart(){if(lyDrag.on||!lyDrag.src)return;lyDrag.on=true;lyDrag.el.classList.add('drag');try{lyDrag.el.setPointerCapture(lyDrag.pid)}catch(x){}}
+document.addEventListener('pointermove',e=>{if(!lyDrag.src||e.pointerId!==lyDrag.pid)return;const d=Math.hypot(e.clientX-lyDrag.x,e.clientY-lyDrag.y);
+ if(!lyDrag.on){if(!lyDrag.mouse&&d>10){clearTimeout(lyDrag.t);lyDrag.src=null;return}if(lyDrag.mouse&&d>6)lyStart();if(!lyDrag.on)return}
+ const W=$('layWrap').getBoundingClientRect();if(e.clientY<W.top+28)$('layWrap').scrollTop-=14;else if(e.clientY>W.bottom-28)$('layWrap').scrollTop+=14;
+ const el=document.elementFromPoint(W.left+W.width/2,Math.max(W.top+2,Math.min(W.bottom-2,e.clientY)));const r=el&&el.closest('#layers [data-l],#layers [data-f]');const L=$('dropLine');if(!r){L.style.display='none';lyDrag.tgt=null;return}
+ const b=r.getBoundingClientRect(),up=e.clientY<b.top+b.height/2;let pos=up?'above':'below';if(r.dataset.f&&!up&&fOpen.has(r.dataset.f)&&!lyDrag.src.f)pos='into';
+ lyDrag.tgt={row:r.dataset.f?{f:r.dataset.f}:{l:r.dataset.l},pos};L.className=pos==='into'?'into':'';L.style.display='block';L.style.left=b.left+'px';L.style.width=b.width+'px';
+ if(pos==='into'){L.style.top=b.top+'px';L.style.height=b.height+'px'}else{L.style.height='';L.style.top=(pos==='above'?b.top-2:b.bottom-1)+'px'}});
+document.addEventListener('touchmove',e=>{if(lyDrag.on)e.preventDefault()},{passive:false});
+function lyEnd(e){if(!lyDrag.src||(e&&e.pointerId!==lyDrag.pid))return;clearTimeout(lyDrag.t);const was=lyDrag.on;$('dropLine').style.display='none';if(lyDrag.el)lyDrag.el.classList.remove('drag');
+ if(was){lyDrag.end=performance.now();if(lyDrag.tgt&&e&&e.type==='pointerup')lyDrop(lyDrag.src,lyDrag.tgt)}lyDrag.on=false;lyDrag.src=null;lyDrag.tgt=null}
+document.addEventListener('pointerup',lyEnd);document.addEventListener('pointercancel',lyEnd);
+function lyDrop(src,tgt){const U0=src.f?fMembers(src.f):(()=>{const L=byId(src.l);if(!L)return[];if(L.clip)return[L];const i=layers.indexOf(L);return layers.slice(i,groupEnd(L)+1)})();if(!U0.length)return;
+ const T=tgt.row.l?byId(tgt.row.l):null;if(T&&U0.includes(T))return;if(tgt.row.f&&src.f===tgt.row.f)return;
+ const ctxName=g=>g?fName(g):undefined;
+ structOp(src.f?'フォルダの重ね順':'重ね順の変更',()=>{const U=U0;const rest=layers.filter(l=>!U.includes(l));let idx,ctx=null;const top=g=>rest.filter(l=>l.grp===g).pop(),bot=g=>rest.find(l=>l.grp===g);
+  if(tgt.row.f){const g=tgt.row.f;if(tgt.pos==='above'){idx=rest.indexOf(top(g))+1}else if(tgt.pos==='into'){idx=rest.indexOf(top(g))+1;ctx=g}else{idx=rest.indexOf(bot(g))}}
+  else{ctx=T.grp||null;if(src.f&&ctx){idx=tgt.pos==='above'?rest.indexOf(top(ctx))+1:rest.indexOf(bot(ctx));ctx=null}
+   else if(tgt.pos==='above'){idx=rest.indexOf(T)+1;if(!U[0].clip)while(idx<rest.length&&rest[idx].clip)idx++}
+   else{let j=rest.indexOf(T);if(!U[0].clip)while(j>0&&rest[j].clip)j--;idx=j}}
+  if(idx<0)idx=rest.length;const nm=ctxName(ctx);rest.splice(idx,0,...U);if(!src.f)U.forEach(l=>{if(l.trace)return;l.grp=ctx;l.gname=ctx?nm:undefined});layers=rest;if(layers[0].clip)layers[0].clip=false;if(ctx){fOpen.add(ctx);fSave()}})}
+/* ===== 小さいメニュー（絵の上の「ここにあるレイヤー」・フォルダのメニュー） ===== */
+let popT=0;function popMenu(x,y,title,items){const m=$('popM');m.innerHTML=(title?`<h4>${esc(title)}</h4>`:'')+items.map((it,i)=>`<button data-pi="${i}" class="${it.on?'on':''}">${it.sw?`<i style="background:${it.sw}"></i>`:''}<span>${it.html||esc(it.label)}</span></button>`).join('');m.style.display='block';m.scrollTop=0;
+ const r=m.getBoundingClientRect();m.style.left=Math.max(6,Math.min(innerWidth-r.width-6,x+10))+'px';m.style.top=Math.max(6,Math.min(innerHeight-r.height-6,y+10))+'px';popT=performance.now();
+ m.onclick=e=>{const b=e.target.closest('[data-pi]');if(!b||performance.now()-popT<(COARSE?350:120))return;closePop();items[+b.dataset.pi].act()}}
+function closePop(){$('popM').style.display='none';$('pickPin').style.display='none'}
+document.addEventListener('pointerdown',e=>{if($('popM').style.display==='block'&&!e.target.closest('#popM'))closePop()},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('popM').style.display==='block'){closePop();e.stopPropagation()}},true);
+/* 絵の上を右クリック（さわる画面は長押し）→ その場所に描いてあるレイヤーの一覧から選ぶ */
+function layerPickMenu(cx,cy){if(!art)return;const p=toDoc({clientX:cx,clientY:cy});const x=Math.floor(p.x),y=Math.floor(p.y);if(x<0||y<0||x>=art.w||y>=art.h)return;const hits=[];
+ for(let i=layers.length-1;i>=0;i--){const l=layers[i];if(!l.visible||l.trace)continue;let d=null;if(l._cv)d=g2(l._cv).getImageData(x,y,1,1).data;else if(l._sm){const m=l._sm,u=x-m.x,v=y-m.y;if(u>=0&&v>=0&&u<m.c.width&&v<m.c.height)d=g2(m.c).getImageData(u,v,1,1).data}if(d&&d[3]>24)hits.push({l,c:`rgb(${d[0]},${d[1]},${d[2]})`})}
+ if(!hits.length)return hint('ここには何も描いてありません');const pin=$('pickPin');pin.style.left=cx+'px';pin.style.top=cy+'px';pin.style.display='block';
+ popMenu(cx,cy,'ここにあるレイヤー（上から）',hits.slice(0,14).map(({l,c})=>({sw:c,on:l.id===activeId,html:`${l.grp?`<small>${esc(fName(l.grp))} ／ </small>`:''}${l.clip?'↳ ':''}${esc(l.name)}`,act:()=>selectLayer(l.id)})));$('pickPin').style.display='block'}
+const lpress={t:0,x:0,y:0};function lpCancel(){clearTimeout(lpress.t);lpress.t=0}
+/* ===== 右の欄の見出し（🎨 色／📚 レイヤー／🕘 ほか） ===== */
+let sideTab=LS.get('pd_sideTab','lay');const sideScroll={};
+function setSideTab(t,keep){if(!['col','lay','etc'].includes(t))t='lay';const S=$('side');if(t!==sideTab)sideScroll[sideTab]=S.scrollTop;const ch=t!==sideTab;sideTab=t;LS.set('pd_sideTab',t);
+ document.querySelectorAll('#side .panel[data-tab]').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));document.querySelectorAll('#sideTabs [data-st]').forEach(b=>b.classList.toggle('on',b.dataset.st===t));if(ch)S.scrollTop=sideScroll[t]||0}
+$('sideTabs').onclick=e=>{const b=e.target.closest('[data-st]');if(b)setSideTab(b.dataset.st)};setSideTab(sideTab);
+$('miniCol').onclick=e=>{const b=e.target.closest('[data-c]');if(b){setFg(b.dataset.c,true);return}if(e.target.closest('#curSw2'))setSideTab('col')};
 $('lBlend').onchange=e=>{const l=act();structOp('描画モード',()=>{l.blend=e.target.value})};
 let opBefore=null;$('lOp').oninput=e=>{const l=act();if(opBefore==null)opBefore=snap();l.opacity=+e.target.value/100;$('lOpV').textContent=e.target.value+'%';need()};
 $('lOp').onchange=()=>{if(opBefore){pushHist({type:'struct',name:'不透明度',before:opBefore,after:snap()});opBefore=null;markAll();renderLayers()}};
@@ -615,7 +743,7 @@ $('lLockA').onclick=()=>{const l=act();structOp('透明部分の保護',()=>{l.l
 $('lNoExp').onclick=()=>{const l=act();structOp('書き出しの対象',()=>{l.noExport=!l.noExport})};
 document.querySelector('.lbtns').onclick=e=>{const b=e.target.closest('[data-la]');if(b)LA[b.dataset.la]()};
 const LA={
- new(){structOp('新規レイヤー',()=>{const l=newLayer('レイヤー '+(layers.length+1));const i=layers.indexOf(act());layers.splice(i+1,0,l);activeId=l.id})},
+ new(){const a=act();structOp('新規レイヤー',()=>{const l=newLayer('レイヤー '+(layers.length+1));let i=layers.indexOf(a);if(a&&!a.clip)i=groupEnd(a);if(a&&a.grp&&!a.trace){l.grp=a.grp;l.gname=a.gname}layers.splice(i+1,0,l);activeId=l.id})},
  dup(){const s=act();structOp('レイヤーを複製',()=>{const l=lcopy(s);l.id=uid('ly');l.name=s.name+' のコピー';l.cv=cloneCv(s.cv);l.trace=false;layers.splice(layers.indexOf(s)+1,0,l);activeId=l.id})},
  del(){if(layers.length<=1)return hint('最後の1枚は消せません');const s=act();structOp('レイヤーを削除',()=>{const i=layers.indexOf(s);layers.splice(i,1);activeId=(layers[i]||layers[i-1]).id;if(layers[0].clip)layers[0].clip=false})},
  up(){const s=act();const i=layers.indexOf(s);if(i>=layers.length-1)return;structOp('重ね順の変更',()=>{layers.splice(i,1);layers.splice(i+1,0,s)})},
@@ -764,16 +892,16 @@ function flatDialog(){if(!art)return hint('先に絵を開いてください');i
    $('flLv').onchange=e=>{o.lv=+e.target.value;run()};$('flFit').onchange=e=>{o.fit=e.target.value}});
  window.__flatSet=c=>{img=c;run()}}
 async function flatBuild(A,img,o){const s=o.fit==='contain'?Math.min(art.w/img.width,art.h/img.height):Math.max(art.w/img.width,art.h/img.height);const rect={w:img.width*s,h:img.height*s};rect.x=(art.w-rect.w)/2;rect.y=(art.h-rect.h)/2;
- const grp=uid('g');const made=[];let gi=-1;for(const g of A.G){gi++;hint(`レイヤーを作っています… ${gi+1}/${A.G.length}`,60000);await new Promise(r=>setTimeout(r,0));const base=flatMask(A,i=>A.lab[i]===g.k,rect,g.base,gi===0);if(!base)continue;made.push(newLayer(g.name,{cv:base,grp}));
-  if(g.dark){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===0,rect,g.dark);if(m)made.push(newLayer(g.name+'：影',{cv:m,clip:true,grp}))}
-  if(g.light){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===2,rect,g.light);if(m)made.push(newLayer(g.name+'：光',{cv:m,clip:true,grp}))}}
+ const grp=uid('g');const made=[];let gi=-1;for(const g of A.G){gi++;hint(`レイヤーを作っています… ${gi+1}/${A.G.length}`,60000);await new Promise(r=>setTimeout(r,0));const base=flatMask(A,i=>A.lab[i]===g.k,rect,g.base,gi===0);if(!base)continue;made.push(newLayer(g.name,{cv:base,grp,gname:'写真の絵'}));
+  if(g.dark){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===0,rect,g.dark);if(m)made.push(newLayer(g.name+'：影',{cv:m,clip:true,grp,gname:'写真の絵'}))}
+  if(g.light){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===2,rect,g.light);if(m)made.push(newLayer(g.name+'：光',{cv:m,clip:true,grp,gname:'写真の絵'}))}}
  structOp('写真から平らな絵に',()=>{const at=layers.indexOf(act());let i=at;while(i+1<layers.length&&layers[i+1].clip)i++;layers.splice(i+1,0,...made);activeId=made[made.length-1].id});hint(`${made.length} 枚のレイヤーにしました（下から、面積の大きい物の色の順）`,5000)}
 
 /* ===== ヒストリー（戻す・やり直し） ===== */
 function snap(){return{w:art.w,h:art.h,bg:art.bg,activeId,layers:layers.map(lcopy)}}
 function restore(s){bump();const sized=s.w!==art.w||s.h!==art.h;art.w=s.w;art.h=s.h;art.bg=s.bg;layers=s.layers.map(lcopy);activeId=s.activeId;if(sized){allocTemps();SEL=null;selPath=null;fit();updKindTag()}}
 function pushHist(e){RC.mSeq++;if(!(e.type==='patch'&&e.lid===activeId)&&e.type!=='sel')bump();hist.splice(hpos);hist.push(e);hpos=hist.length;histBytes+=e.bytes||0;while(histBytes>HIST_MAX&&hist.length>2){const o=hist.shift();hpos--;histBytes-=o.bytes||0}renderHist();art.updatedAt=now();schedulePreview();scheduleSave()}
-function structOp(name,fn){if(!art)return;const before=snap();fn();const after=snap();pushHist({type:'struct',name,before,after,bytes:0});markAll();renderLayers();need()}
+function structOp(name,fn){if(!art)return;const before=snap();fn();fixFolders();const after=snap();pushHist({type:'struct',name,before,after,bytes:0});markAll();renderLayers();need()}
 function pushPatch(name,lid,x,y,w,h,meta){const l=byId(lid);x=Math.max(0,Math.floor(x));y=Math.max(0,Math.floor(y));w=Math.min(art.w-x,Math.ceil(w)+1);h=Math.min(art.h-y,Math.ceil(h)+1);if(w<=0||h<=0)return;
  const before=g2(BK).getImageData(x,y,w,h),after=g2(l.cv).getImageData(x,y,w,h);pushHist({type:'patch',name,lid,x,y,before,after,bytes:w*h*8,...(meta||{})});changedIds.add(lid);thumbLayers(lid)}
 function applyHist(e,dir){bump();if(e.type==='struct'){restore(e[dir]);markAll()}else if(e.type==='patch'){const l=byId(e.lid);if(l){g2(l.cv).putImageData(e[dir],e.x,e.y);if(e.textBefore!==undefined)l.text=dir==='before'?e.textBefore:e.textAfter;changedIds.add(l.id)}}else if(e.type==='sel'){setSelRaw(e[dir])}}
@@ -907,7 +1035,7 @@ let penPath=null;
 function penCurve(pts,closed){const n=pts.length,P=new Path2D();if(!n)return P;P.moveTo(pts[0].x,pts[0].y);const g=i=>closed?pts[(i+n)%n]:pts[Math.max(0,Math.min(n-1,i))];const segs=closed?n:n-1;
  /* 丸み：0%＝点どうしをまっすぐ結ぶ、100%＝ふつう、200%＝ふくらむ */const k=Math.max(0,(OPT.pen.rnd??100))/600;
  for(let i=0;i<segs;i++){const p0=g(i-1),p1=g(i),p2=g(i+1),p3=g(i+2);const c1=p1.c?p1:{x:p1.x+(p2.x-p0.x)*k,y:p1.y+(p2.y-p0.y)*k},c2=p2.c?p2:{x:p2.x-(p3.x-p1.x)*k,y:p2.y-(p3.y-p1.y)*k};P.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,p2.x,p2.y)}if(closed)P.closePath();return P}
-function penFill(path,name){let l=act();if(!l)return;if(OPT.pen.own){const nl=newLayer('形 '+(layers.filter(x=>/^形 \d+$/.test(x.name)).length+1));const at=l;structOp('新規レイヤー',()=>{let i=layers.indexOf(at);while(i+1<layers.length&&layers[i+1].clip)i++;layers.splice(i+1,0,nl);activeId=nl.id});l=nl}
+function penFill(path,name){let l=act();if(!l)return;if(OPT.pen.own){/* 名前に色の名前も付ける（一覧で見分けやすく）。選んでいるレイヤーがフォルダの中なら、同じフォルダに入る */const nl=newLayer('形 '+(layers.filter(x=>/^形 \d+/.test(x.name)).length+1)+'・'+(nameOf(fg)||'色'));const at=l;if(at.grp&&!at.trace){nl.grp=at.grp;nl.gname=at.gname}structOp('新規レイヤー',()=>{let i=layers.indexOf(at);while(i+1<layers.length&&layers[i+1].clip)i++;layers.splice(i+1,0,nl);activeId=nl.id});l=nl}
  if(l.trace){hint('なぞり用の画像には塗れません。上のレイヤーを選んでください');return}snapBK(l.id);stroke={lid:l.id,erase:false,op:1,bb:[0,0,art.w,art.h]};const x=g2(SC);x.clearRect(0,0,art.w,art.h);x.fillStyle=fg;x.fill(path);commitSC(name,true);stroke=null;need()}
 function penCommit(){if(!penPath)return;const pts=penPath.pts;penPath=null;if(pts.length<3){hint('形を塗るには点が3つ以上いります');renderOpts();need();return}penFill(penCurve(pts,true),'形ペン');renderOpts()}
 function penCancel(){penPath=null;renderOpts();need()}
@@ -929,8 +1057,8 @@ function drawPenUI(c){const lw=1/V.s;c.save();c.lineWidth=1.5*lw;
  c.restore()}
 function lift(dup){const l=act();const region=SEL;const G0=dup?[]:grpOf(l);const G=grpOn?G0:[];
  /* まとめて動かせないときは、理由を出す（気づかずに1枚だけ動かしてしまわないように） */
- if(!dup&&G0.length>1&&!grpOn)hint('このレイヤーだけ動かします。取り込んだ絵をまとめて動かすには、上の帯の「🔗 まとめて：切」を押して「入」に');
- else if(!dup&&!l.grp&&layers.some(x=>x.grp)&&lift.told!==art.id&&(lift.told=art.id))hint(`今選んでいるのは「${l.name}」です。取り込んだ絵を動かすには、右のレイヤーの一覧で 🔗 の付いたレイヤーを押してから`);
+ if(!dup&&G0.length>1&&!grpOn)hint('このレイヤーだけ動かします。フォルダごとまとめて動かすには、上の帯の「🔗 まとめて：切」を押して「入」に');
+ else if(!dup&&!l.grp&&layers.some(x=>x.grp)&&lift.told!==art.id&&(lift.told=art.id))hint(`今選んでいるのは「${l.name}」です。フォルダごと動かすには、右のレイヤーの一覧で 📁 の行を押してから`);
  if(G.length>1){   // 組：全部の描いてある範囲を合わせた枠で、いっしょに持ち上げる（選択範囲があれば、全部のレイヤーのその中身だけ）
   const part=m=>{if(!region)return m.cv;const c=cloneCv(m.cv);const x=g2(c);x.globalCompositeOperation='destination-in';x.drawImage(region,0,0);return c};const P=new Map(G.map(m=>[m,part(m)]));
   let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const m of G){const b=maskBBox(P.get(m));if(!b)continue;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.w);y1=Math.max(y1,b.y+b.h)}
@@ -974,7 +1102,7 @@ function hitFloat(p){const tol=14/V.s;for(const h of floatHandles())if(Math.hypo
 function startXform(){if(!art||float)return;if(textEdit)commitText();if(act().trace&&false)return;if(!lift(false))return;setTool('move');renderOpts();need()}
 ACT.xform=startXform;
 ACT.grpT=()=>{if(float)return;grpOn=!grpOn;LS.set('pd_grp',grpOn?'1':'0');renderOpts();hint(grpOn?'取り込んだレイヤーを、いっしょに動かします':'このレイヤーだけ動かします')};
-ACT.grpMake=()=>{if(!art)return;const vs=layers.filter(l=>l.visible&&!l.trace);if(vs.length<2)return hint('見えているレイヤーが2枚以上いります');const g=uid('g');structOp('いっしょに動かす組にする',()=>{vs.forEach(l=>l.grp=g)});renderOpts();hint(`見えている ${vs.length} 枚を、いっしょに動かす組にしました`)};
+ACT.grpMake=()=>{if(!art)return;const vs=layers.filter(l=>l.visible&&!l.trace);if(vs.length<2)return hint('見えているレイヤーが2枚以上いります');const g=uid('g');structOp('いっしょに動かす組にする',()=>{vs.forEach(l=>{l.grp=g;l.gname='組'})});renderOpts();hint(`見えている ${vs.length} 枚を、1つのフォルダ（いっしょに動く）にしました。並んでいないレイヤーは、一覧では別々のフォルダに見えます`)};
 ACT.grpFree=()=>{const l=act();if(!l||!l.grp)return hint('このレイヤーは組に入っていません');const g=l.grp;structOp('組を解く',()=>{layers.forEach(x=>{if(x.grp===g)x.grp=null})});renderOpts();hint('組を解きました')};
 function commitFloat(){if(!float)return;const f=float;const l=byId(f.lid);const c=cloneCv(f.base);drawFloat(g2(c));const mo=(f.more||[]).map(m=>{const cc=cloneCv(m.base);drawFloat(g2(cc),m.src);return[byId(m.lid),cc]}).filter(x=>x[0]);float=null;structOp(f.dup?'複製して移動':f.name+(mo.length?`（${mo.length+1}枚まとめて）`:''),()=>{l.cv=c;l.text=null;for(const[ml,cc]of mo){ml.cv=cc;ml.text=null}});if(f.hadSel){SEL=null;selPath=null}renderOpts();need()}
 function cancelFloat(){float=null;renderOpts();need()}
@@ -1049,10 +1177,11 @@ const SHAPEN={rect:'長方形',round:'角丸長方形',ellipse:'楕円',line:'�
 view.addEventListener('pointerdown',e=>{if(!art)return;
  /* 手のひら・大きく当たった指は無視する（勝手に線が入らないように） */if(e.pointerType==='touch'&&(e.width>42||e.height>42))return;
  try{view.setPointerCapture(e.pointerId)}catch(x){}ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,t:e.pointerType});if(e.pointerType==='pen'&&!penSeen){penSeen=true;if(!fingerPan){fingerPan=true;LS.set('pd_fingerPan','1');renderOpts();hint('ペンで描いたので、これからは指では描かず、画面を動かすだけにします（上の帯の「✋ 指」で切りかえ）',6000)}}
+ /* 指で長押し → ここにあるレイヤーの一覧（ペンは右ボタン。ペンで止まりながら描くのをじゃましないよう、指だけ） */lpCancel();if(e.pointerType==='touch'&&ptrs.size===1&&!['pen','text','crop'].includes(tool)){lpress.x=e.clientX;lpress.y=e.clientY;lpress.t=setTimeout(()=>{lpress.t=0;if(ptrs.size!==1)return;abortStroke();if(drag&&drag.kind==='moveL'&&float)cancelFloat();drag=null;pan=null;view.style.cursor='';layerPickMenu(lpress.x,lpress.y)},600)}
  if(ptrs.size===2&&[...ptrs.values()].every(p=>p.t==='touch')){abortStroke();if(drag&&(drag.kind==='grad'||drag.kind==='shape')){g2(SC).clearRect(0,0,art.w,art.h);stroke=null}drag=null;pan=null;const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,s:V.s,tx:V.tx,ty:V.ty,t0:now(),moved:0};need();return}
  if(ptrs.size>1)return;
  if(tool==='hand'||spaceDown||e.button===1||(fingerPan&&e.pointerType==='touch')){pan={x:e.clientX,y:e.clientY,tx:V.tx,ty:V.ty};view.style.cursor='grabbing';return}
- if(e.button===2)return;
+ if(e.button===2){layerPickMenu(e.clientX,e.clientY);return}
  const p=toDoc(e);const alt=e.altKey||altDown;
  if(tool==='zoom'){const r=view.getBoundingClientRect();zoomAt(alt?1/1.6:1.6,e.clientX-r.left,e.clientY-r.top);return}
  if((tool==='brush'||tool==='bucket'||tool==='grad'||tool==='shape')&&alt){doPick(p);return}
@@ -1061,7 +1190,7 @@ view.addEventListener('pointerdown',e=>{if(!art)return;
  if(tool==='pick'){doPick(p);return}
  if(tool==='bucket'){doBucket(p);return}
  if(tool==='grad'){const l=act();if(l.trace)return hint('なぞり用の画像には描けません');snapBK(l.id);stroke={lid:l.id,erase:false,op:OPT.grad.op/100,bb:[0,0,art.w,art.h],id:e.pointerId};drag={kind:'grad',a:p,b:p};drawGrad(p,p);need();return}
- if(tool==='shape'){let l=act();if(OPT.shape.newL){const nl=newLayer(SHAPEN[OPT.shape.type]);const at=l;structOp('新規レイヤー',()=>{layers.splice(layers.indexOf(at)+1,0,nl);activeId=nl.id});l=nl}if(l.trace)return hint('なぞり用の画像には描けません');snapBK(l.id);stroke={lid:l.id,erase:false,op:1,bb:[0,0,art.w,art.h],id:e.pointerId};drag={kind:'shape',a:p,b:p};return}
+ if(tool==='shape'){let l=act();if(OPT.shape.newL){const nl=newLayer(SHAPEN[OPT.shape.type]);const at=l;if(at.grp&&!at.trace){nl.grp=at.grp;nl.gname=at.gname}structOp('新規レイヤー',()=>{layers.splice(layers.indexOf(at)+1,0,nl);activeId=nl.id});l=nl}if(l.trace)return hint('なぞり用の画像には描けません');snapBK(l.id);stroke={lid:l.id,erase:false,op:1,bb:[0,0,art.w,art.h],id:e.pointerId};drag={kind:'shape',a:p,b:p};return}
  if(tool==='sel'){const mode=e.shiftKey&&alt?'int':e.shiftKey?'add':alt?'sub':OPT.sel.mode;const sp0=snapPt(p);drag={kind:'marquee',shape:OPT.sel.shape,a:sp0,aLines:snapLines.slice(),rect:{x:sp0.x,y:sp0.y,w:0,h:0},mode};return}
  if(tool==='lasso'){const mode=e.shiftKey&&alt?'int':e.shiftKey?'add':alt?'sub':OPT.lasso.mode;drag={kind:'lasso',pts:[p],mode};return}
  if(tool==='wand'){const o=OPT.wand;const mode=e.shiftKey?'add':alt?'sub':OPT.sel.mode;const m=regionMask(p.x,p.y,o.tol,o.cont,o.all);if(m)applySel(m,mode,null,'自動選択');return}
@@ -1072,7 +1201,7 @@ view.addEventListener('pointerdown',e=>{if(!art)return;
   {const b0=moveBox();if(OPT.move.pickL&&!SEL&&!(b0&&hitMoveHandle(b0,p))){const pk=pickLayerAt(p);if(pk&&pk.id!==activeId){activeId=pk.id;renderLayers();MB.k=''}}}
   {const b=moveBox();const hh=b&&!alt&&hitMoveHandle(b,p);if(hh){if(!lift(false))return;float.name='大きさを変える';drag={kind:'xf',fromMove:true,h:{type:'scale',i:hh.i,j:hh.j},start:p,orig:{cx:float.cx,cy:float.cy,sx:float.sx,sy:float.sy,rot:float.rot},a0:0};renderOpts();need();return}}
   if(!lift(alt))return;float.name='移動';drag={kind:'moveL',start:p,orig:{cx:float.cx,cy:float.cy},alt};need();return}});
-view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt.x=e.clientX;pt.y=e.clientY}
+view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt.x=e.clientX;pt.y=e.clientY}if(lpress.t&&Math.hypot(e.clientX-lpress.x,e.clientY-lpress.y)>10)lpCancel();
  if(gest&&ptrs.size>=2){const[a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=view.getBoundingClientRect();const s=clamp(gest.s*d/gest.d,0.02,32);const dx=(gest.cx-r.left-gest.tx)/gest.s,dy=(gest.cy-r.top-gest.ty)/gest.s;V.s=s;V.tx=cx-r.left-dx*s;V.ty=cy-r.top-dy*s;gest.moved=Math.max(gest.moved,Math.abs(d-gest.d),Math.hypot(cx-gest.cx,cy-gest.cy));need();return}
  if(pan){V.tx=pan.tx+e.clientX-pan.x;V.ty=pan.ty+e.clientY-pan.y;need();return}
  if(e.pointerType!=='touch'&&(tool==='brush'||tool==='eraser')){cursor=toDoc(e);clearTimeout(cursorFlash.t)}else if(e.pointerType==='touch')cursor=null;
@@ -1115,7 +1244,7 @@ function ptrEnd(e){ptrs.delete(e.pointerId);
  else if(d.kind==='xf'&&d.fromMove&&float){/* 移動の道具のつまみで大きさを変えたときは、離したらそのまま決める（移動と同じ） */if(Math.abs(float.sx-d.orig.sx)<1e-3&&Math.abs(float.sy-d.orig.sy)<1e-3){float=null;renderOpts();need();return}commitFloat();renderOpts()}
  else if(d.kind==='crop'){if(!crop||crop.w<4||crop.h<4)crop=null;renderOpts()}
  need()}
-view.addEventListener('pointerup',ptrEnd);view.addEventListener('pointercancel',ptrEnd);
+view.addEventListener('pointerup',e=>{lpCancel();ptrEnd(e)});view.addEventListener('pointercancel',e=>{lpCancel();ptrEnd(e)});
 view.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch'){cursor=null;need()}});
 view.addEventListener('contextmenu',e=>e.preventDefault());
 view.addEventListener('dblclick',()=>{if(tool==='hand')fit()});
@@ -1127,7 +1256,7 @@ function cursorFlash(){const r=$('stage').getBoundingClientRect();cursor={x:(r.w
 document.addEventListener('keydown',e=>{if(e.key==='Alt')altDown=true;if(e.target.closest('input,textarea,select')||document.querySelector('dialog[open]'))return;const m=e.metaKey||e.ctrlKey,k=e.key.toLowerCase();
  const run=f=>{e.preventDefault();f()};
  if(m){if(k==='z')return run(e.shiftKey?redo:undo);if(k==='y')return run(redo);if(k==='t')return run(startXform);if(k==='a')return run(ACT.selAll);if(k==='d')return run(ACT.deselect);if(k==='i'&&e.shiftKey)return run(ACT.selInv);if(k==='i')return run(()=>openAdj('inv'));if(k==='u'&&e.shiftKey)return run(()=>openAdj('desat'));if(k==='u')return run(()=>openAdj('hs'));if(k==='l')return run(()=>openAdj('lv'));if(k==='b')return run(()=>openAdj('cb'));
-  if(k==='j')return run(()=>{if(SEL){ACT.copy();ACT.paste()}else LA.dup()});if(k==='n'&&e.shiftKey)return run(LA.new);if(k==='e'&&e.shiftKey)return run(LA.mergeVis);if(k==='e')return run(LA.merge);if(k==='g'&&e.altKey)return run(LA.clip);
+  if(k==='j')return run(()=>{if(SEL){ACT.copy();ACT.paste()}else LA.dup()});if(k==='n'&&e.shiftKey)return run(LA.new);if(k==='e'&&e.shiftKey)return run(LA.mergeVis);if(k==='e')return run(LA.merge);if(k==='g'&&e.altKey)return run(LA.clip);if(k==='g'&&!e.shiftKey)return run(folderNew);
   if(k==='c')return run(ACT.copy);if(k==='x')return run(ACT.cut);if(k==='v')return run(ACT.paste);if(k==='s')return run(()=>{flushSave(true);hint('保存しました')});if(k==='0')return run(fit);if(k==='1')return run(zoom100);if(k==='='||k==='+'||k===';')return run(()=>zoomAt(1.25));if(k==='-')return run(()=>zoomAt(0.8));if(k===']')return run(LA.up);if(k==='[')return run(LA.down);
   if(e.key==='Backspace'||e.key==='Delete')return run(ACT.fillBg);return}
  if(!art)return;
@@ -1211,7 +1340,7 @@ const MENUS={
  'ファイル':[['新規・作品一覧…',()=>openGal()],['画像・写真を開く（新しいレイヤーに）…',()=>pickFile('layer')],['前に描いた絵から取り込む（レイヤーとして）…',()=>openGal('pick')],['なぞり用の画像を置く…',()=>pickFile('trace')],['写真を Kurzgesagt 風の絵にする…',()=>flatDialog()],['紙の絵を線として取り込む…',()=>pickFile('lines')],['PSD を開く…',()=>pickFile('psd')],'-',['保存',()=>{flushSave(true);hint('保存しました')},CMD+'S'],['PNG で書き出す',()=>exportImg('png')],['JPEG で書き出す',()=>exportImg('jpeg')],['PSD で書き出す（Photoshop・アイビス用）',()=>exportPSD()]],
  '編集':[['取り消し',undo,CMD+'Z'],['やり直し',redo,'⇧'+CMD+'Z'],'-',['カット',ACT.cut,CMD+'X'],['コピー',ACT.copy,CMD+'C'],['ペースト',ACT.paste,CMD+'V'],['消去',()=>ACT.clear(),'Delete'],'-',['描画色で塗りつぶし',ACT.fillFg,'⌥Delete'],['背景色で塗りつぶし',ACT.fillBg,CMD+'Delete'],['境界線を描く…',ACT.strokeSel],'-',['自由変形',startXform,CMD+'T'],['曲げる（ワープ）',()=>ACT.warpStart()],['左右に反転（レイヤー）',ACT.flipH],['上下に反転（レイヤー）',ACT.flipV]],
  'イメージ':[{h:'色調補正'},['明るさ・コントラスト…',()=>openAdj('bc')],['レベル補正…',()=>openAdj('lv'),CMD+'L'],['色相・彩度…',()=>openAdj('hs'),CMD+'U'],['カラーバランス…',()=>openAdj('cb'),CMD+'B'],['彩度を下げる',()=>openAdj('desat'),'⇧'+CMD+'U'],['階調の反転',()=>openAdj('inv'),CMD+'I'],['2階調化…',()=>openAdj('th')],['ポスタリゼーション…',()=>openAdj('post')],'-',['画像解像度…',()=>ACT.imgSize()],['カンバスサイズ…',()=>ACT.canvasSize()],['選択範囲で切り抜き',ACT.cropSel],'-',['画像の回転 90°（時計回り）',ACT.rot90],['画像の回転 90°（反時計回り）',ACT.rot270],['画像の回転 180°',ACT.rot180],['カンバスを左右に反転',ACT.cflipH],['カンバスを上下に反転',ACT.cflipV],'-',['背景（紙）の色…',()=>bgDialog()]],
- 'レイヤー':[['新規レイヤー',()=>LA.new(),'⇧'+CMD+'N'],['レイヤーを複製',()=>LA.dup(),CMD+'J'],['レイヤーを削除',()=>LA.del()],'-',['クリッピングマスクを作成／解除',()=>LA.clip(),'⌥'+CMD+'G'],['重ね順：前面へ',()=>LA.up(),CMD+']'],['重ね順：背面へ',()=>LA.down(),CMD+'['],'-',['下のレイヤーと結合',()=>LA.merge(),CMD+'E'],['表示レイヤーを結合',()=>LA.mergeVis(),'⇧'+CMD+'E'],['画像を統合',()=>LA.flatten()],'-',['見えているレイヤーを、いっしょに動かす組にする',()=>ACT.grpMake()],['組を解く',()=>ACT.grpFree()],'-',['周りを暗くする（ビネット）',()=>addVignette()],['影のレイヤーを足す（紫がかった紺・薄め）',()=>addShade('dark')],['光のレイヤーを足す（白・薄め）',()=>addShade('light')],['形に沿って明暗を付ける…',()=>autoShade()]],
+ 'レイヤー':[['新規レイヤー',()=>LA.new(),'⇧'+CMD+'N'],['レイヤーを複製',()=>LA.dup(),CMD+'J'],['レイヤーを削除',()=>LA.del()],'-',['クリッピングマスクを作成／解除',()=>LA.clip(),'⌥'+CMD+'G'],['重ね順：前面へ',()=>LA.up(),CMD+']'],['重ね順：背面へ',()=>LA.down(),CMD+'['],'-',['下のレイヤーと結合',()=>LA.merge(),CMD+'E'],['表示レイヤーを結合',()=>LA.mergeVis(),'⇧'+CMD+'E'],['画像を統合',()=>LA.flatten()],'-',['選んでいるレイヤーを新しいフォルダに入れる',()=>folderNew(),CMD+'G'],['フォルダから出す',()=>{const l=act();if(l&&l.grp)lyOut(l);else hint('このレイヤーはフォルダに入っていません')}],['フォルダを解く',()=>ACT.grpFree()],['見えているレイヤーを全部1つのフォルダに',()=>ACT.grpMake()],'-',['周りを暗くする（ビネット）',()=>addVignette()],['影のレイヤーを足す（紫がかった紺・薄め）',()=>addShade('dark')],['光のレイヤーを足す（白・薄め）',()=>addShade('light')],['形に沿って明暗を付ける…',()=>autoShade()]],
  '選択範囲':[['すべてを選択',ACT.selAll,CMD+'A'],['選択を解除',ACT.deselect,CMD+'D'],['選択範囲を反転',ACT.selInv,'⇧'+CMD+'I'],'-',['拡張…',()=>numDlg('選択範囲を拡張','拡張量',8,v=>morphSel(v,true,'選択範囲を拡張'))],['縮小…',()=>numDlg('選択範囲を縮小','縮小量',8,v=>morphSel(v,false,'選択範囲を縮小'))],['境界をぼかす…',()=>numDlg('境界をぼかす','ぼかしの半径',10,v=>featherSel(v))],['レイヤーの不透明部分を選択',()=>applySel(cloneCv(act().cv),'new',null,'不透明部分を選択')]],
  'フィルター':[['ぼかし（ガウス）…',()=>openAdj('blur')],['アンシャープマスク…',()=>openAdj('sharp')],['ノイズを加える…',()=>openAdj('noise')],['モザイク…',()=>openAdj('mosaic')]],
  '表示':[['ズームイン',()=>zoomAt(1.25),CMD+'+'],['ズームアウト',()=>zoomAt(0.8),CMD+'-'],['画面サイズに合わせる',fit,CMD+'0'],['100%',zoom100,CMD+'1'],['ガイドの表示／非表示',()=>ACT.guide()],['なぞる画像を上に透かす／後ろに戻す',()=>toggleTraceTop(),'⇧T'],['指で描く／指は画面を動かすだけ',()=>ACT.fingerT()],'-',{h:'構図の線'},['なし',()=>{comp='none';LS.set('pd_comp',comp);renderOpts();need()}],['中央',()=>{comp='center';LS.set('pd_comp',comp);renderOpts();need()}],['三分割',()=>{comp='thirds';LS.set('pd_comp',comp);renderOpts();need()}],['黄金比',()=>{comp='golden';LS.set('pd_comp',comp);renderOpts();need()}],['全部',()=>{comp='all';LS.set('pd_comp',comp);renderOpts();need()}],['吸着のオン／オフ',()=>ACT.snapT()]]};
@@ -1312,7 +1441,7 @@ async function startNew(kind){await openArt(newArt(kind));OPT.brush.size=({icon:
 function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(function go(){if(busyNow()){saveT=setTimeout(go,400);return}flushSave(false)},900);clearTimeout(upT);upT=setTimeout(()=>upload(),600000)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
-const META=l=>({id:l.id,grp:l.grp||undefined,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text,blur:l.blur||undefined,glow:l.glow||undefined});
+const META=l=>({id:l.id,grp:l.grp||undefined,gname:l.grp&&l.gname||undefined,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text,blur:l.blur||undefined,glow:l.glow||undefined});
 let saving=null;
 // 保存：レイヤーごとに「版（v）」と「まだ送っていない印（up）」を付けて覚える（ページを開き直しても、送り残しを忘れない）
 async function flushSave(alsoUp){if(!art)return;if(saving)await saving;saving=(async()=>{const old=await dbGet(art.id);const om=new Map(((old&&old.layerData)||[]).map(d=>[d.id,d]));const layerData=[];
@@ -1379,7 +1508,7 @@ function placeOf(rec,fit){const s=fit==='in'?Math.min(art.w/rec.w,art.h/rec.h):f
 function importedLayers(rec,Ls,fit,flat){const P=placeOf(rec,fit);const put=(c,bm)=>{c.imageSmoothingQuality='high';c.drawImage(bm,P.x,P.y,rec.w*P.s,rec.h*P.s)};
  if(flat){const l=newLayer((rec.name||'絵')+'（まとめ）');const c=g2(l.cv);for(const{meta,bm}of Ls){if(meta.visible===false||meta.trace)continue;c.globalAlpha=meta.opacity??1;c.globalCompositeOperation=meta.blend||'source-over';put(c,bm)}c.globalAlpha=1;c.globalCompositeOperation='source-over';return[l]}
  const grp=Ls.filter(x=>!x.meta.trace).length>1?uid('g'):null;
- return Ls.map(({meta,bm})=>{const l=newLayer(meta.name||'レイヤー',{grp:meta.trace?null:grp,opacity:meta.opacity??1,blend:meta.blend||'source-over',visible:meta.visible!==false,lockAlpha:!!meta.lockAlpha,clip:!!meta.clip,blur:+meta.blur||0,glow:+meta.glow||0,noExport:!!meta.noExport,trace:!!meta.trace});put(g2(l.cv),bm);return l})}
+ return Ls.map(({meta,bm})=>{const l=newLayer(meta.name||'レイヤー',{grp:meta.trace?null:grp,gname:grp&&!meta.trace?(rec.name||'取り込んだ絵'):undefined,opacity:meta.opacity??1,blend:meta.blend||'source-over',visible:meta.visible!==false,lockAlpha:!!meta.lockAlpha,clip:!!meta.clip,blur:+meta.blur||0,glow:+meta.glow||0,noExport:!!meta.noExport,trace:!!meta.trace});put(g2(l.cv),bm);return l})}
 /* ===== 素材の棚（作り手・2026-11-20「よく使う素材は保存できるように」） =====
  素材＝種類「素材」の絵（arts の kind:'part'）。ふつうの絵と同じ仕組みで端末に保存し、GitHub に送るので、ほかの端末でも使える。
  保存：選んだレイヤー（＋クリップした影・光／🔗の組）を、描いてある所だけに切り詰めて新しい素材にする（選択範囲があればその中だけ）。
