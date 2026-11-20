@@ -75,4 +75,6 @@ await E(()=>undo());await chk('move scale undo');await E(()=>setTool('brush'));
 await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;setTool('move');renderLayers();ACT.warpStart()});await chk('warp start');
 {const q=await pg.evaluate(()=>{const P=float.warp.P;const c=warpAt(P,.5,.5);const r=view.getBoundingClientRect();return{x:r.left+V.tx+c.x*V.s,y:r.top+V.ty+c.y*V.s}});await pg.mouse.move(q.x,q.y);await pg.mouse.down();await pg.mouse.move(q.x+30,q.y+40,{steps:4});await chk('warp drag');await pg.mouse.up()}
 await E(()=>ACT.xfOk());await chk('warp ok');await E(()=>undo());await chk('warp undo');await E(()=>setTool('brush'));
+// 形ペン（2026-11-20）
+await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace).id;setTool('pen');renderLayers();penPath={pts:[{x:300,y:300,c:false},{x:700,y:250,c:false},{x:800,y:600,c:true},{x:350,y:650,c:false}],lastI:-1,lastT:0};need()});await chk('pen preview');await E(()=>penCommit());await chk('pen fill');await E(()=>undo());await chk('pen undo');await E(()=>setTool('brush'));
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();

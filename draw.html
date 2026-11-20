@@ -235,7 +235,7 @@ let art=null,layers=[],activeId=null;
 const act=()=>layers.find(l=>l.id===activeId)||layers[layers.length-1];
 const byId=id=>layers.find(l=>l.id===id);
 let tool=LS.get('pd_tool','brush');
-const OPT0={brush:{tone:'0',size:16,hard:100,op:100,flow:100,smooth:4,pSize:1,pOp:0,line:0,snapA:1},eraser:{size:40,hard:100,op:100,flow:100,smooth:2,pSize:1,pOp:0,line:0,snapA:1},bucket:{tol:32,cont:1,all:1,op:100,gap:3,spread:2},grad:{type:'linear',mode:'fgbg',op:100,rev:0},wand:{tol:32,cont:1,all:0},sel:{mode:'new',shape:'rect'},lasso:{mode:'new'},shape:{type:'rect',fill:1,stroke:0,sw:12,newL:1},text:{font:'Zen Maru Gothic|900',size:120,edge:'0',align:'center',warp:'none',bend:40},crop:{},move:{},pick:{},hand:{},zoom:{}};
+const OPT0={pen:{newL:0,sm:4},brush:{tone:'0',size:16,hard:100,op:100,flow:100,smooth:4,pSize:1,pOp:0,line:0,snapA:1},eraser:{size:40,hard:100,op:100,flow:100,smooth:2,pSize:1,pOp:0,line:0,snapA:1},bucket:{tol:32,cont:1,all:1,op:100,gap:3,spread:2},grad:{type:'linear',mode:'fgbg',op:100,rev:0},wand:{tol:32,cont:1,all:0},sel:{mode:'new',shape:'rect'},lasso:{mode:'new'},shape:{type:'rect',fill:1,stroke:0,sw:12,newL:1},text:{font:'Zen Maru Gothic|900',size:120,edge:'0',align:'center',warp:'none',bend:40},crop:{},move:{},pick:{},hand:{},zoom:{}};
 const OPT=(()=>{let s={};try{s=JSON.parse(LS.get('pd_opt','{}')||'{}')}catch(e){}const o={};for(const k in OPT0)o[k]={...OPT0[k],...(s[k]||{})};return o})();
 const saveOpt=()=>LS.set('pd_opt',JSON.stringify(OPT));
 if(LS.get('pd_bucket_v2','')!=='1'){OPT.bucket.all=1;OPT.bucket.gap=OPT.bucket.gap??3;OPT.bucket.spread=OPT.bucket.spread??2;LS.set('pd_bucket_v2','1');saveOpt()}
@@ -252,7 +252,7 @@ let stroke=null,float=null,adj=null,textEdit=null,crop=null,drag=null;
 let changedIds=new Set(),saveT=null,upT=null;
 
 /* ===== 道具の一覧 ===== */
-const TOOLS=[['move','✥','移動','V'],['sel','⬚','選択','M'],['lasso','➰','なげなわ','L'],['wand','✦','自動選択','W'],['crop','⌗','切り抜き','C'],['pick','⦿','スポイト','I'],null,['brush','✎','ブラシ','B'],['eraser','⌫','消しゴム','E'],['bucket','◩','塗りつぶし','G'],['grad','▤','グラデ','⇧G'],null,['text','T','文字','T'],['shape','▭','図形','U'],null,['hand','✋','手のひら','H'],['zoom','🔍','ズーム','Z']];
+const TOOLS=[['move','✥','移動','V'],['sel','⬚','選択','M'],['lasso','➰','なげなわ','L'],['wand','✦','自動選択','W'],['crop','⌗','切り抜き','C'],['pick','⦿','スポイト','I'],null,['brush','✎','ブラシ','B'],['pen','✒','形ペン','P'],['eraser','⌫','消しゴム','E'],['bucket','◩','塗りつぶし','G'],['grad','▤','グラデ','⇧G'],null,['text','T','文字','T'],['shape','▭','図形','U'],null,['hand','✋','手のひら','H'],['zoom','🔍','ズーム','Z']];
 function renderTools(){$('tools').innerHTML=TOOLS.map(t=>t?`<button class="tb" data-tool="${t[0]}" title="${t[2]} (${t[3]})">${t[1]}<small>${t[2]}</small></button>`:'<div class="tsep"></div>').join('')+
  `<div class="tsep"></div><button class="tb" id="undoTb" title="取り消し ${CMD}Z">↶<small>戻す</small></button><button class="tb" id="redoTb" title="やり直し ⇧${CMD}Z">↷<small>進む</small></button><button class="tb" id="fitTb" title="画面サイズ ${CMD}0">⤢<small>全体</small></button><div id="fgbg"><button class="fg" id="fgSw" title="描画色"></button><button class="bg" id="bgSw" title="背景色"></button><button class="swap" id="swapC" title="入れ替え X">⇄</button><button class="def" id="defC" title="初期設定 D">◩</button></div><input type="color" id="fgIn" style="position:absolute;opacity:0;width:0;height:0"><input type="color" id="bgIn" style="position:absolute;opacity:0;width:0;height:0">`;
  $('tools').onclick=e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool)};
@@ -260,7 +260,7 @@ function renderTools(){$('tools').innerHTML=TOOLS.map(t=>t?`<button class="tb" d
  $('fgSw').onclick=()=>{$('fgIn').value=fg;$('fgIn').click()};$('bgSw').onclick=()=>{$('bgIn').value=bg;$('bgIn').click()};
  $('fgIn').oninput=e=>setFg(e.target.value,true);$('fgIn').onchange=e=>setFg(e.target.value);$('bgIn').oninput=e=>{bg=e.target.value;LS.set('pd_bg',bg);renderColors()};
  $('swapC').onclick=()=>{[fg,bg]=[bg,fg];LS.set('pd_fg',fg);LS.set('pd_bg',bg);renderColors()};$('defC').onclick=()=>{fg='#000000';bg='#ffffff';LS.set('pd_fg',fg);LS.set('pd_bg',bg);renderColors()}}
-function setTool(t){if(!OPT[t])t='brush';if(t!==tool){if(textEdit)commitText();if(crop&&t!=='crop')crop=null}tool=t;LS.set('pd_tool',t);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));renderOpts();setCursor();need()}
+function setTool(t){if(!OPT[t])t='brush';if(t!==tool){if(textEdit)commitText();if(penPath){if(penPath.pts.length>=3)penCommit();else penPath=null}if(crop&&t!=='crop')crop=null}tool=t;LS.set('pd_tool',t);document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));renderOpts();setCursor();need()}
 function setCursor(){view.style.cursor={hand:'grab',zoom:'zoom-in',pick:'crosshair',move:'move',text:'text'}[tool]||'crosshair'}
 
 /* ===== オプションバー（道具ごと） ===== */
@@ -270,7 +270,8 @@ const chk=(id,lab,on)=>`<label><input type="checkbox" data-ck="${id}" ${on?'chec
 const sizeFromSlider=v=>Math.round(Math.pow(1.06,v)*10)/10; // 1〜1000
 const sliderFromSize=s=>Math.round(Math.log(Math.max(1,s))/Math.log(1.06));
 function renderOpts(){const o=OPT[tool]||{};let h='';
- if(tool==='brush'||tool==='eraser'){h=(tool==='brush'?`<label title="一段明るく／暗く：もう描いてある色を、同じ色の明るい段・暗い段に塗りかえる（形からはみ出さない）">塗り方</label>`+seg('tone',[['0','ふつう'],['1','☀ 一段明るく'],['-1','🌑 一段暗く']],o.tone||'0'):'')+`<span class="seg"><button data-act="lineToggle" class="${o.line?'on':''}" title="押した所から離した所まで、まっすぐ引く">📏 定規（まっすぐ）</button></span>`+(o.line?chk('snapA','15°ごと',o.snapA):'')+`<label>直径</label><input type="range" data-o="size" min="0" max="118" value="${sliderFromSize(o.size)}"><span class="num" data-ov="size">${o.size}px</span>`+rng('hard','硬さ',0,100,o.hard,'%')+rng('op','不透明度',1,100,o.op,'%')+rng('flow','流量',1,100,o.flow,'%')+rng('smooth','滑らかさ',0,10,o.smooth)+chk('pSize','筆圧で太さ',o.pSize)+chk('pOp','筆圧で濃さ',o.pOp)}
+ if(tool==='pen'){h=(penPath?`<button class="b main" data-act="penOk">確定（塗る） Enter</button><button class="b" data-act="penUndo">最後の点を消す</button><button class="b" data-act="penCancel">取り消し Esc</button><span class="lead">${penPath.pts.length}点。最初の点を押しても塗れます。点は引いて動かせ、2回押すと角になります</span>`:`<span class="lead" style="color:var(--ink)">✒ 押した所に点を打つと、点を通るなめらかな形になります（最初の点を押すか Enter で塗る）。引きずると、なぞった形をそのまま塗ります</span>`)+rng('sm','なぞったときのなめらかさ',0,10,o.sm)+chk('newL','新しいレイヤーに',o.newL)}
+ else if(tool==='brush'||tool==='eraser'){h=(tool==='brush'?`<label title="一段明るく／暗く：もう描いてある色を、同じ色の明るい段・暗い段に塗りかえる（形からはみ出さない）">塗り方</label>`+seg('tone',[['0','ふつう'],['1','☀ 一段明るく'],['-1','🌑 一段暗く']],o.tone||'0'):'')+`<span class="seg"><button data-act="lineToggle" class="${o.line?'on':''}" title="押した所から離した所まで、まっすぐ引く">📏 定規（まっすぐ）</button></span>`+(o.line?chk('snapA','15°ごと',o.snapA):'')+`<label>直径</label><input type="range" data-o="size" min="0" max="118" value="${sliderFromSize(o.size)}"><span class="num" data-ov="size">${o.size}px</span>`+rng('hard','硬さ',0,100,o.hard,'%')+rng('op','不透明度',1,100,o.op,'%')+rng('flow','流量',1,100,o.flow,'%')+rng('smooth','滑らかさ',0,10,o.smooth)+chk('pSize','筆圧で太さ',o.pSize)+chk('pOp','筆圧で濃さ',o.pOp)}
  else if(tool==='bucket')h=`<label>線を見る</label>`+seg('all',[[1,'全部のレイヤー'],[0,'このレイヤーだけ']],o.all)+rng('gap','隙間を閉じる',0,20,o.gap??3,'px')+rng('spread','線の下まで広げる',0,8,o.spread??2,'px')+rng('tol','許容値',0,255,o.tol)+chk('cont','つながった所だけ',o.cont)+rng('op','不透明度',1,100,o.op,'%');
  else if(tool==='grad')h=seg('type',[['linear','線形'],['radial','円形']],o.type)+seg('mode',[['fgbg','描画色→背景色'],['fgt','描画色→透明']],o.mode)+chk('rev','逆方向',o.rev)+rng('op','不透明度',1,100,o.op,'%')+'<span class="lead">ドラッグで方向を決める</span>';
  else if(tool==='sel')h=seg('shape',[['rect','長方形'],['ellipse','楕円形']],o.shape)+seg('mode',[['new','新規'],['add','追加'],['sub','削除'],['int','共通']],o.mode)+selBtns();
@@ -487,6 +488,7 @@ function drawOverlays(c){const lw=1/V.s;
  if(drag&&drag.kind==='lasso'&&drag.pts.length>1){c.save();c.lineWidth=lw;c.strokeStyle='#000';c.setLineDash([4/V.s,4/V.s]);c.beginPath();drag.pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();c.restore()}
  if(drag&&drag.kind==='grad'){c.save();c.lineWidth=2*lw;c.strokeStyle='#fff';c.beginPath();c.moveTo(drag.a.x,drag.a.y);c.lineTo(drag.b.x,drag.b.y);c.stroke();c.restore()}
  if(float&&float.warp)drawWarpUI(c);
+ if(tool==='pen'||penPath)drawPenUI(c);
  if(float&&!float.warp){const P=floatCorners();c.save();c.lineWidth=lw;c.strokeStyle='#3d8ef0';c.beginPath();P.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.stroke();const hs=8/V.s;for(const p of floatHandles()){c.fillStyle='#fff';c.fillRect(p.x-hs/2,p.y-hs/2,hs,hs);c.strokeRect(p.x-hs/2,p.y-hs/2,hs,hs)}c.restore()}
  if(crop){c.save();c.beginPath();c.rect(0,0,art.w,art.h);c.rect(crop.x,crop.y,crop.w,crop.h);c.fillStyle='rgba(0,0,0,.55)';c.fill('evenodd');c.lineWidth=lw*1.5;c.strokeStyle='#fff';c.strokeRect(crop.x,crop.y,crop.w,crop.h);c.lineWidth=lw;c.strokeStyle='rgba(255,255,255,.5)';for(let i=1;i<3;i++){c.beginPath();c.moveTo(crop.x+crop.w*i/3,crop.y);c.lineTo(crop.x+crop.w*i/3,crop.y+crop.h);c.moveTo(crop.x,crop.y+crop.h*i/3);c.lineTo(crop.x+crop.w,crop.y+crop.h*i/3);c.stroke()}c.restore()}
  if(textEdit&&textEdit.bb){const b=textEdit.bb;c.save();c.lineWidth=lw;c.setLineDash([5/V.s,4/V.s]);c.strokeStyle='#3d8ef0';c.strokeRect(b.x,b.y,b.w,b.h);c.restore()}
@@ -697,7 +699,7 @@ function applySel(newMask,mode,vecPath,name){const before=selState();let m;
  else{m=cloneCv(SEL);const x=g2(m);x.globalCompositeOperation=mode==='add'?'source-over':mode==='sub'?'destination-out':'destination-in';x.drawImage(newMask,0,0);vecPath=null}
  if(m&&!maskBBox(m))m=null;SEL=m;selPath=m?(vecPath||outlineOf(m)):null;pushHist({type:'sel',name:name||'選択範囲',before,after:selState(),bytes:art.w*art.h});need()}
 function maskFromPath(fn){const m=mk(art.w,art.h);const x=g2(m);x.fillStyle='#fff';x.beginPath();fn(x);x.fill();return m}
-const ACT={};ACT.fingerT=()=>{fingerPan=!fingerPan;LS.set('pd_fingerPan',fingerPan?'1':'0');renderOpts();hint(fingerPan?'指では描かず、画面を動かすだけにしました（2本指で拡大・縮小）':'指で描けるようにしました',4000)};
+const ACT={};ACT.penOk=()=>penCommit();ACT.penCancel=()=>penCancel();ACT.penUndo=()=>{if(penPath){penPath.pts.pop();if(!penPath.pts.length)penPath=null;renderOpts();need()}};ACT.fingerT=()=>{fingerPan=!fingerPan;LS.set('pd_fingerPan',fingerPan?'1':'0');renderOpts();hint(fingerPan?'指では描かず、画面を動かすだけにしました（2本指で拡大・縮小）':'指で描けるようにしました',4000)};
 ACT.selAll=()=>{if(!art)return;const p=new Path2D();p.rect(0,0,art.w,art.h);applySel(maskFromPath(x=>x.rect(0,0,art.w,art.h)),'new',p,'すべてを選択')};
 ACT.deselect=()=>{if(!SEL)return;const before=selState();SEL=null;selPath=null;pushHist({type:'sel',name:'選択を解除',before,after:null,bytes:0});need()};
 ACT.selInv=()=>{if(!art)return;const m=mk(art.w,art.h);const x=g2(m);x.fillStyle='#fff';x.fillRect(0,0,art.w,art.h);if(SEL){x.globalCompositeOperation='destination-out';x.drawImage(SEL,0,0)}const before=selState();SEL=maskBBox(m)?m:null;selPath=SEL?outlineOf(SEL):null;pushHist({type:'sel',name:'選択範囲を反転',before,after:selState(),bytes:art.w*art.h});need()};
@@ -798,6 +800,32 @@ ACT.tOk=commitText;ACT.tCancel=cancelText;
 /* ===== 移動・自由変形 ===== */
 let grpOn=LS.get('pd_grp','1')==='1';
 const grpOf=l=>l&&l.grp?layers.filter(x=>x.grp===l.grp&&!x.trace):[];
+/* ===== 形ペン（作り手・2026-11-20「丸いブラシだと楕円や複雑な形が描きにくい」） =====
+ 点を打つと、点を通るなめらかな曲線（カトマル・ロム → ベジェ）で形を作り、閉じて描画色で塗る。引きずると、なぞった線をなめらかにして、そのまま塗る（塗りなげなわ）。
+ Kurzgesagt のような平らな形は、筆で塗るより「形を切り出して塗る」ほうが描きやすい */
+let penPath=null;
+function penCurve(pts,closed){const n=pts.length,P=new Path2D();if(!n)return P;P.moveTo(pts[0].x,pts[0].y);const g=i=>closed?pts[(i+n)%n]:pts[Math.max(0,Math.min(n-1,i))];const segs=closed?n:n-1;
+ for(let i=0;i<segs;i++){const p0=g(i-1),p1=g(i),p2=g(i+1),p3=g(i+2);const c1=p1.c?p1:{x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6},c2=p2.c?p2:{x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};P.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,p2.x,p2.y)}if(closed)P.closePath();return P}
+function penFill(path,name){let l=act();if(!l)return;if(OPT.pen.newL){const nl=newLayer(name);const at=l;structOp('新規レイヤー',()=>{let i=layers.indexOf(at);while(i+1<layers.length&&layers[i+1].clip)i++;layers.splice(i+1,0,nl);activeId=nl.id});l=nl}
+ if(l.trace){hint('なぞり用の画像には塗れません。上のレイヤーを選んでください');return}snapBK(l.id);stroke={lid:l.id,erase:false,op:1,bb:[0,0,art.w,art.h]};const x=g2(SC);x.clearRect(0,0,art.w,art.h);x.fillStyle=fg;x.fill(path);commitSC(name,true);stroke=null;need()}
+function penCommit(){if(!penPath)return;const pts=penPath.pts;penPath=null;if(pts.length<3){hint('形を塗るには点が3つ以上いります');renderOpts();need();return}penFill(penCurve(pts,true),'形ペン');renderOpts()}
+function penCancel(){penPath=null;renderOpts();need()}
+/* なぞった線：近すぎる点を間引いてから、なめらかにする（チャイキン法） */
+function penFree(raw){const mind=Math.max(1.5,3/V.s);let pts=[raw[0]];for(const p of raw)if(Math.hypot(p.x-pts[pts.length-1].x,p.y-pts[pts.length-1].y)>=mind)pts.push(p);if(pts.length<3)return;
+ for(let it=0;it<Math.min(5,Math.round(OPT.pen.sm/2));it++){const q=[];const n=pts.length;for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];q.push({x:a.x*.75+b.x*.25,y:a.y*.75+b.y*.25},{x:a.x*.25+b.x*.75,y:a.y*.25+b.y*.75})}pts=q}
+ const P=new Path2D();pts.forEach((p,i)=>i?P.lineTo(p.x,p.y):P.moveTo(p.x,p.y));P.closePath();penFill(P,'なぞって塗る')}
+function penDown(p){const tol=(COARSE?20:11)/V.s;if(penPath){const pts=penPath.pts;const i=pts.findIndex(q=>Math.hypot(q.x-p.x,q.y-p.y)<tol);
+  if(i===0&&pts.length>=3&&!(penPath.lastI===0&&performance.now()-penPath.lastT<350)){penCommit();return}
+  if(i>=0){if(penPath.lastI===i&&performance.now()-penPath.lastT<350){pts[i].c=!pts[i].c;penPath.lastI=-1;need();return}penPath.lastI=i;penPath.lastT=performance.now();drag={kind:'penPt',i,start:p,o:{...pts[i]},moved:false};return}}
+ drag={kind:'penNew',pts:[p],a:p,moved:0}}
+function penUp(d){if(d.kind==='penPt'){need();return}if(d.kind!=='penNew')return;
+ if(!penPath&&d.moved*V.s>10&&d.pts.length>=5){penFree(d.pts);return}
+ if(!penPath)penPath={pts:[],lastI:-1,lastT:0};penPath.pts.push({x:d.a.x,y:d.a.y,c:false});renderOpts();need()}
+function drawPenUI(c){const lw=1/V.s;c.save();c.lineWidth=1.5*lw;
+ if(penPath&&penPath.pts.length){const pts=penPath.pts;if(pts.length>=3){c.globalAlpha=.45;c.fillStyle=fg;c.fill(penCurve(pts,true));c.globalAlpha=1}c.strokeStyle='#3d8ef0';c.stroke(penCurve(pts,false));if(pts.length>=3){c.setLineDash([5*lw,4*lw]);c.stroke(new Path2D(penCurve(pts,true)));c.setLineDash([])}
+  const r=(COARSE?7:5)/V.s;pts.forEach((q,i)=>{c.beginPath();if(q.c)c.rect(q.x-r,q.y-r,2*r,2*r);else c.arc(q.x,q.y,r,0,7);c.fillStyle=i===0?'#3d8ef0':'#fff';c.fill();c.strokeStyle='#3d8ef0';c.stroke()})}
+ if(drag&&drag.kind==='penNew'&&drag.pts.length>1&&drag.moved*V.s>10){c.beginPath();drag.pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.globalAlpha=.45;c.fillStyle=fg;c.fill();c.globalAlpha=1;c.strokeStyle='#3d8ef0';c.stroke()}
+ c.restore()}
 function lift(dup){const l=act();const region=SEL;const G0=dup?[]:grpOf(l);const G=grpOn?G0:[];
  /* まとめて動かせないときは、理由を出す（気づかずに1枚だけ動かしてしまわないように） */
  if(!dup&&G0.length>1&&!grpOn)hint('このレイヤーだけ動かします。取り込んだ絵をまとめて動かすには、上の帯の「🔗 まとめて：切」を押して「入」に');
@@ -928,6 +956,7 @@ view.addEventListener('pointerdown',e=>{if(!art)return;
  if(tool==='zoom'){const r=view.getBoundingClientRect();zoomAt(alt?1/1.6:1.6,e.clientX-r.left,e.clientY-r.top);return}
  if((tool==='brush'||tool==='bucket'||tool==='grad'||tool==='shape')&&alt){doPick(p);return}
  if(tool==='brush'||tool==='eraser'){if(startStroke(e,p))need();return}
+ if(tool==='pen'){penDown(p);need();return}
  if(tool==='pick'){doPick(p);return}
  if(tool==='bucket'){doBucket(p);return}
  if(tool==='grad'){const l=act();if(l.trace)return hint('なぞり用の画像には描けません');snapBK(l.id);stroke={lid:l.id,erase:false,op:OPT.grad.op/100,bb:[0,0,art.w,art.h],id:e.pointerId};drag={kind:'grad',a:p,b:p};drawGrad(p,p);need();return}
@@ -948,6 +977,8 @@ view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt
  if(cursor)need()
  if(!drag)return;const p=toDoc(e);
  if(drag.kind==='warpPt'||drag.kind==='warpIn'){warpMove(p);return}
+ if(drag.kind==='penPt'){const q=penPath.pts[drag.i];q.x=drag.o.x+p.x-drag.start.x;q.y=drag.o.y+p.y-drag.start.y;need();return}
+ if(drag.kind==='penNew'){const l=drag.pts[drag.pts.length-1];drag.moved=Math.max(drag.moved,Math.hypot(p.x-drag.a.x,p.y-drag.a.y));if(Math.hypot(p.x-l.x,p.y-l.y)>.8/V.s)drag.pts.push(p);need();return}
  if(drag.kind==='grad'){drag.b=p;drawGrad(drag.a,p);need()}
  else if(drag.kind==='shape'){drag.b=p;drawShape(drag.a,p,e.shiftKey);need()}
  else if(drag.kind==='marquee'){const sp=snapPt(p);const keepL=snapLines;let w=sp.x-drag.a.x,h=sp.y-drag.a.y;snapLines=[...(drag.aLines||[]),...keepL];if(e.shiftKey&&drag.mode==='new'){const s=Math.max(Math.abs(w),Math.abs(h));w=Math.sign(w||1)*s;h=Math.sign(h||1)*s}drag.rect={x:Math.min(drag.a.x,drag.a.x+w),y:Math.min(drag.a.y,drag.a.y+h),w:Math.abs(w),h:Math.abs(h)};need()}
@@ -972,6 +1003,7 @@ function ptrEnd(e){ptrs.delete(e.pointerId);
  if(pan){pan=null;setCursor();return}
  if(stroke&&e.pointerId===stroke.id&&(tool==='brush'||tool==='eraser')){endStroke(e.type==='pointercancel'?null:e);return}
  if(!drag)return;const d=drag;drag=null;snapLines=[];
+ if(d.kind==='penNew'||d.kind==='penPt'){penUp(d);return}
  if(d.kind==='grad'){commitSC('グラデーション',true);stroke=null}
  else if(d.kind==='shape'){if(Math.hypot(d.b.x-d.a.x,d.b.y-d.a.y)<2){g2(SC).clearRect(0,0,art.w,art.h);stroke=null;need();return}commitSC(SHAPEN[OPT.shape.type]+'ツール',true);stroke=null;renderLayers()}
  else if(d.kind==='marquee'){const r=d.rect;if(r.w<2||r.h<2){if(d.mode==='new')ACT.deselect();need();return}const vec=new Path2D();if(d.shape==='ellipse')vec.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,7);else vec.rect(r.x,r.y,r.w,r.h);applySel(maskFromPath(x=>{if(d.shape==='ellipse')x.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,7);else x.rect(r.x,r.y,r.w,r.h)}),d.mode,vec,d.shape==='ellipse'?'楕円形選択':'長方形選択')}
@@ -997,13 +1029,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Alt')altDown=true;if(e.targe
   if(e.key==='Backspace'||e.key==='Delete')return run(ACT.fillBg);return}
  if(!art)return;
  if(e.altKey&&(e.key==='Backspace'||e.key==='Delete'))return run(ACT.fillFg);
+ if(penPath){if(e.key==='Enter')return run(penCommit);if(e.key==='Escape')return run(penCancel);if(e.key==='Backspace'||e.key==='Delete')return run(ACT.penUndo)}
  if(e.key==='Enter'){if(float)return run(commitFloat);if(textEdit)return run(commitText);if(crop)return run(ACT.cropOk)}
  if(e.key==='Escape'){if(float)return run(cancelFloat);if(textEdit)return run(cancelText);if(crop)return run(ACT.cropCancel)}
  if(e.key==='Backspace'||e.key==='Delete')return run(()=>ACT.clear());
  if(e.key===' '){spaceDown=true;view.style.cursor='grab';e.preventDefault();return}
  if(e.key.startsWith('Arrow')&&tool==='move'){const s=e.shiftKey?10:1;return run(()=>nudge(e.key==='ArrowLeft'?-s:e.key==='ArrowRight'?s:0,e.key==='ArrowUp'?-s:e.key==='ArrowDown'?s:0))}
  if(k==='t'&&e.shiftKey)return toggleTraceTop();
- const map={v:'move',l:'lasso',w:'wand',c:'crop',i:'pick',b:'brush',e:'eraser',t:'text',u:'shape',h:'hand',z:'zoom'};
+ const map={p:'pen',v:'move',l:'lasso',w:'wand',c:'crop',i:'pick',b:'brush',e:'eraser',t:'text',u:'shape',h:'hand',z:'zoom'};
  if(k==='m'){if(tool==='sel'&&e.shiftKey){OPT.sel.shape=OPT.sel.shape==='rect'?'ellipse':'rect';saveOpt()}return setTool('sel')}
  if(k==='g')return setTool(e.shiftKey?(tool==='grad'?'bucket':'grad'):(tool==='grad'?'grad':'bucket'));
  if(map[k])return setTool(map[k]);
