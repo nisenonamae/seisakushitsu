@@ -71,4 +71,8 @@ await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;act()
 await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;setTool('move');renderLayers();need()});await chk('move box');
 {const h=await pg.evaluate(()=>{const b=moveBox();const r=view.getBoundingClientRect();return{x:r.left+V.tx+(b.x+b.w)*V.s,y:r.top+V.ty+(b.y+b.h)*V.s,ok:!!b}});if(!h.ok){fails++;console.log('FAIL no move box')}else{await pg.mouse.move(h.x,h.y);await pg.mouse.down();await pg.mouse.move(h.x-40,h.y-30,{steps:4});await chk('move scale mid');await pg.mouse.up();await chk('move scale done');const f=await pg.evaluate(()=>!!float);if(f){fails++;console.log('FAIL float left')}}}
 await E(()=>undo());await chk('move scale undo');await E(()=>setTool('brush'));
+// 曲げる（ワープ・2026-11-20）
+await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;setTool('move');renderLayers();ACT.warpStart()});await chk('warp start');
+{const q=await pg.evaluate(()=>{const P=float.warp.P;const c=warpAt(P,.5,.5);const r=view.getBoundingClientRect();return{x:r.left+V.tx+c.x*V.s,y:r.top+V.ty+c.y*V.s}});await pg.mouse.move(q.x,q.y);await pg.mouse.down();await pg.mouse.move(q.x+30,q.y+40,{steps:4});await chk('warp drag');await pg.mouse.up()}
+await E(()=>ACT.xfOk());await chk('warp ok');await E(()=>undo());await chk('warp undo');await E(()=>setTool('brush'));
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();
