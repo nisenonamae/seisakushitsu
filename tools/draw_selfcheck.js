@@ -62,4 +62,7 @@ await E(()=>{act().blur=8;renderLayers();need()});await chk('shade blur');
 await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;renderLayers();autoShade()});await pg.waitForTimeout(150);if(!await pg.evaluate(()=>$('dlg').open)){fails++;console.log('FAIL auto shade dialog')}await chk('auto shade preview');await E(()=>$('dlgOk').click());await chk('auto shade ok');await E(()=>undo());await chk('auto shade undo');
 await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;renderLayers();toneBrush('-1')});await strokeMid(30);await chk('tone dark mid');await pg.mouse.up();await chk('tone dark done');
 await E(()=>{LA.new();LA.clip();toneBrush('1')});await strokeMid(-30);await chk('tone clip mid');await pg.mouse.up();await chk('tone clip done');await E(()=>{OPT.brush.tone='0'});
+// 写真を平らな絵に（小さな作り物の写真で）・なぞる画像を上に透かす（2026-11-20）
+await E(()=>{const c=mk(300,200),x=g2(c);x.fillStyle='#4a7';x.fillRect(0,0,300,200);x.fillStyle='#e94';x.beginPath();x.arc(150,100,60,0,7);x.fill();const A=flatAnalyze(c,{k:4,lv:3,simp:2,sat:20,pur:30});flatBuild(A,c,{fit:'contain'})});await chk('flat build');await E(()=>undo());await chk('flat undo');
+await E(()=>{toggleTraceTop();toggleTraceTop()});await chk('trace top');
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();
