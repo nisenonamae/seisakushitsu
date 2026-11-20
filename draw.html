@@ -82,6 +82,8 @@ input[type=range]{flex:1;min-width:70px;accent-color:var(--sea)}
 .menu button:hover{background:var(--sea)}
 .menu button kbd{margin-left:auto;color:var(--sub);font-family:inherit;font-size:11.5px}
 .lbtns [data-la=del]{margin-left:auto}
+.palbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:5px;margin:4px 0 6px}.palbox .pc{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:1px solid transparent;border-radius:6px;padding:3px 2px;cursor:pointer;min-width:0}
+.palbox .pc i{display:block;width:30px;height:30px;border-radius:6px;border:1px solid #000}.palbox .pc span{font-size:10.5px;color:var(--sub);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.palbox .pc.on{border-color:var(--sea)}.palbox .empty{grid-column:1/-1;font-size:12px;color:var(--sub)}
 /* 画面にさわれる端末（Chromebook など）：押す所を大きく・間を広くして、となりのボタンの押し間違いを減らす（作り手・2026-11-20） */
 @media (any-pointer:coarse){.b{min-height:34px;padding:6px 11px;font-size:13px}#opts .seg button{padding:8px 11px;font-size:13px}#opts .om,#opts .of{gap:11px}#menubar button{padding:8px 12px;font-size:14px}
  .menu button{padding:11px 14px;font-size:14px}.lbtns{gap:7px}.lbtns button{padding:7px 11px;font-size:13px}.rowx{gap:7px}.lay{padding:6px 5px;margin-bottom:3px}.sw{min-width:26px;min-height:26px}.tb{height:46px}}
@@ -124,15 +126,17 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div id="stage"><canvas id="view"></canvas><div id="zoomLab"></div><div id="hint"></div></div>
 <aside id="side">
  <div class="panel"><h3>色</h3>
- <div class="rowx"><span id="curSw" class="sw" style="width:34px;height:34px;display:inline-block"></span><button class="b main" id="pickNew">＋ 新しい色を作る</button><button class="b" id="saveMy">今の色を登録</button></div>
+ <div class="rowx"><span id="curSw" class="sw" style="width:34px;height:34px;display:inline-block"></span><button class="b main" id="pickNew">＋ 新しい色を作る</button><button class="b" id="saveMy" title="今の描画色を、選んでいる色の組に足す（名前を付けられます）">＋ 今の色を組に足す</button></div>
  <div class="rowx"><button class="b" id="screenPick" title="ほかのタブやアプリに出ている色も取れます">🎯 画面のどこからでも色を取る</button><button class="b" id="pickFloat" title="小さなスポイトの窓を、ほかのタブ・アプリの上に浮かせておく。ほかの画面を見ながら、いつでも押して色を取れる">📌 スポイトを浮かせる</button><button class="b" id="imgPick" title="スクショや画像を貼って、押した所の色を取る">🖼 画像から色を取る</button></div>
  <div class="rowx" title="同じ色の、暗い〜明るい段（深緑・緑・黄緑のように）。暗い段は少し青みに、明るい段は少し黄みに寄せてあります"><span class="lead" style="margin:0;min-width:3.5em">明暗の段：</span><span id="toneRow" class="rowx" style="margin:0;gap:2px"></span></div>
  <div class="rowx" title="今の色に合う、別の系統の色（影に使う紫・光に使う暖色・反対の色・となりの色）"><span class="lead" style="margin:0;min-width:3.5em">合う色：</span><span id="accRow" class="rowx" style="margin:0;gap:2px"></span></div>
  <div class="rowx" title="暗い夜空・宇宙に映える、鮮やかな色の組み合わせ（Claude が選んだ見本）"><span class="lead" style="margin:0;min-width:3.5em">映える色：</span><span id="popRow" class="rowx" style="margin:0;gap:2px"></span></div>
- <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">自分の色：</span><span id="mycols" class="rowx" style="margin:0"></span></div>
+ <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">色の組：</span><select id="palSel" style="flex:1;min-width:0"></select><button class="b" id="palNew" title="新しい色の組を作る（回ごと・物ごとなど）">＋ 組</button><button class="b" id="palEdit" title="組の名前を変える・組を消す">✎</button></div>
+ <div id="palBox" class="palbox"></div>
+ <div class="rowx" id="pickedWrap"><span class="lead" style="margin:0;min-width:3.5em">取った色：</span><span id="pickedRow" class="rowx" style="margin:0;gap:2px"></span><button class="b" id="pickedAll" title="スポイトで取った色を全部、選んでいる色の組に入れる">全部を組に入れる</button><button class="b" id="pickedClr">空にする</button></div>
  <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">最近：</span><span id="recent" class="rowx" style="margin:0"></span></div>
  <div class="rowx" id="swatches"></div>
- <div class="lead" style="margin:2px 0 0">押すと描く色になります。自分の色は右クリック（スマホは長押し）で消せます</div></div>
+ <div class="lead" style="margin:2px 0 0">押すと描く色になります。組の色は右クリック（さわる画面は長押し）で、名前を変える・置き換える・消す・並べかえができます</div></div>
  <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="partPutBtn" title="保存しておいた素材を、今の絵に置く">＋ 素材を置く</button><button class="b" id="partSaveBtn" title="選んでいるレイヤー（選択範囲があればその中だけ）を、ほかの絵でも使える素材として保存する">⭐ 素材にする</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></h3>
   <div class="rowx"><select id="lBlend" title="描画モード"></select><label style="min-width:0">不透明度</label><input type="range" id="lOp" min="0" max="100"><span class="num" id="lOpV"></span></div>
   <div class="rowx"><label style="min-width:0" title="手前の物・奥の物をぼかす。絵そのものは変わらないので、あとから何度でも変えられます">ぼかし</label><input type="range" id="lBl" min="0" max="60" step="1"><span class="num" id="lBlV"></span></div>
@@ -220,7 +224,7 @@ let sBusy=false,sTimer=null,sDirty=false;
 function lab(t,c){const e=$('syncStat');e.textContent=t;e.className='stat '+(c||'')}
 let sP=null,syncOK=false;function sync(){return sP||(sP=sync0().finally(()=>{sP=null}))}   // 同時に2つ走らせない。待てば、終わった同期の結果が使える
 async function sync0(){if(!syncOn()){lab('この端末だけに保存中');return}sBusy=true;
- try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();D=merge(data,D);LS.set('ss_data',JSON.stringify(D));if(!sDirty)break;if(await ghPut(D,sha)){sDirty=false;break}}syncOK=true;lab('同期済み '+new Date().toTimeString().slice(0,5),'okk');renderFin()}catch(e){lab('同期できません：'+e.message,'bad')}sBusy=false}
+ try{for(let i=0;i<3;i++){const{data,sha}=await ghGet();D=merge(data,D);LS.set('ss_data',JSON.stringify(D));if(!sDirty)break;if(await ghPut(D,sha)){sDirty=false;break}}syncOK=true;lab('同期済み '+new Date().toTimeString().slice(0,5),'okk');renderFin();renderPal()}catch(e){lab('同期できません：'+e.message,'bad')}sBusy=false}
 function saveD(){sDirty=true;LS.set('ss_data',JSON.stringify(D));clearTimeout(sTimer);sTimer=setTimeout(sync,1200)}
 
 /* ===== この端末の保存（IndexedDB） ===== */
@@ -326,15 +330,43 @@ let accBase=null,accLock=false;function renderAcc(){if(!accLock||!accBase)accBas
 document.addEventListener('click',e=>{const b=e.target.closest('[data-c2]');if(b){if(e.altKey){bg=b.dataset.c2;LS.set('pd_bg',bg);renderColors()}else{accLock=!!b.closest('#accRow');setFg(b.dataset.c2,true);accLock=false}}});
 function renderTone(){const r=$('toneRow');if(!r)return;if(!toneBase)toneBase=fg;r.innerHTML=[-3,-2,-1,0,1,2,3].map(k=>{const c=k?toneHex(toneBase,k):toneBase;return`<button class="sw" data-tc="${c}" style="background:${c};${c===fg?'outline:2px solid var(--sea);outline-offset:1px':''}" title="${k<0?'暗い':k>0?'明るい':'もとの色'}${k?Math.abs(k)+'段':''} ${c}"></button>`}).join('')}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tc]');if(b){const keep=toneBase;setFg(b.dataset.tc,true);toneBase=keep;renderTone()}});
-function renderColors(){if(fg!==toneBase&&!(toneBase&&[-3,-2,-1,1,2,3].some(k=>toneHex(toneBase,k)===fg)))toneBase=fg;renderTone();renderAcc();try{if(pickWin&&!pickWin.closed&&pickWin.pdShow)pickWin.pdShow()}catch(e){}$('mycols').innerHTML=mycols.length?mycols.map(c=>`<button class="sw" data-c="${c}" data-my="${c}" style="background:${c}" title="${c}"></button>`).join(''):'<span class="lead" style="margin:0">まだありません</span>';$('curSw').style.background=fg;$('swatches').innerHTML=SWATCH.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" title="${c}（Alt+クリックで背景色）"></button>`).join('');$('recent').innerHTML=recent.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');const f=$('fgSw'),b=$('bgSw');if(f){f.style.background=fg;b.style.background=bg}}
+function renderColors(){if(fg!==toneBase&&!(toneBase&&[-3,-2,-1,1,2,3].some(k=>toneHex(toneBase,k)===fg)))toneBase=fg;renderTone();renderAcc();try{if(pickWin&&!pickWin.closed&&pickWin.pdShow)pickWin.pdShow()}catch(e){}renderPal();$('curSw').style.background=fg;$('swatches').innerHTML=SWATCH.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" title="${c}（Alt+クリックで背景色）"></button>`).join('');$('recent').innerHTML=recent.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');const f=$('fgSw'),b=$('bgSw');if(f){f.style.background=fg;b.style.background=bg}}
 function setFg(c,live){fg=c;LS.set('pd_fg',c);if(!live){recent=[c,...recent.filter(x=>x!==c)].slice(0,10);LS.set('pd_recent',JSON.stringify(recent))}renderColors();if(textEdit){textEdit.color=fg;drawTextLayer()}}
 let mycols=[];try{mycols=JSON.parse(LS.get('pd_mycols','[]')||'[]')}catch(e){}
+/* ===== 色の組（作り手・2026-11-20「名前を付けて管理したい・楽に使いたい」） =====
+ D.palettes＝[{id,name,colors:[{c:'#hex',n:'名前'}],updatedAt,deleted}]。data.json に入るので、ほかの端末でも同じ組が使える。
+ 前の「自分の色」（この端末だけ）は、最初に「自分の色」という組に移す */
+function pals(){D.palettes=D.palettes||[];return D.palettes.filter(p=>!p.deleted)}
+function curPal(){const P=pals();let id=LS.get('pd_pal','');let p=P.find(x=>x.id===id);if(!p&&P.length)p=P[0];return p||null}
+function touchPal(p){p.updatedAt=Math.max(now(),...(D.palettes||[]).map(x=>(x.updatedAt||0)+1));saveD();renderColors()}
+function newPal(name,colors){const p={id:uid('pal'),name,colors:colors||[],updatedAt:now()};D.palettes=D.palettes||[];D.palettes.push(p);LS.set('pd_pal',p.id);touchPal(p);return p}
+if(!pals().length&&mycols.length){newPal('自分の色',mycols.map(c=>({c,n:''})))}
+function nameOf(c){try{const n=parseInt(c.slice(1),16);return colName([n>>16&255,n>>8&255,n&255])}catch(e){return''}}
+let picked=[];try{picked=JSON.parse(LS.get('pd_picked','[]')||'[]')}catch(e){}
+function addPicked(c){picked=[c,...picked.filter(x=>x!==c)].slice(0,24);LS.set('pd_picked',JSON.stringify(picked));renderColors()}
+function renderPal(){const sel=$('palSel');if(!sel)return;const P=pals(),cp=curPal();sel.innerHTML=P.length?P.map(p=>`<option value="${p.id}" ${cp&&p.id===cp.id?'selected':''}>${esc(p.name)}（${p.colors.length}）</option>`).join(''):'<option value="">（まだありません）</option>';
+ $('palBox').innerHTML=cp&&cp.colors.length?cp.colors.map((x,i)=>`<button class="pc ${x.c===fg?'on':''}" data-pc="${i}" title="${esc(x.n||'')} ${x.c}"><i style="background:${x.c}"></i><span>${esc(x.n||x.c)}</span></button>`).join(''):`<div class="empty">${cp?'まだ色がありません。描画色を決めて「＋ 今の色を組に足す」で入れます':'「＋ 組」で色の組を作れます（例：台湾の回・空と海・人の肌）'}</div>`;
+ $('pickedWrap').style.display=picked.length?'':'none';$('pickedRow').innerHTML=picked.map(c=>`<button class="sw" data-c2="${c}" style="background:${c}" title="${c}"></button>`).join('')}
+function palColorDlg(i){const p=curPal();if(!p||!p.colors[i])return;const x=p.colors[i];
+ dialog('組の色',`<div class="rowx"><i style="display:inline-block;width:40px;height:40px;border-radius:8px;border:1px solid #000;background:${x.c}"></i><label>名前</label><input id="pcN" value="${esc(x.n||'')}" placeholder="${esc(nameOf(x.c))}" style="flex:1"></div>
+  <div class="rowx"><button class="b" id="pcRep" style="display:inline-flex;gap:6px;align-items:center">今の描画色 <i style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${fg}"></i> に置き換える</button><button class="b" id="pcL">← 前へ</button><button class="b" id="pcR">後ろへ →</button><button class="b" id="pcDel" style="margin-left:auto">この色を消す</button></div>`,
+  ()=>{x.n=$('pcN').value.trim();touchPal(p)},()=>{const i0=$('pcN');i0.focus();i0.select();
+   $('pcRep').onclick=()=>{x.c=fg;x.n=$('pcN').value.trim();$('dlg').close();touchPal(p);hint('今の描画色に置き換えました')};
+   $('pcDel').onclick=()=>{p.colors.splice(i,1);$('dlg').close();touchPal(p);hint('消しました')};
+   const mv=d=>{const j=i+d;if(j<0||j>=p.colors.length)return;x.n=$('pcN').value.trim();[p.colors[i],p.colors[j]]=[p.colors[j],p.colors[i]];$('dlg').close();touchPal(p)};$('pcL').onclick=()=>mv(-1);$('pcR').onclick=()=>mv(1)})}
+function addToPal(cs,ask){let p=curPal();if(!p)p=newPal('自分の色');let n=0;for(const c of cs){if(p.colors.some(x=>x.c===c))continue;p.colors.push({c,n:''});n++}touchPal(p);
+ if(ask&&n===1){palColorDlg(p.colors.length-1)}else hint(n?`「${p.name}」に${n}色入れました`:'もう入っています')}
 const saveMy=()=>{LS.set('pd_mycols',JSON.stringify(mycols));renderColors()};
 $('pickNew').onclick=()=>{const i=$('fgIn');i.value=fg;i.click()};
-$('saveMy').onclick=()=>{if(!mycols.includes(fg)){mycols.push(fg);saveMy();hint('「自分の色」に登録しました')}else hint('もう登録してあります')};
-let lpT=null;$('mycols').addEventListener('contextmenu',e=>{const b=e.target.closest('[data-my]');if(!b)return;e.preventDefault();mycols=mycols.filter(c=>c!==b.dataset.my);saveMy();hint('消しました')});
-$('mycols').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-my]');if(!b||e.pointerType==='mouse')return;lpT=setTimeout(()=>{mycols=mycols.filter(c=>c!==b.dataset.my);saveMy();hint('消しました')},650)});['pointerup','pointerleave','pointercancel'].forEach(t=>$('mycols').addEventListener(t,()=>clearTimeout(lpT)));
-document.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b&&(b.closest('#swatches')||b.closest('#recent')||b.closest('#mycols'))){if(e.altKey){bg=b.dataset.c;LS.set('pd_bg',bg);renderColors()}else setFg(b.dataset.c,true)}});
+$('saveMy').onclick=()=>addToPal([fg],true);
+$('palSel').onchange=e=>{LS.set('pd_pal',e.target.value);renderColors()};
+$('palNew').onclick=()=>dialog('新しい色の組',`<div class="rowx"><label>名前</label><input id="pnN" placeholder="例：台湾の回・空と海・人の肌" style="flex:1"></div><div class="rowx"><label><input type="checkbox" id="pnPk" ${picked.length?'checked':''}> 取った色（${picked.length}色）を入れる</label></div>`,()=>{const nm=$('pnN').value.trim()||('色の組 '+(pals().length+1));newPal(nm,$('pnPk').checked?picked.map(c=>({c,n:''})):[]);hint(`色の組「${nm}」を作りました`)},()=>$('pnN').focus());
+$('palEdit').onclick=()=>{const p=curPal();if(!p)return hint('色の組がまだありません');dialog('色の組の名前',`<div class="rowx"><label>名前</label><input id="peN" value="${esc(p.name)}" style="flex:1"></div><div class="rowx"><button class="b" id="peDel">この組を消す</button></div>`,()=>{p.name=$('peN').value.trim()||p.name;touchPal(p)},()=>{$('peN').focus();$('peDel').onclick=()=>{if(!$('peDel').dataset.sure){$('peDel').dataset.sure=1;$('peDel').textContent='本当に消す（'+p.colors.length+'色）';return}p.deleted=true;$('dlg').close();touchPal(p);LS.set('pd_pal','');renderColors();hint('消しました')}})};
+$('pickedAll').onclick=()=>addToPal(picked.slice().reverse(),false);$('pickedClr').onclick=()=>{picked=[];LS.set('pd_picked','[]');renderColors()};
+$('palBox').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;const p=curPal();const x=p&&p.colors[+b.dataset.pc];if(!x)return;if(e.altKey){bg=x.c;LS.set('pd_bg',bg);renderColors()}else setFg(x.c,true)});
+$('palBox').addEventListener('contextmenu',e=>{const b=e.target.closest('[data-pc]');if(!b)return;e.preventDefault();palColorDlg(+b.dataset.pc)});
+{let t=null;$('palBox').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-pc]');if(!b||e.pointerType==='mouse')return;t=setTimeout(()=>{t=null;palColorDlg(+b.dataset.pc)},550)});['pointerup','pointerleave','pointercancel'].forEach(k=>$('palBox').addEventListener(k,()=>clearTimeout(t)))}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b&&(b.closest('#swatches')||b.closest('#recent'))){if(e.altKey){bg=b.dataset.c;LS.set('pd_bg',bg);renderColors()}else setFg(b.dataset.c,true)}});
 
 /* ===== 画面 ===== */
 function resize(){const r=$('stage').getBoundingClientRect();dpr=Math.min(2,window.devicePixelRatio||1);view.width=Math.max(1,Math.round(r.width*dpr));view.height=Math.max(1,Math.round(r.height*dpr));need()}
@@ -1064,14 +1096,14 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
   #cur{display:flex;align-items:center;gap:8px;margin:10px 0 6px;font-size:13px}#cur i{display:inline-block;width:34px;height:34px;border-radius:7px;border:1px solid #000}
   #list{display:flex;flex-wrap:wrap;gap:5px}#list b{width:28px;height:28px;border-radius:6px;border:1px solid #000;cursor:pointer}
   p{font-size:11.5px;color:#9aa3b1;margin:8px 0 0;line-height:1.5}</style>
-  <button id="go">🎯 色を取る</button><div id="cur"><i></i><span></span></div><div id="list"></div>
-  <p>押してから、画面のどこでも（ほかのタブ・アプリでも）押すと、その色がお絵描きの描画色になります。下の色を押すと、その色に戻せます。${pip?'この窓はいつも手前に出ています。':''}</p>`;
- const show=()=>{const c=d.querySelector('#cur i'),t=d.querySelector('#cur span');c.style.background=fg;t.textContent='描画色 '+fg;d.getElementById('list').innerHTML=recent.slice(0,16).map(x=>`<b data-c="${x}" title="${x}" style="background:${x}"></b>`).join('')};show();w.pdShow=show;
- d.getElementById('go').onclick=async()=>{const ED=w.EyeDropper||window.EyeDropper;if(!ED){d.querySelector('p').textContent='このブラウザでは画面から色を取れません（Chrome なら取れます）';return}try{const r=await new ED().open();const c=hexOf(r.sRGBHex);setFg(c);show();hint('色を取りました：'+c)}catch(e){}};
+  <button id="go">🎯 色を取る</button><div id="cur"><i></i><span></span></div><div style="font-size:11.5px;color:#9aa3b1;margin:2px 0 4px">取った色</div><div id="list"></div><button id="add" style="margin-top:8px;width:100%;padding:8px;border:1px solid #3a4150;border-radius:8px;background:#2a3038;color:#e9ecf1;font-size:13px;cursor:pointer"></button>
+  <p>押してから画面のどこでも（ほかのタブ・アプリでも）押すと、その色が描画色になり「取った色」にたまります。何色でも続けて取れます（1色ごとに「色を取る」を押してください）。${pip?'この窓はいつも手前に出ています。':''}</p>`;
+ const show=()=>{const c=d.querySelector('#cur i'),t=d.querySelector('#cur span');c.style.background=fg;t.textContent='描画色 '+fg;d.getElementById('list').innerHTML=picked.slice(0,24).map(x=>`<b data-c="${x}" title="${x}" style="background:${x}"></b>`).join('')||'<span style="font-size:11.5px;color:#9aa3b1">まだありません</span>';const cp=curPal();const ad=d.getElementById('add');ad.textContent=picked.length?`取った${picked.length}色を「${cp?cp.name:'自分の色'}」に入れる`:'取った色を色の組に入れる';ad.disabled=!picked.length};d.getElementById('add').onclick=()=>{addToPal(picked.slice().reverse(),false);show()};show();w.pdShow=show;
+ d.getElementById('go').onclick=async()=>{const ED=w.EyeDropper||window.EyeDropper;if(!ED){d.querySelector('p').textContent='このブラウザでは画面から色を取れません（Chrome なら取れます）';return}try{const r=await new ED().open();const c=hexOf(r.sRGBHex);setFg(c);addPicked(c);show();hint('色を取りました：'+c)}catch(e){}};
  d.getElementById('list').onclick=e=>{const b=e.target.closest('[data-c]');if(b){setFg(b.dataset.c);show()}};
  w.addEventListener('pagehide',()=>{if(pickWin===w)pickWin=null});
  hint(pip?'スポイトの窓を手前に浮かせました。ほかのタブやアプリを見ながら、いつでも押して色を取れます':'スポイトの小さな窓を開きました。ほかの画面の横に置いて使ってください',6000)};
-ACT.screenPick=async()=>{if(window.EyeDropper){try{const r=await new EyeDropper().open();setFg(r.sRGBHex);hint('色を取りました：'+r.sRGBHex)}catch(e){}}else{hint('この端末のブラウザは画面から直接は取れません。画像から取ります');ACT.imgPick()}};
+ACT.screenPick=async()=>{if(window.EyeDropper){try{const r=await new EyeDropper().open();const c=hexOf(r.sRGBHex);setFg(c);addPicked(c);hint('色を取りました：'+c+'（「取った色」にたまります）')}catch(e){}}else{hint('この端末のブラウザは画面から直接は取れません。画像から取ります');ACT.imgPick()}};
 let imgPickOn=false;
 ACT.imgPick=()=>{imgPickOn=true;dialog('画像から色を取る',`<div class="lead">いいなと思った画像を、スクリーンショットして <b>ここに貼り付け</b>（${CMD}V／長押しで貼り付け）するか、「画像を選ぶ」で開きます。出た画像を押すと、その色が描く色になります（何回でも）。</div><div class="rowx"><button class="b" id="ipFile">画像を選ぶ</button><span id="ipSw" class="sw" style="width:28px;height:28px;display:inline-block"></span><span id="ipHex" class="lead" style="margin:0"></span></div><div style="max-height:52vh;overflow:auto"><canvas id="ipCv" style="max-width:100%;cursor:crosshair;display:none;border-radius:6px"></canvas></div><input type="file" id="ipIn" accept="image/*" hidden>`,()=>{imgPickOn=false},()=>{
   $('ipFile').onclick=()=>$('ipIn').click();$('ipIn').onchange=async e=>{const f=e.target.files[0];if(f)ipShow(await createImageBitmap(f))};
