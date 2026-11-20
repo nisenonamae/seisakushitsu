@@ -353,7 +353,12 @@ function layerView(l){if(adj&&adj.cvs&&adj.cvs[l.id])return adj.cvs[l.id];if(flo
   if(stroke.tone)s=toneSrc(s);t.globalCompositeOperation=strokeOp(l);t.globalAlpha=stroke.op;t.drawImage(s,0,0);t.globalAlpha=1;t.globalCompositeOperation='source-over';return TMP}
  return l.cv}
 /* レイヤーのぼかし（l.blur＝絵の点の数。あとから何度でも変えられる）。絵の大きさの一時キャンバスに、ぼかした写しを作る */
-function blurOf(src,r,dst){const x=g2(dst);x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,dst.width,dst.height);x.filter=`blur(${r}px)`;x.drawImage(src,0,0);x.filter='none';return dst}
+/* 絵のはしで切れている物は、はしの外にも続いているものとしてぼかす（はしの近くが薄くならず、動画の端までしっかり塗れる。作り手・2026-11-20） */
+let BP=null;function blurOf(src,r,dst){const W=src.width,H=src.height,m=Math.ceil(r*2.5)+2;BP=fitCv(BP,W+2*m,H+2*m);const p=g2(BP);p.setTransform(1,0,0,1,0,0);p.globalAlpha=1;p.filter='none';p.imageSmoothingEnabled=false;
+ p.globalCompositeOperation='copy';p.drawImage(src,m,m);p.globalCompositeOperation='source-over';
+ p.drawImage(src,0,0,1,H,0,m,m,H);p.drawImage(src,W-1,0,1,H,W+m,m,m,H);p.drawImage(src,0,0,W,1,m,0,W,m);p.drawImage(src,0,H-1,W,1,m,H+m,W,m);
+ p.drawImage(src,0,0,1,1,0,0,m,m);p.drawImage(src,W-1,0,1,1,W+m,0,m,m);p.drawImage(src,0,H-1,1,1,0,H+m,m,m);p.drawImage(src,W-1,H-1,1,1,W+m,H+m,m,m);
+ const x=g2(dst);x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,dst.width,dst.height);x.filter=`blur(${r}px)`;x.drawImage(BP,-m,-m);x.filter='none';return dst}
 function compositeTo(c,opt={}){let i=opt.from||0;const end=opt.to==null?layers.length:opt.to;while(i<end){const base=layers[i];let j=i+1;const clips=[];while(j<layers.length&&layers[j].clip){clips.push(layers[j]);j++}
   if(!base.visible||(opt.exp&&base.noExport)){i=j;continue}
   const vc=clips.filter(c2=>c2.visible&&!(opt.exp&&c2.noExport));if(opt.fast&&!vc.length&&fastLayer(c,base)){i=j;continue}let img=opt.raw?base.cv:layerView(base);if(vc.length){const t=g2(TMPG);t.globalCompositeOperation='copy';t.drawImage(img,0,0);for(const c2 of vc){let ci=opt.raw?c2.cv:layerView(c2);if(c2.blur>0)ci=blurOf(ci,c2.blur,TMPB2);
