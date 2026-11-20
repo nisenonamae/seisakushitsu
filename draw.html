@@ -133,7 +133,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  <div class="rowx"><span class="lead" style="margin:0;min-width:3.5em">最近：</span><span id="recent" class="rowx" style="margin:0"></span></div>
  <div class="rowx" id="swatches"></div>
  <div class="lead" style="margin:2px 0 0">押すと描く色になります。自分の色は右クリック（スマホは長押し）で消せます</div></div>
- <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></h3>
+ <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="partPutBtn" title="保存しておいた素材を、今の絵に置く">＋ 素材を置く</button><button class="b" id="partSaveBtn" title="選んでいるレイヤー（選択範囲があればその中だけ）を、ほかの絵でも使える素材として保存する">⭐ 素材にする</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></h3>
   <div class="rowx"><select id="lBlend" title="描画モード"></select><label style="min-width:0">不透明度</label><input type="range" id="lOp" min="0" max="100"><span class="num" id="lOpV"></span></div>
   <div class="rowx"><label style="min-width:0" title="手前の物・奥の物をぼかす。絵そのものは変わらないので、あとから何度でも変えられます">ぼかし</label><input type="range" id="lBl" min="0" max="60" step="1"><span class="num" id="lBlV"></span></div>
   <div class="rowx"><label style="min-width:0" title="このレイヤーの形のまわりを、ぼかした濃い紺で暗くする。サムネの文字の後ろを暗くして、字を浮かせるときに（あとから何度でも変えられます）">後ろを暗く</label><input type="range" id="lGl" min="0" max="100" step="1"><span class="num" id="lGlV"></span></div>
@@ -177,7 +177,7 @@ const cloneCv=c=>{const n=mk(c.width,c.height);g2(n).drawImage(c,0,0);return n};
 const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);const CMD=isMac?'⌘':'Ctrl+';
 
 /* ===== 描くもの（YouTube の決まりの大きさ） ===== */
-const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},video:{n:'動画用',w:1920,h:1080,note:'動画の場面に使う絵。動かしたい物はレイヤーを分けて、レイヤーに名前を付けてください（例：雲・車・人の腕）。下の点線より下は字幕が出ます'},free:{n:'自由',w:1200,h:1200,note:''}};
+const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},video:{n:'動画用',w:1920,h:1080,note:'動画の場面に使う絵。動かしたい物はレイヤーを分けて、レイヤーに名前を付けてください（例：雲・車・人の腕）。下の点線より下は字幕が出ます'},free:{n:'自由',w:1200,h:1200,note:''},part:{n:'素材',w:1000,h:1000,note:'よく使う素材。ほかの絵で「＋ 素材を置く」から置けます'}};
 const FONT_LIST=[
  ['丸い','Zen Maru Gothic',900,'丸ゴシック 太'],['丸い','Zen Maru Gothic',500,'丸ゴシック'],['丸い','M PLUS Rounded 1c',800,'M+ 丸ゴシック 太'],['丸い','Kosugi Maru',400,'小杉丸ゴシック'],['丸い','Kiwi Maru',500,'キウイ丸'],
  ['ポップ','Mochiy Pop One',400,'もちもちポップ'],['ポップ','Hachi Maru Pop',400,'はちまるポップ'],['ポップ','Potta One',400,'ぽってり'],['ポップ','Darumadrop One',400,'だるまドロップ'],['ポップ','RocknRoll One',400,'ロックンロール'],
@@ -499,7 +499,7 @@ let opBefore=null;$('lOp').oninput=e=>{const l=act();if(opBefore==null)opBefore=
 $('lOp').onchange=()=>{if(opBefore){pushHist({type:'struct',name:'不透明度',before:opBefore,after:snap()});opBefore=null;markAll();renderLayers()}};
 let blBefore=null;$('lBl').oninput=e=>{const l=act();if(!l)return;if(blBefore==null)blBefore=snap();l.blur=+e.target.value;$('lBlV').textContent=e.target.value+'px';bump();need()};
 $('lBl').onchange=()=>{if(blBefore){pushHist({type:'struct',name:'ぼかし',before:blBefore,after:snap()});blBefore=null;markAll();renderLayers()}};
-$('flatBtn').onclick=()=>flatDialog();$('traceTopBtn').onclick=()=>toggleTraceTop();
+$('flatBtn').onclick=()=>flatDialog();$('partSaveBtn').onclick=()=>partSaveDlg();$('partPutBtn').onclick=()=>partPutDlg();$('traceTopBtn').onclick=()=>toggleTraceTop();
 $('traceXfBtn').onclick=()=>{if(!art)return;if(float)commitFloat();if(textEdit)commitText();const t=layers.filter(l=>l.trace);if(!t.length)return;const cur=act();activeId=(cur&&cur.trace?cur:t[t.length-1]).id;renderLayers();startXform();if(float)hint('なぞる画像を動かせます：四すみをつまむと大きさ、中をつまむと移動、外側で回転。終わったら上の帯の「確定」か Enter',7000)};let glBefore=null;$('lGl').oninput=e=>{const l=act();if(!l)return;if(glBefore==null)glBefore=snap();l.glow=+e.target.value;$('lGlV').textContent=e.target.value;bump();need()};
 $('lGl').onchange=()=>{if(glBefore){pushHist({type:'struct',name:'後ろを暗く',before:glBefore,after:snap()});glBefore=null;markAll();renderLayers()}};
 $('lVig').onclick=()=>addVignette();
@@ -1152,6 +1152,38 @@ function importedLayers(rec,Ls,fit,flat){const P=placeOf(rec,fit);const put=(c,b
  if(flat){const l=newLayer((rec.name||'絵')+'（まとめ）');const c=g2(l.cv);for(const{meta,bm}of Ls){if(meta.visible===false||meta.trace)continue;c.globalAlpha=meta.opacity??1;c.globalCompositeOperation=meta.blend||'source-over';put(c,bm)}c.globalAlpha=1;c.globalCompositeOperation='source-over';return[l]}
  const grp=Ls.filter(x=>!x.meta.trace).length>1?uid('g'):null;
  return Ls.map(({meta,bm})=>{const l=newLayer(meta.name||'レイヤー',{grp:meta.trace?null:grp,opacity:meta.opacity??1,blend:meta.blend||'source-over',visible:meta.visible!==false,lockAlpha:!!meta.lockAlpha,clip:!!meta.clip,blur:+meta.blur||0,glow:+meta.glow||0,noExport:!!meta.noExport,trace:!!meta.trace});put(g2(l.cv),bm);return l})}
+/* ===== 素材の棚（作り手・2026-11-20「よく使う素材は保存できるように」） =====
+ 素材＝種類「素材」の絵（arts の kind:'part'）。ふつうの絵と同じ仕組みで端末に保存し、GitHub に送るので、ほかの端末でも使える。
+ 保存：選んだレイヤー（＋クリップした影・光／🔗の組）を、描いてある所だけに切り詰めて新しい素材にする（選択範囲があればその中だけ）。
+ 置く：素材のレイヤーを今の絵の真ん中に置き（大きすぎれば縮める）、そのまま自由変形にする。レイヤーの設定（ぼかし・後ろを暗く・クリップ・描画モード）はそのまま */
+function partLayersOf(scope){const a=act();if(!a)return[];if(scope==='vis')return layers.filter(l=>l.visible&&!l.trace);if(scope==='grp'&&a.grp)return layers.filter(l=>l.grp===a.grp&&!l.trace);
+ let i=layers.indexOf(a);while(i>0&&layers[i].clip)i--;const out=[layers[i]];let j=i+1;while(j<layers.length&&layers[j].clip){out.push(layers[j]);j++}return out.filter(l=>!l.trace)}
+function partSaveDlg(){if(!art)return;if(float)commitFloat();if(textEdit)commitText();const a=act();if(!a||a.trace)return hint('素材にするレイヤーを選んでください（なぞる画像は素材にできません）');
+ const hasG=!!a.grp&&layers.filter(l=>l.grp===a.grp).length>1;
+ dialog('素材として保存する',`<div class="rowx"><label>名前</label><input id="ptName" value="${esc(a.name.replace(/[：:].*$/,''))}" style="flex:1"></div>
+  <div class="rowx"><label>入れるもの</label><select id="ptScope"><option value="one">このレイヤー（＋クリップした影・光）</option>${hasG?'<option value="grp">🔗の組ぜんぶ</option>':''}<option value="vis">見えているレイヤーぜんぶ</option></select></div>
+  <div class="lead">${SEL?'選択範囲の中だけを保存します。':''}描いてある所だけに切り詰めて保存します。レイヤーの分け方・ぼかし・後ろを暗く・影や光のクリップはそのまま残ります。ほかの絵では、レイヤーの欄の「＋ 素材を置く」から置けます。</div>`,
+  ()=>{const nm=$('ptName').value.trim()||a.name;partSave(nm,$('ptScope').value)},()=>{const i=$('ptName');i.focus();i.select()})}
+async function partSave(name,scope){const Ls=partLayersOf(scope);if(!Ls.length)return hint('素材にできるレイヤーがありません');
+ /* 描いてある所（全部のレイヤーを合わせた範囲・ぼかしの分も少し広く） */const u=mk(art.w,art.h),ux=g2(u);for(const l of Ls){if(SEL){const t=cloneCv(l.cv),tx=g2(t);tx.globalCompositeOperation='destination-in';tx.drawImage(SEL,0,0);ux.drawImage(t,0,0)}else ux.drawImage(l.cv,0,0)}
+ const bb0=maskBBox(u);if(!bb0)return hint('描いてある物がありません');const pad=Math.ceil(Math.max(0,...Ls.map(l=>(l.blur||0)*2.5+(l.glow||0)*2)))+4;
+ const bb={x:Math.max(0,bb0.x-pad),y:Math.max(0,bb0.y-pad)};bb.w=Math.min(art.w,bb0.x+bb0.w+pad)-bb.x;bb.h=Math.min(art.h,bb0.y+bb0.h+pad)-bb.y;
+ const layerData=[];for(const l of Ls){const c=mk(bb.w,bb.h),x=g2(c);let src=l.cv;if(SEL){src=cloneCv(l.cv);const t=g2(src);t.globalCompositeOperation='destination-in';t.drawImage(SEL,0,0)}x.drawImage(src,-bb.x,-bb.y);layerData.push({...META(l),id:uid('ly'),grp:undefined,text:null,blob:await toBlob(c),v:1,up:true})}
+ if(layerData.length&&layerData[0].clip)layerData[0].clip=false;
+ const th=mk(240,150),tx=g2(th);tx.fillStyle='#2b3038';tx.fillRect(0,0,240,150);const z=Math.min(230/bb.w,140/bb.h);const keep=layers;layers=Ls;const full=mk(art.w,art.h);compositeTo(g2(full),{raw:true});layers=keep;tx.drawImage(full,bb.x,bb.y,bb.w,bb.h,(240-bb.w*z)/2,(150-bb.h*z)/2,bb.w*z,bb.h*z);
+ const id=uid('art'),t=now();const rec={id,kind:'part',name,w:bb.w,h:bb.h,bg:'',rev:0,updatedAt:t,activeId:layerData[layerData.length-1].id,thumb:th.toDataURL('image/png'),layerData,localDirty:true,sv:1};await dbPut(rec);
+ D.arts=D.arts||[];D.arts.push({id,kind:'part',name,w:bb.w,h:bb.h,bg:'',thumb:rec.thumb,rev:0,files:{},layers:[],finished:[],updatedAt:t});saveD();uploadRec(id);
+ hint(`素材「${name}」を保存しました（${Ls.length}枚のレイヤー）。ほかの絵では「＋ 素材を置く」から置けます`,5000)}
+async function partPutDlg(){if(!art)return;if(float)commitFloat();if(textEdit)await commitText();const loc=await dbAll();const ids=new Set(loc.map(a=>a.id));
+ const del=new Set((D.arts||[]).filter(a=>a.deleted).map(a=>a.id));const all=[...loc.filter(a=>a.kind==='part'&&!del.has(a.id)),...(D.arts||[]).filter(a=>a.kind==='part'&&!a.deleted&&!ids.has(a.id)&&a.files&&Object.keys(a.files).length)].filter(a=>a.id!==art.id).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+ if(!all.length)return hint('素材がまだありません。置きたい物のレイヤーを選んで「⭐ 素材にする」で保存できます',6000);
+ dialog('素材を置く',`<div class="rowx"><input id="ptQ" placeholder="名前でさがす" style="flex:1"></div><div id="ptList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:52vh;overflow:auto;margin-top:6px">${all.map(a=>`<button class="b" data-pt="${a.id}" data-nm="${esc(a.name||'')}" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;white-space:normal"><img src="${a.thumb||''}" style="width:100%;aspect-ratio:8/5;object-fit:contain;background:#2b3038;border-radius:4px"><span style="font-size:12px">${esc(a.name||'素材')}</span></button>`).join('')}</div><div class="lead">押すと、今の絵の真ん中に置いて、そのまま大きさと場所を変えられます。素材を直したいときは、作品一覧から開いて描き直せます。</div>`,null,
+  ()=>{$('ptQ').oninput=e=>{const q=e.target.value.trim();document.querySelectorAll('[data-pt]').forEach(b=>b.style.display=!q||b.dataset.nm.includes(q)?'':'none')};
+   $('ptList').onclick=async e=>{const b=e.target.closest('[data-pt]');if(!b)return;$('dlg').close();await partPut(b.dataset.pt)}})}
+async function partPut(id){lab('素材を読み込んでいます…');const rec=await getRec(id);lab('');if(!rec)return hint('読み込めませんでした');const Ls=await recLayers(rec);if(!Ls.length)return hint('この素材にはレイヤーがありません');
+ const fitM=rec.w>art.w*.9||rec.h>art.h*.9?'in':'keep';const nl=importedLayers(rec,Ls,fitM,false);if(fitM==='in'){const P=placeOf(rec,'in');for(const l of nl)if(l.blur)l.blur=Math.round(l.blur*P.s)}
+ structOp('素材を置く',()=>{const a=act();let i=a?layers.indexOf(a):layers.length-1;while(i+1<layers.length&&layers[i+1].clip)i++;if(nl[0].clip)nl[0].clip=false;layers.splice(i+1,0,...nl);activeId=nl[nl.length-1].id});
+ if(nl.length>1&&!grpOn){grpOn=true;LS.set('pd_grp','1')}schedulePreview();scheduleSave();startXform();hint(`素材「${rec.name}」を置きました。四すみで大きさ、中をつまんで場所。終わったら「確定」`,6000)}
 async function importFrom(id){if(!art)return;if(float)commitFloat();if(textEdit)await commitText();lab('絵を読み込んでいます…');const rec=await getRec(id);if(!rec){hint('読み込めませんでした');return}const Ls=await recLayers(rec);lab('');if(!Ls.length){hint('取り込めるレイヤーがありません');return}
  const rows=Ls.slice().reverse().map((x,k)=>{const i=Ls.length-1-k;return`<label class="imp"><input type="checkbox" data-imp="${i}" ${x.meta.trace?'':'checked'}><canvas data-impc="${i}" width="128" height="80"></canvas><span>${esc(x.meta.name||'レイヤー')}${x.meta.trace?'（なぞり用）':''}${x.meta.text?'（文字 → 絵として取り込みます）':''}</span></label>`}).join('');
  dialog(`「${rec.name||'絵'}」から取り込む`,`<div class="lead">取り込むレイヤーを選びます（上にあるほど手前）。元の絵は変わりません。</div><div style="max-height:38vh;overflow:auto">${rows}</div><div class="rowx" style="margin-top:6px"><label><input type="checkbox" id="impFlat"> まとめて1枚のレイヤーにする</label></div>${fitHtml('keep')}`,
