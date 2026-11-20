@@ -474,7 +474,14 @@ function drawGuides(c){const w=art.w,h=art.h,k=art.kind;c.save();c.lineWidth=1.5
  if(k==='thumb'){c.fillStyle='rgba(0,0,0,.55)';c.fillRect(w-150,h-62,130,44);c.fillStyle='#fff';c.font='bold 28px sans-serif';c.fillText('10:24',w-128,h-30)}
  c.restore()}
 let antOff=0;
+/* 移動の道具：選んでいるレイヤー（🔗の組ならまとめて）の描いてある範囲に、いつも枠とつまみを出す。つまみを引けばそのまま大きさを変えられる（作り手・2026-11-20） */
+const MB={k:'',b:null};function moveBox(){if(!art||tool!=='move'||float||SEL||textEdit)return null;const l=act();if(!l||!l.visible)return null;const k=[GV,RC.mSeq,activeId,grpOn,art.w,art.h].join('~');if(k===MB.k)return MB.b;MB.k=k;
+ const G=grpOn&&grpOf(l).length>1?grpOf(l):[l];let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const m of G){const b=maskBBox(m.cv);if(!b)continue;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.w);y1=Math.max(y1,b.y+b.h)}MB.b=x1<0?null:{x:x0,y:y0,w:x1-x0,h:y1-y0};return MB.b}
+const COARSE=matchMedia('(any-pointer:coarse)').matches;
+function moveHandles(b){return[[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]].map(([i,j])=>({x:b.x+b.w/2+i*b.w/2,y:b.y+b.h/2+j*b.h/2,i,j}))}
+function hitMoveHandle(b,p){const tol=(COARSE?22:12)/V.s;for(const h of moveHandles(b))if(Math.hypot(p.x-h.x,p.y-h.y)<tol)return h;return null}
 function drawOverlays(c){const lw=1/V.s;
+ {const b=moveBox();if(b&&!drag){c.save();c.lineWidth=lw;c.setLineDash([5/V.s,4/V.s]);c.strokeStyle='rgba(61,142,240,.9)';c.strokeRect(b.x,b.y,b.w,b.h);c.setLineDash([]);const hs=(COARSE?11:7)/V.s;for(const h of moveHandles(b)){c.fillStyle='#fff';c.fillRect(h.x-hs/2,h.y-hs/2,hs,hs);c.strokeStyle='#3d8ef0';c.strokeRect(h.x-hs/2,h.y-hs/2,hs,hs)}c.restore()}}
  if(selPath&&!float){c.save();c.lineWidth=lw;c.strokeStyle='#fff';c.stroke(selPath);c.setLineDash([4/V.s,4/V.s]);c.lineDashOffset=-antOff/V.s;c.strokeStyle='#000';c.stroke(selPath);c.restore()}
  if(drag&&drag.kind==='marquee'){c.save();c.lineWidth=lw;c.setLineDash([4/V.s,4/V.s]);c.strokeStyle='#000';c.beginPath();const r=drag.rect;if(drag.shape==='ellipse')c.ellipse(r.x+r.w/2,r.y+r.h/2,Math.abs(r.w/2),Math.abs(r.h/2),0,0,7);else c.rect(r.x,r.y,r.w,r.h);c.stroke();c.strokeStyle='#fff';c.lineDashOffset=4/V.s;c.stroke();c.restore()}
  if(drag&&drag.kind==='lasso'&&drag.pts.length>1){c.save();c.lineWidth=lw;c.strokeStyle='#000';c.setLineDash([4/V.s,4/V.s]);c.beginPath();drag.pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();c.restore()}
@@ -897,6 +904,7 @@ view.addEventListener('pointerdown',e=>{if(!art)return;
  if(tool==='crop'){if(crop){const h=cropHit(p);if(h){drag={kind:'cropAdj',h,start:p,orig:{...crop}};return}}drag={kind:'crop',a:p};crop={x:p.x,y:p.y,w:0,h:0};return}
  if(tool==='text'){if(textEdit){const b=textEdit.bb;if(b&&p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){drag={kind:'textMove',off:{x:p.x-textEdit.x,y:p.y-textEdit.y}};return}commitText()}startText(p);return}
  if(tool==='move'){if(float){const h=hitFloat(p);drag={kind:'xf',h,start:p,orig:{cx:float.cx,cy:float.cy,sx:float.sx,sy:float.sy,rot:float.rot},a0:Math.atan2(p.y-float.cy,p.x-float.cx)};return}
+  {const b=moveBox();const hh=b&&!alt&&hitMoveHandle(b,p);if(hh){if(!lift(false))return;float.name='大きさを変える';drag={kind:'xf',fromMove:true,h:{type:'scale',i:hh.i,j:hh.j},start:p,orig:{cx:float.cx,cy:float.cy,sx:float.sx,sy:float.sy,rot:float.rot},a0:0};renderOpts();need();return}}
   if(!lift(alt))return;float.name='移動';drag={kind:'moveL',start:p,orig:{cx:float.cx,cy:float.cy},alt};need();return}});
 view.addEventListener('pointermove',e=>{const pt=ptrs.get(e.pointerId);if(pt){pt.x=e.clientX;pt.y=e.clientY}
  if(gest&&ptrs.size>=2){const[a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=view.getBoundingClientRect();const s=clamp(gest.s*d/gest.d,0.02,32);const dx=(gest.cx-r.left-gest.tx)/gest.s,dy=(gest.cy-r.top-gest.ty)/gest.s;V.s=s;V.tx=cx-r.left-dx*s;V.ty=cy-r.top-dy*s;gest.moved=Math.max(gest.moved,Math.abs(d-gest.d),Math.hypot(cx-gest.cx,cy-gest.cy));need();return}
@@ -934,6 +942,7 @@ function ptrEnd(e){ptrs.delete(e.pointerId);
  else if(d.kind==='marquee'){const r=d.rect;if(r.w<2||r.h<2){if(d.mode==='new')ACT.deselect();need();return}const vec=new Path2D();if(d.shape==='ellipse')vec.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,7);else vec.rect(r.x,r.y,r.w,r.h);applySel(maskFromPath(x=>{if(d.shape==='ellipse')x.ellipse(r.x+r.w/2,r.y+r.h/2,r.w/2,r.h/2,0,0,7);else x.rect(r.x,r.y,r.w,r.h)}),d.mode,vec,d.shape==='ellipse'?'楕円形選択':'長方形選択')}
  else if(d.kind==='lasso'){if(d.pts.length<3){need();return}const vec=new Path2D();d.pts.forEach((p,i)=>i?vec.lineTo(p.x,p.y):vec.moveTo(p.x,p.y));vec.closePath();applySel(maskFromPath(x=>{d.pts.forEach((p,i)=>i?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath()}),d.mode,vec,'なげなわ')}
  else if(d.kind==='moveL'){if(Math.hypot(float.cx-d.orig.cx,float.cy-d.orig.cy)<0.5){float=null;need();return}commitFloat()}
+ else if(d.kind==='xf'&&d.fromMove&&float){/* 移動の道具のつまみで大きさを変えたときは、離したらそのまま決める（移動と同じ） */if(Math.abs(float.sx-d.orig.sx)<1e-3&&Math.abs(float.sy-d.orig.sy)<1e-3){float=null;renderOpts();need();return}commitFloat();renderOpts()}
  else if(d.kind==='crop'){if(!crop||crop.w<4||crop.h<4)crop=null;renderOpts()}
  need()}
 view.addEventListener('pointerup',ptrEnd);view.addEventListener('pointercancel',ptrEnd);

@@ -67,4 +67,8 @@ await E(()=>{const c=mk(300,200),x=g2(c);x.fillStyle='#4a7';x.fillRect(0,0,300,2
 await E(()=>{toggleTraceTop();toggleTraceTop()});await chk('trace top');
 // 後ろを暗く（l.glow）・周りを暗く（2026-11-20）
 await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;act().glow=40;renderLayers();need()});await chk('glow');await strokeMid(10);await chk('glow stroke mid');await pg.mouse.up();await chk('glow stroke done');await E(()=>{act().glow=0;addVignette()});await chk('vignette');await E(()=>undo());await chk('vignette undo');
+// 移動の道具のつまみで大きさを変える（2026-11-20）
+await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;setTool('move');renderLayers();need()});await chk('move box');
+{const h=await pg.evaluate(()=>{const b=moveBox();const r=view.getBoundingClientRect();return{x:r.left+V.tx+(b.x+b.w)*V.s,y:r.top+V.ty+(b.y+b.h)*V.s,ok:!!b}});if(!h.ok){fails++;console.log('FAIL no move box')}else{await pg.mouse.move(h.x,h.y);await pg.mouse.down();await pg.mouse.move(h.x-40,h.y-30,{steps:4});await chk('move scale mid');await pg.mouse.up();await chk('move scale done');const f=await pg.evaluate(()=>!!float);if(f){fails++;console.log('FAIL float left')}}}
+await E(()=>undo());await chk('move scale undo');await E(()=>setTool('brush'));
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();
