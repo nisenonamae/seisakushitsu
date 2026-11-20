@@ -128,7 +128,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  </div>
  <div class="panel"><h3>ヒストリー</h3><div id="hist"></div></div>
  <div class="panel"><h3>見え方（実際の大きさ）</h3><div class="pv" id="pv"></div></div>
- <div class="panel" id="finPanel" style="display:none"><h3>Claude の仕上げ</h3><div id="finBox"></div></div>
+ <div class="panel" id="finPanel" style="display:none"><h3 id="finPanelT">Claude の仕上げ</h3><div id="finBox"></div></div>
  <div class="panel"><h3>使い方</h3><div class="lead">ショートカットは Photoshop と同じです（B ブラシ、E 消しゴム、V 移動、M 選択、⌘T 自由変形、⌘Z 戻す など。メニューに書いてあります）。<br>スマホ・タブレット：2本指でつまむと拡大縮小、2本指で動かすと画面移動、2本指でトンと叩くと1つ戻ります。ペンで描くと、指は画面を動かすだけになります。<br>描いた絵は自動で保存され、制作室の同期をつないだ端末どうしで同じ絵を開けます。</div></div>
 </aside>
 </div>
@@ -140,8 +140,9 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </dialog>
 <dialog id="dlg"><b id="dlgTitle"></b><div id="dlgBody"></div><div class="rowx" style="justify-content:flex-end;margin-top:10px"><button class="b" id="dlgCancel">キャンセル</button><button class="b main" id="dlgOk">OK</button></div></dialog>
 <dialog id="finDlg">
- <b>Claude に仕上げてもらう</b>
- <p class="lead">今の絵をそのまま渡します。手書きの味は残したまま、線を整え、色を付け、YouTube の大きさに合わせて仕上げます。仕上がると、右の「Claude の仕上げ」に並びます。</p>
+ <b id="finTitle">Claude に仕上げてもらう</b>
+ <p class="lead" id="finLead">今の絵をそのまま渡します。手書きの味は残したまま、線を整え、色を付け、YouTube の大きさに合わせて仕上げます。仕上がると、右の「Claude の仕上げ」に並びます。</p>
+ <div id="finProjRow" style="display:none;margin:6px 0"><label class="lead">どの動画で使う？ <select id="finProj" style="max-width:100%"></select></label><br><label class="lead">どこで使う？（章や場面。分かれば） <input id="finWhere" style="width:100%" placeholder="例：第2章の、水路を作る工事の所"></label></div>
  <textarea id="finNote" rows="4" style="width:100%;padding:6px 8px" placeholder=""></textarea>
  <div class="rowx" style="justify-content:flex-end"><button class="b" id="finCancel">やめる</button><button class="b main" id="finSend">頼む</button></div>
 </dialog>
@@ -160,7 +161,7 @@ const cloneCv=c=>{const n=mk(c.width,c.height);g2(n).drawImage(c,0,0);return n};
 const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);const CMD=isMac?'⌘':'Ctrl+';
 
 /* ===== 描くもの（YouTube の決まりの大きさ） ===== */
-const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},free:{n:'自由',w:1200,h:1200,note:''}};
+const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},video:{n:'動画用',w:1920,h:1080,note:'動画の場面に使う絵。動かしたい物はレイヤーを分けて、レイヤーに名前を付けてください（例：雲・車・人の腕）。下の点線より下は字幕が出ます'},free:{n:'自由',w:1200,h:1200,note:''}};
 const FONT_LIST=[
  ['丸い','Zen Maru Gothic',900,'丸ゴシック 太'],['丸い','Zen Maru Gothic',500,'丸ゴシック'],['丸い','M PLUS Rounded 1c',800,'M+ 丸ゴシック 太'],['丸い','Kosugi Maru',400,'小杉丸ゴシック'],['丸い','Kiwi Maru',500,'キウイ丸'],
  ['ポップ','Mochiy Pop One',400,'もちもちポップ'],['ポップ','Hachi Maru Pop',400,'はちまるポップ'],['ポップ','Potta One',400,'ぽってり'],['ポップ','Darumadrop One',400,'だるまドロップ'],['ポップ','RocknRoll One',400,'ロックンロール'],
@@ -185,7 +186,7 @@ const ROOT=()=>S().p.replace(/data\.json$/,'');
 const b64e=s=>{const u=new TextEncoder().encode(s);let t='';for(let i=0;i<u.length;i+=0x8000)t+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(t)};
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
 const blobB64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(String(f.result).split(',')[1]);f.readAsDataURL(b)});
-function merge(a,b){const out={...a,...b};for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})])){const x=(a||{})[k],y=(b||{})[k];if(Array.isArray(x)||Array.isArray(y)){if([...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)){out[k]=y||x;continue}const un=k==='projects',kf=(w,l)=>{let o=w;for(const q in l){if(!(q in w)){if(o===w)o={...w};o[q]=l[q]}}return o};const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w)m.set(v.id,v);else{const nw=(v.updatedAt||0)>(w.updatedAt||0);m.set(v.id,un?(nw?kf(v,w):kf(w,v)):(nw?v:w))}}out[k]=[...m.values()]}}return out}   /* projects は、新しい方に無い項目を古い方から残す（index.html の merge と同じ決まり） */
+function merge(a,b){const out={...a,...b};for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})])){const x=(a||{})[k],y=(b||{})[k];if(Array.isArray(x)||Array.isArray(y)){if([...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)){out[k]=y||x;continue}const un=k==='projects'||k==='arts',kf=(w,l)=>{let o=w;for(const q in l){if(!(q in w)){if(o===w)o={...w};o[q]=l[q]}}return o};const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w)m.set(v.id,v);else{const nw=(v.updatedAt||0)>(w.updatedAt||0);m.set(v.id,un?(nw?kf(v,w):kf(w,v)):(nw?v:w))}}out[k]=[...m.values()]}}return out}   /* projects は、新しい方に無い項目を古い方から残す（index.html の merge と同じ決まり） */
 async function ghGet(){const s=S();const h={Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'};const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:h,cache:'no-store'});
  if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();let txt=j.content?b64d(j.content):'';if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{...h,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}return{data:JSON.parse(txt),sha:j.sha}}
 /* 古い画面の上書きを防ぐ（2026-11-17）：この画面を開いたあとでページ自体が新しくなっていたら、データを送らずに「読み込み直して」と出す。
@@ -397,6 +398,7 @@ function drawGuides(c){const w=art.w,h=art.h,k=art.kind;c.save();c.lineWidth=1.5
  if(k==='ending'&&w===1920&&h===1080){const E=END_SLOTS;c.font=`${13/V.s}px sans-serif`;c.setLineDash([10/V.s,6/V.s]);
   for(const[b,col,t] of [[E.msg,'rgba(255,255,255,.75)','ここにメッセージ（文字はあとで重ねる）'],[E.left,'rgba(255,170,0,.95)','ここに関連動画（YouTube が重ねる）'],[E.right,'rgba(255,170,0,.95)','ここに最新の動画（YouTube が重ねる）']]){c.strokeStyle=col;c.strokeRect(b.x,b.y,b.w,b.h);c.fillStyle=col;c.fillText(t,b.x+6/V.s,b.y-6/V.s)}
   c.strokeStyle='rgba(61,142,240,.8)';c.beginPath();c.arc(E.earth.x,E.earth.y,E.earth.r,0,7);c.stroke();c.fillStyle='rgba(61,142,240,.95)';c.textAlign='center';c.fillText('地球の目安',E.earth.x,E.earth.y+E.earth.r+18/V.s);c.textAlign='start';c.setLineDash([])}
+ if(k==='video'&&w===1920&&h===1080){const y=h-225;c.save();c.fillStyle='rgba(0,0,0,.10)';c.fillRect(0,y,w,h-y);c.strokeStyle='rgba(255,170,0,.95)';c.lineWidth=2/V.s;c.setLineDash([10/V.s,6/V.s]);c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.setLineDash([]);c.font=`${13/V.s}px sans-serif`;c.fillStyle='rgba(255,140,0,.95)';c.fillText('ここから下は字幕が出ます（大事な物は置かない）',8/V.s,y-6/V.s);c.restore()}
  if(k==='thumb'){c.fillStyle='rgba(0,0,0,.55)';c.fillRect(w-150,h-62,130,44);c.fillStyle='#fff';c.font='bold 28px sans-serif';c.fillText('10:24',w-128,h-30)}
  c.restore()}
 let antOff=0;
@@ -853,14 +855,14 @@ function renderPreview(){if(!art)return;thumbLayers();const src=composite(true);
  else fig('縮小',150,Math.round(150*art.h/art.w),(k,w,h)=>k.drawImage(src,0,0,w,h))}
 
 /* ===== 開く・新しく・保存・同期 ===== */
-function updKindTag(){$('kindTag').textContent=KINDS[art.kind].n+` ${art.w}×${art.h}`}
+function updKindTag(){$('kindTag').textContent=KINDS[art.kind].n+` ${art.w}×${art.h}`;updFinBtn()}
 async function openArt(rec){if(art)await flushSave(true);float=null;adj=null;textEdit=null;crop=null;stroke=null;drag=null;SEL=null;selPath=null;hist=[];hpos=0;histBytes=0;lastEnd=null;
  art={id:rec.id,kind:KINDS[rec.kind]?rec.kind:'free',name:rec.name,w:rec.w,h:rec.h,bg:rec.bg??'',rev:rec.rev||0,updatedAt:rec.updatedAt||now(),thumb:rec.thumb};allocTemps();layers=[];
  if(Array.isArray(rec.layerData)){for(const d of rec.layerData){const{blob,...meta}=d;const l=newLayer(d.name,meta);l.id=d.id;l.cv=mk(art.w,art.h);if(blob){try{const bm=await createImageBitmap(blob);g2(l.cv).drawImage(bm,0,0)}catch(e){}}layers.push(l)}}
  else if(rec.layers&&!Array.isArray(rec.layers)){for(const[k,n]of[['sketch','なぞり用（下書き）'],['color','色'],['line','線']]){const l=newLayer(n,k==='sketch'?{opacity:rec.sketchAlpha??.45,noExport:true,trace:true}:{});if(rec.layers[k]){try{const bm=await createImageBitmap(rec.layers[k]);g2(l.cv).drawImage(bm,0,0)}catch(e){}}layers.push(l)}}
  if(!layers.length)layers=[newLayer('レイヤー 1')];activeId=(rec.activeId&&layers.some(l=>l.id===rec.activeId))?rec.activeId:layers[layers.length-1].id;if(byId(activeId).trace&&layers.some(l=>!l.trace))activeId=layers.filter(l=>!l.trace).pop().id;
  LS.set('pd_open',art.id);$('artName').value=art.name||'';updKindTag();changedIds=new Set();resize();fit();renderLayers();renderHist();renderPreview();renderFin();renderOpts();if(KINDS[art.kind].note)hint(KINDS[art.kind].note)}
-function newArt(kind){const k=KINDS[kind];const n=(D.arts||[]).filter(a=>a.kind===kind&&!a.deleted).length+1;return{id:uid('art'),kind,name:k.n+(n>1?n:''),w:k.w,h:k.h,bg:kind==='icon'||kind==='mark'?'':kind==='ending'?'#0a0f2c':'#ffffff',rev:0,updatedAt:now(),layerData:[]}}
+function newArt(kind){const k=KINDS[kind];const n=(D.arts||[]).filter(a=>a.kind===kind&&!a.deleted).length+1;return{id:uid('art'),kind,name:k.n+(n>1?n:''),w:k.w,h:k.h,bg:kind==='icon'||kind==='mark'||kind==='video'?'':kind==='ending'?'#0a0f2c':'#ffffff',rev:0,updatedAt:now(),layerData:[]}}
 async function startNew(kind){await openArt(newArt(kind));OPT.brush.size=({icon:14,banner:24,mark:12,thumb:14,ending:18,free:14}[kind]||14);saveOpt();renderOpts();markAll();await flushSave(false)}
 function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(function go(){if(busyNow()){saveT=setTimeout(go,400);return}flushSave(false)},900);clearTimeout(upT);upT=setTimeout(()=>upload(),600000)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
@@ -947,16 +949,23 @@ async function reuseAsNew(id){lab('絵を読み込んでいます…');const rec
    hist=[];hpos=0;histBytes=0;markAll();renderLayers();renderHist();need();renderPreview();await flushSave(false);hint('元の絵を写しました。ここから描き足せます')},null,back)}
 
 /* ===== Claude に仕上げてもらう ===== */
-const FIN_DEF={icon:'線を整えて色を付け、チャンネルのアイコン（丸く切り取られる）に仕上げて。手書きの味は残す',banner:'線を整えて色を付け、YouTube のバナーに仕上げて。スマホで見える範囲に大事なものを収める',mark:'動画の右下に小さく出る透かしにして。小さくても形が分かるように',thumb:'サムネとして仕上げて',ending:'動画の最後に出すエンディングの背景に仕上げて。手書きの味は残す',free:'整えて仕上げて'};
-$('finBtn').onclick=()=>{if(!art)return;if(!syncOn())return hint('制作室の設定で同期をつなぐと頼めます');$('finNote').placeholder=FIN_DEF[art.kind];$('finDlg').showModal()};
+const FIN_DEF={icon:'線を整えて色を付け、チャンネルのアイコン（丸く切り取られる）に仕上げて。手書きの味は残す',banner:'線を整えて色を付け、YouTube のバナーに仕上げて。スマホで見える範囲に大事なものを収める',mark:'動画の右下に小さく出る透かしにして。小さくても形が分かるように',thumb:'サムネとして仕上げて',ending:'動画の最後に出すエンディングの背景に仕上げて。手書きの味は残す',video:'この絵を動画の場面にして、動かして（例：雲がゆっくり流れる、車が左から右へ走る）',free:'整えて仕上げて'};
+function finMode(){return art&&art.kind==='video'?'anim':'fin'}
+function updFinBtn(){const v=finMode()==='anim';$('finBtn').innerHTML=v?'<span class="long">Claude に</span>アニメにしてもらう':'<span class="long">Claude に</span>仕上げを頼む'}
+$('finBtn').onclick=()=>{if(!art)return;if(!syncOn())return hint('制作室の設定で同期をつなぐと頼めます');const v=finMode()==='anim';$('finNote').placeholder=FIN_DEF[art.kind];
+ $('finTitle').textContent=v?'Claude にアニメにしてもらう':'Claude に仕上げてもらう';$('finLead').textContent=v?'今の絵をレイヤーごとに渡します。レイヤー1枚ずつを部品にして動かし、動画の場面（1920×1080）にします。どの動画のどこで使うか、どう動かしたいかを書いてください。できると、右の「Claude のアニメ」に見本の動画が並びます。':'今の絵をそのまま渡します。手書きの味は残したまま、線を整え、色を付け、YouTube の大きさに合わせて仕上げます。仕上がると、右の「Claude の仕上げ」に並びます。';
+ $('finProjRow').style.display=v?'':'none';if(v){const ps=(D.projects||[]).filter(p=>!p.deleted).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));$('finProj').innerHTML='<option value="">（まだ決めていない）</option>'+ps.map(p=>{const c=(D.candidates||[]).find(x=>x.id===p.candId);return `<option value="${esc(p.id)}">${esc((c&&c.q)||p.title||'無題')}</option>`}).join('')}
+ $('finDlg').showModal()};
 $('finCancel').onclick=()=>$('finDlg').close();
 $('finSend').onclick=async()=>{$('finDlg').close();lab('絵を送っています…');await flushSave(false);await upload(true);
- try{const dir=`${ROOT()}art/${art.id}/`;await ghPutFile(dir+'whole.png',await blobB64(await toBlob(composite(true))),'お絵描き 仕上げの依頼');const note=$('finNote').value.trim();D.jobs.filter(j=>!j.deleted&&j.status==='待ち'&&j.type==='art_finish'&&j.artId===art.id).forEach(j=>{j.deleted=true;j.updatedAt=now()});
-  D.jobs.push({id:uid('j'),type:'art_finish',status:'待ち',artId:art.id,kind:art.kind,name:art.name,whole:dir+'whole.png',notes:note||FIN_DEF[art.kind],createdAt:now(),updatedAt:now()});$('finNote').value='';saveD();renderFin();hint('頼みました。仕上がると右に並びます')}catch(e){lab('頼めません：'+e.message,'bad')}};
+ try{const dir=`${ROOT()}art/${art.id}/`;await ghPutFile(dir+'whole.png',await blobB64(await toBlob(composite(true))),'お絵描き 仕上げの依頼');const note=$('finNote').value.trim();const ty=finMode()==='anim'?'art_animate':'art_finish';D.jobs.filter(j=>!j.deleted&&j.status==='待ち'&&j.type===ty&&j.artId===art.id).forEach(j=>{j.deleted=true;j.updatedAt=now()});
+  const job={id:uid('j'),type:ty,status:'待ち',artId:art.id,kind:art.kind,name:art.name,whole:dir+'whole.png',notes:note||FIN_DEF[art.kind],createdAt:now(),updatedAt:now()};if(ty==='art_animate'){job.projId=$('finProj').value||'';job.where=$('finWhere').value.trim()}
+  D.jobs.push(job);$('finNote').value='';$('finWhere').value='';saveD();renderFin();hint(ty==='art_animate'?'頼みました。アニメができると右に並びます':'頼みました。仕上がると右に並びます')}catch(e){lab('頼めません：'+e.message,'bad')}};
 const finUrl={};
-function renderFin(){const box=$('finBox');if(!art){$('finPanel').style.display='none';return}const m=(D.arts||[]).find(a=>a.id===art.id);const js=(D.jobs||[]).filter(j=>!j.deleted&&j.type==='art_finish'&&j.artId===art.id&&j.status!=='できた');const fin=(m&&m.finished)||[];
- $('finPanel').style.display=js.length||fin.length?'':'none';
- box.innerHTML=js.map(j=>`<div class="lead">頼みごと：<b>${esc(j.status)}</b>（${esc(j.notes).slice(0,40)}）</div>`).join('')+fin.slice().reverse().map(f=>`<div class="fin" style="margin:6px 0"><img data-fimg="${esc(f.path)}" alt=""><div class="lead">${esc(f.note||'')}</div><div class="rowx"><button class="b" data-fdl="${esc(f.path)}">PNGで保存</button><button class="b" data-fload="${esc(f.path)}">レイヤーとして開く</button></div></div>`).join('');
+function renderFin(){const box=$('finBox');if(!art){$('finPanel').style.display='none';return}const m=(D.arts||[]).find(a=>a.id===art.id);const js=(D.jobs||[]).filter(j=>!j.deleted&&(j.type==='art_finish'||j.type==='art_animate')&&j.artId===art.id&&j.status!=='できた');const fin=(m&&m.finished)||[];const an=(m&&m.anims)||[];
+ $('finPanel').style.display=js.length||fin.length||an.length?'':'none';$('finPanelT').textContent=art.kind==='video'?'Claude のアニメ':'Claude の仕上げ';
+ box.innerHTML=js.map(j=>`<div class="lead">頼みごと：<b>${esc(j.status)}</b>（${esc(j.notes).slice(0,40)}）</div>`).join('')+fin.slice().reverse().map(f=>`<div class="fin" style="margin:6px 0"><img data-fimg="${esc(f.path)}" alt=""><div class="lead">${esc(f.note||'')}</div><div class="rowx"><button class="b" data-fdl="${esc(f.path)}">PNGで保存</button><button class="b" data-fload="${esc(f.path)}">レイヤーとして開く</button></div></div>`).join('')+an.slice().reverse().map(f=>`<div class="fin" style="margin:6px 0"><video data-fvid="${esc(f.path)}" controls loop muted playsinline style="width:100%;border-radius:6px;background:#000"></video><div class="lead">${esc(f.note||'')}${f.proj?'<br>使う所：'+esc(f.proj):''}</div><div class="rowx"><button class="b" data-fdl="${esc(f.path)}">動画で保存</button></div></div>`).join('');
+ box.querySelectorAll('[data-fvid]').forEach(async v=>{try{const p=v.dataset.fvid;finUrl[p]=finUrl[p]||URL.createObjectURL(await ghBlob(p));v.src=finUrl[p]}catch(e){v.replaceWith(Object.assign(document.createElement('div'),{className:'lead',textContent:'動画を読み込めません'}))}});
  box.querySelectorAll('[data-fimg]').forEach(async im=>{try{const p=im.dataset.fimg;finUrl[p]=finUrl[p]||URL.createObjectURL(await ghBlob(p));im.src=finUrl[p]}catch(e){im.alt='読み込めません'}})}
 $('finBox').onclick=async e=>{const dl=e.target.closest('[data-fdl]');if(dl){download(await ghBlob(dl.dataset.fdl),dl.dataset.fdl.split('/').pop());return}
  const ld=e.target.closest('[data-fload]');if(ld){const bm=await createImageBitmap(await ghBlob(ld.dataset.fload));const c=mk(bm.width,bm.height);g2(c).drawImage(bm,0,0);pasteCanvas(c,null,null,'Claude の仕上げ')}};
