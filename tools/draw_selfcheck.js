@@ -65,4 +65,6 @@ await E(()=>{LA.new();LA.clip();toneBrush('1')});await strokeMid(-30);await chk(
 // 写真を平らな絵に（小さな作り物の写真で）・なぞる画像を上に透かす（2026-11-20）
 await E(()=>{const c=mk(300,200),x=g2(c);x.fillStyle='#4a7';x.fillRect(0,0,300,200);x.fillStyle='#e94';x.beginPath();x.arc(150,100,60,0,7);x.fill();const A=flatAnalyze(c,{k:4,lv:3,simp:2,sat:20,pur:30});flatBuild(A,c,{fit:'contain'})});await chk('flat build');await E(()=>undo());await chk('flat undo');
 await E(()=>{toggleTraceTop();toggleTraceTop()});await chk('trace top');
+// 後ろを暗く（l.glow）・周りを暗く（2026-11-20）
+await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;act().glow=40;renderLayers();need()});await chk('glow');await strokeMid(10);await chk('glow stroke mid');await pg.mouse.up();await chk('glow stroke done');await E(()=>{act().glow=0;addVignette()});await chk('vignette');await E(()=>undo());await chk('vignette undo');
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();

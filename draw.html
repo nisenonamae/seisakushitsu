@@ -136,7 +136,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  <div class="panel"><h3>レイヤー<span class="sp"></span><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></h3>
   <div class="rowx"><select id="lBlend" title="描画モード"></select><label style="min-width:0">不透明度</label><input type="range" id="lOp" min="0" max="100"><span class="num" id="lOpV"></span></div>
   <div class="rowx"><label style="min-width:0" title="手前の物・奥の物をぼかす。絵そのものは変わらないので、あとから何度でも変えられます">ぼかし</label><input type="range" id="lBl" min="0" max="60" step="1"><span class="num" id="lBlV"></span></div>
-  <div class="rowx"><button class="b" id="lShD" title="このレイヤーの上に、紫がかった紺の「影」のレイヤー（薄め・クリップ）を足す。塗った所だけ暗くなり、はみ出さない">🌑 影のレイヤー</button><button class="b" id="lShL" title="このレイヤーの上に、白い「光」のレイヤー（薄め・クリップ）を足す。塗った所だけ明るくなり、はみ出さない">☀ 光のレイヤー</button><button class="b" id="lShA" title="形のふちに沿って、影と光を自動で付ける">✨ 形に沿って明暗</button></div>
+  <div class="rowx"><label style="min-width:0" title="このレイヤーの形のまわりを、ぼかした濃い紺で暗くする。サムネの文字の後ろを暗くして、字を浮かせるときに（あとから何度でも変えられます）">後ろを暗く</label><input type="range" id="lGl" min="0" max="100" step="1"><span class="num" id="lGlV"></span></div>
+  <div class="rowx"><button class="b" id="lShD" title="このレイヤーの上に、紫がかった紺の「影」のレイヤー（薄め・クリップ）を足す。塗った所だけ暗くなり、はみ出さない">🌑 影のレイヤー</button><button class="b" id="lShL" title="このレイヤーの上に、白い「光」のレイヤー（薄め・クリップ）を足す。塗った所だけ明るくなり、はみ出さない">☀ 光のレイヤー</button><button class="b" id="lShA" title="形のふちに沿って、影と光を自動で付ける">✨ 形に沿って明暗</button><button class="b" id="lVig" title="画面の四すみ・はしを暗くするレイヤーを足す（文字より下に入る）（サムネで真ん中に目を集める）。強さは不透明度で">◎ 周りを暗く</button></div>
   <div class="rowx"><button class="b" id="lLockA" title="透明部分をロック（描いてある所だけに描ける）">▦ 透明部分を保護</button><button class="b" id="lNoExp" title="書き出し・仕上げに入れない">書き出さない</button></div>
   <div id="layers"></div>
   <div class="lbtns"><button class="b" data-la="new" title="新規レイヤー">＋新規</button><button class="b" data-la="dup" title="複製">複製</button><button class="b" data-la="up" title="前面へ">↑</button><button class="b" data-la="down" title="背面へ">↓</button><button class="b" data-la="clip" title="クリッピングマスク">クリップ</button><button class="b" data-la="merge" title="下と結合">下と結合</button><button class="b" data-la="del" title="削除">🗑</button></div>
@@ -243,7 +244,7 @@ let fg=LS.get('pd_fg','#000000'),bg=LS.get('pd_bg','#ffffff');let recent=[];try{
 let showGuide=LS.get('pd_guide','1')==='1';let comp=LS.get('pd_comp','none');let snapOn=LS.get('pd_snap','1')==='1';let snapLines=[];
 const V={s:1,tx:0,ty:0};
 const view=$('view'),vctx=g2(view);let dpr=1;
-let SC,BK,TMP,TMP2,TMPG,TMPB,TMPB2,TMPC;            // 描いている途中・描く前の写し・合成用
+let SC,BK,TMP,TMP2,TMPG,TMPB,TMPB2,TMPC,TMPGL,TMPGL2;            // 描いている途中・描く前の写し・合成用
 let SEL=null,selPath=null;          // 選択範囲（白＝選ばれている）と輪郭
 let hist=[],hpos=0,histBytes=0;
 const HIST_MAX=((navigator.deviceMemory||4)<=4||matchMedia('(pointer:coarse)').matches)?110e6:260e6; // 戻す用に覚えておく量（端末の中だけ。保存はしない）
@@ -341,7 +342,7 @@ function zoomAt(f,mx,my){const r=$('stage').getBoundingClientRect();if(mx==null)
 function zoom100(){zoomAt(1/V.s)}
 let rq=0;function need(){if(!rq)rq=requestAnimationFrame(render)}
 let checker=null;function checkerPat(){if(checker)return checker;const c=mk(16,16),x=g2(c);x.fillStyle='#fff';x.fillRect(0,0,16,16);x.fillStyle='#cfd3d9';x.fillRect(0,0,8,8);x.fillRect(8,8,8,8);return checker=vctx.createPattern(c,'repeat')}
-function allocTemps(){SC=mk(art.w,art.h);BK=mk(art.w,art.h);TMP=mk(art.w,art.h);TMP2=mk(art.w,art.h);TMPG=mk(art.w,art.h);TMPB=mk(art.w,art.h);TMPB2=mk(art.w,art.h);TMPC=mk(art.w,art.h)}
+function allocTemps(){SC=mk(art.w,art.h);BK=mk(art.w,art.h);TMP=mk(art.w,art.h);TMP2=mk(art.w,art.h);TMPG=mk(art.w,art.h);TMPB=mk(art.w,art.h);TMPB2=mk(art.w,art.h);TMPC=mk(art.w,art.h);TMPGL=mk(art.w,art.h);TMPGL2=mk(art.w,art.h)}
 /* 明暗の塗り：線の形で、明るく／暗くした写しを切り抜いたもの。クリップしたレイヤーなら、下の絵の色を明るく／暗くして塗る（あとから消したり薄くしたりできる） */
 function toneStart(l,k){const i=layers.indexOf(l);let b=l;if(l.clip){let j=i;while(j>0&&layers[j].clip)j--;b=layers[j]}stroke.tone=k;stroke.T=toneCv(b.cv,k);stroke.tOn=l.clip?'source-over':'source-atop'}
 let TMPT=null;function toneSrc(s){TMPT=fitCv(TMPT,art.w,art.h);const x=g2(TMPT);x.globalAlpha=1;x.globalCompositeOperation='copy';x.drawImage(stroke.T,0,0);x.globalCompositeOperation='destination-in';x.drawImage(s,0,0);x.globalCompositeOperation='source-over';return TMPT}
@@ -354,11 +355,17 @@ function layerView(l){if(adj&&adj.cvs&&adj.cvs[l.id])return adj.cvs[l.id];if(flo
  return l.cv}
 /* レイヤーのぼかし（l.blur＝絵の点の数。あとから何度でも変えられる）。絵の大きさの一時キャンバスに、ぼかした写しを作る */
 /* 絵のはしで切れている物は、はしの外にも続いているものとしてぼかす（はしの近くが薄くならず、動画の端までしっかり塗れる。作り手・2026-11-20） */
+/* ぼかし・後ろを暗くを、絵そのものに焼き込んだ写し（PSD の書き出し・下と結合で使う） */
+function bakeFx(l){if(!(l.blur>0)&&!(l.glow>0))return l.cv;let c=l.blur>0?blurOf(l.cv,l.blur,mk(art.w,art.h)):cloneCv(l.cv);if(l.glow>0){const o=mk(art.w,art.h),x=g2(o);x.drawImage(glowOf(c,l.glow,TMPGL),0,0);x.drawImage(c,0,0);c=o}return c}
 let BP=null;function blurOf(src,r,dst){const W=src.width,H=src.height,m=Math.ceil(r*2.5)+2;BP=fitCv(BP,W+2*m,H+2*m);const p=g2(BP);p.setTransform(1,0,0,1,0,0);p.globalAlpha=1;p.filter='none';p.imageSmoothingEnabled=false;
  p.globalCompositeOperation='copy';p.drawImage(src,m,m);p.globalCompositeOperation='source-over';
  p.drawImage(src,0,0,1,H,0,m,m,H);p.drawImage(src,W-1,0,1,H,W+m,m,m,H);p.drawImage(src,0,0,W,1,m,0,W,m);p.drawImage(src,0,H-1,W,1,m,H+m,W,m);
  p.drawImage(src,0,0,1,1,0,0,m,m);p.drawImage(src,W-1,0,1,1,W+m,0,m,m);p.drawImage(src,0,H-1,1,1,0,H+m,m,m);p.drawImage(src,W-1,H-1,1,1,W+m,H+m,m,m);
  const x=g2(dst);x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,dst.width,dst.height);x.filter=`blur(${r}px)`;x.drawImage(BP,-m,-m);x.filter='none';return dst}
+/* 後ろを暗く（l.glow＝0〜100）：描いてある形のまわりに、ぼかした濃い紺の影を敷く。サムネの文字の後ろを暗くして字を浮かせる（Kurzgesagt のサムネ風・作り手・2026-11-20） */
+const GLOWC='#070b24';function glowOf(src,v,dst){const k=Math.max(art.w,art.h)/1920,r=Math.max(2,v*1.9*k),a=Math.min(1,.55+v/160);
+ const m=g2(TMPGL2);m.setTransform(1,0,0,1,0,0);m.globalAlpha=1;m.filter='none';m.globalCompositeOperation='copy';m.drawImage(src,0,0);m.globalCompositeOperation='source-in';m.fillStyle=GLOWC;m.fillRect(0,0,art.w,art.h);m.globalCompositeOperation='source-over';
+ const x=g2(dst);x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(0,0,dst.width,dst.height);x.filter=`blur(${r}px)`;x.globalAlpha=a;x.drawImage(TMPGL2,0,0);x.drawImage(TMPGL2,0,0);x.filter=`blur(${r*.4}px)`;x.globalAlpha=a*.8;x.drawImage(TMPGL2,0,0);x.filter='none';x.globalAlpha=1;return dst}
 function compositeTo(c,opt={}){let i=opt.from||0;const end=opt.to==null?layers.length:opt.to;while(i<end){const base=layers[i];let j=i+1;const clips=[];while(j<layers.length&&layers[j].clip){clips.push(layers[j]);j++}
   if(!base.visible||(opt.exp&&base.noExport)){i=j;continue}
   const vc=clips.filter(c2=>c2.visible&&!(opt.exp&&c2.noExport));if(opt.fast&&!vc.length&&fastLayer(c,base)){i=j;continue}let img=opt.raw?base.cv:layerView(base);if(vc.length){const t=g2(TMPG);t.globalCompositeOperation='copy';t.drawImage(img,0,0);for(const c2 of vc){let ci=opt.raw?c2.cv:layerView(c2);if(c2.blur>0)ci=blurOf(ci,c2.blur,TMPB2);
@@ -366,6 +373,7 @@ function compositeTo(c,opt={}){let i=opt.from||0;const end=opt.to==null?layers.l
    else{/* クリップしたレイヤーの描画モード（乗算の影・スクリーンの光など）：下の形で切ってから、そのモードで重ねる */const m=g2(TMPC);m.globalAlpha=1;m.globalCompositeOperation='copy';m.drawImage(ci,0,0);m.globalCompositeOperation='destination-in';m.drawImage(TMPG,0,0);m.globalCompositeOperation='source-over';t.globalCompositeOperation=c2.blend;t.globalAlpha=c2.opacity;t.drawImage(TMPC,0,0)}}
    t.globalAlpha=1;t.globalCompositeOperation='source-over';img=TMPG}
   if(base.blur>0)img=blurOf(img,base.blur,TMPB);
+  if(base.glow>0){c.globalAlpha=base.opacity;c.globalCompositeOperation=base.blend;c.drawImage(glowOf(img,base.glow,TMPGL),0,0)}
   c.globalAlpha=base.opacity;c.globalCompositeOperation=base.blend;c.drawImage(img,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';i=j}}
 /* ===== 速く描き直すための控え =====
  さわっているレイヤー以外は、描いている間・動かしている間ずっと同じ絵。だから「それより下の全部」「それより上の全部」を
@@ -392,15 +400,15 @@ function strokeView(l){const g=RC.g;RC.VT=fitCv(RC.VT,g.w,g.h);const x=g2(RC.VT)
  x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';return RC.VT}
 /* 今のレイヤーを速く描く。できないとき（クリッピングの組・文字の入力中など）は false → いつもの描き方 */
 function fastLayer(c,l){
- if(float&&float.direct&&V.s<1&&!(l.blur>0)){const src=l.id===float.lid?float.src:((float.more||[]).find(m=>m.lid===l.id)||{}).src;if(src){c.save();c.globalAlpha=l.opacity;c.globalCompositeOperation=l.blend;c.imageSmoothingEnabled=true;drawFloat(c,src);c.restore();return true}}
- if(l.id!==activeId||l.clip||l.blur>0||float||textEdit||(adj&&adj.cvs&&adj.cvs[l.id])||(stroke&&stroke.lid!==l.id))return false;
+ if(float&&float.direct&&V.s<1&&!(l.blur>0)&&!(l.glow>0)){const src=l.id===float.lid?float.src:((float.more||[]).find(m=>m.lid===l.id)||{}).src;if(src){c.save();c.globalAlpha=l.opacity;c.globalCompositeOperation=l.blend;c.imageSmoothingEnabled=true;drawFloat(c,src);c.restore();return true}}
+ if(l.id!==activeId||l.clip||l.blur>0||l.glow>0||float||textEdit||(adj&&adj.cvs&&adj.cvs[l.id])||(stroke&&stroke.lid!==l.id))return false;
  const kM=RC.k2+'~'+RC.mSeq+'~'+l.id;if(kM!==RC.kM||!RC.VM){RC.VM=l2of(l.cv,RC.VM);RC.kM=kM}
  const img=stroke?strokeView(l):RC.VM;c.globalAlpha=l.opacity;c.globalCompositeOperation=l.blend;blit(c,img);c.globalAlpha=1;c.globalCompositeOperation='source-over';return true}
 function drawLayers(c,k,ox,oy){const n=layers.length;const{lo,hi}=dynRange();
  /* L2 の置き方：絵がまるごと入る倍率なら「絵まるごと」（画面をずらしても作り直さない）。入らないなら画面の大きさ */
  const W=Math.max(1,Math.ceil(art.w*k)),H=Math.max(1,Math.ceil(art.h*k));const whole=W*H<=Math.min(5e6,Math.max(2.5e6,view.width*view.height*1.2));
  RC.g=whole?{k,w:W,h:H,dx:0,dy:0,bx:ox,by:oy}:{k,w:view.width,h:view.height,dx:ox,dy:oy,bx:0,by:0};const g=RC.g;
- const st=(a,b)=>{let t='';for(let i=a;i<b;i++){const l=layers[i];t+=l.id+(l.visible?'v':'h')+l.opacity+l.blend+(l.clip?'c':'')+'b'+(l.blur||0)+';'}return t};
+ const st=(a,b)=>{let t='';for(let i=a;i<b;i++){const l=layers[i];t+=l.id+(l.visible?'v':'h')+l.opacity+l.blend+(l.clip?'c':'')+'b'+(l.blur||0)+'g'+(l.glow||0)+';'}return t};
  const normal=(a,b)=>{for(let i=a;i<b;i++){const l=layers[i];if(!l.clip&&l.visible&&l.blend!=='source-over')return false}return true};
  /* 画面を拡大・縮小している最中（1コマごとに倍率が変わる）：全部を1枚にまとめた控えを、軽い縮め方で1回だけ描く。止まったら、きれいな縮め方で描き直す */
  const gk=[k,g.w,g.h,g.dx,g.dy].join('~'),moved=RC.gk!==''&&RC.gk!==gk;RC.gk=gk;clearTimeout(RC.st);
@@ -479,9 +487,9 @@ setInterval(()=>{if(selPath&&!stroke&&!drag){antOff=(antOff+1)%8;need()}},140);
 
 /* ===== レイヤー ===== */
 function newLayer(name,o={}){return{id:uid('ly'),name,cv:mk(art.w,art.h),opacity:1,blend:'source-over',visible:true,lockAlpha:false,clip:false,noExport:false,trace:false,text:null,grp:null,...o}}
-function renderLayers(){bump();const l0=act();$('lBlend').innerHTML=BLENDS.map(([v,n])=>`<option value="${v}" ${l0&&l0.blend===v?'selected':''}>${n}</option>`).join('');$('lOp').value=l0?Math.round(l0.opacity*100):100;$('lOpV').textContent=$('lOp').value+'%';$('lBl').value=l0?(l0.blur||0):0;$('lBlV').textContent=$('lBl').value+'px';
+function renderLayers(){bump();const l0=act();$('lBlend').innerHTML=BLENDS.map(([v,n])=>`<option value="${v}" ${l0&&l0.blend===v?'selected':''}>${n}</option>`).join('');$('lOp').value=l0?Math.round(l0.opacity*100):100;$('lOpV').textContent=$('lOp').value+'%';$('lBl').value=l0?(l0.blur||0):0;$('lBlV').textContent=$('lBl').value+'px';$('lGl').value=l0?(l0.glow||0):0;$('lGlV').textContent=$('lGl').value;
  $('lLockA').classList.toggle('on',!!(l0&&l0.lockAlpha));{const tb=$('traceTopBtn'),hasT=layers.some(l=>l.trace);if(tb){tb.style.display=hasT?'':'none';tb.classList.toggle('on',traceTop)}const tx=$('traceXfBtn');if(tx)tx.style.display=hasT?'':'none'}$('lNoExp').classList.toggle('on',!!(l0&&l0.noExport));
- $('layers').innerHTML=layers.slice().reverse().map(l=>`<div class="lay ${l.id===activeId?'on':''} ${l.clip?'clip':''}" data-l="${l.id}"><button class="ic" data-eye="${l.id}">${l.visible?'👁':'　'}</button><canvas width="80" height="60" data-th="${l.id}"></canvas><span class="nm">${l.clip?'↳ ':''}${l.text?'T ':''}${esc(l.name)}${l.trace?'<br><small>なぞり用・書き出さない</small>':l.noExport?'<br><small>書き出さない</small>':''}${l.blend!=='source-over'||l.opacity<1?`<br><small>${BLENDS.find(b=>b[0]===l.blend)[1]} ${Math.round(l.opacity*100)}%</small>`:''}${l.blur>0?`<br><small>ぼかし ${l.blur}px</small>`:''}</span>${l.grp?'<span class="ic" title="いっしょに動かす組">🔗</span>':''}${l.lockAlpha?'<span class="ic">▦</span>':''}</div>`).join('');thumbLayers()}
+ $('layers').innerHTML=layers.slice().reverse().map(l=>`<div class="lay ${l.id===activeId?'on':''} ${l.clip?'clip':''}" data-l="${l.id}"><button class="ic" data-eye="${l.id}">${l.visible?'👁':'　'}</button><canvas width="80" height="60" data-th="${l.id}"></canvas><span class="nm">${l.clip?'↳ ':''}${l.text?'T ':''}${esc(l.name)}${l.trace?'<br><small>なぞり用・書き出さない</small>':l.noExport?'<br><small>書き出さない</small>':''}${l.blend!=='source-over'||l.opacity<1?`<br><small>${BLENDS.find(b=>b[0]===l.blend)[1]} ${Math.round(l.opacity*100)}%</small>`:''}${l.blur>0?`<br><small>ぼかし ${l.blur}px</small>`:''}${l.glow>0?`<br><small>後ろを暗く ${l.glow}</small>`:''}</span>${l.grp?'<span class="ic" title="いっしょに動かす組">🔗</span>':''}${l.lockAlpha?'<span class="ic">▦</span>':''}</div>`).join('');thumbLayers()}
 function thumbLayers(only){document.querySelectorAll('[data-th]').forEach(cv=>{if(only&&cv.dataset.th!==only)return;const l=byId(cv.dataset.th);const x=g2(cv);x.clearRect(0,0,80,60);if(!l)return;const s=Math.min(80/art.w,60/art.h);x.drawImage(l.cv,(80-art.w*s)/2,(60-art.h*s)/2,art.w*s,art.h*s)})}
 $('layers').addEventListener('click',e=>{const ey=e.target.closest('[data-eye]');if(ey){const l=byId(ey.dataset.eye);structOp(l.visible?'レイヤーを非表示':'レイヤーを表示',()=>{l.visible=!l.visible});return}
  const d=e.target.closest('[data-l]');if(d&&!e.target.closest('input')){if(textEdit)commitText();if(float)commitFloat();activeId=d.dataset.l;renderLayers();if(tool==='move')renderOpts()}});
@@ -492,7 +500,10 @@ $('lOp').onchange=()=>{if(opBefore){pushHist({type:'struct',name:'不透明度',
 let blBefore=null;$('lBl').oninput=e=>{const l=act();if(!l)return;if(blBefore==null)blBefore=snap();l.blur=+e.target.value;$('lBlV').textContent=e.target.value+'px';bump();need()};
 $('lBl').onchange=()=>{if(blBefore){pushHist({type:'struct',name:'ぼかし',before:blBefore,after:snap()});blBefore=null;markAll();renderLayers()}};
 $('flatBtn').onclick=()=>flatDialog();$('traceTopBtn').onclick=()=>toggleTraceTop();
-$('traceXfBtn').onclick=()=>{if(!art)return;if(float)commitFloat();if(textEdit)commitText();const t=layers.filter(l=>l.trace);if(!t.length)return;const cur=act();activeId=(cur&&cur.trace?cur:t[t.length-1]).id;renderLayers();startXform();if(float)hint('なぞる画像を動かせます：四すみをつまむと大きさ、中をつまむと移動、外側で回転。終わったら上の帯の「確定」か Enter',7000)};$('lShD').onclick=()=>addShade('dark');$('lShL').onclick=()=>addShade('light');$('lShA').onclick=()=>autoShade();
+$('traceXfBtn').onclick=()=>{if(!art)return;if(float)commitFloat();if(textEdit)commitText();const t=layers.filter(l=>l.trace);if(!t.length)return;const cur=act();activeId=(cur&&cur.trace?cur:t[t.length-1]).id;renderLayers();startXform();if(float)hint('なぞる画像を動かせます：四すみをつまむと大きさ、中をつまむと移動、外側で回転。終わったら上の帯の「確定」か Enter',7000)};let glBefore=null;$('lGl').oninput=e=>{const l=act();if(!l)return;if(glBefore==null)glBefore=snap();l.glow=+e.target.value;$('lGlV').textContent=e.target.value;bump();need()};
+$('lGl').onchange=()=>{if(glBefore){pushHist({type:'struct',name:'後ろを暗く',before:glBefore,after:snap()});glBefore=null;markAll();renderLayers()}};
+$('lVig').onclick=()=>addVignette();
+$('lShD').onclick=()=>addShade('dark');$('lShL').onclick=()=>addShade('light');$('lShA').onclick=()=>autoShade();
 $('lLockA').onclick=()=>{const l=act();structOp('透明部分の保護',()=>{l.lockAlpha=!l.lockAlpha})};
 $('lNoExp').onclick=()=>{const l=act();structOp('書き出しの対象',()=>{l.noExport=!l.noExport})};
 document.querySelector('.lbtns').onclick=e=>{const b=e.target.closest('[data-la]');if(b)LA[b.dataset.la]()};
@@ -503,9 +514,9 @@ const LA={
  up(){const s=act();const i=layers.indexOf(s);if(i>=layers.length-1)return;structOp('重ね順の変更',()=>{layers.splice(i,1);layers.splice(i+1,0,s)})},
  down(){const s=act();const i=layers.indexOf(s);if(i<=0)return;structOp('重ね順の変更',()=>{layers.splice(i,1);layers.splice(i-1,0,s);if(i-1===0)s.clip=false})},
  clip(){const s=act();if(layers.indexOf(s)===0)return hint('一番下のレイヤーはクリップできません');structOp(s.clip?'クリッピングマスクを解除':'クリッピングマスクを作成',()=>{s.clip=!s.clip})},
- merge(){const s=act();const i=layers.indexOf(s);if(i<=0)return;const lo=layers[i-1];structOp('下のレイヤーと結合',()=>{const c=lo.blur>0?blurOf(lo.cv,lo.blur,mk(art.w,art.h)):cloneCv(lo.cv);const x=g2(c);let si=s.blur>0?blurOf(s.cv,s.blur,mk(art.w,art.h)):s.cv;
+ merge(){const s=act();const i=layers.indexOf(s);if(i<=0)return;const lo=layers[i-1];structOp('下のレイヤーと結合',()=>{const c=cloneCv(bakeFx(lo));const x=g2(c);let si=bakeFx(s);
   if(s.clip&&s.blend!=='source-over'){const m=mk(art.w,art.h),mx=g2(m);mx.drawImage(si,0,0);mx.globalCompositeOperation='destination-in';mx.drawImage(c,0,0);si=m;x.globalCompositeOperation=s.blend}else x.globalCompositeOperation=s.clip?'source-atop':s.blend;
-  x.globalAlpha=s.opacity;x.drawImage(si,0,0);lo.cv=c;lo.blur=0;lo.text=null;layers.splice(i,1);activeId=lo.id})},
+  x.globalAlpha=s.opacity;x.drawImage(si,0,0);lo.cv=c;lo.blur=0;lo.glow=0;lo.text=null;layers.splice(i,1);activeId=lo.id})},
  mergeVis(){const vis=layers.filter(l=>l.visible);if(vis.length<2)return;structOp('表示レイヤーを結合',()=>{const c=mk(art.w,art.h);const keep=layers;layers=vis;compositeTo(g2(c),{raw:true});layers=keep;const top=vis[vis.length-1];const nl=newLayer('結合');nl.cv=c;layers=layers.filter(l=>!l.visible||l===top);layers[layers.indexOf(top)]=nl;activeId=nl.id})},
  flatten(){structOp('画像を統合',()=>{const c=mk(art.w,art.h);const x=g2(c);if(art.bg){x.fillStyle=art.bg;x.fillRect(0,0,art.w,art.h)}compositeTo(x,{raw:true,exp:true});const nl=newLayer('背景');nl.cv=c;layers=[nl];activeId=nl.id})}};
 
@@ -518,6 +529,10 @@ function groupEnd(b){let j=layers.indexOf(b);while(j+1<layers.length&&layers[j+1
 function shadeReady(){if(!art)return null;if(textEdit)commitText();if(float)commitFloat();const b=shadeBase();if(!b)return null;if(b.trace){hint('なぞり用の画像には付けられません');return null}return b}
 function toneBrush(v){if(!art)return;const l=act();if(l&&l.trace)return hint('なぞり用の画像には塗れません');OPT.brush.tone=v;saveOpt();setTool('brush');renderOpts();
  hint((v>0?'☀ 一段明るく':'🌑 一段暗く')+'：もう描いてある所をなぞると、同じ色の'+(v>0?'明るい':'暗い')+'段に変わります（はみ出しません）。重ねるともう一段。やわらかい境目にしたいときは「硬さ」を下げる。もとに戻すときは上の「塗り方：ふつう」',8000)}
+/* 周りを暗く（ビネット）：いちばん上に、はしほど濃い紺になるレイヤーを足す */
+function addVignette(){if(!art)return;if(textEdit)commitText();if(float)commitFloat();const l=newLayer('周りを暗く',{opacity:.6});const x=g2(l.cv),W=art.w,H=art.h,R=Math.hypot(W,H)/2;
+ x.save();x.translate(W/2,H/2);x.scale(1,H/W*1.15);const g=x.createRadialGradient(0,0,R*.35,0,0,R*.98);g.addColorStop(0,'rgba(7,11,36,0)');g.addColorStop(.55,'rgba(7,11,36,.35)');g.addColorStop(1,'rgba(7,11,36,1)');x.fillStyle=g;x.fillRect(-W,-H*2,W*2,H*4);x.restore();
+ /* 文字（文字の道具で書いたレイヤー）は暗くしたくないので、いちばん下の文字より下に入れる */const ti=layers.findIndex(x=>x.text&&!x.clip);structOp('周りを暗く',()=>{if(ti>=0)layers.splice(ti,0,l);else layers.push(l);activeId=l.id});hint((ti>=0?'文字より下に':'いちばん上に')+'「周りを暗く」を足しました。強さは不透明度、暗くしたくない所は消しゴムで消せます。重ね順は ↑↓ で',6000)}
 function addShade(kind){const b=shadeReady();if(!b)return;const S=SHADE[kind];
  structOp(S.n+'を足す',()=>{const l=newLayer(S.n+'：'+b.name.slice(0,14),{blend:S.blend,opacity:S.op,clip:true});layers.splice(groupEnd(b)+1,0,l);activeId=l.id});
  setFg(S.col);setTool('brush');hint(S.n+'のレイヤー（'+(kind==='dark'?'紫がかった紺':'白')+'・不透明度'+Math.round(S.op*100)+'%）を足しました。塗ると「'+b.name+'」の上だけが'+(kind==='dark'?'暗く':'明るく')+'なります（はみ出しません）。強さ＝不透明度、やわらかさ＝ぼかし。グラデーション（描画色→透明）でなめらかにも塗れます',8000)}
@@ -968,7 +983,7 @@ const MENUS={
  'ファイル':[['新規・作品一覧…',()=>openGal()],['画像・写真を開く（新しいレイヤーに）…',()=>pickFile('layer')],['前に描いた絵から取り込む（レイヤーとして）…',()=>openGal('pick')],['なぞり用の画像を置く…',()=>pickFile('trace')],['写真を Kurzgesagt 風の絵にする…',()=>flatDialog()],['紙の絵を線として取り込む…',()=>pickFile('lines')],['PSD を開く…',()=>pickFile('psd')],'-',['保存',()=>{flushSave(true);hint('保存しました')},CMD+'S'],['PNG で書き出す',()=>exportImg('png')],['JPEG で書き出す',()=>exportImg('jpeg')],['PSD で書き出す（Photoshop・アイビス用）',()=>exportPSD()]],
  '編集':[['取り消し',undo,CMD+'Z'],['やり直し',redo,'⇧'+CMD+'Z'],'-',['カット',ACT.cut,CMD+'X'],['コピー',ACT.copy,CMD+'C'],['ペースト',ACT.paste,CMD+'V'],['消去',()=>ACT.clear(),'Delete'],'-',['描画色で塗りつぶし',ACT.fillFg,'⌥Delete'],['背景色で塗りつぶし',ACT.fillBg,CMD+'Delete'],['境界線を描く…',ACT.strokeSel],'-',['自由変形',startXform,CMD+'T'],['左右に反転（レイヤー）',ACT.flipH],['上下に反転（レイヤー）',ACT.flipV]],
  'イメージ':[{h:'色調補正'},['明るさ・コントラスト…',()=>openAdj('bc')],['レベル補正…',()=>openAdj('lv'),CMD+'L'],['色相・彩度…',()=>openAdj('hs'),CMD+'U'],['カラーバランス…',()=>openAdj('cb'),CMD+'B'],['彩度を下げる',()=>openAdj('desat'),'⇧'+CMD+'U'],['階調の反転',()=>openAdj('inv'),CMD+'I'],['2階調化…',()=>openAdj('th')],['ポスタリゼーション…',()=>openAdj('post')],'-',['画像解像度…',()=>ACT.imgSize()],['カンバスサイズ…',()=>ACT.canvasSize()],['選択範囲で切り抜き',ACT.cropSel],'-',['画像の回転 90°（時計回り）',ACT.rot90],['画像の回転 90°（反時計回り）',ACT.rot270],['画像の回転 180°',ACT.rot180],['カンバスを左右に反転',ACT.cflipH],['カンバスを上下に反転',ACT.cflipV],'-',['背景（紙）の色…',()=>bgDialog()]],
- 'レイヤー':[['新規レイヤー',()=>LA.new(),'⇧'+CMD+'N'],['レイヤーを複製',()=>LA.dup(),CMD+'J'],['レイヤーを削除',()=>LA.del()],'-',['クリッピングマスクを作成／解除',()=>LA.clip(),'⌥'+CMD+'G'],['重ね順：前面へ',()=>LA.up(),CMD+']'],['重ね順：背面へ',()=>LA.down(),CMD+'['],'-',['下のレイヤーと結合',()=>LA.merge(),CMD+'E'],['表示レイヤーを結合',()=>LA.mergeVis(),'⇧'+CMD+'E'],['画像を統合',()=>LA.flatten()],'-',['見えているレイヤーを、いっしょに動かす組にする',()=>ACT.grpMake()],['組を解く',()=>ACT.grpFree()],'-',['影のレイヤーを足す（紫がかった紺・薄め）',()=>addShade('dark')],['光のレイヤーを足す（白・薄め）',()=>addShade('light')],['形に沿って明暗を付ける…',()=>autoShade()]],
+ 'レイヤー':[['新規レイヤー',()=>LA.new(),'⇧'+CMD+'N'],['レイヤーを複製',()=>LA.dup(),CMD+'J'],['レイヤーを削除',()=>LA.del()],'-',['クリッピングマスクを作成／解除',()=>LA.clip(),'⌥'+CMD+'G'],['重ね順：前面へ',()=>LA.up(),CMD+']'],['重ね順：背面へ',()=>LA.down(),CMD+'['],'-',['下のレイヤーと結合',()=>LA.merge(),CMD+'E'],['表示レイヤーを結合',()=>LA.mergeVis(),'⇧'+CMD+'E'],['画像を統合',()=>LA.flatten()],'-',['見えているレイヤーを、いっしょに動かす組にする',()=>ACT.grpMake()],['組を解く',()=>ACT.grpFree()],'-',['周りを暗くする（ビネット）',()=>addVignette()],['影のレイヤーを足す（紫がかった紺・薄め）',()=>addShade('dark')],['光のレイヤーを足す（白・薄め）',()=>addShade('light')],['形に沿って明暗を付ける…',()=>autoShade()]],
  '選択範囲':[['すべてを選択',ACT.selAll,CMD+'A'],['選択を解除',ACT.deselect,CMD+'D'],['選択範囲を反転',ACT.selInv,'⇧'+CMD+'I'],'-',['拡張…',()=>numDlg('選択範囲を拡張','拡張量',8,v=>morphSel(v,true,'選択範囲を拡張'))],['縮小…',()=>numDlg('選択範囲を縮小','縮小量',8,v=>morphSel(v,false,'選択範囲を縮小'))],['境界をぼかす…',()=>numDlg('境界をぼかす','ぼかしの半径',10,v=>featherSel(v))],['レイヤーの不透明部分を選択',()=>applySel(cloneCv(act().cv),'new',null,'不透明部分を選択')]],
  'フィルター':[['ぼかし（ガウス）…',()=>openAdj('blur')],['アンシャープマスク…',()=>openAdj('sharp')],['ノイズを加える…',()=>openAdj('noise')],['モザイク…',()=>openAdj('mosaic')]],
  '表示':[['ズームイン',()=>zoomAt(1.25),CMD+'+'],['ズームアウト',()=>zoomAt(0.8),CMD+'-'],['画面サイズに合わせる',fit,CMD+'0'],['100%',zoom100,CMD+'1'],['ガイドの表示／非表示',()=>ACT.guide()],['なぞる画像を上に透かす／後ろに戻す',()=>toggleTraceTop(),'⇧T'],['指で描く／指は画面を動かすだけ',()=>ACT.fingerT()],'-',{h:'構図の線'},['なし',()=>{comp='none';LS.set('pd_comp',comp);renderOpts();need()}],['中央',()=>{comp='center';LS.set('pd_comp',comp);renderOpts();need()}],['三分割',()=>{comp='thirds';LS.set('pd_comp',comp);renderOpts();need()}],['黄金比',()=>{comp='golden';LS.set('pd_comp',comp);renderOpts();need()}],['全部',()=>{comp='all';LS.set('pd_comp',comp);renderOpts();need()}],['吸着のオン／オフ',()=>ACT.snapT()]]};
@@ -1025,7 +1040,7 @@ function linesDialog(img){dialog('紙の絵を線として取り込む','<div cl
 let agp=null;function loadAg(){return agp||(agp=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/ag-psd@28.5.1/dist/bundle.js';s.onload=()=>res(window.agPsd);s.onerror=()=>{agp=null;rej(new Error('読み込めません'))};document.head.appendChild(s)}))}
 const PSDB={'source-over':'normal',multiply:'multiply',screen:'screen',overlay:'overlay',darken:'darken',lighten:'lighten','color-dodge':'color dodge','color-burn':'color burn','hard-light':'hard light','soft-light':'soft light',difference:'difference',exclusion:'exclusion',hue:'hue',saturation:'saturation',color:'color',luminosity:'luminosity'};
 async function exportPSD(){if(!art)return;hint('PSD を作っています…');try{const ag=await loadAg();const bgc=mk(art.w,art.h);if(art.bg){g2(bgc).fillStyle=art.bg;g2(bgc).fillRect(0,0,art.w,art.h)}
- const psd={width:art.w,height:art.h,canvas:composite(true),children:[...(art.bg?[{name:'背景',canvas:bgc}]:[]),...layers.map(l=>({name:l.name,canvas:l.blur>0?blurOf(l.cv,l.blur,mk(art.w,art.h)):l.cv,opacity:l.opacity,hidden:!l.visible||!!l.trace,blendMode:PSDB[l.blend]||'normal',clipping:!!l.clip,transparencyProtected:!!l.lockAlpha}))]};
+ const psd={width:art.w,height:art.h,canvas:composite(true),children:[...(art.bg?[{name:'背景',canvas:bgc}]:[]),...layers.map(l=>({name:l.name,canvas:bakeFx(l),opacity:l.opacity,hidden:!l.visible||!!l.trace,blendMode:PSDB[l.blend]||'normal',clipping:!!l.clip,transparencyProtected:!!l.lockAlpha}))]};
  const buf=ag.writePsd(psd);download(new Blob([buf],{type:'image/vnd.adobe.photoshop'}),`${art.name||'絵'}.psd`)}catch(e){hint('PSD を作れません：'+e.message)}}
 async function openPSD(f){hint('PSD を開いています…');try{const ag=await loadAg();const psd=ag.readPsd(await f.arrayBuffer());const rev=Object.fromEntries(Object.entries(PSDB).map(([a,b])=>[b,a]));const flat=[];const walk=ch=>{for(const c of ch||[]){if(c.children)walk(c.children);else if(c.canvas)flat.push(c)}};walk(psd.children);
  const kind=psd.width===2560&&psd.height===1440?'banner':psd.width===psd.height&&psd.width<=1000?'icon':'free';
@@ -1069,7 +1084,7 @@ async function startNew(kind){await openArt(newArt(kind));OPT.brush.size=({icon:
 function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(function go(){if(busyNow()){saveT=setTimeout(go,400);return}flushSave(false)},900);clearTimeout(upT);upT=setTimeout(()=>upload(),600000)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
-const META=l=>({id:l.id,grp:l.grp||undefined,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text,blur:l.blur||undefined});
+const META=l=>({id:l.id,grp:l.grp||undefined,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text,blur:l.blur||undefined,glow:l.glow||undefined});
 let saving=null;
 // 保存：レイヤーごとに「版（v）」と「まだ送っていない印（up）」を付けて覚える（ページを開き直しても、送り残しを忘れない）
 async function flushSave(alsoUp){if(!art)return;if(saving)await saving;saving=(async()=>{const old=await dbGet(art.id);const om=new Map(((old&&old.layerData)||[]).map(d=>[d.id,d]));const layerData=[];
@@ -1136,7 +1151,7 @@ function placeOf(rec,fit){const s=fit==='in'?Math.min(art.w/rec.w,art.h/rec.h):f
 function importedLayers(rec,Ls,fit,flat){const P=placeOf(rec,fit);const put=(c,bm)=>{c.imageSmoothingQuality='high';c.drawImage(bm,P.x,P.y,rec.w*P.s,rec.h*P.s)};
  if(flat){const l=newLayer((rec.name||'絵')+'（まとめ）');const c=g2(l.cv);for(const{meta,bm}of Ls){if(meta.visible===false||meta.trace)continue;c.globalAlpha=meta.opacity??1;c.globalCompositeOperation=meta.blend||'source-over';put(c,bm)}c.globalAlpha=1;c.globalCompositeOperation='source-over';return[l]}
  const grp=Ls.filter(x=>!x.meta.trace).length>1?uid('g'):null;
- return Ls.map(({meta,bm})=>{const l=newLayer(meta.name||'レイヤー',{grp:meta.trace?null:grp,opacity:meta.opacity??1,blend:meta.blend||'source-over',visible:meta.visible!==false,lockAlpha:!!meta.lockAlpha,clip:!!meta.clip,blur:+meta.blur||0,noExport:!!meta.noExport,trace:!!meta.trace});put(g2(l.cv),bm);return l})}
+ return Ls.map(({meta,bm})=>{const l=newLayer(meta.name||'レイヤー',{grp:meta.trace?null:grp,opacity:meta.opacity??1,blend:meta.blend||'source-over',visible:meta.visible!==false,lockAlpha:!!meta.lockAlpha,clip:!!meta.clip,blur:+meta.blur||0,glow:+meta.glow||0,noExport:!!meta.noExport,trace:!!meta.trace});put(g2(l.cv),bm);return l})}
 async function importFrom(id){if(!art)return;if(float)commitFloat();if(textEdit)await commitText();lab('絵を読み込んでいます…');const rec=await getRec(id);if(!rec){hint('読み込めませんでした');return}const Ls=await recLayers(rec);lab('');if(!Ls.length){hint('取り込めるレイヤーがありません');return}
  const rows=Ls.slice().reverse().map((x,k)=>{const i=Ls.length-1-k;return`<label class="imp"><input type="checkbox" data-imp="${i}" ${x.meta.trace?'':'checked'}><canvas data-impc="${i}" width="128" height="80"></canvas><span>${esc(x.meta.name||'レイヤー')}${x.meta.trace?'（なぞり用）':''}${x.meta.text?'（文字 → 絵として取り込みます）':''}</span></label>`}).join('');
  dialog(`「${rec.name||'絵'}」から取り込む`,`<div class="lead">取り込むレイヤーを選びます（上にあるほど手前）。元の絵は変わりません。</div><div style="max-height:38vh;overflow:auto">${rows}</div><div class="rowx" style="margin-top:6px"><label><input type="checkbox" id="impFlat"> まとめて1枚のレイヤーにする</label></div>${fitHtml('keep')}`,
