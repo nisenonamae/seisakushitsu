@@ -55,4 +55,11 @@ await E(()=>{setTool('marquee')});await pg.mouse.move(st.x-200,st.y-120);await p
 // 大きさを変える・回す
 await E(()=>ACT.rot90());await pg.waitForTimeout(200);await chk('rot90');await strokeMid(0);await chk('rot90 stroke mid');await pg.mouse.up();await E(()=>undo());await E(()=>undo());await pg.waitForTimeout(200);await chk('rot90 undo');
 await E(()=>LA.flatten());await chk('flatten');await E(()=>undo());await chk('flatten undo');
+// ぼかし（レイヤーの設定）・影と光（クリップした乗算・スクリーン）・形に沿って明暗（2026-11-20）
+await E(()=>{activeId=layers[2].id;act().blur=12;renderLayers();need()});await chk('layer blur');await strokeMid(20);await chk('blur stroke mid');await pg.mouse.up();await chk('blur stroke done');
+await E(()=>{activeId=layers[1].id;renderLayers();addShade('dark');setTool('brush')});await strokeMid(-20);await chk('shade mid');await pg.mouse.up();await chk('shade done');
+await E(()=>{act().blur=8;renderLayers();need()});await chk('shade blur');
+await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;renderLayers();autoShade()});await pg.waitForTimeout(150);if(!await pg.evaluate(()=>$('dlg').open)){fails++;console.log('FAIL auto shade dialog')}await chk('auto shade preview');await E(()=>$('dlgOk').click());await chk('auto shade ok');await E(()=>undo());await chk('auto shade undo');
+await E(()=>{activeId=layers.find(l=>!l.clip&&!l.trace&&maskBBox(l.cv)).id;renderLayers();toneBrush('-1')});await strokeMid(30);await chk('tone dark mid');await pg.mouse.up();await chk('tone dark done');
+await E(()=>{LA.new();LA.clip();toneBrush('1')});await strokeMid(-30);await chk('tone clip mid');await pg.mouse.up();await chk('tone clip done');await E(()=>{OPT.brush.tone='0'});
 console.log('steps',steps,'fails',fails,'errs',errs.slice(0,5));await b.close()})();
