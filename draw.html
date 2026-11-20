@@ -144,7 +144,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  <h1>お絵描き</h1><a href="index.html">←<span class="long"> 制作室</span></a>
  <div id="menubar"></div>
  <button class="b" id="hUndo" title="取り消し（1つ戻す）" style="font-size:15px;padding:2px 10px">↶ 戻す</button><button class="b" id="hRedo" title="やり直し" style="font-size:15px;padding:2px 10px">↷</button><input id="artName" placeholder="名前"><span class="kindTag" id="kindTag"></span>
- <span class="sp"></span><span class="stat" id="syncStat"></span>
+ <span class="sp"></span><button id="verTag" class="stat" style="background:none;border:1px solid #3a4150;border-radius:10px;padding:1px 8px;cursor:pointer;color:#9aa3b1" title="このお絵描きの版（GitHub に上げた時刻）。押すと新しい版が出ていないか調べます"></button><span class="stat" id="syncStat"></span>
  <button class="b main" id="finBtn"><span class="long">Claude に</span>仕上げを頼む</button>
 </header>
 <div id="opts"></div>
@@ -256,6 +256,12 @@ async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`
  const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:msg,content:b64,...(sha?{sha}:{})})});if(!r.ok)throw new Error('GitHub '+r.status)}
 async function ghBlob(path){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${encodeURI(path)}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});if(!r.ok)throw new Error('GitHub '+r.status);return r.blob()}
 let sBusy=false,sTimer=null,sDirty=false;
+/* 版の表示（作り手・2026-11-20「アップデートされたか分からない」）：このページを GitHub に上げた時刻（Last-Modified）を「版 11/20 21:45」の形で出す。押すと新しい版が出ていないか調べ、出ていれば読み込み直す */
+const PAGE_VER=new Date(document.lastModified);const verStr=d=>`版 ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+function showVer(newer){const b=$('verTag');if(!b)return;b.textContent=verStr(PAGE_VER)+(newer?' → 新しい版あり（押して読み込み直す）':'');b.style.color=newer?'#fff':'#9aa3b1';b.style.background=newer?'#c23a55':'none';b.dataset.newer=newer?1:''}
+async function checkVer(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{method:'HEAD',cache:'no-store'});const lm=r.headers.get('last-modified');if(!lm)return false;const n=new Date(lm);const newer=n-PAGE_VER>1000;showVer(newer);return newer}catch(e){return false}}
+showVer(false);setTimeout(checkVer,4000);setInterval(checkVer,5*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkVer()});
+$('verTag').onclick=async()=>{const b=$('verTag');if(b.dataset.newer||await checkVer()){b.textContent='保存して読み込み直しています…';try{await flushSave(false)}catch(e){}location.reload()}else hint('これが最新の版です（'+verStr(PAGE_VER)+'）',3000)};
 function lab(t,c){const e=$('syncStat');e.textContent=t;e.className='stat '+(c||'')}
 let sP=null,syncOK=false;function sync(){return sP||(sP=sync0().finally(()=>{sP=null}))}   // 同時に2つ走らせない。待てば、終わった同期の結果が使える
 async function sync0(){if(!syncOn()){lab('この端末だけに保存中');return}sBusy=true;
@@ -1310,7 +1316,7 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
  pickWin=w;const d=w.document;d.title='スポイト';
  const B='border:1px solid #3a4150;border-radius:6px;background:#2a3038;color:#e9ecf1;cursor:pointer';
  d.body.innerHTML=`<style>body{margin:0;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;background:#1f232a;color:#e9ecf1;padding:10px;box-sizing:border-box;font-size:13px}
-  #go{width:100%;font-size:17px;font-weight:700;padding:12px 8px;border:0;border-radius:10px;background:#3d8ef0;color:#fff;cursor:pointer}#tr{width:100%;margin-top:6px;font-size:12.5px;padding:8px 6px;${B}}
+  #go{width:100%;font-size:17px;font-weight:700;padding:12px 8px;border:0;border-radius:10px;background:#3d8ef0;color:#fff;cursor:pointer}#tr,#cap{width:100%;margin-top:6px;font-size:12.5px;padding:8px 6px;${B}}
   #cur{display:flex;align-items:center;gap:8px;margin:8px 0 6px}#cur i{display:inline-block;width:30px;height:30px;border-radius:7px;border:1px solid #000}
   .hd{display:flex;align-items:center;gap:5px;margin:10px 0 4px;font-size:11.5px;color:#9aa3b1}.hd button{margin-left:auto;font-size:11.5px;padding:3px 8px;${B}}
   #list{display:flex;flex-wrap:wrap;gap:5px}#list b{width:26px;height:26px;border-radius:6px;border:1px solid #000;cursor:pointer}
@@ -1319,14 +1325,14 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
   #pc input{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid #3a4150;color:#e9ecf1;padding:3px 2px;font-size:12.5px}
   #memo{width:100%;box-sizing:border-box;min-height:64px;margin-top:5px;${B};padding:6px;font:inherit;font-size:12.5px;resize:vertical;cursor:auto}
   p{font-size:11px;color:#9aa3b1;margin:8px 0 0;line-height:1.5}</style>
-  <button id="go">🎯 色を取る</button><button id="tr">🖼 なぞる画像・お絵描きの絵から取る（ルーペ）</button><div id="cur"><i></i><span></span></div>
+  <button id="go">🎯 色を取る</button><button id="cap">📸 ほかの窓・アプリから（写して取る）</button><button id="tr">🖼 なぞる画像・お絵描きの絵から取る（ルーペ）</button><div id="cur"><i></i><span></span></div>
   <div class="hd">取った色<button id="del">✕ 消す</button></div><div id="list"></div>
   <div class="row"><button id="add" class="main">今のセットに全部入れる</button></div>
   <div class="row"><input id="pn" placeholder="新しいセットの名前"><button id="mk">セットにする</button></div>
   <div class="hd">色のセット</div><div class="row"><select id="ps"></select></div>
   <div id="pc"></div>
   <div class="hd">メモ（色の使い方など）</div><textarea id="memo" placeholder="例：島は主役なので一番鮮やかに。影は「島の影」、光は白30%"></textarea>
-  <p>お絵描きに置いた画像（なぞる画像）から取るときは「🖼」を押してから、お絵描きの絵の上で押したまま動かし、離した所の色を取ります（薄くしてあるなぞる画像も元の色で取れます。🎯 は画面に見えている色をそのまま取るので、薄くしたなぞる画像だと白っぽくなります）。<br>「🎯 色を取る」を押してから画面のどこでも押すと、その色が描画色になり「取った色」にたまります（1色ごとに押す）。セットの色の名前とメモは、ここでそのまま書けます。${pip?'この窓はいつも手前に出ています。':''}</p>`;
+  <p>🎯 で十字が出ないとき（ほかのブラウザの窓・アプリ）は「📸」：最初に「何を共有するか」を聞かれるので、画面全体か取りたい窓を選ぶと、その画面がこの窓に大きく写ります。押したまま動かしてルーペで合わせ、離すと取れます（2回目からは聞かれません。この窓を閉じると共有も終わります）。<br>お絵描きに置いた画像（なぞる画像）から取るときは「🖼」を押してから、お絵描きの絵の上で押したまま動かし、離した所の色を取ります（薄くしてあるなぞる画像も元の色で取れます。🎯 は画面に見えている色をそのまま取るので、薄くしたなぞる画像だと白っぽくなります）。<br>「🎯 色を取る」を押してから画面のどこでも押すと、その色が描画色になり「取った色」にたまります（1色ごとに押す）。セットの色の名前とメモは、ここでそのまま書けます。${pip?'この窓はいつも手前に出ています。':''}</p>`;
  const $$=id=>d.getElementById(id);
  const show=()=>{const c=d.querySelector('#cur i'),t=d.querySelector('#cur span');c.style.background=fg;t.textContent='描画色 '+fg;
   $$('list').innerHTML=picked.slice(0,24).map(x=>`<b data-c="${x}" title="${x}" style="background:${x}"></b>`).join('')||'<span style="font-size:11.5px;color:#9aa3b1">まだありません</span>';
@@ -1338,6 +1344,38 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
  show();w.pdShow=show;
  $$('tr').onclick=()=>{setTool('pick');try{window.focus()}catch(e){}hint('スポイトにしました。絵の上で押したまま動かすと、ルーペに取る所が大きく出ます。離した所の色を取ります',6000)};
  $$('go').onclick=async()=>{const ED=w.EyeDropper||window.EyeDropper;if(!ED){d.querySelector('p').textContent='このブラウザでは画面から色を取れません（Chrome なら取れます）';return}const st=d.querySelector('p'),old=st.innerHTML;st.textContent='十字を動かして、取りたい所を押してください（やめるときは Esc）';try{const r=await withTraceFull(()=>new ED().open());const c=hexOf(r.sRGBHex);st.innerHTML=old;setFg(c);addPicked(c);show();hint('色を取りました：'+c)}catch(e){st.innerHTML=old;pickErr(e,m=>{st.textContent=m;st.style.color='#ff9a9a'})}};
+ /* 📸 ほかの窓・アプリから写して取る（作り手・2026-11-20「ブラウザをまたぐと十字が出ない」。Chromebook ではブラウザの十字（EyeDropper）が、開いた窓の中でしか出ないらしい〔要確認〕）
+    画面か窓を「共有」で写し、その1コマをこの窓に大きく出して、ルーペで狙って取る。共有はこの窓を閉じるまで続くので、2回目からは聞かれない */
+ let cap=null;const capStop=()=>{try{cap&&cap.stream.getTracks().forEach(t=>t.stop())}catch(e){}cap=null};w.addEventListener('pagehide',capStop);
+ const capGrab=async()=>{const tr=cap.stream.getVideoTracks()[0];if(w.ImageCapture||window.ImageCapture){try{const IC=w.ImageCapture||window.ImageCapture;const bm=await new IC(tr).grabFrame();const c=d.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);return c}catch(e){}}
+  const v=cap.video;if(v.readyState<2)await new Promise(r=>{v.onloadeddata=r;setTimeout(r,1500)});await new Promise(r=>setTimeout(r,150));const c=d.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);return c};
+ const capErr=m=>{const st=d.querySelector('p');st.textContent=m;st.style.color='#ff9a9a'};
+ $$('cap').onclick=async()=>{try{if(!cap||!cap.stream.active){const md=(w.navigator.mediaDevices&&w.navigator.mediaDevices.getDisplayMedia)?w.navigator.mediaDevices:navigator.mediaDevices;
+    const st=await md.getDisplayMedia({video:true,audio:false,selfBrowserSurface:'exclude',surfaceSwitching:'include'});const v=d.createElement('video');v.muted=true;v.playsInline=true;v.style.cssText='position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';d.body.appendChild(v);v.srcObject=st;try{await v.play()}catch(e){}
+    cap={stream:st,video:v};st.getVideoTracks()[0].addEventListener('ended',()=>{cap=null})}
+   capOpen(await capGrab())}catch(e){if(e&&(e.name==='NotAllowedError'||e.name==='AbortError'))return;capErr('写せませんでした（'+(e&&e.name||'')+(e&&e.message?'：'+e.message:'')+'）。この文をそのまま Claude に送ってください')}};
+ const capOpen=F=>{let o=d.getElementById('capO');const prev=[w.outerWidth,w.outerHeight];const big=()=>{try{w.resizeTo(Math.min(screen.availWidth-20,1200),Math.min(screen.availHeight-20,820))}catch(e){}};big();
+  if(!o){o=d.createElement('div');o.id='capO';d.body.appendChild(o)}
+  o.style.cssText='position:fixed;inset:0;background:#0d0f13;z-index:9;display:flex;flex-direction:column';
+  o.innerHTML=`<div style="display:flex;gap:6px;align-items:center;padding:6px;flex-wrap:wrap"><span style="flex:1;min-width:120px;font-size:12px;color:#c9ced8">取りたい所を押したまま動かし、離すと取れます（何色でも続けて取れます）</span><button id="cRe" style="padding:6px 10px;${B}">📸 撮り直す</button><button id="cBig" style="padding:6px 10px;${B}">⤢ 大きく</button><button id="cEnd" style="padding:6px 12px;border:0;border-radius:6px;background:#3d8ef0;color:#fff;font-weight:700;cursor:pointer">✓ 終わる</button></div>
+   <div id="cWrap" style="flex:1;position:relative;overflow:hidden;touch-action:none"><canvas id="cImg" style="position:absolute;image-rendering:auto"></canvas></div>
+   <canvas id="cL" width="260" height="260" style="position:fixed;width:130px;height:130px;pointer-events:none;display:none;z-index:10;filter:drop-shadow(0 4px 10px #000a)"></canvas><div id="cT" style="position:fixed;transform:translateX(-50%);pointer-events:none;display:none;z-index:10;background:rgba(0,0,0,.85);color:#fff;border-radius:6px;padding:1px 8px;font-size:12px;white-space:nowrap"></div>`;
+  const C=d.getElementById('cImg'),W=d.getElementById('cWrap'),L=d.getElementById('cL'),T=d.getElementById('cT');let src=F,sc=1,ox=0,oy=0;
+  const lay=()=>{const r=W.getBoundingClientRect();sc=Math.min(r.width/src.width,r.height/src.height);const cw=src.width*sc,ch=src.height*sc;ox=(r.width-cw)/2;oy=(r.height-ch)/2;C.width=src.width;C.height=src.height;C.getContext('2d').drawImage(src,0,0);C.style.width=cw+'px';C.style.height=ch+'px';C.style.left=ox+'px';C.style.top=oy+'px'};lay();w.addEventListener('resize',lay);
+  const sx=src.getContext('2d',{willReadFrequently:true});
+  const at=e=>{const r=W.getBoundingClientRect();return{x:Math.floor((e.clientX-r.left-ox)/sc),y:Math.floor((e.clientY-r.top-oy)/sc)}};
+  const colAt=p=>{if(p.x<0||p.y<0||p.x>=src.width||p.y>=src.height)return null;const q=sx.getImageData(p.x,p.y,1,1).data;return'#'+[q[0],q[1],q[2]].map(v=>v.toString(16).padStart(2,'0')).join('')};
+  const loupe=(e,p)=>{const c=colAt(p);if(!c){L.style.display=T.style.display='none';return null}const x=L.getContext('2d'),S=260,N=15,z=S/N;x.clearRect(0,0,S,S);x.save();x.beginPath();x.arc(S/2,S/2,S/2-9,0,7);x.clip();x.fillStyle='#777';x.fillRect(0,0,S,S);x.imageSmoothingEnabled=false;x.drawImage(src,p.x-(N>>1),p.y-(N>>1),N,N,0,0,S,S);
+   x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=2;x.strokeRect((N>>1)*z,(N>>1)*z,z,z);x.strokeStyle='rgba(0,0,0,.8)';x.lineWidth=1;x.strokeRect((N>>1)*z-1.5,(N>>1)*z-1.5,z+3,z+3);x.restore();
+   x.lineWidth=12;x.strokeStyle=c;x.beginPath();x.arc(S/2,S/2,S/2-7,Math.PI,0);x.stroke();x.strokeStyle=fg;x.beginPath();x.arc(S/2,S/2,S/2-7,0,Math.PI);x.stroke();x.lineWidth=1.5;x.strokeStyle='#000';x.beginPath();x.arc(S/2,S/2,S/2-1,0,7);x.stroke();
+   const touch=e.pointerType!=='mouse';let lx=e.clientX-65,ly=e.clientY-130-(touch?60:24);if(ly<4)ly=e.clientY+(touch?60:24);L.style.left=Math.max(4,Math.min(w.innerWidth-134,lx))+'px';L.style.top=ly+'px';L.style.display='block';T.textContent=(nameOf(c)||'')+' '+c;T.style.left=(parseFloat(L.style.left)+65)+'px';T.style.top=(ly+132)+'px';T.style.display='block';return c};
+  let dn=null;C.onpointerdown=e=>{e.preventDefault();try{C.setPointerCapture(e.pointerId)}catch(x){}dn={c:loupe(e,at(e))}};
+  C.onpointermove=e=>{const c=loupe(e,at(e));if(dn)dn.c=c;else if(e.pointerType==='touch'){L.style.display=T.style.display='none'}};
+  C.onpointerup=e=>{if(!dn)return;const c=dn.c;dn=null;if(c){setFg(c);addPicked(c);show();T.textContent='取りました '+c;hint('色を取りました：'+c)}if(e.pointerType==='touch')setTimeout(()=>{L.style.display=T.style.display='none'},700)};
+  C.onpointerleave=e=>{if(!dn&&e.pointerType==='mouse')L.style.display=T.style.display='none'};
+  d.getElementById('cRe').onclick=async()=>{try{if(!cap||!cap.stream.active)return $$('cap').onclick();src=await capGrab();lay()}catch(e){}};
+  d.getElementById('cBig').onclick=big;
+  d.getElementById('cEnd').onclick=()=>{w.removeEventListener('resize',lay);o.remove();try{w.resizeTo(prev[0],prev[1])}catch(e){}}};
  let dm=false;const delB=$$('del');delB.onclick=()=>{dm=!dm;delB.textContent=dm?'✓ 終わり':'✕ 消す';delB.style.background=dm?'#c23a55':'#2a3038';$$('list').style.outline=dm?'2px dashed #ff5a7a':'none'};
  $$('list').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;if(dm){dropColor('picked',b.dataset.c);show();return}setFg(b.dataset.c);show()};
  $$('add').onclick=()=>{addToPal(picked.slice().reverse(),false);show()};
