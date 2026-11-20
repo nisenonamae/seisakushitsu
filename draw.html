@@ -605,21 +605,24 @@ function colName(rgb){const[h,s,l]=hexHsl('#'+rgb.map(hx2).join(''));if(s<.15||l
 /* 箱のぼかし（横・縦。3回でガウスに近くなる） */
 function boxBlur(A,W,H,r){if(r<1)return A;const t=new Float32Array(A.length);let a=A;for(let pass=0;pass<3;pass++){for(let y=0;y<H;y++){let s=0;const o=y*W;for(let x=-r;x<=r;x++)s+=a[o+Math.min(W-1,Math.max(0,x))];for(let x=0;x<W;x++){t[o+x]=s/(2*r+1);s+=a[o+Math.min(W-1,x+r+1)]-a[o+Math.max(0,x-r)]}}
  const u=new Float32Array(A.length);for(let x=0;x<W;x++){let s=0;for(let y=-r;y<=r;y++)s+=t[Math.min(H-1,Math.max(0,y))*W+x];for(let y=0;y<H;y++){u[y*W+x]=s/(2*r+1);s+=t[Math.min(H-1,y+r+1)*W+x]-t[Math.max(0,y-r)*W+x]}}a=u}return a}
-function flatAnalyze(src,o){const LONG=[900,720,600,500,420,340][o.simp-1]||500,sc=Math.min(1,LONG/Math.max(src.width,src.height)),W=Math.max(8,Math.round(src.width*sc)),H=Math.max(8,Math.round(src.height*sc));
+function flatAnalyze(src,o,lim){const LONG=Math.min(lim||1e9,[900,720,600,500,420,340][o.simp-1]||500),sc=Math.min(1,LONG/Math.max(src.width,src.height)),W=Math.max(8,Math.round(src.width*sc)),H=Math.max(8,Math.round(src.height*sc));
  const c=mk(W,H),x=g2(c);x.imageSmoothingQuality='high';x.drawImage(src,0,0,W,H);let d=x.getImageData(0,0,W,H).data;d=kuwahara(d,W,H,2+Math.round(o.simp/2));if(o.simp>=3)d=kuwahara(d,W,H,2);
  const P=W*H,OK=new Float32Array(P*3);for(let i=0;i<P;i++){const v=toOk(d[i*4],d[i*4+1],d[i*4+2]);OK[i*3]=v[0];OK[i*3+1]=v[1];OK[i*3+2]=v[2]}
  /* 物の色のグループ：明るさの重みを軽くして、同じ物の明るい所・暗い所が同じグループに入りやすくする */
- const wL=.3;let K=o.k;let seed=7;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;const step=Math.max(1,Math.floor(P/24000));const smp=[];for(let i=0;i<P;i+=step)smp.push(i);
+ const wL=.3;let K=o.k;let seed=7;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;const step=Math.max(1,Math.floor(P/14000));const smp=[];for(let i=0;i<P;i+=step)smp.push(i);
  const f=i=>[OK[i*3]*wL,OK[i*3+1],OK[i*3+2]],dist=(p,q)=>(p[0]-q[0])**2+(p[1]-q[1])**2+(p[2]-q[2])**2;
  const C=[f(smp[Math.floor(rnd()*smp.length)])];const dm=new Float64Array(smp.length).fill(1e9);while(C.length<K){let tot=0;for(let j=0;j<smp.length;j++){dm[j]=Math.min(dm[j],dist(f(smp[j]),C[C.length-1]));tot+=dm[j]}let r=rnd()*tot,j=0;while(j<smp.length-1&&(r-=dm[j])>0)j++;C.push(f(smp[j]))}
- for(let it=0;it<14;it++){const acc=C.map(()=>[0,0,0,0]);for(const i of smp){const p=f(i);let b=0,bd=1e9;for(let k=0;k<K;k++){const dd=dist(p,C[k]);if(dd<bd){bd=dd;b=k}}const A=acc[b];A[0]+=p[0];A[1]+=p[1];A[2]+=p[2];A[3]++}for(let k=0;k<K;k++)if(acc[k][3])C[k]=[acc[k][0]/acc[k][3],acc[k][1]/acc[k][3],acc[k][2]/acc[k][3]]}
+ for(let it=0;it<10;it++){const acc=C.map(()=>[0,0,0,0]);for(const i of smp){const p=f(i);let b=0,bd=1e9;for(let k=0;k<K;k++){const dd=dist(p,C[k]);if(dd<bd){bd=dd;b=k}}const A=acc[b];A[0]+=p[0];A[1]+=p[1];A[2]+=p[2];A[3]++}for(let k=0;k<K;k++)if(acc[k][3])C[k]=[acc[k][0]/acc[k][3],acc[k][1]/acc[k][3],acc[k][2]/acc[k][3]]}
  /* ほとんど同じ色のグループは1つにまとめる */for(let a=0;a<C.length;a++)for(let b=C.length-1;b>a;b--)if(dist(C[a],C[b])<.0016){C[a]=C[a].map((v,j)=>(v+C[b][j])/2);C.splice(b,1)}K=C.length;
  let lab=new Int16Array(P);for(let i=0;i<P;i++){const p=f(i);let b=0,bd=1e9;for(let k=0;k<K;k++){const dd=dist(p,C[k]);if(dd<bd){bd=dd;b=k}}lab[i]=b}
  const mr=o.simp>=3?2:1;lab=modeFilter(lab,W,H,mr,K);const minA=Math.round(P*(.0006*o.simp*o.simp));dropSmall(lab,W,H,minA);lab=modeFilter(lab,W,H,1,K);
  /* グループの中を明るさで分ける */
  /* 明るさは、同じグループの中だけで大きくならしてから分ける（影・光が大きな形になるように） */
  const lev=new Uint8Array(P).fill(1);const G=[];const LS=new Float32Array(P);const rr=Math.max(2,Math.round(Math.max(W,H)*.006*(1+o.simp)));
- for(let k=0;k<K;k++){const m=new Float32Array(P),v=new Float32Array(P);let n=0;for(let i=0;i<P;i++)if(lab[i]===k){m[i]=1;v[i]=OK[i*3];n++}if(!n)continue;const bm=boxBlur(m,W,H,rr),bv=boxBlur(v,W,H,rr);for(let i=0;i<P;i++)if(lab[i]===k)LS[i]=bv[i]/Math.max(1e-4,bm[i])}
+ /* グループの描いてある範囲だけでならす（全体でやると重い） */const BB=[];for(let k=0;k<K;k++)BB.push([W,H,-1,-1]);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const b=BB[lab[y*W+x]];if(x<b[0])b[0]=x;if(y<b[1])b[1]=y;if(x>b[2])b[2]=x;if(y>b[3])b[3]=y}
+ for(let k=0;k<K;k++){const b=BB[k];if(b[2]<0)continue;const g=rr*3,x0=Math.max(0,b[0]-g),y0=Math.max(0,b[1]-g),x1=Math.min(W-1,b[2]+g),y1=Math.min(H-1,b[3]+g),w=x1-x0+1,h=y1-y0+1;const m=new Float32Array(w*h),v=new Float32Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y+y0)*W+x+x0;if(lab[i]===k){m[y*w+x]=1;v[y*w+x]=OK[i*3]}}const bm=boxBlur(m,w,h,rr),bv=boxBlur(v,w,h,rr);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y+y0)*W+x+x0;if(lab[i]===k)LS[i]=bv[y*w+x]/Math.max(1e-4,bm[y*w+x])}}
  for(let k=0;k<K;k++){const idx=[];for(let i=0;i<P;i++)if(lab[i]===k)idx.push(i);if(!idx.length)continue;const Ls=idx.map(i=>LS[i]).sort((a,b)=>a-b);const pc=q=>Ls[Math.min(Ls.length-1,Math.floor(q*Ls.length))];
   let th=[];if(o.lv>=2&&pc(.9)-pc(.1)>.06){if(o.lv===2)th=[pc(.38)];else th=[pc(.28),pc(.8)]}
   for(const i of idx){const L=LS[i];lev[i]=o.lv===2?(L<th[0]?0:1):th.length?(L<th[0]?0:L>th[1]?2:1):1}G.push({k,idx})}
@@ -633,13 +636,19 @@ function flatAnalyze(src,o){const LONG=[900,720,600,500,420,340][o.simp-1]||500,
  return{W,H,lab,lev:lv2,G:out}}
 function flatPreview(A,cv){cv.width=A.W;cv.height=A.H;const x=g2(cv),id=x.createImageData(A.W,A.H),d=id.data;const byK={};for(const g of A.G)byK[g.k]=g;for(let i=0;i<A.W*A.H;i++){const g=byK[A.lab[i]];const c=(A.lev[i]===0&&g.dark)||(A.lev[i]===2&&g.light)||g.base;d[i*4]=c[0];d[i*4+1]=c[1];d[i*4+2]=c[2];d[i*4+3]=255}x.putImageData(id,0,0)}
 /* 小さい地図（どこがその色か）を、絵の大きさのなめらかな形にする */
-function flatMask(A,test,rect,col,full){const sm=mk(A.W,A.H),sx=g2(sm),id=sx.createImageData(A.W,A.H),d=id.data;let any=false;for(let i=0;i<A.W*A.H;i++)if(full||test(i)){d[i*4+3]=255;any=true}if(!any)return null;sx.putImageData(id,0,0);
- const l=mk(art.w,art.h),x=g2(l);const k=rect.w/A.W;x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.filter=`blur(${Math.max(.6,k*.55)}px)`;x.drawImage(sm,rect.x,rect.y,rect.w,rect.h);x.filter='none';
- const X0=Math.max(0,Math.floor(rect.x)),Y0=Math.max(0,Math.floor(rect.y)),X1=Math.min(art.w,Math.ceil(rect.x+rect.w)),Y1=Math.min(art.h,Math.ceil(rect.y+rect.h));if(X1<=X0||Y1<=Y0)return null;
- const im=x.getImageData(X0,Y0,X1-X0,Y1-Y0),e=im.data;for(let i=0;i<e.length;i+=4){const a=e[i+3];e[i]=col[0];e[i+1]=col[1];e[i+2]=col[2];e[i+3]=full?255:a<90?0:a>150?255:(a-90)*4.25}x.putImageData(im,X0,Y0);
- if(!full){x.globalCompositeOperation='destination-in';x.fillStyle='#000';x.fillRect(X0,Y0,X1-X0,Y1-Y0)}return l}
+/* ふちをくっきりさせる（ぼかした形の濃さ 35%〜59% を 0〜100% にのばす）。ブラウザの画面の部品（SVG のフィルター）で、絵の点を1つずつ計算しないで済ませる */
+let FTH=null;function flatThOK(){if(FTH!==null)return FTH;try{if(!document.getElementById('flatTh')){const d=document.createElement('div');d.style.cssText='position:absolute;width:0;height:0;overflow:hidden';d.innerHTML='<svg width="0" height="0"><filter id="flatTh" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="linear" slope="4.25" intercept="-1.5"/></feComponentTransfer></filter></svg>';document.body.appendChild(d)}
+ const c=mk(4,4),x=g2(c);x.filter='url(#flatTh)';x.fillStyle='rgba(255,0,0,.5)';x.fillRect(0,0,4,4);const a=x.getImageData(1,1,1,1).data[3];FTH=a>140&&a<180}catch(e){FTH=false}return FTH}
+function flatMask(A,test,rect,col,full){const W=A.W,H=A.H;let bx0=W,by0=H,bx1=-1,by1=-1;const sm=mk(W,H),sx=g2(sm),id=sx.createImageData(W,H),d=id.data;
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(full||test(i)){d[i*4]=col[0];d[i*4+1]=col[1];d[i*4+2]=col[2];d[i*4+3]=255;if(x<bx0)bx0=x;if(x>bx1)bx1=x;if(y<by0)by0=y;if(y>by1)by1=y}}if(bx1<0)return null;
+ const l=mk(art.w,art.h),x=g2(l);const RX0=Math.max(0,Math.floor(rect.x)),RY0=Math.max(0,Math.floor(rect.y)),RX1=Math.min(art.w,Math.ceil(rect.x+rect.w)),RY1=Math.min(art.h,Math.ceil(rect.y+rect.h));if(RX1<=RX0||RY1<=RY0)return null;
+ if(full){x.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;x.fillRect(RX0,RY0,RX1-RX0,RY1-RY0);return l}
+ sx.putImageData(id,0,0);const k=rect.w/W,m=Math.ceil(k*2)+3;
+ /* その色がある所のまわりだけを、絵の大きさで作る（全体でやると重い） */const X0=Math.max(RX0,Math.floor(rect.x+bx0*k)-m),Y0=Math.max(RY0,Math.floor(rect.y+by0*k)-m),X1=Math.min(RX1,Math.ceil(rect.x+(bx1+1)*k)+m),Y1=Math.min(RY1,Math.ceil(rect.y+(by1+1)*k)+m);if(X1<=X0||Y1<=Y0)return null;
+ const gpu=flatThOK();x.save();x.beginPath();x.rect(X0,Y0,X1-X0,Y1-Y0);x.clip();x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.filter=`blur(${Math.max(.6,k*.55)}px)`+(gpu?' url(#flatTh)':'');const sx0=Math.max(0,bx0-3),sy0=Math.max(0,by0-3),sx1=Math.min(W,bx1+4),sy1=Math.min(H,by1+4);x.drawImage(sm,sx0,sy0,sx1-sx0,sy1-sy0,rect.x+sx0*k,rect.y+sy0*k,(sx1-sx0)*k,(sy1-sy0)*k);x.restore();if(gpu)return l;
+ const im=x.getImageData(X0,Y0,X1-X0,Y1-Y0),e=im.data;for(let i=0;i<e.length;i+=4){const a=e[i+3];e[i]=col[0];e[i+1]=col[1];e[i+2]=col[2];e[i+3]=a<90?0:a>150?255:(a-90)*4.25}x.putImageData(im,X0,Y0);return l}
 function flatDialog(){if(!art)return hint('先に絵を開いてください');if(textEdit)commitText();if(float)commitFloat();const o={...FLT};let img=null,A=null,tm=0;
- const run=()=>{if(!img)return;clearTimeout(tm);$('flSt').textContent='まとめています…';tm=setTimeout(()=>{const t0=performance.now();A=flatAnalyze(img,o);flatPreview(A,$('flPv'));$('flSt').textContent=`物の色 ${A.G.length} グループ・${A.G.reduce((n,g)=>n+1+(g.dark?1:0)+(g.light?1:0),0)} 枚のレイヤーになります（${Math.round(performance.now()-t0)}ms）`},60)};
+ const run=()=>{if(!img)return;clearTimeout(tm);$('flSt').textContent='まとめています…';tm=setTimeout(()=>{const t0=performance.now();A=flatAnalyze(img,o,300);flatPreview(A,$('flPv'));$('flSt').textContent=`物の色 ${A.G.length} グループ・${A.G.reduce((n,g)=>n+1+(g.dark?1:0)+(g.light?1:0),0)} 枚のレイヤーになります（${Math.round(performance.now()-t0)}ms）`},60)};
  dialog('写真を Kurzgesagt 風の絵にする',`<div class="rowx"><button class="b main" id="flPick">📷 写真を選ぶ</button><span class="lead" id="flSt" style="margin:0">似た色をまとめて平らな絵にし、物の色ごとにレイヤーを分けます（影・光は、その上のクリップしたレイヤー）</span></div>
   <div style="display:flex;gap:6px;margin:6px 0"><canvas id="flSrc" style="flex:1;min-width:0;max-height:260px;object-fit:contain;background:#000"></canvas><canvas id="flPv" style="flex:1;min-width:0;max-height:260px;object-fit:contain;background:#000"></canvas></div>
   <div class="rowx"><label>物の色の数</label><input type="range" id="flK" min="3" max="16" value="${o.k}"><span class="num" id="flKv">${o.k}色</span></div>
@@ -649,16 +658,16 @@ function flatDialog(){if(!art)return hint('先に絵を開いてください');i
   <div class="rowx"><label>影を紫・光を暖色に</label><input type="range" id="flPur" min="0" max="100" value="${o.pur}"><span class="num" id="flPurv">${o.pur}%</span></div>
   <div class="rowx"><label>置き方</label><select id="flFit"><option value="cover">画面いっぱい（はみ出す所は切る）</option><option value="contain">全体が入る</option></select></div>
   <div class="lead">左が写真、右ができあがりの見本です。「形のまとめ方」を大きくすると、形が大きく・単純になります。できたレイヤーは🔗の組なので、まとめて動かせます。実在の人の写真は使わないでください</div>`,
-  ()=>{if(!A){hint('写真がまだ選ばれていません');return}Object.assign(FLT,o);LS.set('pd_flat',JSON.stringify(FLT));hint('レイヤーを作っています…',4000);setTimeout(()=>flatBuild(A,img,o),30)},
+  ()=>{if(!A){hint('写真がまだ選ばれていません');return}Object.assign(FLT,o);LS.set('pd_flat',JSON.stringify(FLT));hint('色をまとめています…（少しかかります）',60000);setTimeout(async()=>{const AF=flatAnalyze(img,o);await flatBuild(AF,img,o)},60)},
   ()=>{$('flLv').value=String(o.lv);$('flFit').value=o.fit;
-   $('flPick').onclick=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f0=inp.files[0];if(!f0)return;let bm;try{bm=await createImageBitmap(f0)}catch(x){return hint('この画像は開けません')}const c=mk(bm.width,bm.height);g2(c).drawImage(bm,0,0);img=c;img.fname=f0.name;const s=$('flSrc');s.width=Math.round(c.width*Math.min(1,720/Math.max(c.width,c.height)));s.height=Math.round(c.height*s.width/c.width);g2(s).drawImage(c,0,0,s.width,s.height);run()};inp.click()};
-   const bind=(id,k,fmt)=>{$(id).oninput=e=>{o[k]=+e.target.value;$(id+'v').textContent=fmt(o[k]);run()}};bind('flK','k',v=>v+'色');bind('flS','simp',v=>v);bind('flSat','sat',v=>'+'+v+'%');bind('flPur','pur',v=>v+'%');
+   $('flPick').onclick=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f0=inp.files[0];if(!f0)return;let bm;try{bm=await createImageBitmap(f0)}catch(x){return hint('この画像は開けません')}/* 大きい写真（スマホの写真など）は、先に長い辺 1600 まで小さくしておく（まとめる計算は高々 900 で足りる） */const S0=Math.min(1,1600/Math.max(bm.width,bm.height));const c=mk(Math.round(bm.width*S0),Math.round(bm.height*S0));const cx0=g2(c);cx0.imageSmoothingQuality='high';cx0.drawImage(bm,0,0,c.width,c.height);img=c;img.fname=f0.name;const s=$('flSrc');s.width=Math.round(c.width*Math.min(1,720/Math.max(c.width,c.height)));s.height=Math.round(c.height*s.width/c.width);g2(s).drawImage(c,0,0,s.width,s.height);run()};inp.click()};
+   const bind=(id,k,fmt)=>{$(id).oninput=e=>{o[k]=+e.target.value;$(id+'v').textContent=fmt(o[k])};$(id).onchange=()=>run()};/* つまみを動かしている間は数字だけ変え、離したときに作り直す（重くならないように） */bind('flK','k',v=>v+'色');bind('flS','simp',v=>v);bind('flSat','sat',v=>'+'+v+'%');bind('flPur','pur',v=>v+'%');
    $('flLv').onchange=e=>{o.lv=+e.target.value;run()};$('flFit').onchange=e=>{o.fit=e.target.value}});
  window.__flatSet=c=>{img=c;run()}}
-function flatBuild(A,img,o){const s=o.fit==='contain'?Math.min(art.w/img.width,art.h/img.height):Math.max(art.w/img.width,art.h/img.height);const rect={w:img.width*s,h:img.height*s};rect.x=(art.w-rect.w)/2;rect.y=(art.h-rect.h)/2;
- const grp=uid('g');const made=[];A.G.forEach((g,gi)=>{const base=flatMask(A,i=>A.lab[i]===g.k,rect,g.base,gi===0);if(!base)return;made.push(newLayer(g.name,{cv:base,grp}));
+async function flatBuild(A,img,o){const s=o.fit==='contain'?Math.min(art.w/img.width,art.h/img.height):Math.max(art.w/img.width,art.h/img.height);const rect={w:img.width*s,h:img.height*s};rect.x=(art.w-rect.w)/2;rect.y=(art.h-rect.h)/2;
+ const grp=uid('g');const made=[];let gi=-1;for(const g of A.G){gi++;hint(`レイヤーを作っています… ${gi+1}/${A.G.length}`,60000);await new Promise(r=>setTimeout(r,0));const base=flatMask(A,i=>A.lab[i]===g.k,rect,g.base,gi===0);if(!base)continue;made.push(newLayer(g.name,{cv:base,grp}));
   if(g.dark){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===0,rect,g.dark);if(m)made.push(newLayer(g.name+'：影',{cv:m,clip:true,grp}))}
-  if(g.light){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===2,rect,g.light);if(m)made.push(newLayer(g.name+'：光',{cv:m,clip:true,grp}))}});
+  if(g.light){const m=flatMask(A,i=>A.lab[i]===g.k&&A.lev[i]===2,rect,g.light);if(m)made.push(newLayer(g.name+'：光',{cv:m,clip:true,grp}))}}
  structOp('写真から平らな絵に',()=>{const at=layers.indexOf(act());let i=at;while(i+1<layers.length&&layers[i+1].clip)i++;layers.splice(i+1,0,...made);activeId=made[made.length-1].id});hint(`${made.length} 枚のレイヤーにしました（下から、面積の大きい物の色の順）`,5000)}
 
 /* ===== ヒストリー（戻す・やり直し） ===== */
