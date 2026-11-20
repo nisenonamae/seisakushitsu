@@ -274,7 +274,7 @@ let art=null,layers=[],activeId=null;
 const act=()=>layers.find(l=>l.id===activeId)||layers[layers.length-1];
 const byId=id=>layers.find(l=>l.id===id);
 let tool=LS.get('pd_tool','brush');
-const OPT0={pen:{own:1,sm:4,rnd:100},brush:{tone:'0',size:16,hard:100,op:100,flow:100,smooth:4,pSize:1,pOp:0,line:0,snapA:1},eraser:{size:40,hard:100,op:100,flow:100,smooth:2,pSize:1,pOp:0,line:0,snapA:1},bucket:{tol:32,cont:1,all:1,op:100,gap:3,spread:2},grad:{type:'linear',mode:'fgbg',op:100,rev:0},wand:{tol:32,cont:1,all:0},sel:{mode:'new',shape:'rect'},lasso:{mode:'new'},shape:{type:'rect',fill:1,stroke:0,sw:12,newL:1},text:{font:'Zen Maru Gothic|900',size:120,edge:'0',align:'center',warp:'none',bend:40},crop:{},move:{pickL:1},pick:{},hand:{},zoom:{}};
+const OPT0={pen:{own:1,sm:4,rnd:100},brush:{tone:'0',size:16,hard:100,op:100,flow:100,smooth:4,pSize:1,pOp:0,line:0,snapA:1},eraser:{size:40,hard:100,op:100,flow:100,smooth:2,pSize:1,pOp:0,line:0,snapA:1},bucket:{tol:32,cont:1,all:1,op:100,gap:3,spread:2},grad:{type:'linear',mode:'fgbg',op:100,rev:0},wand:{tol:32,cont:1,all:0},sel:{mode:'new',shape:'rect'},lasso:{mode:'new'},shape:{type:'rect',fill:1,stroke:0,sw:12,newL:1},text:{font:'Zen Maru Gothic|900',size:120,edge:'0',align:'center',warp:'none',bend:40},crop:{},move:{pickL:1},pick:{src:'auto'},hand:{},zoom:{}};
 const OPT=(()=>{let s={};try{s=JSON.parse(LS.get('pd_opt','{}')||'{}')}catch(e){}const o={};for(const k in OPT0)o[k]={...OPT0[k],...(s[k]||{})};return o})();
 const saveOpt=()=>LS.set('pd_opt',JSON.stringify(OPT));
 if(LS.get('pd_bucket_v2','')!=='1'){OPT.bucket.all=1;OPT.bucket.gap=OPT.bucket.gap??3;OPT.bucket.spread=OPT.bucket.spread??2;LS.set('pd_bucket_v2','1');saveOpt()}
@@ -320,7 +320,7 @@ function renderOpts(){const o=OPT[tool]||{};let h='';
  else if(tool==='shape')h=seg('type',[['rect','長方形'],['round','角丸'],['ellipse','楕円'],['line','直線']],o.type)+chk('fill','塗り',o.fill)+chk('stroke','線',o.stroke)+rng('sw','線の太さ',1,200,o.sw,'px')+chk('newL','新しいレイヤーに',o.newL);
  else if(tool==='text')h=(textEdit?`<input id="tIn" value="${esc(textEdit.str)}" style="width:14em;padding:3px 6px;font-size:15px" placeholder="ここに文字を入れる"><button class="b main" data-act="tOk">確定</button><button class="b" data-act="tCancel">取り消し</button>`:'')+`<button class="b" data-act="fontPick" style="font-family:'${fontOf(o.font).family}';font-weight:${fontOf(o.font).w}">字体：${esc(fontOf(o.font).name)} ▾</button>`+rng('size','大きさ',8,600,o.size,'px')+`<label>縁取り</label><select data-sel="edge"><option value="0" ${o.edge==='0'?'selected':''}>なし</option><option value="w" ${o.edge==='w'?'selected':''}>白</option><option value="k" ${o.edge==='k'?'selected':''}>黒</option><option value="bg" ${o.edge==='bg'?'selected':''}>背景色</option></select>`+seg('align',[['left','左'],['center','中'],['right','右']],o.align)+`<label>曲げ</label>`+seg('warp',[['none','まっすぐ'],['arc','アーチ ⌒'],['arcd','逆アーチ ◡'],['wave','波 〜']],o.warp||'none')+((o.warp&&o.warp!=='none')?rng('bend',o.warp==='wave'?'波の高さ':'曲げ具合（100%で円）',5,100,o.bend??40,'%'):'')+(textEdit?'':'<span class="lead">絵の上を押すと、上の段に文字を入れる欄が出ます。置いた文字を押すと直せます</span>');
  else if(tool==='crop')h=crop?`<span class="lead">${Math.round(crop.w)}×${Math.round(crop.h)}</span><button class="b main" data-act="cropOk">切り抜く Enter</button><button class="b" data-act="cropCancel">やめる Esc</button>`:'<span class="lead">残す範囲をドラッグ</span>';
- else if(tool==='pick')h='<button class="b main" data-act="screenPick">🎯 画面のどこからでも</button><button class="b" data-act="pickFloat">📌 浮かせる</button><button class="b" data-act="imgPick">🖼 画像から</button><span class="lead">押したまま動かすと、指の上の丸い窓（ルーペ）に取る所が大きく出ます。真ん中の四角の色を、離した所で取ります（輪の上＝取る色・下＝今の色。全レイヤーを合わせた色。ブラシ中は Alt+クリック）</span>';
+ else if(tool==='pick')h='<button class="b main" data-act="screenPick">🎯 画面のどこからでも</button><button class="b" data-act="pickFloat">📌 浮かせる</button><button class="b" data-act="imgPick">🖼 画像から</button><label title="なぞる画像（薄くしてある写真・スクショ）は、薄くする前の元の色で取ります">取る色</label>'+seg('src',[['auto','自動'],['trace','なぞる画像の元の色'],['art','描いた絵だけ']],o.src||'auto')+'<span class="lead">押したまま動かすと、指の上の丸い窓（ルーペ）に取る所が大きく出て、離した所の色を取ります。「自動」＝塗った所は塗った色、まだ塗っていない所はなぞる画像の元の色（薄くしてあっても元の濃さで取れる）</span>';
  else h=`<span class="lead">${tool==='zoom'?'押すと拡大、Alt を押しながらで縮小':'ドラッグで画面を動かす（どの道具でもスペースを押しながらで同じ）'}</span><button class="b" data-act="fit">画面サイズ</button><button class="b" data-act="z100">100%</button>`;
  const om0=document.querySelector('#opts .om'),sl0=om0&&renderOpts.last===tool?om0.scrollLeft:0;renderOpts.last=tool;
  $('opts').innerHTML=`<div class="om">${h}</div><div class="of">`+`${navigator.maxTouchPoints>0?`<button class="b ${fingerPan?'':'on'}" data-act="fingerT" title="指で絵にさわったとき：描く／画面を動かすだけ（勝手に線が入るときは「動かす」に）">✋ 指：${fingerPan?'動かすだけ':'描く'}</button>`:''}<label style="color:var(--ink)">📐構図</label><select data-gsel="comp"><option value="none" ${comp==='none'?'selected':''}>なし</option><option value="center" ${comp==='center'?'selected':''}>中央</option><option value="thirds" ${comp==='thirds'?'selected':''}>三分割</option><option value="golden" ${comp==='golden'?'selected':''}>黄金比</option><option value="all" ${comp==='all'?'selected':''}>全部</option></select><select data-gsel="base" title="構図の線をどこの中に引くか"><option value="canvas" ${compBase.type==='canvas'?'selected':''}>画面全体</option><option value="sel" ${compBase.type==='sel'?'selected':''}>選択範囲の中</option><option value="layer" ${compBase.type==='layer'?'selected':''}>${compBase.type==='layer'&&byId(compBase.lid)?'「'+esc(byId(compBase.lid).name).slice(0,8)+'」の中':'今のレイヤーの中'}</option></select><button class="b ${snapOn?'on':''}" data-act="snapT" title="動かすときに中央・三分割・黄金比・端に吸いつく">吸着</button><button class="b ${showGuide?'on':''}" data-act="guide">ガイド</button></div>`;
@@ -995,7 +995,10 @@ function doBucket(p){const l=act();if(l.trace)return hint('なぞり用の画像
  押している間（マウスは押していなくても）指の少し上に、取る所を拡大した丸い窓を出す。真ん中の四角が取る点。輪の上半分＝取る色、下半分＝今の色。
  指を離した所の色を取る（指で隠れても、ルーペを見ながら合わせられる）。絵全体は最初に1回だけ合成して覚えておく */
 const PK={k:'',c:null,drag:null};
-function pkSrc(){const k=[GV,RC.mSeq,art.w,art.h,art.bg].join('~');if(k!==PK.k||!PK.c){PK.k=k;PK.c=fitCv(PK.c,art.w,art.h);const x=g2(PK.c);x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.fillStyle=art.bg||'#fff';x.fillRect(0,0,art.w,art.h);const keep=layers;layers=layers.filter(l=>!l.trace);compositeTo(x,{raw:true});layers=keep}return PK.c}
+function pkSrc(){const mode=(OPT.pick&&OPT.pick.src)||'auto';const k=[GV,RC.mSeq,art.w,art.h,art.bg,mode,layers.map(l=>l.id+(l.visible?1:0)+l.opacity+(l.trace?'t':'')).join()].join('~');if(k!==PK.k||!PK.c){PK.k=k;PK.c=fitCv(PK.c,art.w,art.h);const x=g2(PK.c);x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.fillStyle=art.bg||'#fff';x.fillRect(0,0,art.w,art.h);
+  /* なぞる画像は、薄くしてある不透明度を無視して元の色で（作り手はスクショをなぞる画像に置いて、そこから色を取っている・2026-11-20） */
+  if(mode!=='art')for(const l of layers)if(l.trace&&l.visible){if(l._cv)x.drawImage(l._cv,0,0);else if(l._sm)x.drawImage(l._sm.c,l._sm.x,l._sm.y)}
+  if(mode!=='trace'){const keep=layers;layers=layers.filter(l=>!l.trace);compositeTo(x,{raw:true});layers=keep}}return PK.c}
 function pkColor(p){const x=Math.floor(p.x),y=Math.floor(p.y);if(x<0||y<0||x>=art.w||y>=art.h)return null;const d=g2(pkSrc()).getImageData(x,y,1,1).data;return'#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}
 function loupeShow(e,p){const L=$('loupe'),c=pkColor(p);if(!c){loupeHide();return}const S=L.width,N=15,z=S/N,x=g2(L);x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,S,S);
  x.save();x.beginPath();x.arc(S/2,S/2,S/2-9,0,7);x.clip();x.fillStyle='#777';x.fillRect(0,0,S,S);x.imageSmoothingEnabled=false;const fx=Math.floor(p.x)-(N>>1),fy=Math.floor(p.y)-(N>>1);x.drawImage(pkSrc(),fx,fy,N,N,0,0,S,S);
@@ -1306,7 +1309,7 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
  pickWin=w;const d=w.document;d.title='スポイト';
  const B='border:1px solid #3a4150;border-radius:6px;background:#2a3038;color:#e9ecf1;cursor:pointer';
  d.body.innerHTML=`<style>body{margin:0;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;background:#1f232a;color:#e9ecf1;padding:10px;box-sizing:border-box;font-size:13px}
-  #go{width:100%;font-size:17px;font-weight:700;padding:12px 8px;border:0;border-radius:10px;background:#3d8ef0;color:#fff;cursor:pointer}
+  #go{width:100%;font-size:17px;font-weight:700;padding:12px 8px;border:0;border-radius:10px;background:#3d8ef0;color:#fff;cursor:pointer}#tr{width:100%;margin-top:6px;font-size:12.5px;padding:8px 6px;${B}}
   #cur{display:flex;align-items:center;gap:8px;margin:8px 0 6px}#cur i{display:inline-block;width:30px;height:30px;border-radius:7px;border:1px solid #000}
   .hd{display:flex;align-items:center;gap:5px;margin:10px 0 4px;font-size:11.5px;color:#9aa3b1}.hd button{margin-left:auto;font-size:11.5px;padding:3px 8px;${B}}
   #list{display:flex;flex-wrap:wrap;gap:5px}#list b{width:26px;height:26px;border-radius:6px;border:1px solid #000;cursor:pointer}
@@ -1315,14 +1318,14 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
   #pc input{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid #3a4150;color:#e9ecf1;padding:3px 2px;font-size:12.5px}
   #memo{width:100%;box-sizing:border-box;min-height:64px;margin-top:5px;${B};padding:6px;font:inherit;font-size:12.5px;resize:vertical;cursor:auto}
   p{font-size:11px;color:#9aa3b1;margin:8px 0 0;line-height:1.5}</style>
-  <button id="go">🎯 色を取る</button><div id="cur"><i></i><span></span></div>
+  <button id="go">🎯 色を取る</button><button id="tr">🖼 なぞる画像・お絵描きの絵から取る（ルーペ）</button><div id="cur"><i></i><span></span></div>
   <div class="hd">取った色<button id="del">✕ 消す</button></div><div id="list"></div>
   <div class="row"><button id="add" class="main">今のセットに全部入れる</button></div>
   <div class="row"><input id="pn" placeholder="新しいセットの名前"><button id="mk">セットにする</button></div>
   <div class="hd">色のセット</div><div class="row"><select id="ps"></select></div>
   <div id="pc"></div>
   <div class="hd">メモ（色の使い方など）</div><textarea id="memo" placeholder="例：島は主役なので一番鮮やかに。影は「島の影」、光は白30%"></textarea>
-  <p>「色を取る」を押してから画面のどこでも押すと、その色が描画色になり「取った色」にたまります（1色ごとに押す）。セットの色の名前とメモは、ここでそのまま書けます。${pip?'この窓はいつも手前に出ています。':''}</p>`;
+  <p>お絵描きに置いた画像（なぞる画像）から取るときは「🖼」を押してから、お絵描きの絵の上で押したまま動かし、離した所の色を取ります（薄くしてあるなぞる画像も元の色で取れます。🎯 は画面に見えている色をそのまま取るので、薄くしたなぞる画像だと白っぽくなります）。<br>「🎯 色を取る」を押してから画面のどこでも押すと、その色が描画色になり「取った色」にたまります（1色ごとに押す）。セットの色の名前とメモは、ここでそのまま書けます。${pip?'この窓はいつも手前に出ています。':''}</p>`;
  const $$=id=>d.getElementById(id);
  const show=()=>{const c=d.querySelector('#cur i'),t=d.querySelector('#cur span');c.style.background=fg;t.textContent='描画色 '+fg;
   $$('list').innerHTML=picked.slice(0,24).map(x=>`<b data-c="${x}" title="${x}" style="background:${x}"></b>`).join('')||'<span style="font-size:11.5px;color:#9aa3b1">まだありません</span>';
@@ -1332,6 +1335,7 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
   $$('pc').innerHTML=cp?cp.colors.map((x,i)=>`<div><i data-pi="${i}" title="押すと描画色" style="background:${x.c};${x.c===fg?'outline:2px solid #3d8ef0;outline-offset:1px':''}"></i><input data-pn="${i}" value="${esc(x.n||'')}" placeholder="${esc(nameOf(x.c))}（名前）"></div>`).join(''):'';
   $$('memo').value=cp?(cp.memo||''):'';$$('memo').disabled=!cp};
  show();w.pdShow=show;
+ $$('tr').onclick=()=>{setTool('pick');try{window.focus()}catch(e){}hint('スポイトにしました。絵の上で押したまま動かすと、ルーペに取る所が大きく出ます。離した所の色を取ります',6000)};
  $$('go').onclick=async()=>{const ED=w.EyeDropper||window.EyeDropper;if(!ED){d.querySelector('p').textContent='このブラウザでは画面から色を取れません（Chrome なら取れます）';return}try{const r=await new ED().open();const c=hexOf(r.sRGBHex);setFg(c);addPicked(c);show();hint('色を取りました：'+c)}catch(e){}};
  let dm=false;const delB=$$('del');delB.onclick=()=>{dm=!dm;delB.textContent=dm?'✓ 終わり':'✕ 消す';delB.style.background=dm?'#c23a55':'#2a3038';$$('list').style.outline=dm?'2px dashed #ff5a7a':'none'};
  $$('list').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;if(dm){dropColor('picked',b.dataset.c);show();return}setFg(b.dataset.c);show()};
