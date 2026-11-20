@@ -1337,7 +1337,7 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
   $$('memo').value=cp?(cp.memo||''):'';$$('memo').disabled=!cp};
  show();w.pdShow=show;
  $$('tr').onclick=()=>{setTool('pick');try{window.focus()}catch(e){}hint('スポイトにしました。絵の上で押したまま動かすと、ルーペに取る所が大きく出ます。離した所の色を取ります',6000)};
- $$('go').onclick=async()=>{const ED=w.EyeDropper||window.EyeDropper;if(!ED){d.querySelector('p').textContent='このブラウザでは画面から色を取れません（Chrome なら取れます）';return}try{const r=await withTraceFull(()=>new ED().open());const c=hexOf(r.sRGBHex);setFg(c);addPicked(c);show();hint('色を取りました：'+c)}catch(e){}};
+ $$('go').onclick=async()=>{const ED=w.EyeDropper||window.EyeDropper;if(!ED){d.querySelector('p').textContent='このブラウザでは画面から色を取れません（Chrome なら取れます）';return}const st=d.querySelector('p'),old=st.innerHTML;st.textContent='十字を動かして、取りたい所を押してください（やめるときは Esc）';try{const r=await withTraceFull(()=>new ED().open());const c=hexOf(r.sRGBHex);st.innerHTML=old;setFg(c);addPicked(c);show();hint('色を取りました：'+c)}catch(e){st.innerHTML=old;pickErr(e,m=>{st.textContent=m;st.style.color='#ff9a9a'})}};
  let dm=false;const delB=$$('del');delB.onclick=()=>{dm=!dm;delB.textContent=dm?'✓ 終わり':'✕ 消す';delB.style.background=dm?'#c23a55':'#2a3038';$$('list').style.outline=dm?'2px dashed #ff5a7a':'none'};
  $$('list').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;if(dm){dropColor('picked',b.dataset.c);show();return}setFg(b.dataset.c);show()};
  $$('add').onclick=()=>{addToPal(picked.slice().reverse(),false);show()};
@@ -1349,9 +1349,11 @@ ACT.pickFloat=async()=>{if(pickWin&&!pickWin.closed){try{pickWin.focus()}catch(e
  w.addEventListener('pagehide',()=>{if(pickWin===w)pickWin=null});
  hint(pip?'スポイトの窓を手前に浮かせました。ほかのタブやアプリを見ながら、いつでも押して色を取れます':'スポイトの小さな窓を開きました。ほかの画面の横に置いて使ってください',6000)};
 /* 画面のどこからでも取る間は、お絵描きのなぞる画像を元の濃さで見せる（薄いまま取ると白っぽくなる・作り手 2026-11-20）。取り終わったら戻す */
-async function withTraceFull(open){const has=art&&layers.some(l=>l.trace&&l.visible&&l.opacity<1);if(has){traceFull=true;bump();try{render()}catch(e){need()}}
- try{return await open()}finally{if(has){traceFull=false;bump();need()}}}
-ACT.screenPick=async()=>{if(window.EyeDropper){try{const r=await withTraceFull(()=>new EyeDropper().open());const c=hexOf(r.sRGBHex);setFg(c);addPicked(c);hint('色を取りました：'+c+'（「取った色」にたまります）')}catch(e){}}else{hint('この端末のブラウザは画面から直接は取れません。画像から取ります');ACT.imgPick()}};
+async function withTraceFull(open){/* 先にスポイトを開く（押した直後に開かないと、ブラウザが許さないことがある）。なぞる画像を濃く見せるのはそのあと、少し間をあけて */
+ const p=open();const has=art&&layers.some(l=>l.trace&&l.visible&&l.opacity<1);let t=0;if(has)t=setTimeout(()=>{traceFull=true;bump();need()},30);
+ try{return await p}finally{clearTimeout(t);if(traceFull){traceFull=false;bump();need()}}}
+function pickErr(e,say){if(!e||e.name==='AbortError')return;const m='色を取る十字を出せませんでした（'+(e.name||'')+(e.message?'：'+e.message:'')+'）。もう一度「🎯」を押してみてください。続くときは、この文をそのまま Claude に送ってください';say(m)}
+ACT.screenPick=async()=>{if(window.EyeDropper){try{const r=await withTraceFull(()=>new EyeDropper().open());const c=hexOf(r.sRGBHex);setFg(c);addPicked(c);hint('色を取りました：'+c+'（「取った色」にたまります）')}catch(e){pickErr(e,m=>hint(m,9000))}}else{hint('この端末のブラウザは画面から直接は取れません。画像から取ります');ACT.imgPick()}};
 let imgPickOn=false;
 ACT.imgPick=()=>{imgPickOn=true;dialog('画像から色を取る',`<div class="lead">いいなと思った画像を、スクリーンショットして <b>ここに貼り付け</b>（${CMD}V／長押しで貼り付け）するか、「画像を選ぶ」で開きます。出た画像を押すと、その色が描く色になります（何回でも）。</div><div class="rowx"><button class="b" id="ipFile">画像を選ぶ</button><span id="ipSw" class="sw" style="width:28px;height:28px;display:inline-block"></span><span id="ipHex" class="lead" style="margin:0"></span></div><div style="max-height:52vh;overflow:auto"><canvas id="ipCv" style="max-width:100%;cursor:crosshair;display:none;border-radius:6px"></canvas></div><input type="file" id="ipIn" accept="image/*" hidden>`,()=>{imgPickOn=false},()=>{
   $('ipFile').onclick=()=>$('ipIn').click();$('ipIn').onchange=async e=>{const f=e.target.files[0];if(f)ipShow(await createImageBitmap(f))};
