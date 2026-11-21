@@ -156,21 +156,37 @@ function ant5(cx,cy,S,yaw,ph,t){const co=Math.cos(yaw),si=Math.sin(yaw),PITCH=0.
   // 線1本：3つの点を通るなめらかなカーブ。太さは変えない
   const line=(P3,w,col,depth,hi)=>{const q=P3.map(p=>pr(p[0],p[1]+bob,p[2]));items.push([depth,()=>{g.lineCap='round';g.lineJoin='round';g.strokeStyle=col;g.lineWidth=w*S;g.beginPath();g.moveTo(q[0][0],q[0][1]);const cx1=2*q[1][0]-(q[0][0]+q[2][0])/2,cy1=2*q[1][1]-(q[0][1]+q[2][1])/2;g.quadraticCurveTo(cx1,cy1,q[2][0],q[2][1]);g.stroke();
     if(hi){g.strokeStyle=hi;g.lineWidth=w*S*0.26;g.beginPath();const m0=[(q[0][0]*0.7+cx1*0.3),(q[0][1]*0.7+cy1*0.3)],m1=[(q[0][0]*0.25+cx1*0.5+q[2][0]*0.25),(q[0][1]*0.25+cy1*0.5+q[2][1]*0.25)];g.moveTo(m0[0]-w*S*0.16,m0[1]-w*S*0.16);g.lineTo(m1[0]-w*S*0.16,m1[1]-w*S*0.16);g.stroke()}g.lineCap='butt'}])};
+  // 折れる線1本：太さは変えず、関節の所でちゃんと折れる（作り手の直し「1本の線でも途中で折れる」）
+  const bend=(P3,w,col,depth,hi)=>{const q=P3.map(p=>pr(p[0],p[1]+bob,p[2]));items.push([depth,()=>{g.lineCap='round';g.lineJoin='round';g.strokeStyle=col;g.lineWidth=w*S;g.beginPath();q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
+    if(hi){g.strokeStyle=hi;g.lineWidth=w*S*0.24;g.beginPath();g.moveTo(q[0][0]*0.8+q[1][0]*0.2-w*S*0.15,q[0][1]*0.8+q[1][1]*0.2-w*S*0.15);g.lineTo(q[0][0]*0.25+q[1][0]*0.75-w*S*0.15,q[0][1]*0.25+q[1][1]*0.75-w*S*0.15);g.stroke()}g.lineCap='butt';g.lineJoin='miter'}])};
+  const tri=(P3,col,depth)=>{const q=P3.map(p=>pr(p[0],p[1]+bob,p[2]));items.push([depth,()=>{g.fillStyle=col;g.strokeStyle=col;g.lineJoin='round';g.lineWidth=3*S;g.beginPath();q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fill();g.stroke();g.lineJoin='miter'}])};
   const body0=pr(0,0,0)[2];
   // 腹：板を3枚重ねる（後ろほど暗い）。胸：こぶを2つ重ねる。頭：1つの形
   plate(-104,4,0,26,24,26,[A5.gas[2],A5.gas[0],0],false,-2);plate(-84,0,0,34,31,33,[A5.gas[0],A5.gas[1],0],false,-1);plate(-62,-3,0,30,29,31,[A5.gas[1],'#96608f',0],true,0);
   plate(-28,6,0,8,8,8,[A5.tho[2],A5.tho[0],0],false);
   plate(-8,0,0,20,16,15,[A5.tho[2],A5.tho[0],0],false,-1);plate(12,-4,0,22,19,17,[A5.tho[0],A5.tho[1],0],true);
-  const hy=-12+Math.sin(ph*Math.PI*4+1)*1.2;const hd=plate(52,hy,0,24,25,27,[A5.head[0],A5.head[1],0],true,6);
+  // 頭：本物のアリの顔のつくり（作り手の直し「球に丸と線を付けただけで、アリの顔になっていない」）
+  //   ・正面から見ると、上が広く下がすぼまる形。後ろの上に2つのふくらみ
+  //   ・目は小さく、顔の横（高さはまん中あたり）
+  //   ・触角は、顔の下のほう・目と目のあいだから生える。根元から外へ上がり、「ひじ」で折れて前へのびる
+  //   ・口の上に、横長の板（頭楯）。その下に、三角の大きなあごが2枚、先が少し重なる
+  const hy=-12+Math.sin(ph*Math.PI*4+1)*1.2;
+  for(const sd of [-1,1])plate(40,hy-12,sd*14,13,15,15,[A5.head[2],A5.head[0],0],false,-3);       // 後ろ上のふくらみ（少し暗い）
+  const hd=plate(52,hy,0,22,23,27,[A5.head[0],A5.head[1],0],true,6);
+  plate(64,hy+10,0,12,13,19,[A5.head[0],A5.head[1],0],false,8);                                    // すぼまるあご先のほう
+  plate(71,hy+7,0,5,7,15,[A5.head[1],'#f6a57a',0],false,10);                                       // 頭楯（明るい板）
   for(const sd of [-1,1]){
-    const[ex,ey,ed,ek]=pr(64,hy-3+bob,sd*21);if(ed>hd-10)items.push([hd+60,()=>{g.fillStyle=A5.eye;g.beginPath();g.ellipse(ex,ey,(2.6+3*Math.abs(si))*S*ek,5.6*S*ek,0,0,7);g.fill()}]);
-    const nearH=pr(80,0,sd*20)[2]>hd;
-    line([[66,hy+13,sd*11],[84,hy+24,sd*17],[98,hy+17,sd*5]],8.5,A5.mand,hd+(nearH?52:-30),nearH?'#6d4a70':null);          // あご
-    const wob=Math.sin(t*4.6+sd)*5;line([[60,hy-18,sd*11],[84,hy-58+wob*0.4,sd*30],[118,hy-36+wob,sd*40]],5,nearH?A5.limb:A5.limbFar,hd+(nearH?55:-55),nearH?A5.limbHi:null)}   // 触角
-  const hips=[[22,8],[6,10],[-12,8]],home=[[66,58],[6,68],[-70,60]],stride=38,GYc=56;
+    const[ex,ey,ed,ek]=pr(58,hy-4+bob,sd*25);if(ed>hd-12)items.push([hd+60,()=>{g.fillStyle=A5.eye;g.beginPath();g.ellipse(ex,ey,(2.4+2.8*Math.abs(co))*S*ek,5.4*S*ek,0,0,7);g.fill()}]);
+    const front=pr(80,0,sd*14)[2]>hd-4;
+    tri([[69,hy+9,sd*19],[73,hy+15,sd*2],[90,hy+36,-sd*3]],sd>0?A5.mand:'#4d2a50',hd+(front?50+sd:-30));   // あご（三角の板。左右で少し色を変え、重なりが分かるように）
+    const wob=Math.sin(t*4.6+sd)*4,nearA=pr(80,0,sd*30)[2]>hd-4;
+    bend([[72,hy+1,sd*8],[80,hy-40+wob*0.3,sd*32],[116,hy-26+wob,sd*42]],4.6,nearA?A5.limb:A5.limbFar,hd+(nearA?56:-56),nearA?A5.limbHi:null)}   // 触角（ひじで折れる）
+  const hips=[[22,8],[6,10],[-12,8]],home=[[70,64],[8,76],[-76,66]],stride=38,GYc=58;
   for(let i=0;i<3;i++)for(const sd of [-1,1]){const off=((i+(sd>0?1:0))%2)*0.5,p=(ph+off)%1;let fx,lift=0;if(p<0.5)fx=stride*(0.5-p*2);else{const q=(p-0.5)*2;fx=stride*(-0.5+q);lift=Math.sin(q*Math.PI)*15}
-    const H3=[hips[i][0],hips[i][1],sd*11],F3=[home[i][0]+fx,GYc-lift-bob,sd*home[i][1]],K3=[H3[0]+(F3[0]-H3[0])*0.5,Math.min(H3[1],F3[1])-9,sd*(home[i][1]*0.66)];
-    const kd=pr(K3[0],0,K3[2])[2],near=kd>body0;line([H3,K3,F3],8.5,near?A5.limb:A5.limbFar,kd+(near?30:-30),near?A5.limbHi:null)}
+    const H3=[hips[i][0],hips[i][1],sd*11],F3=[home[i][0]+fx,GYc-lift-bob,sd*home[i][1]],K3=[H3[0]+(F3[0]-H3[0])*0.38,Math.min(H3[1],F3[1])-30,sd*(home[i][1]*0.62)];
+    const kd=pr(K3[0],0,K3[2])[2],near=kd>body0,lc=near?A5.limb:A5.limbFar;const dH=pr(H3[0],0,H3[2])[2],dF=pr(F3[0],0,F3[2])[2];
+    // ももは付け根の奥行き、すねは足先の奥行きで重ねる（正面から見たとき、ももが顔の前に出ないように）
+    bend([H3,K3],7.5,lc,(dH+kd)/2+(near?4:-4),near?A5.limbHi:null);bend([K3,F3,[F3[0]+12,F3[1]+2,F3[2]+sd*4]],7.5,lc,(kd+dF)/2+(near?12:-12))}
   const[sx,sy]=pr(-12,GYc+4,0);g.fillStyle='rgba(6,40,30,.30)';g.beginPath();g.ellipse(sx,sy,(100*Math.abs(co)+66*Math.abs(si))*S,(11+24*Math.abs(si))*S,0,0,7);g.fill();
   items.sort((a,b)=>a[0]-b[0]);for(const it of items)it[1]()}
 // 向きを変えて見せる：横向き → ななめ前 → ほぼ正面 → 反対のななめ後ろ
