@@ -315,13 +315,14 @@ function faces(t){g.fillStyle='#0d2b3a';g.fillRect(0,0,W,H);
 //   ・あごと触角は同じ色にして「手足の色」としてまとめる
 //   ・光は面で表す（明るい面の上塗り）。光の線は足さない（作り手の直し「むやみに光の線を入れない」）
 //   ・目は4段：まぶたのふち（頭の明るい色）→ 暗いくぼみ → 目の色 → 目の中の暗い側と小さな明るい面
-function antFace2(cx,cy,s,t=0){const C=[[0,-25,.45],[17,-33,.6],[33,-25,.55],[33,-6,.6],[24,14,.35],[15,27,.3],[0,24,.5],[-15,27,.3],[-24,14,.35],[-33,-6,.6],[-33,-25,.55],[-17,-33,.6]];
+function antFace2(cx,cy,s,t=0,o={}){const C=[[0,-25,.45],[17,-33,.6],[33,-25,.55],[33,-6,.6],[24,14,.35],[15,27,.3],[0,24,.5],[-15,27,.3],[-24,14,.35],[-33,-6,.6],[-33,-25,.55],[-17,-33,.6]];
   const HL='#dc5530',HR='#a5303a',HH='#f07a3e',PL='#fba565',DK='#45163f',AC='#f8b443',AC2='#d98a2e',EY='#35c48e',EY2='#1c8468';
-  const wob=Math.sin(t*3.1)*3,jaw=(Math.sin(t*2.2)*0.5+0.5)*4;
+  const wob=o.wob!=null?o.wob:Math.sin(t*3.1)*3,wob2=o.wob2!=null?o.wob2:wob,jaw=o.jaw!=null?o.jaw:(Math.sin(t*2.2)*0.5+0.5)*4,hs=o.hs==null?1:o.hs,eg=o.eg==null?1:o.eg,mg=o.mg==null?1:o.mg,ag=o.ag==null?1:o.ag;
   g.save();g.translate(cx,cy);g.scale(s,s);g.lineCap='round';g.lineJoin='round';
-  g.fillStyle='#3a1c44';g.beginPath();g.arc(0,2,58,0,7);g.fill();
+  g.fillStyle='#3a1c44';g.beginPath();g.arc(0,2,58*(o.cs==null?1:o.cs),0,7);g.fill();if(hs<=0.001){g.restore();return}
+  g.translate(0,o.dy||0);g.rotate(o.tilt||0);g.scale(hs*(o.sqx||1),hs*(o.sqy||1));
   // あご（主役）：太く短い。右を先に描き、左を上に重ねる（はさみの重なり）。先だけ暗く、左にだけ明るい線
-  const mand=(sd)=>{g.save();g.scale(-sd,1);g.translate(-jaw*.5,0);g.rotate(jaw*.03);const Q=[[-18,21,.4],[-5,22,.4],[-2,31,.5],[5,42,.25],[-11,40,.7],[-22,31,.7]];
+  const mand=(sd)=>{if(mg<=0.001)return;g.save();g.translate(0,22);g.scale(mg,mg);g.translate(0,-22);g.scale(-sd,1);g.translate(-jaw*.5,0);g.rotate(jaw*.03);const Q=[[-18,21,.4],[-5,22,.4],[-2,31,.5],[5,42,.25],[-11,40,.7],[-22,31,.7]];
     g.fillStyle=sd>0?AC2:AC;g.beginPath();blob(Q);g.fill();
     g.save();g.beginPath();blob(Q);g.clip();g.fillStyle=sd>0?'#b86a24':AC2;g.beginPath();blob(Q,5,-3);g.fill();g.fillStyle=sd>0?AC2:AC;g.beginPath();blob(Q,-3.5,-1.5);g.fill();g.fillStyle=DK;g.beginPath();g.arc(6,45,9.5,0,7);g.fill();g.restore();   // 内側（刃のほう）を暗く上塗り
     g.restore()};   // 内のふち（刃）に暗い線
@@ -339,13 +340,32 @@ function antFace2(cx,cy,s,t=0){const C=[[0,-25,.45],[17,-33,.6],[33,-25,.55],[33
   // 一本線：左のふくらみに明るい線を2本（光）。右のほおに暗い線を1本（筋肉のふくらみの下の影）
   g.restore();
   // 目：小さめ。外の暗い色と、中にあごと同じ色
-  for(const sd of [-1,1]){const ex=sd*31.5,r=sd*0.14;g.fillStyle=sd<0?HH:HL;g.beginPath();g.ellipse(ex-1.2,-4.6,6.6,8.8,r,0,7);g.fill();g.fillStyle=DK;g.beginPath();g.ellipse(ex,-3,6,8.4,r,0,7);g.fill();g.save();g.beginPath();g.ellipse(ex-.3,-2.6,3.6,5.6,r,0,7);g.clip();g.fillStyle=EY2;g.fillRect(ex-8,-12,16,20);g.fillStyle=EY;g.beginPath();g.ellipse(ex-1.5,-4.2,3.6,5.4,r,0,7);g.fill();g.fillStyle='#8fe8b8';g.beginPath();g.ellipse(ex-1.9,-5.6,1.3,1.9,r,0,7);g.fill();g.restore()}
+  for(const sd of [-1,1]){if(eg<=0.001)continue;g.save();g.translate(sd*31.5,-3);g.scale(eg,eg);g.translate(-sd*31.5,3);const ex=sd*31.5,r=sd*0.14;g.fillStyle=sd<0?HH:HL;g.beginPath();g.ellipse(ex-1.2,-4.6,6.6,8.8,r,0,7);g.fill();g.fillStyle=DK;g.beginPath();g.ellipse(ex,-3,6,8.4,r,0,7);g.fill();g.save();g.beginPath();g.ellipse(ex-.3,-2.6,3.6,5.6,r,0,7);g.clip();g.fillStyle=EY2;g.fillRect(ex-8,-12,16,20);g.fillStyle=EY;g.beginPath();g.ellipse(ex-1.5,-4.2,3.6,5.4,r,0,7);g.fill();g.fillStyle='#8fe8b8';g.beginPath();g.ellipse(ex-1.9,-5.6,1.3,1.9,r,0,7);g.fill();g.restore();g.restore()}
   // 触角：顔のまん中の付け根から。ひじは丸く曲がり、先だけ色を変える
-  for(const sd of [-1,1]){const b=[sd*9,-5],e=[sd*39,-44+wob*.3],tp=[sd*64,-20+wob*sd];g.lineWidth=4.4;g.strokeStyle=sd<0?AC:AC2;g.beginPath();g.moveTo(b[0],b[1]);g.arcTo(e[0],e[1],tp[0],tp[1],10);g.lineTo(tp[0],tp[1]);g.stroke();
+  for(const sd of [-1,1]){if(ag<=0.001)continue;const b=[sd*9,-5],e=[lerp(b[0],sd*39+(o.sx||0)*.5,ag),lerp(b[1],-44+wob*.3,ag)],tp=[lerp(b[0],sd*64+(o.sx||0),ag),lerp(b[1],-20+wob2*sd+(o.droop||0),ag)];g.lineWidth=4.4;g.strokeStyle=sd<0?AC:AC2;g.beginPath();g.moveTo(b[0],b[1]);g.arcTo(e[0],e[1],tp[0],tp[1],10*ag);g.lineTo(tp[0],tp[1]);g.stroke();
     g.strokeStyle=HR;g.beginPath();g.moveTo(lerp(e[0],tp[0],.5),lerp(e[1],tp[1],.5));g.lineTo(tp[0],tp[1]);g.stroke();}
   g.restore()}
 function face2(t){g.fillStyle='#24122e';g.fillRect(0,0,W,H);antFace2(470,350,5.4,t);antFace2(1020,350,2.2,t)}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);({walk,leafcut,turn,head,faces,face2}[P.mode]||walk)(t)};
+// 顔を動かす（11回目）。動きの決まり：
+//   ・部品は一度に出さず、頭→目→あご→触角の順に少しずつ遅らせて出す。どれも行きすぎてから戻る
+//   ・大きな動きの前に、逆向きの小さな動き（ため）を入れる。あごは「ゆっくり開く → 一瞬で閉じる」
+//   ・速い動きのあとは、ゆれが残る（頭が少し沈んで戻り、触角の先は遅れてゆれる）。先ほど遅れる
+//   ・止まっている間も、触角だけはゆっくりゆれる（止め絵にしない）
+function face2anim(t){g.fillStyle='#24122e';g.fillRect(0,0,W,H);
+  const pop=(a,d)=>back(clamp((t-a)/d),2.2),sp=(t0,amp,f,dec)=>t<t0?0:amp*Math.exp(-(t-t0)*dec)*Math.sin((t-t0)*f);
+  const o={cs:eout(clamp(t/0.35)),hs:t<0.15?0:pop(0.15,0.4),eg:t<0.4?0:pop(0.4,0.3),mg:t<0.55?0:pop(0.55,0.32),ag:t<0.7?0:pop(0.7,0.5)};
+  // あご：ふだんは少し開く。2.5秒からゆっくり開き、3.1秒で一瞬で閉じる
+  let jaw=3+Math.sin(t*1.7)*0.6;const SN=3.1;if(t>2.4&&t<SN)jaw=lerp(3,9,ease((t-2.4)/(SN-2.4)));else if(t>=SN)jaw=lerp(9,-0.5,eout(clamp((t-SN)/0.07)))+lerp(0,3.5,ease(clamp((t-SN-0.9)/0.8)))+sp(SN+0.07,1.2,34,9);
+  o.jaw=jaw;
+  // 頭：ためで少し上がり、閉じた瞬間に沈んで、ゆれながら戻る。4.3秒から首をかしげる
+  const ant=t>2.4&&t<SN?ease((t-2.4)/(SN-2.4)):0;const tl=ease(clamp((t-4.3)/0.45))-ease(clamp((t-5.6)/0.5));
+  o.dy=-ant*2.5+sp(SN,5,24,6)+Math.sin(t*1.7)*0.5;o.tilt=-ant*0.03+sp(SN,0.03,22,6)+tl*-0.16+sp(4.3,0.03,16,5)-sp(5.6,0.03,16,5);
+  o.sqy=1+sp(SN,0.06,24,7);o.sqx=1-sp(SN,0.04,24,7);
+  // 触角：いつもゆっくりゆれ、先は遅れる。速い動きのあとは大きくゆれてから収まる
+  o.wob=Math.sin(t*2.3)*2.2+sp(0.95,7,15,3.5)+sp(SN,6,19,4);o.wob2=Math.sin(t*2.3-0.9)*3.4+sp(1.02,12,15,3)+sp(SN+0.05,13,17,3.2);
+  o.sx=sp(4.3,9,11,3)*-1+sp(5.6,9,11,3)+tl*5;o.droop=ant*-5+sp(SN+0.04,9,17,3.5);
+  antFace2(640,340,5.2,t,o)}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({walk,leafcut,turn,head,faces,face2,face2anim}[P.mode]||walk)(t)};
 </script>
 </content>
 </invoke>
