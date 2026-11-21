@@ -146,13 +146,14 @@ function ant3(cx,cy,S,yaw,ph,t,o={}){const c=o.col||ANT,co=Math.cos(yaw),si=Math
 //   ・足・触角・あごは、太さの変わらない線1本（先は丸い）。関節や節を描き込まない。曲がりはなめらかな1つのカーブ
 //   ・立体感は「重ね順」と「奥の物を暗い色にする」で出す。ぼかした影や大きな影の面は付けない
 //   ・光は、形の中の左上に、細い明るい線か小さな明るい面を1つだけ（目立たない範囲で）
+//   ・ディテールは「部分の上塗り」と「一本線」の組み合わせで作る（作り手の直し・5回目）：1つの面の上に、色の違う面を部分的に上塗りして明るい所・暗い所を作り、短い一本線を足して補う。あごのような太い線には、中に細い明るい線を1本入れる。線の一部（すね）だけ色を変えるのも同じ考え
 //   ・体はただの丸にしない。腹は板を重ねたように（後ろの板ほど少し暗く、ふちが見える）、胸もこぶを重ねる
 const A5={head:['#d9532f','#f0875a','#a83a2a'],tho:['#9a3340','#bf5560','#74253a'],gas:['#5a3157','#7d4a78','#3f2140'],limb:'#f2b866',limbFar:'#8a5a3c',limbHi:'#ffe0a6',mand:'#3a1f3d',eye:'#1a0c16'};
 function ant5(cx,cy,S,yaw,ph,t){const co=Math.cos(yaw),si=Math.sin(yaw),PITCH=0.16;
   const pr=(x,y,z)=>{const d=x*si+z*co,k=1+d/1100;return[cx+S*(x*co-z*si)*k,cy+S*(y*k+d*PITCH),d,k]};
   const bob=Math.sin(ph*Math.PI*4)*1.4,items=[];
   // 面：地の色で塗り、左上に小さな明るい面を1つ。far＝奥にあるとき暗い色
-  const plate=(x,y,z,a,b,cc,col,hi=true,bias=0)=>{const[px,py,d,k]=pr(x,y+bob,z);const rx=Math.max(3,Math.hypot(a*co,cc*si))*S*k,ry=b*S*k;items.push([d+bias,()=>{g.fillStyle=col[0];g.beginPath();g.ellipse(px,py,rx,ry,0,0,7);g.fill();if(hi){g.save();g.beginPath();g.ellipse(px,py,rx,ry,0,0,7);g.clip();g.fillStyle=col[1];g.beginPath();g.ellipse(px-rx*0.28,py-ry*0.62,rx*0.62,ry*0.34,-0.2,0,7);g.fill();g.restore()}}]);return d};
+  const plate=(x,y,z,a,b,cc,col,hi=true,bias=0,deco=null)=>{const[px,py,d,k]=pr(x,y+bob,z);const rx=Math.max(3,Math.hypot(a*co,cc*si))*S*k,ry=b*S*k;items.push([d+bias,()=>{g.fillStyle=col[0];g.beginPath();g.ellipse(px,py,rx,ry,0,0,7);g.fill();if(hi){g.save();g.beginPath();g.ellipse(px,py,rx,ry,0,0,7);g.clip();g.fillStyle=col[1];g.beginPath();g.ellipse(px-rx*0.28,py-ry*0.62,rx*0.62,ry*0.34,-0.2,0,7);g.fill();g.restore()}if(deco){g.save();g.beginPath();g.ellipse(px,py,rx,ry,0,0,7);g.clip();deco(px,py,rx,ry,(u,v,ru,rv,c,rot=0)=>{g.fillStyle=c;g.beginPath();g.ellipse(px+u*rx,py+v*ry,ru*rx,rv*ry,rot,0,7);g.fill()},(u0,v0,u1,v1,w,c)=>{g.strokeStyle=c;g.lineWidth=w*S;g.lineCap='round';g.beginPath();g.moveTo(px+u0*rx,py+v0*ry);g.lineTo(px+u1*rx,py+v1*ry);g.stroke();g.lineCap='butt'});g.restore()}}]);return d};
   // 線1本：3つの点を通るなめらかなカーブ。太さは変えない
   const line=(P3,w,col,depth,hi)=>{const q=P3.map(p=>pr(p[0],p[1]+bob,p[2]));items.push([depth,()=>{g.lineCap='round';g.lineJoin='round';g.strokeStyle=col;g.lineWidth=w*S;g.beginPath();g.moveTo(q[0][0],q[0][1]);const cx1=2*q[1][0]-(q[0][0]+q[2][0])/2,cy1=2*q[1][1]-(q[0][1]+q[2][1])/2;g.quadraticCurveTo(cx1,cy1,q[2][0],q[2][1]);g.stroke();
     if(hi){g.strokeStyle=hi;g.lineWidth=w*S*0.26;g.beginPath();const m0=[(q[0][0]*0.7+cx1*0.3),(q[0][1]*0.7+cy1*0.3)],m1=[(q[0][0]*0.25+cx1*0.5+q[2][0]*0.25),(q[0][1]*0.25+cy1*0.5+q[2][1]*0.25)];g.moveTo(m0[0]-w*S*0.16,m0[1]-w*S*0.16);g.lineTo(m1[0]-w*S*0.16,m1[1]-w*S*0.16);g.stroke()}g.lineCap='butt'}])};
@@ -162,9 +163,10 @@ function ant5(cx,cy,S,yaw,ph,t){const co=Math.cos(yaw),si=Math.sin(yaw),PITCH=0.
   const tri=(P3,col,depth)=>{const q=P3.map(p=>pr(p[0],p[1]+bob,p[2]));items.push([depth,()=>{g.fillStyle=col;g.strokeStyle=col;g.lineJoin='round';g.lineWidth=3*S;g.beginPath();q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fill();g.stroke();g.lineJoin='miter'}])};
   const body0=pr(0,0,0)[2];
   // 腹：板を3枚重ねる（後ろほど暗い）。胸：こぶを2つ重ねる。頭：1つの形
-  plate(-104,4,0,26,24,26,[A5.gas[2],A5.gas[0],0],false,-2);plate(-84,0,0,34,31,33,[A5.gas[0],A5.gas[1],0],false,-1);plate(-62,-3,0,30,29,31,[A5.gas[1],'#96608f',0],true,0);
+  const gd=(lite,dark)=>(px,py,rx,ry,zone,dash)=>{zone(0.25,0.75,1.1,0.5,dark,-0.15);dash(-0.55,-0.62,0.15,-0.8,3.2,lite);dash(0.3,-0.78,0.5,-0.7,3.2,lite)};
+  plate(-104,4,0,26,24,26,[A5.gas[2],A5.gas[0],0],false,-2,gd('#6a3d68','#2e1730'));plate(-84,0,0,34,31,33,[A5.gas[0],A5.gas[1],0],false,-1,gd('#8d5a88','#40224a'));plate(-62,-3,0,30,29,31,[A5.gas[1],'#96608f',0],false,0,gd('#b07aa8','#5a3157'));
   plate(-28,6,0,8,8,8,[A5.tho[2],A5.tho[0],0],false);
-  plate(-8,0,0,20,16,15,[A5.tho[2],A5.tho[0],0],false,-1);plate(12,-4,0,22,19,17,[A5.tho[0],A5.tho[1],0],true);
+  plate(-8,0,0,20,16,15,[A5.tho[2],A5.tho[0],0],false,-1);plate(12,-4,0,22,19,17,[A5.tho[0],A5.tho[1],0],false,0,(px,py,rx,ry,zone,dash)=>{zone(-0.2,-0.75,0.9,0.45,A5.tho[1],-0.1);zone(0.3,0.85,1.0,0.45,A5.tho[2]);dash(-0.5,-0.2,-0.1,-0.3,3,'#d97a80');dash(0.15,-0.05,0.45,-0.1,3,'#d97a80')});
   // 頭：本物のアリの顔のつくり（作り手の直し「球に丸と線を付けただけで、アリの顔になっていない」）
   //   ・正面から見ると、上が広く下がすぼまる形。後ろの上に2つのふくらみ
   //   ・目は小さく、顔の横（高さはまん中あたり）
@@ -172,13 +174,13 @@ function ant5(cx,cy,S,yaw,ph,t){const co=Math.cos(yaw),si=Math.sin(yaw),PITCH=0.
   //   ・口の上に、横長の板（頭楯）。その下に、三角の大きなあごが2枚、先が少し重なる
   const hy=-12+Math.sin(ph*Math.PI*4+1)*1.2;
   for(const sd of [-1,1])plate(40,hy-12,sd*14,13,15,15,[A5.head[2],A5.head[0],0],false,-3);       // 後ろ上のふくらみ（少し暗い）
-  const hd=plate(52,hy,0,22,23,27,[A5.head[0],A5.head[1],0],true,6);
+  const hd=plate(52,hy,0,22,23,27,[A5.head[0],A5.head[1],0],false,6,(px,py,rx,ry,zone,dash)=>{zone(-0.45,-0.55,0.75,0.6,A5.head[1],-0.35);zone(-0.62,-0.72,0.34,0.26,'#ffb98a',-0.35);zone(0.1,0.95,1.1,0.5,A5.head[2]);zone(0.78,0.1,0.34,0.55,'#b9412b');dash(-0.2,-0.86,0.02,-0.9,3,'#ffd0a8');dash(0.2,-0.84,0.36,-0.78,3,'#ffd0a8');dash(-0.75,0.05,-0.6,0.3,3.2,A5.head[2]);dash(0.5,0.42,0.72,0.3,3.2,'#f08a5a')});
   plate(64,hy+10,0,12,13,19,[A5.head[0],A5.head[1],0],false,8);                                    // すぼまるあご先のほう
   plate(71,hy+7,0,5,7,15,[A5.head[1],'#f6a57a',0],false,10);                                       // 頭楯（明るい板）
   for(const sd of [-1,1]){
     const[ex,ey,ed,ek]=pr(58,hy-4+bob,sd*25);if(ed>hd-12)items.push([hd+60,()=>{g.fillStyle=A5.eye;g.beginPath();g.ellipse(ex,ey,(2.4+2.8*Math.abs(co))*S*ek,5.4*S*ek,0,0,7);g.fill()}]);
     const front=pr(80,0,sd*14)[2]>hd-4;
-    tri([[69,hy+9,sd*19],[73,hy+15,sd*2],[90,hy+36,-sd*3]],sd>0?A5.mand:'#4d2a50',hd+(front?50+sd:-30));   // あご（三角の板。左右で少し色を変え、重なりが分かるように）
+    bend([[69,hy+10,sd*16],[84,hy+24,sd*14],[92,hy+35,sd*1]],9.5,sd>0?A5.mand:'#4d2a50',hd+(front?50+sd:-30),front?'#8a5a90':null);   // あご（三角の板。左右で少し色を変え、重なりが分かるように）
     const wob=Math.sin(t*4.6+sd)*4,nearA=pr(80,0,sd*30)[2]>hd-4;
     bend([[72,hy+1,sd*8],[80,hy-40+wob*0.3,sd*32],[116,hy-26+wob,sd*42]],4.6,nearA?A5.limb:A5.limbFar,hd+(nearA?56:-56),nearA?A5.limbHi:null)}   // 触角（ひじで折れる）
   const hips=[[22,8],[6,10],[-12,8]],home=[[70,64],[8,76],[-76,66]],stride=38,GYc=58;
@@ -186,7 +188,7 @@ function ant5(cx,cy,S,yaw,ph,t){const co=Math.cos(yaw),si=Math.sin(yaw),PITCH=0.
     const H3=[hips[i][0],hips[i][1],sd*11],F3=[home[i][0]+fx,GYc-lift-bob,sd*home[i][1]],K3=[H3[0]+(F3[0]-H3[0])*0.38,Math.min(H3[1],F3[1])-30,sd*(home[i][1]*0.62)];
     const kd=pr(K3[0],0,K3[2])[2],near=kd>body0,lc=near?A5.limb:A5.limbFar;const dH=pr(H3[0],0,H3[2])[2],dF=pr(F3[0],0,F3[2])[2];
     // ももは付け根の奥行き、すねは足先の奥行きで重ねる（正面から見たとき、ももが顔の前に出ないように）
-    bend([H3,K3],7.5,lc,(dH+kd)/2+(near?4:-4),near?A5.limbHi:null);bend([K3,F3,[F3[0]+12,F3[1]+2,F3[2]+sd*4]],7.5,lc,(kd+dF)/2+(near?12:-12))}
+    bend([H3,K3],7.5,lc,(dH+kd)/2+(near?4:-4),near?A5.limbHi:null);bend([K3,F3,[F3[0]+12,F3[1]+2,F3[2]+sd*4]],7.5,near?'#dc9a4c':'#74492f',(kd+dF)/2+(near?12:-12))}
   const[sx,sy]=pr(-12,GYc+4,0);g.fillStyle='rgba(6,40,30,.30)';g.beginPath();g.ellipse(sx,sy,(100*Math.abs(co)+66*Math.abs(si))*S,(11+24*Math.abs(si))*S,0,0,7);g.fill();
   items.sort((a,b)=>a[0]-b[0]);for(const it of items)it[1]()}
 // 向きを変えて見せる：横向き → ななめ前 → ほぼ正面 → 反対のななめ後ろ
