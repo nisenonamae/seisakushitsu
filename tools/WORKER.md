@@ -367,6 +367,7 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - take に `recPath` があれば、作り手が録った声そのもの（`roadmap/apps/seisakushitsu/voice_rec/<id>.webm`）。録音の合わせ方（高さの測り方 YIN・時間の突き合わせ DTW）の精度を確かめ、直すときに使う
 
 ## 本番の書き出し（final_render）
+- **まず `python3 tools/final_export.py <projId か題材の一部> --res <res> [--items <エンディングに流す物>]` を run_in_background で1回だけ動かす**（2026-11-21・トークンの節約）。下の1（書き出し）・エンディングをつなぐ・点検（長さ・LUFS・黒・止まり・無音）・一覧の画像1枚・.srt とチャプターをデータへ写す、まで全部やり、数行だけ出す。終わりの知らせを待ち、途中で見に行かない。`要確認` の行があるときだけ `.log` を読む。エンディングの物は `--items` か `projects[].endingItems`（配列。決めたら書いておくと次から要らない）。そのあとは下の2（チャットで送る）・3（`final`・`publish` を書く）だけ
 制作の9番目の段。`jobs[].res`（1080 か 1440）。total は 3（書き出し→投稿の材料→届ける）。
 1. `render_draft.py --data … --proj … --repo <notion-daily> --out final_vN.mp4 --kata main --vrules --lead 0.3 --bgm proj --res <res> --final`。`--final`＝場面の番号を出さない。`--res`＝図解（HTML の部品）は描く所から大きく描き、写真などの部品と字幕も書き出しの大きさで作る。`final_vN.srt`（YouTube の字幕ファイル）と `final_vN.chapters.txt`（チャプター）も一緒にできる
 2. 動画は大きくて GitHub（1ファイル100MBまで）に置けないので、**チャットに送る**（作り手がいる会話で SendUserFile。名前は `<題名の短い形>_<res>.mp4`）。`.srt` は `videos/<projId>/final_vN.srt` に置く
