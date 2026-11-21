@@ -3,8 +3,8 @@
 <script>
 /* 構図の型の一覧（見本）。赤＝補助線、黄色の点＝主役を置く所 */
 window.DEF={};
-window.render=function(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#14181f';g.fillRect(0,0,W,H);const ks=Object.keys(COMP),cw=196,ch=110,gx=14,gy=104,x0=(W-(cw*6+gx*5))/2;
-  g.fillStyle='#fff';g.font=`900 30px ${FONT}`;g.textAlign='left';g.textBaseline='middle';g.fillText('構図の型（18）',x0,32);g.font=`700 17px ${FONT}`;g.fillStyle='#9aa3ae';g.fillText('赤＝補助線　黄色の点＝主役を置く所',x0+250,34);
+window.render=function(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#14181f';g.fillRect(0,0,W,H);const pg=P.page==2,ks=Object.keys(COMP).slice(pg?18:0,pg?36:18),cw=196,ch=110,gx=14,gy=104,x0=(W-(cw*6+gx*5))/2;
+  g.fillStyle='#fff';g.font=`900 30px ${FONT}`;g.textAlign='left';g.textBaseline='middle';g.fillText(pg?'構図の型：見た絵から足した型':'構図の型（18）',x0,32);g.font=`700 17px ${FONT}`;g.fillStyle='#9aa3ae';g.fillText('赤＝補助線　黄色の点＝主役を置く所',x0+(pg?470:250),34);
   ks.forEach((k,i)=>{const x=x0+(i%6)*(cw+gx),y=66+Math.floor(i/6)*(ch+gy);g.fillStyle='#e9edf2';g.fillRect(x,y,cw,ch);compGuide(k,x,y,cw,ch);g.fillStyle='#fff';g.font=`900 18px ${FONT}`;g.textAlign='left';g.fillText(COMP[k].name,x,y+ch+20);g.fillStyle='#7dd3fc';g.font=`700 13px ${FONT}`;g.fillText('"guide":"'+k+'"',x,y+ch+42);
     g.fillStyle='#b8c0cc';g.font=`500 12.5px ${FONT}`;const tx=COMP[k].ours;let ln='',yy=y+ch+62,n=0;for(const chx of tx){if(g.measureText(ln+chx).width>cw){g.fillText(ln,x,yy);yy+=16;ln='';if(++n>=3)break}ln+=chx}if(n<3)g.fillText(ln,x,yy)})};
 </script>
