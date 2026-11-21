@@ -178,5 +178,29 @@ function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP
   // 切り替えの白が晴れる
   const w=1-clamp(tt/0.5);if(w>0){g.fillStyle=`rgba(255,253,228,${w*w})`;g.fillRect(0,0,W,H)}
   const dkv=ease(pu)*0.35;const vg=g.createRadialGradient(W/2,H*0.5,H*0.4,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(8,30,50,0)');vg.addColorStop(1,`rgba(8,30,50,${0.2+dkv})`);g.fillStyle=vg;g.fillRect(0,0,W,H)}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);(t<T1?forest:world)(t)};
+// ───── 房から作る（20回目・作り手「図形的ではなくなったが、精度が足りない。丸・四角・三角を少し不規則にしただけ。本家はもっと自由自在」）─────
+// 輪郭を先に決めない。小さな房（葉の束）を、枝の向きに沿って何本も生やし、輪郭はその結果としてできるようにする。
+// 房の先が飛び出し、房と房の間に切れこみができ、重なった所が濃くなる（丸を崩しても、これは出ない）
+// 房1本：根元が細く、腹がふくらみ、先がとがって少し曲がる。a＝向き、l＝長さ、w＝太さ、bend＝曲がり
+function tuft(x,y,a,l,w,col,bend=0,tip=.4){const c=Math.cos(a),s=Math.sin(a),P=[[0,-.2,.5],[.28,-.5,.8],[.7,-.36,.7],[1,0,tip],[.76,.3,.7],[.36,.46,.8],[0,.2,.5]].map(q=>{const u=q[0]*l,v=q[1]*w+bend*l*q[0]*q[0];return[x+u*c-v*s,y+u*s+v*c,q[2]]});fill(P,col)}
+// 葉のかたまり：中心から房を扇のように生やす。暗い長い房を奥に、明るい短い房を手前に（光の側へ寄せる）
+function clump2(cx,cy,Rr,seed,C,far){const r=R(seed),fan=(n,a0,a1,l0,l1,w,col,ox,oy)=>{for(let i=0;i<n;i++){const a=a0+(a1-a0)*((i+r()*.7)/n),l=Rr*(l0+r()*(l1-l0));tuft(cx+ox+Math.cos(a)*Rr*.12,cy+oy+Math.sin(a)*Rr*.12,a,l,Rr*w*(0.8+r()*.4),col,(r()-.5)*.5)}};
+  fill(bump(cx,cy+Rr*.1,Rr*.7,Rr*.5,seed+9,9,.8),C[0]);fan(17,-3.7,0.6,.7,1.05,.36,C[0],Rr*.06,Rr*.16);if(far)return;
+  fill(bump(cx-Rr*.04,cy-Rr*.02,Rr*.56,Rr*.4,seed+8,9,.8),C[1]);fan(14,-3.5,0.3,.55,.86,.34,C[1],0,0);fan(10,-3.3,-0.7,.4,.66,.32,C[2],-Rr*.14,-Rr*.14);fan(5,-3.0,-1.5,.26,.44,.28,C[3],-Rr*.24,-Rr*.26)}
+// モミの枝1本：垂れる枝の骨に沿って、房を並べる。奥に暗い房（下へ垂れる）、手前に明るい房（前へ寝る）。先は少し上を向く
+function bough2(x,y,sd,L,seed,cb,cd,cl,lit){const r=R(seed),sp=u=>[x+sd*L*u,y+L*(0.32*u*u-0.04*u)+(u>.8?-L*.05*(u-.8)/.2:0)],tg=u=>{const a=sp(u),b=sp(u+.02);return Math.atan2(b[1]-a[1],b[0]-a[0])};
+  taper([sp(0),sp(.35),sp(.7),sp(1)],L*.12,L*.02,cd);
+  for(let i=0;i<15;i++){const u=i/15+r()*.03,p=sp(u),a=tg(u)+sd*(0.85+r()*.35),l=L*(.44-.27*u)*(0.85+r()*.3);tuft(p[0],p[1],a,l,l*.46,cd,sd*.2)}                          // 奥：下へ垂れる暗い房
+  for(let i=0;i<13;i++){const u=i/13+r()*.03,p=sp(u),a=tg(u)+sd*(0.3+r()*.3),l=L*(.38-.22*u)*(0.85+r()*.3);tuft(p[0],p[1]-L*.02,a,l,l*.5,cb,sd*.15)}                 // 手前：前へ寝る房
+  if(lit)for(let i=0;i<7;i++){const u=.04+i/8+r()*.04,p=sp(u),a=tg(u)+sd*(0.05+r()*.2),l=L*(.26-.14*u)*(0.85+r()*.3);tuft(p[0],p[1]-L*.05,a,l,l*.46,cl,-sd*.1)}       // 上に乗る明るい房
+  const e=sp(1);tuft(e[0],e[1],tg(.97)-sd*.3,L*.13,L*.06,cb,0)}
+function study(t){g.fillStyle='#bfeaf2';g.fillRect(0,0,W,H);const CN=['#1f5f52','#2f8560','#55ab66','#9ed46a'];
+  label(320,44,'今の作り方（丸や段を少し崩す）',1,'#fff',26);label(960,44,'房から作る',1,'#fff',26);
+  g.strokeStyle='rgba(20,60,80,.25)';g.lineWidth=2;g.beginPath();g.moveTo(640,90);g.lineTo(640,700);g.stroke();
+  clump(320,230,150,104,71,CN);clump2(960,250,150,71,CN);
+  // モミの枝：今の形（左）と、房で作った枝（右）
+  const bo=(cx,cy,tw,th,sd)=>[[cx-sd*tw*.12,cy-th*.5,.5],[cx+sd*tw*.5,cy-th*.24,.8],[cx+sd*tw,cy+th*.34,.35],[cx+sd*tw*.72,cy+th*.46,.7],[cx+sd*tw*.34,cy+th*.28,.8],[cx-sd*tw*.12,cy+th*.4,.6]];
+  ln([[320,440],[320,700]],26,'#7a5a86');for(const sd of [-1,1])fill(bo(320,560,250,150,sd),'#1b5560');for(const sd of [-1,1]){const P=bo(320,536,sd<0?225:165,130,sd);fill(P,'#2f7f76');if(sd<0)inside(P,()=>fill([[318,440,.6],[60,540,.5],[60,570,.5],[250,526,.7]],'#62b49c'))}
+  ln([[960,440],[960,700]],26,'#7a5a86');for(const sd of [-1,1]){bough2(960,520,sd,sd<0?250:215,31+sd,'#2f7f76','#1b5560','#62b49c',sd<0)}}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);(P.mode==='study'?study:t<T1?forest:world)(t)};
 </script>
