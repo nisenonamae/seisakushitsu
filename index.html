@@ -763,7 +763,7 @@ ${yt.length?`<details><summary>参考動画のサムネ（${yt.length}）</summa
 ${(()=>{const card=t=>`<div class="item ${p.thumbId===t.id?'picked':''}" style="margin:8px 0">${abTag(p,'h',t.id)?`<div class="tags">${abTag(p,'h',t.id)}</div>`:''}${t.title?`<div class="q" style="font-size:15.5px">${esc(t.title)}</div>`:''}<div class="lead" style="margin:2px 0">${esc(t.idea||'')}${t.text?'　サムネの文字：「'+esc(t.text)+'」':''}</div>
 ${t.preview?`<img data-gh="${esc(t.preview)}" style="width:100%;border-radius:6px;background:var(--line);min-height:60px">`:''}
 ${t.desc?`<div style="font-size:14px">${esc(t.desc)}</div>`:''}${usesHTML(t)}
-<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'✓ これに決めた':'これにする'}</button>${p.thumbId===t.id?'<button data-tunpick>決定を取り消す</button>':abBtn(p,'h',t.id)}</div>
+<div class="st" style="margin-top:4px"><button data-tpick="${t.id}" class="${p.thumbId===t.id?'on':''}">${p.thumbId===t.id?'✓ これに決めた':'これにする'}</button>${p.thumbId===t.id?'<button data-tunpick>決定を取り消す</button>':abBtn(p,'h',t.id)}${t.preview?`<button data-fdl="${esc(t.preview)}" data-fname="${esc('サムネ_'+((t.text||t.idea||t.id)+'').replace(/[\\/:*?"<>|\s]/g,'').slice(0,16)+'.png')}">⬇ 画像をダウンロード</button>`:''}</div>
 ${tfixHTML(p,t)}</div>`;const abs=(p.abThumbs||[]).map(id=>ts.find(t=>t.id===id)).filter(t=>t&&t.id!==p.thumbId);const pk=ts.find(t=>t.id===p.thumbId),rest=ts.filter(t=>t.id!==p.thumbId&&!abs.includes(t));return pk?`<h3 style="font-size:15px;margin:12px 0 4px">決めたサムネ</h3>${card(pk)}${abs.length?`<h3 style="font-size:15px;margin:12px 0 4px">A/B テストに入れるサムネ</h3>${abs.map(card).join('')}`:''}${rest.length?`<details class="others"><summary>ほかの案（${rest.length}）</summary>${rest.map(card).join('')}</details>`:''}`:ts.map(card).join('')})()}${jobLine(p,'thumb_fix')}
 ${abCard(p)}
 <div class="row"><button class="b main" data-next>サムネはこれでいい</button></div>`}
@@ -815,6 +815,7 @@ return `<div class="how"><b>やること</b><ol>
 <div class="row"><button class="b main" data-fjob>${f.done?'もう一度、本番を書き出してもらう':'本番を書き出してもらう'}</button></div>${jobLine(p,'final_render')}
 ${f.done?`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">本番の動画</div><div class="lead" style="margin:2px 0">${esc(f.res||'')}・${f.size?Math.round(f.size/1048576)+'MB・':''}${f.duration?toClock(f.duration)+'・':''}${md(f.at||0)}　${esc(f.note||'')}</div>
 <div>ファイル名：<b>${esc(f.name||'')}</b>（チャットに送ってあります）</div>
+${(()=>{const h=(p.thumbs||[]).find(t=>t.id===p.thumbId);return h&&h.preview?`<div class="row" style="margin:6px 0"><button class="b" data-fdl="${esc(h.preview)}" data-fname="${esc((f.name||'video').replace(/\.mp4$/,'')+'_サムネ.png')}">決めたサムネをダウンロード</button></div>`:''})()}
 ${f.srt?`<div class="row" style="margin:6px 0"><button class="b" data-fdl="${esc(f.srt)}" data-fname="${esc((f.name||'video').replace(/\.mp4$/,'')+'.srt')}">字幕ファイル（CC）をダウンロード</button></div>`:''}
 <label class="chk"><input type="checkbox" data-fup ${f.uploaded?'checked':''}><span>YouTube に上げた</span></label></div>`:''}
 ${pub.title||pub.desc||pub.tags?`<h3 style="font-size:15px;margin:14px 0 4px">YouTube に貼るもの</h3>${cp('pubTitle','題名',pub.title,1)}${cp('pubDesc','概要欄（チャプター・参考にした資料・クレジット入り）',pub.desc,10)}${cp('pubTags','タグ（カンマ区切り。YouTube の「タグ」欄にそのまま貼る）',pub.tags,2)}`:''}
