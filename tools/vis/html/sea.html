@@ -75,5 +75,59 @@ function scene(t){
   L(1.25,()=>{fish(t);sea(2,512,'#136a78','#6fd0aa',t+5)});
   L(1.7,()=>{sea(3,590,C.front,'#5fc9a8',t+1);blurOn(7);g.fillStyle=C.dk;g.beginPath();blob([[-80,760,.3],[-60,560,.5],[40,520,.6],[120,566,.5],[210,560,.6],[300,640,.5],[380,760,.3]]);g.fill();g.beginPath();blob([[1010,760,.3],[1090,640,.5],[1180,610,.6],[1260,560,.5],[1400,560,.4],[1400,760,.3]]);g.fill();blurOff()});
   const vg=g.createRadialGradient(W/2,H*0.5,H*0.4,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(6,10,40,0)');vg.addColorStop(1,'rgba(6,10,40,.5)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);scene(t)};
+// ───── 漁船を大きく（13回目・作り手「アリのノウハウ〔部分塗り・一本線・図形すぎない形・デフォルメ〕を使ったのを見たい」）─────
+// 12回目は物を小さく置いたので、塗り分けも線も入れる場所がなかった。**ノウハウを見せる物は、画面の中で大きく置く**。
+// デフォルメの決め方：主役（ランタン）は実物より大きく／船体は短くずんぐり、へさきを高く／船室は大きく、窓は1つだけ大きく／細い物（ロープ・柱）は太い線に
+function boatBig(t){
+  const s=g.createLinearGradient(0,0,0,470);s.addColorStop(0,C.sky0);s.addColorStop(1,C.sky1);g.fillStyle=s;g.fillRect(0,0,W,H);
+  const r=R(11);for(let i=0;i<40;i++){const x=r()*1300,y=r()*380,sz=1.6+r()*2.6,tw=0.45+0.55*Math.sin(t*(1+r()*2)+i);g.fillStyle=`rgba(190,236,216,${0.25+0.55*tw})`;g.beginPath();blob([[x-sz,y,.3],[x,y-sz,.3],[x+sz,y,.3],[x,y+sz,.3]]);g.fill()}
+  for(const c of [[210,120,1.7],[1010,190,1.3]]){const x=c[0]-t*5,y=c[1],k=c[2],P=[[-90,10,.6],[-60,-14,.8],[-20,-10,.6],[10,-30,.8],[50,-16,.8],[92,8,.6],[40,18,.5],[-40,18,.5]].map(p=>[x+p[0]*k,y+p[1]*k,p[2]]);g.fillStyle='#1d3d7c';g.beginPath();blob(P);g.fill();g.save();g.beginPath();blob(P);g.clip();g.fillStyle='#142a60';g.beginPath();blob(P,6*k,12*k);g.fill();g.restore()}
+  sea(0,452,C.far,'#1d5590',t);sea(1,486,'#12507a','#1f78a0',t+3);
+  const bx=620,tl=t-0.28,y=520+wave(2,bx,tl)*0.7,sl=(wave(2,bx+90,tl)-wave(2,bx-90,tl))/180,rot=Math.atan(sl)*0.5;
+  const tl2=t-0.62,sl2=(wave(2,bx+90,tl2)-wave(2,bx-90,tl2))/180,sw=-Math.atan(sl2)*2.2+Math.sin(t*2.1)*0.04;
+  g.save();g.translate(bx,y);g.rotate(rot);g.scale(2.7,2.7);g.lineCap='round';g.lineJoin='round';
+  const ln=(P,w,col)=>{g.strokeStyle=col;g.lineWidth=w;g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke()};
+  const fill=(P,col)=>{g.fillStyle=col;g.beginPath();blob(P);g.fill()};
+  const inside=(P,fn)=>{g.save();g.beginPath();blob(P);g.clip();fn();g.restore()};
+  // ロープ（太い線）：柱の上からへさきと船尾へ。少したるんでゆれる
+  const sag=3+Math.sin(t*1.6)*1.2;g.strokeStyle='#3a6aa8';g.lineWidth=2.4;g.beginPath();g.moveTo(-6,-150);g.quadraticCurveTo(52,-98+sag,104,-56);g.moveTo(-6,-150);g.quadraticCurveTo(-58,-96+sag,-96,-32);g.stroke();
+  // 柱と腕（太い線。柱は下を暗く塗り分ける）
+  ln([[-6,-30],[-6,-152]],7,'#16306e');ln([[-6,-30],[-6,-72]],7,'#0c1c48');ln([[-6,-136],[58,-152]],6,'#16306e');
+  // 煙突と煙（煙は点で描いた形。上ほど大きく薄く）
+  fill([[-70,-74,.25],[-58,-75,.25],[-57,-96,.3],[-71,-95,.3]],'#16306e');fill([[-73,-96,.3],[-55,-97,.3],[-55,-102,.4],[-73,-101,.4]],'#35c0a4');
+  for(let i=0;i<4;i++){const a=((t*0.45+i*0.25)%1),px=-64-a*26+Math.sin(a*6+i)*4,py=-106-a*62,sz=5+a*13;g.fillStyle=`rgba(60,110,170,${0.75*(1-a)})`;g.beginPath();blob([[px-sz,py+sz*.3,.7],[px-sz*.5,py-sz*.8,.8],[px+sz*.4,py-sz*.6,.8],[px+sz,py+sz*.2,.7],[px,py+sz*.8,.7]]);g.fill()}
+  // 船室：正面の面（明るい）と横の面（暗い）。屋根は厚い板で、下の面を暗く
+  const CB=[[-86,-28,.2],[-82,-76,.3],[-22,-80,.3],[-18,-28,.2]];fill(CB,'#1f7f8c');inside(CB,()=>{fill([[-38,-20,.2],[-36,-82,.3],[-10,-82,.3],[-10,-20,.2]],'#17586e');fill([[-90,-34,.3],[-10,-36,.3],[-10,-20,.2],[-90,-20,.2]],'#145068')});
+  const RF=[[-94,-76,.35],[-14,-81,.35],[-11,-92,.5],[-92,-88,.5]];fill(RF,'#8fe6b4');inside(RF,()=>fill([[-100,-80,.3],[-8,-85,.3],[-8,-70,.3],[-100,-70,.3]],'#35c0a4'));
+  // 窓：大きく1つ。中を塗り分ける（明るい左下・暗い右上）。枠は太い線
+  const WN=[[-76,-66,.4],[-46,-68,.4],[-45,-42,.4],[-75,-41,.4]];fill(WN,C.ac);inside(WN,()=>{fill([[-80,-52,.5],[-58,-62,.6],[-52,-36,.5],[-80,-36,.4]],C.ac2);fill([[-56,-72,.4],[-40,-72,.4],[-40,-50,.5],[-50,-58,.6]],'#e07a1c')});
+  g.strokeStyle='#0c1c48';g.lineWidth=3;g.beginPath();blob(WN);g.stroke();ln([[-60,-67],[-60,-42]],3,'#0c1c48');
+  ln([[-30,-66],[-30,-32]],2.6,'#0f4258');   // 横の面の戸の線
+  // 網の山（船尾）：点で描いた形に、明るい面と、網目の短い線
+  const NT=[[-98,-28,.4],[-94,-44,.7],[-84,-50,.7],[-74,-42,.7],[-70,-28,.4]];fill(NT,'#2a9aa0');inside(NT,()=>{fill([[-100,-46,.6],[-86,-54,.7],[-82,-40,.7],[-98,-34,.6]],'#6fd0aa');g.strokeStyle='#17586e';g.lineWidth=2;g.beginPath();g.moveTo(-92,-30);g.lineTo(-80,-46);g.moveTo(-84,-30);g.lineTo(-74,-42);g.moveTo(-96,-40);g.lineTo(-78,-32);g.stroke()});
+  // 船体：短くずんぐり、へさきが高い
+  const Hh=[[-104,-30,.35],[62,-34,.3],[106,-60,.45],[114,-52,.5],[94,-8,.6],[66,24,.6],[-72,24,.6],[-100,2,.6]];fill(Hh,'#1c3a80');
+  inside(Hh,()=>{    g.fillStyle='#0e2058';g.beginPath();blob(Hh,-5,17);g.fill();                                                  // 下の影の面
+    fill([[52,-40,.4],[120,-70,.4],[120,-20,.5],[92,14,.5],[70,10,.6],[76,-10,.7]],'#2f5fb4');   // へさきの前の面（明るい）
+    fill([[-110,-34,.3],[64,-38,.3],[110,-65,.4],[116,-52,.4],[66,-24,.3],[-110,-20,.3]],'#35c0a4');           // 上の帯
+    fill([[40,-40,.3],[110,-66,.4],[116,-52,.4],[66,-24,.3],[42,-24,.3]],'#8fe6b4');                            // 帯の、へさき側だけ明るく
+    ln([[-88,-10],[-20,-10]],2.6,'#142c6a');ln([[4,-11],[58,-12]],2.6,'#142c6a');ln([[-60,3],[10,3]],2.6,'#0a1848')});   // 板の継ぎ目（短い線を3本。端から端までは引かない）
+  // 船べりのタイヤ（太い線の輪）とロープ
+  for(const fx of [-52,14]){ln([[fx,-30],[fx,-14]],2.2,'#3a6aa8');g.strokeStyle='#0a1848';g.lineWidth=5;g.beginPath();g.arc(fx,-6,7,0,7);g.stroke();g.strokeStyle='#2a55a8';g.lineWidth=1.8;g.beginPath();g.arc(fx,-6,7,3.4,4.9);g.stroke()}
+  // ランタン（主役）：実物より大きく。ガラスの中を3つに塗り分け、枠は太い線
+  g.save();g.translate(58,-152);g.rotate(sw-rot);ln([[0,0],[0,14]],3,'#0c1c48');
+  const fl=0.92+0.08*Math.sin(t*9)+0.05*Math.sin(t*23);const gl=g.createRadialGradient(0,38,4,0,38,150);gl.addColorStop(0,`rgba(255,190,90,${0.5*fl})`);gl.addColorStop(0.35,`rgba(255,170,60,${0.15*fl})`);gl.addColorStop(1,'rgba(255,170,60,0)');g.fillStyle=gl;g.beginPath();g.arc(0,38,150,0,7);g.fill();
+  g.strokeStyle='#0c1c48';g.lineWidth=3;g.beginPath();g.arc(0,22,9,Math.PI,0);g.stroke();
+  fill([[-13,20,.3],[13,20,.3],[10,27,.3],[-10,27,.3]],'#16306e');
+  const GL=[[-11,27,.3],[11,27,.3],[15,55,.35],[-15,55,.35]];fill(GL,C.ac);inside(GL,()=>{fill([[-18,24,.3],[-2,24,.4],[-5,58,.4],[-18,58,.3]],C.ac2);fill([[6,24,.4],[18,24,.3],[18,58,.3],[9,58,.4]],'#e07a1c');fill([[-7,36,.7],[0,30,.8],[6,37,.7],[4,48,.7],[-5,48,.7]],'#fff2c0')});
+  ln([[-12,27],[-16,55]],2.6,'#0c1c48');ln([[12,27],[16,55]],2.6,'#0c1c48');
+  fill([[-17,55,.3],[17,55,.3],[13,63,.4],[-13,63,.4]],'#16306e');inside([[-17,55,.3],[17,55,.3],[13,63,.4],[-13,63,.4]],()=>fill([[2,50,.3],[20,50,.3],[20,66,.3],[4,66,.3]],'#0c1c48'));
+  g.restore();g.restore();
+  // 手前の波：船の下に重なる。へさきに小さなしぶき
+  const lx=bx+58*2.7;g.lineCap='round';for(let i=0;i<5;i++){const yy=y+86+i*17,w=(46-i*7)*(0.7+0.3*Math.sin(t*3+i*1.3)),xx=lx+Math.sin(t*1.7+i)*9;g.strokeStyle=`rgba(255,168,56,${0.7-i*0.12})`;g.lineWidth=7;g.beginPath();g.moveTo(xx-w,yy);g.lineTo(xx+w,yy);g.stroke()}g.lineCap='butt';
+  sea(2,562,C.near,C.crest,t);
+  const rs=R(3);g.fillStyle=C.foam;for(let i=0;i<6;i++){const a=((t*0.9+rs())%1),px=bx+250+a*(30+rs()*40),py=y+40-Math.sin(a*Math.PI)*(18+rs()*22),sz=(3+rs()*3)*(1-a);g.beginPath();blob([[px-sz*1.4,py,.6],[px,py-sz*.8,.8],[px+sz*1.2,py,.8],[px,py+sz*.8,.8]]);g.fill()}
+  sea(3,640,C.front,'#5fc9a8',t+1);
+  const vg=g.createRadialGradient(W/2,H*0.5,H*0.4,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(6,10,40,0)');vg.addColorStop(1,'rgba(6,10,40,.5)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);(P.mode==='boat'?boatBig:scene)(t)};
 </script>
