@@ -194,13 +194,37 @@ function bough2(x,y,sd,L,seed,cb,cd,cl,lit){const r=R(seed),sp=u=>[x+sd*L*u,y+L*
   for(let i=0;i<13;i++){const u=i/13+r()*.03,p=sp(u),a=tg(u)+sd*(0.3+r()*.3),l=L*(.38-.22*u)*(0.85+r()*.3);tuft(p[0],p[1]-L*.02,a,l,l*.5,cb,sd*.15)}                 // 手前：前へ寝る房
   if(lit)for(let i=0;i<7;i++){const u=.04+i/8+r()*.04,p=sp(u),a=tg(u)+sd*(0.05+r()*.2),l=L*(.26-.14*u)*(0.85+r()*.3);tuft(p[0],p[1]-L*.05,a,l,l*.46,cl,-sd*.1)}       // 上に乗る明るい房
   const e=sp(1);tuft(e[0],e[1],tg(.97)-sd*.3,L*.13,L*.06,cb,0)}
+// ───── 図形を組み合わせて切り抜く（21回目・作り手「図形を組み合わせて作った形を切り抜いて、1つの色で塗りつぶせば、どんな形も作れる。本家は色ごとに重ねている」）─────
+// 本家の木を色ごとに分け、上の層を足し戻して見た結果：下から順に ①木全体の影絵（暗い色）②ほぼ同じ形を少し内側へ（緑）③横長の雲のようなかたまりを互い違いに（明るい緑）④かたまり1つに1つ、上寄りに小さく（黄緑）。
+// 「葉の間の影を描く」のではなく、「下から順に、小さくしながら塗り重ねる」。幹は葉の後ろを通り、すき間からだけ見える。
+// どの層のふちも、丸い出っぱりがつながり、間が鋭く切れこむ＝大小の丸を重ねて1つに切り抜いた形。
+// uni：だ円の集まり [x,y,rx,ry,回転] を、1つの形として1色で塗る。dx,dy＝ずらす、k＝(cx0,cy0) を中心に大きくする
+function uni(L,col,dx=0,dy=0,k=1,cx0=0,cy0=0){g.fillStyle=col;g.beginPath();for(const e of L){let x=cx0+(e[0]-cx0)*k+dx,y=cy0+(e[1]-cy0)*k+dy,rx=e[2]*k,ry=(e[3]||e[2])*k;const ro=e[4]||0;if(PERSP){const q=pw(x,y);x=q[0];rx*=pk(y)}g.moveTo(x+rx*Math.cos(ro),y+rx*Math.sin(ro));g.ellipse(x,y,rx,ry,ro,0,Math.PI*2)}g.fill()}
+// 雲のようなかたまり：まん中に大きなだ円、まわりに大小の丸（上は大きめ、下は小さめ）
+function cloudL(cx,cy,w,h,seed){const r=R(seed),L=[[cx,cy,w*.36,h*.34],[cx-w*.2,cy+h*.04,w*.26,h*.3],[cx+w*.2,cy+h*.02,w*.26,h*.3]],n=11+Math.floor(r()*4);
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2+r()*.3,top=Math.sin(a)<0,big=r()<0.45,rad=h*(big?.25+r()*.1:.12+r()*.07)*(top?1:.8);L.push([cx+Math.cos(a)*(w*.5-rad*.7),cy+Math.sin(a)*(h*.5-rad*.75)*(top?1:.85),rad*1.2,rad])}return L}
+// 葉のかたまりの集まり：CL＝[x,y,幅,高さ,種]。C＝[影絵の色, 緑, 明るい緑, 黄緑]。mid(i) が偽のかたまりは、明るい層を付けない（奥の葉）
+function foliage(CL,C,back){const cx=CL.reduce((a,c)=>a+c[0],0)/CL.length,cy=CL.reduce((a,c)=>a+c[1],0)/CL.length,all=[];CL.forEach(c=>all.push(...cloudL(c[0],c[1],c[2],c[3],c[4])));
+  if(back){uni(all,C[0],CL[0][2]*.06,CL[0][3]*.14,1.12,cx,cy);return}
+  CL.forEach(c=>uni(cloudL(c[0],c[1],c[2],c[3],c[4]),C[1],0,c[3]*.1,1.16,c[0],c[1]));                 // ②緑：かたまりより少し大きく、少し下へ（かたまりの間と下に、影としてのぞく）
+  CL.forEach(c=>uni(cloudL(c[0],c[1],c[2],c[3],c[4]),C[2]));                                           // ③明るい緑
+  CL.forEach(c=>uni(cloudL(c[0]-c[2]*.07,c[1]-c[3]*.16,c[2]*.54,c[3]*.46,c[4]+5),C[3]))}               // ④黄緑：上寄りに小さく
+// モミの枝1段：垂れる枝に沿って、だ円を並べて切り抜く。奥＝下へ垂れる大きめのだ円（暗い）、手前＝枝に沿うだ円、上に明るいだ円
+function bough3(x,y,sd,L,seed,cb,cd,cl,lit){const r=R(seed),sp=u=>[x+sd*L*u,y+L*(0.3*u*u-0.03*u)],B=[],F=[],T=[];
+  for(let i=0;i<10;i++){const u=i/9,p=sp(u),l=L*(.3-.19*u)*(0.85+r()*.3);B.push([p[0]+sd*l*.1,p[1]+l*.42,l*.36,l*.6,sd*(0.25+r()*.3)]);F.push([p[0],p[1]+l*.06,l*.52,l*.4,sd*0.25]);if(u<.8)T.push([p[0]-sd*l*.05,p[1]-l*.14,l*.36,l*.2,sd*0.3])}
+  uni(B,cd);uni(F,cb);if(lit)uni(T,cl)}
 function study(t){g.fillStyle='#bfeaf2';g.fillRect(0,0,W,H);const CN=['#1f5f52','#2f8560','#55ab66','#9ed46a'];
-  label(320,44,'今の作り方（丸や段を少し崩す）',1,'#fff',26);label(960,44,'房から作る',1,'#fff',26);
-  g.strokeStyle='rgba(20,60,80,.25)';g.lineWidth=2;g.beginPath();g.moveTo(640,90);g.lineTo(640,700);g.stroke();
-  clump(320,230,150,104,71,CN);clump2(960,250,150,71,CN);
-  // モミの枝：今の形（左）と、房で作った枝（右）
+  label(320,40,'前の作り方（丸や段を崩す）',1,'#fff',24);label(960,40,'図形を組み合わせて切り抜き、層を重ねる',1,'#fff',24);
+  g.strokeStyle='rgba(20,60,80,.25)';g.lineWidth=2;g.beginPath();g.moveTo(640,80);g.lineTo(640,700);g.stroke();
+  // 上：巨木の葉。左＝前の作り方、右＝新しい作り方（奥の影絵 → 幹 → 緑 → 明るい緑 → 黄緑）
+  const SQb='#b5533a';
+  [[320,150,78,50,51],[262,206,56,38,53],[384,196,60,38,55]].forEach(b=>fill(bump(b[0],b[1],b[2],b[3],b[4],11),'#174a45'));ln([[320,150],[320,400]],46,SQb);
+  [[276,172,50,36,71],[370,156,46,34,73],[246,238,44,30,75],[396,236,46,32,77],[320,130,44,30,79],[308,210,30,21,91]].forEach(b=>clump(b[0],b[1],b[2],b[3],b[4],CN));
+  const CL=[[960,110,150,74,3],[872,176,150,70,5],[1046,170,140,66,7],[930,238,130,60,9],[1020,268,120,54,11],[850,262,104,48,13],[1080,232,90,42,15]];
+  foliage(CL,['#174a45'],true);ln([[962,120],[960,400]],46,SQb);ln([[950,180],[948,400]],12,'#d67a4c');foliage(CL,CN);
+  // 下：モミの枝2段
   const bo=(cx,cy,tw,th,sd)=>[[cx-sd*tw*.12,cy-th*.5,.5],[cx+sd*tw*.5,cy-th*.24,.8],[cx+sd*tw,cy+th*.34,.35],[cx+sd*tw*.72,cy+th*.46,.7],[cx+sd*tw*.34,cy+th*.28,.8],[cx-sd*tw*.12,cy+th*.4,.6]];
-  ln([[320,440],[320,700]],26,'#7a5a86');for(const sd of [-1,1])fill(bo(320,560,250,150,sd),'#1b5560');for(const sd of [-1,1]){const P=bo(320,536,sd<0?225:165,130,sd);fill(P,'#2f7f76');if(sd<0)inside(P,()=>fill([[318,440,.6],[60,540,.5],[60,570,.5],[250,526,.7]],'#62b49c'))}
-  ln([[960,440],[960,700]],26,'#7a5a86');for(const sd of [-1,1]){bough2(960,520,sd,sd<0?250:215,31+sd,'#2f7f76','#1b5560','#62b49c',sd<0)}}
+  ln([[320,450],[320,700]],22,'#7a5a86');for(const yy of [0,96])for(const sd of [-1,1]){fill(bo(320,540+yy,(210+yy*.5),120,sd),'#1b5560');const P=bo(320,520+yy,(sd<0?190:140)+yy*.4,104,sd);fill(P,'#2f7f76');if(sd<0)inside(P,()=>fill([[318,440+yy,.6],[90,520+yy,.5],[90,548+yy,.5],[250,510+yy,.7]],'#62b49c'))}
+  ln([[960,450],[960,700]],22,'#7a5a86');for(const yy of [96,0])for(const sd of [-1,1])bough3(960,500+yy,sd,(sd<0?215:190)+yy*.5,31+sd+yy,'#2f7f76','#1b5560','#62b49c',sd<0)}
 window.render=function(t){g.setTransform(1,0,0,1,0,0);(P.mode==='study'?study:t<T1?forest:world)(t)};
 </script>
