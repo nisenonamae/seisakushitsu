@@ -4,7 +4,7 @@
 import json, math, os, re, urllib.request, urllib.parse, io
 from base import *
 UA={'User-Agent':'seisakushitsu/1.0 (noreply@anthropic.com)'}
-CACHE='/home/claude/vv/cache';os.makedirs(CACHE,exist_ok=True)
+import sspaths;CACHE=sspaths.CACHE
 def fetch(url):
     import hashlib;fn=os.path.join(CACHE,hashlib.md5(url.encode()).hexdigest()+os.path.splitext(urllib.parse.urlparse(url).path)[1][:5])
     if not os.path.exists(fn):

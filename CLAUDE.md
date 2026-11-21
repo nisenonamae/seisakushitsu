@@ -56,6 +56,10 @@
 - 開発（アプリを直す）と動画づくりは会話を分ける
 - **書き出しは前に作った物を使い回す**（2026-11-21）：場面（`~/.cache/seisaku_scenes`。指定・長さ・部品のコード・素材が同じなら）と声（`~/.cache/seisaku_voice`。同じ文・同じ声の決まりなら）。場面は裏で並べて描き（`SS_JOBS`＝同時の数。ふつうは CPU の数）、ブラウザは使い回す。直していない所はそのまま使うので、直したあとの書き出し直しは速い（序＋第1章 1分41秒で 154秒 → 25秒・中身は同じ）。`SS_NOCACHE=1` で使わない
 
+## Mac で書き出す（2026-11-21。この作業場より速い）
+- 最初の1回だけ：Mac の Claude Code で、アプリのリポジトリ（隣に notion-daily）の中で `bash tools/setup_mac.sh`（ffmpeg・Python の部品〔`~/.seisaku/venv`〕・ブラウザ・フォント・声のエンジン〔VOICEVOX のアプリがあればそれ〕）
+- あとはこの作業場と同じ `python3 tools/final_export.py <題材の一部>`（自動で `~/.seisaku/venv` の Python を使う。場面は CPU の数だけ同時に描く）。置き場所・フォントは `tools/vis/sspaths.py` が探す。**決め打ちのパス（/home/claude・/usr/share/fonts）を新しく書かない**
+
 ## 記録の置き場所（必要なときだけ読む）
 - `docs/notes/draw.md`：お絵描きの機能ごとの決まりと経緯
 - `docs/notes/videos.md`：動画ごとの進み具合（洗濯板道路・人工の土地・ロサンゼルスの水・台湾）、チャンネルの設定、エンディングの経緯

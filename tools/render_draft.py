@@ -11,8 +11,9 @@ import argparse, json, os, re, subprocess, tempfile, wave, math, sys
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'vis'))
 from PIL import Image, ImageDraw, ImageFont
 W,H,FPS=1280,720,30
-FB='/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc';FR='/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
-V='/home/claude/vv'
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'vis'));import sspaths   # 置き場所・フォント（この作業場でも Mac でも）
+FB=sspaths.jpfont('Bold');FR=sspaths.jpfont('Regular')
+V=sspaths.HOME
 ap=argparse.ArgumentParser();ap.add_argument('--data');ap.add_argument('--proj');ap.add_argument('--repo',default='');ap.add_argument('--out')
 ap.add_argument('--voice',type=int,default=2);ap.add_argument('--speed',type=float,default=1.1)
 ap.add_argument('--final',action='store_true',help='本番用：場面の番号を出さない')
@@ -48,15 +49,16 @@ if a.chapters:
     _want=[x.strip() for x in a.chapters.split(',') if x.strip()];_cn=chap_names(seq)
     seq=[b for b,c in zip(seq,_cn) if c in _want]
     if not seq: raise SystemExit(f'--chapters {a.chapters} に当たる段がない（章の名前：{sorted(set(_cn))}）')
-from voicevox_core.blocking import Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile
-ort=Onnxruntime.load_once(filename=f'{V}/ort/voicevox_onnxruntime-linux-x64-1.17.3/lib/libvoicevox_onnxruntime.so.1.17.3')
-syn=Synthesizer(ort,OpenJtalk(f'{V}/dict/open_jtalk_dic_utf_8-1.11'))
-# 声の型（.vvm）は全部読むとメモリが足りないので、使う声が入っているものだけ読む
-for f in ([] if a.kata else sorted(os.listdir(f'{V}/models'))):
-    with VoiceModelFile.open(f'{V}/models/{f}') as m:
-        if any(s.id==a.voice for c in m.metas for s in c.styles): syn.load_voice_model(m);break
-else:
-  if not a.kata: raise SystemExit(f'声 {a.voice} の型が {V}/models にない（bash tools/setup_voice.sh を見直す）')
+if not a.kata:   # 声のエンジンを使わない古いやり方のときだけ（Linux 用の部品が要る。Mac の本番は --kata でエンジンを使う）
+    from voicevox_core.blocking import Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile
+    ort=Onnxruntime.load_once(filename=f'{V}/ort/voicevox_onnxruntime-linux-x64-1.17.3/lib/libvoicevox_onnxruntime.so.1.17.3')
+    syn=Synthesizer(ort,OpenJtalk(f'{V}/dict/open_jtalk_dic_utf_8-1.11'))
+    # 声の型（.vvm）は全部読むとメモリが足りないので、使う声が入っているものだけ読む
+    for f in sorted(os.listdir(f'{V}/models')):
+        with VoiceModelFile.open(f'{V}/models/{f}') as m:
+            if any(s.id==a.voice for c in m.metas for s in c.styles): syn.load_voice_model(m);break
+    else:
+      if not a.kata: raise SystemExit(f'声 {a.voice} の型が {V}/models にない（bash tools/setup_voice.sh を見直す）')
 def _moras(q):
     """AudioQuery から、モーラごとの終わりの時刻（話す速さ込み）を出す"""
     t=q.pre_phoneme_length;ends=[]
@@ -174,7 +176,7 @@ def card(b,k,n):
     for line in wrap(b['screen'] or '（画面の指示なし）',25)[:6]:
         d.text((W/2,y),line,font=ImageFont.truetype(FB,34),fill=(225,232,242),anchor='ma');y+=50
     return im
-_FD='/home/claude/vv/fonts/'
+_FD=sspaths.FONTS+'/'
 SUBST={1:(FB,44,'white',3,(0,0,0),(0,0,0,135),False),2:(_FD+'Zen_Maru_Gothic_wght_700.ttf',48,'white',5,(0,0,0),None,False),3:(_FD+'M_PLUS_Rounded_1c_wght_800.ttf',48,'white',6,(20,30,60),None,False),
  4:(_FD+'BIZ_UDPGothic_wght_700.ttf',48,'white',1,(0,0,0),None,True),5:(_FD+'Zen_Kaku_Gothic_New_wght_700.ttf',48,(255,224,90),5,(0,0,0),None,False),6:(_FD+'Noto_Serif_JP_wght_700.ttf',46,'white',2,(0,0,0),None,True),
  7:(_FD+'RocknRoll_One.ttf',48,'white',7,(0,0,0),None,False),8:(_FD+'Murecho_wght_700.ttf',46,'white',0,(0,0,0),(10,14,20,175),False),9:(_FD+'Kiwi_Maru_wght_500.ttf',48,'white',6,(70,45,20),None,False),10:(_FD+'Dela_Gothic_One.ttf',46,'white',6,(0,0,0),None,False)}
@@ -395,7 +397,7 @@ if a.bgm:
         if not fpath or int(x.get('lane',1)) in muted:continue
         if str(fpath).startswith('http'):   # 音楽の棚の目録から入れた曲（ファイルは置かず、URL で持つ）→ 取ってきて使う
             import hashlib,urllib.request as _u
-            cdir='/home/claude/bgm_cache';os.makedirs(cdir,exist_ok=True);cp_=os.path.join(cdir,hashlib.md5(fpath.encode()).hexdigest()+'.mp3')
+            cdir=os.path.join(sspaths.HOME,'bgm_cache');os.makedirs(cdir,exist_ok=True);cp_=os.path.join(cdir,hashlib.md5(fpath.encode()).hexdigest()+'.mp3')
             if not os.path.exists(cp_):_u.urlretrieve(fpath,cp_)
             fpath=cp_
         elif a.repo and not os.path.isabs(fpath):fpath=os.path.join(a.repo,fpath)

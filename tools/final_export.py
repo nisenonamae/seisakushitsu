@@ -16,6 +16,11 @@
 """
 import argparse, json, os, re, subprocess, sys, glob, shutil, time
 
+# Mac などで tools/setup_mac.sh を流してあれば、その Python（~/.seisaku/venv）で動かし直す（部品がそろっている方を使う）
+_VENV = os.path.join(os.environ.get('SS_HOME') or os.path.expanduser('~/.seisaku'), 'venv', 'bin', 'python')
+if os.path.exists(_VENV) and os.path.realpath(sys.executable) != os.path.realpath(_VENV) and not os.environ.get('SS_NO_VENV'):
+    os.execv(_VENV, [_VENV] + sys.argv)
+
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ap = argparse.ArgumentParser()
 ap.add_argument('proj')
@@ -23,8 +28,10 @@ ap.add_argument('--res', type=int, default=1080)
 ap.add_argument('--items', default='')
 ap.add_argument('--no-ending', action='store_true')
 ap.add_argument('--chapters', default='', help='一部の章だけ（試しに書き出すとき）')
-ap.add_argument('--repo', default='/home/claude/notion-daily')
-ap.add_argument('--outdir', default='/home/claude/out/final')
+sys.path.insert(0, os.path.join(APP, 'tools/vis')); import sspaths
+_rd = os.environ.get('SS_DATA_REPO') or next((p for p in (os.path.join(os.path.dirname(APP), 'notion-daily'), '/home/claude/notion-daily', os.path.expanduser('~/apps/notion-daily')) if os.path.isdir(p)), '/home/claude/notion-daily')
+ap.add_argument('--repo', default=_rd, help='データのリポジトリ（ふつうはアプリの隣の notion-daily）')
+ap.add_argument('--outdir', default='/home/claude/out/final' if os.path.isdir('/home/claude') else os.path.expanduser('~/seisaku_out/final'))
 a = ap.parse_args()
 
 DATA = os.path.join(a.repo, 'roadmap/apps/seisakushitsu/data.json')
@@ -80,7 +87,7 @@ try:
 except ImportError:
     run(['pip', 'install', '--break-system-packages', '-q', 'pyloudnorm'], '音量の部品の用意')
 # 2. 本編
-cmd = ['python3', 'tools/render_draft.py', '--data', DATA, '--proj', pid, '--repo', a.repo, '--out', main,
+cmd = [sys.executable, 'tools/render_draft.py', '--data', DATA, '--proj', pid, '--repo', a.repo, '--out', main,
        '--kata', 'main', '--vrules', '--lead', '0.3', '--bgm', 'proj', '--res', str(a.res), '--final']
 if a.chapters: cmd += ['--chapters', a.chapters]
 run(cmd, '本編の書き出し')
@@ -96,7 +103,7 @@ if not a.no_ending:
         ending_note = 'なし（物が未指定）'
     else:
         final = os.path.join(od, f'final_v{N}_end.mp4')
-        run(['python3', 'tools/add_ending.py', main, final, '--data', DATA, '--repo', a.repo, '--items', items], 'エンディング')
+        run([sys.executable, 'tools/add_ending.py', main, final, '--data', DATA, '--repo', a.repo, '--items', items], 'エンディング')
         ending_note = f'{mmss(md)} から（{items}）'
 fd = dur(final)
 # 4. 点検（1回読み通すだけで全部測る）
@@ -128,7 +135,7 @@ if sil: warn.append('2.5秒以上の無音 ' + fmt(sil))
 sheet = os.path.join(od, f'final_v{N}_sheet.png')
 try:
     from PIL import Image, ImageDraw, ImageFont
-    fp = (glob.glob('/home/claude/vv/fonts/BIZ_UDPGothic*.ttf') + glob.glob('/home/claude/vv/fonts/*.ttf') + [None])[0]
+    fp = (glob.glob(os.path.join(sspaths.FONTS, 'BIZ_UDPGothic*.ttf')) + glob.glob(os.path.join(sspaths.FONTS, '*.ttf')) + [None])[0]
     font = ImageFont.truetype(fp, 18) if fp else ImageFont.load_default()
     n = 24; W, H = 320, 180; img = Image.new('RGB', (W * 6, H * 4), (20, 20, 20)); dr = ImageDraw.Draw(img)
     tmp = os.path.join(od, '_f.jpg')

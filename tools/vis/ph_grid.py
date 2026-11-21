@@ -3,7 +3,7 @@
 import json,sys
 from PIL import Image,ImageDraw,ImageFont
 M=json.load(open('ph/meta.json'));keys=sys.argv[2:] or list(M)
-F=ImageFont.truetype('/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',14)
+import sspaths;F=ImageFont.truetype(sspaths.jpfont('Bold'),14)
 tiles=[]
 for i,k in enumerate(keys):
     im=Image.open(M[k]['file']).convert('RGB');r=max(480/im.width,270/im.height);im=im.resize((int(im.width*r)+1,int(im.height*r)+1));x=(im.width-480)//2;y=(im.height-270)//2;im=im.crop((x,y,x+480,y+270))
