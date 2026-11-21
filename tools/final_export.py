@@ -71,6 +71,14 @@ T0 = time.time()
 # 1. 準備
 run(['bash', 'tools/setup_fonts.sh'], 'フォントの用意')
 run(['bash', 'tools/setup_engine.sh'], '声のエンジンの用意')
+try:
+    import voicevox_core  # noqa: F401  render_draft.py が使う（無い環境では先に入れる・2026-11-21）
+except ImportError:
+    run(['bash', 'tools/setup_voice.sh'], '声の部品の用意')
+try:
+    import pyloudnorm  # noqa: F401  音量をそろえるのに要る（無いと声の合成のあとで止まる・2026-11-21）
+except ImportError:
+    run(['pip', 'install', '--break-system-packages', '-q', 'pyloudnorm'], '音量の部品の用意')
 # 2. 本編
 cmd = ['python3', 'tools/render_draft.py', '--data', DATA, '--proj', pid, '--repo', a.repo, '--out', main,
        '--kata', 'main', '--vrules', '--lead', '0.3', '--bgm', 'proj', '--res', str(a.res), '--final']
