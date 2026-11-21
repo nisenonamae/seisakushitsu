@@ -5,7 +5,7 @@ import json,sys,re,collections
 d=json.load(open(sys.argv[1],encoding='utf-8'));p=[x for x in d['projects'] if x['id']==sys.argv[2]][0]
 tl=json.load(open(sys.argv[3])) if len(sys.argv)>3 else None
 dur={s['tag']:s['end']-s['start'] for s in tl['shots']} if tl else {}
-W=[];seen=collections.Counter();prev=None;k=0
+W=[];seen=collections.Counter();prev=None;k=0;NP=[0];DASH=set();src=''
 live=[b for b in p['flesh']['blocks'] if b.get('mark')!='削る']
 def kind(sh):
     if sh.get('seq'):return 'seq'
@@ -47,6 +47,16 @@ for k,b in enumerate(live,1):
             import os
             src=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'vis','html',sh['page']+'.html'),encoding='utf-8').read()
             if sh['page'] not in('person','calendar') and re.search(r"label\([^)]*'[^']*[ぁ-んァ-ヶ一-龠]",src):W.append((tag,f"ページ {sh['page']} の中で文字を描いている所がある（モードによる。目で確かめる）"))
+        # 世界地図で寄るのは、1つの国だけに注目するとき
+        if sh.get('t')=='map' and sh.get('zoom') and len(sh.get('highlight') or [])>1:W.append((tag,'世界地図で寄っているのに、国が2つ以上ある（寄るのは1つの国のときだけ）'))
+        # 一つの画面は3〜6秒が目安：長すぎる場面
+        if tl and dur.get(tag,0)>10:W.append((tag,f'場面が {dur[tag]:.0f} 秒続く（目安は3〜6秒。動き続けているか、分けられないか見る）'))
+        # ぐいっと寄るのは頻発させない
+        NP[0]+=len(sh.get('punch') or [])
+        # 飾りの点々の線は使わない（ブラウザの場面のコードに点線があるか。地図の境など要る点線もあるので、目で確かめる）
+        if sh.get('t')=='html' and sh['page'] not in DASH:
+            DASH.add(sh['page'])
+            if 'setLineDash([' in src.replace('setLineDash([])',''):W.append((tag,f"ページ {sh['page']} に点線を描く所がある（飾りの点々の線は使わない。モードによる。目で確かめる）"))
         prev=sh
     # 部品が自分で文字を出すもの（指定しなくても出る）
         if sh.get('t') in('wave','strip') and sh.get('text') is None:W.append((tag,f"{sh['t']} は text を空にしないと決まった文字を出す"))
@@ -54,7 +64,7 @@ for k,b in enumerate(live,1):
     for w in ['何なのか','何故','一日','今日は']:
         if w in sents:W.append((f'{k}-語り',f'読み間違えやすい「{w}」はひらがなに'))
     # 章の名前を言う／前の内容を覚えている前提で話す（動画はつなげて見る）
-    for pat,why in [(r'第[0-9０-９一二三四五六七八九十]+章','「第○章」と言わない'),(r'冒頭の|先ほど|さっきの|前にお話し|覚えて(い|ま)','視聴者が前の内容を覚えている前提の言い方。中身をもう一度言う')]:
+    for pat,why in [(r'第[0-9０-９一二三四五六七八九十]+章','「第○章」と言わない'),(r'冒頭の|先ほど|さっきの|前にお話し|覚えて(い|ま)','視聴者が前の内容を覚えている前提の言い方。中身をもう一度言う'),(r'舞台は','長くその話が続くと思わせる言い方')]:
         m_=re.search(pat,sents)
         if m_:W.append((f'{k}-語り',f'「{m_.group(0)}」：{why}'))
 # 場面の切り替えの間：字幕がとぎれる所（作り手の決まり・2026-11-17「字幕が常に続くぐらいのテンポ」。止まった画面で待たない）
@@ -71,5 +81,7 @@ if tl and os.path.exists(_srt):
             tag=sh[-1]['tag'] if sh else '?';role=(sh[-1].get('role') or '') if sh else ''
             if _only and not any(role.startswith(c) for c in _only):continue
             GAPS.append((tag,b0-a1));W.append((tag,f'字幕が {b0-a1:.1f} 秒とぎれる（{int(a1//60)}分{a1%60:04.1f}秒〜）。待ち（hold）をやめ、アニメは語りの中で終わらせる'))
+_total=(tl['shots'][-1]['end'] if tl and tl.get('shots') else 0)
+if _total and NP[0]>max(1,_total/20):W.append(('全体',f'ぐいっと寄る所が {NP[0]} 回（{_total:.0f} 秒の動画。数十秒に一度より少なく）'))
 for tag,msg in W:print(f'場面 {tag}: {msg}')
 print(f'— 指摘 {len(W)} 件'+(f'（うち字幕のとぎれ {len(GAPS)} か所・合わせて {sum(x for _,x in GAPS):.0f} 秒）' if GAPS else ''))

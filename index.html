@@ -182,7 +182,9 @@ details.chap[open]{border:2px solid var(--sea)}
 <section data-tab="kufu">
 <p class="lead" style="border:1px dashed var(--line);border-radius:8px;padding:6px 9px">ここは Claude が作業で使う保管庫（決まりごと・餌・音・工夫）。自分で読むためのコツは「ポイント」タブへ。</p>
 <h2>Claude への決まりごと</h2>
-<p class="lead">「こういうときは、こうして」という頼み方の決まり。Claude は頼みごとや話し合いのたびに、ここにある「使う」の決まりを全部読んで守ります。話し合いの中で言った決まりも、Claude がここに足します。</p>
+<p class="lead">「こういうときは、こうして」という頼み方の決まり。話し合いの中で言った決まりも、Claude がここに足します。決まりが増えても重くならないよう、Claude が3つの段に分けて守ります：<b>部品</b>（部品や道具に入れて、何もしなくても守られる）／<b>機械</b>（数えたり測ったりして点検する）／<b>読む</b>（判断が要るので、当てはまる作業のたびに読む）。足したばかりの決まりは、仕分けるまで毎回読みます。</p>
+<div id="ruleSum" class="lead"></div>
+<div class="chips" id="ruleTier" style="margin:6px 0"></div>
 <div id="ruleList"></div>
 <details><summary>決まりを足す</summary>
 <label>どの仕事で</label><select id="rs"><option>全部</option><option>題材探し</option><option>参考集め</option><option>構成</option><option>肉付け</option><option>図解</option><option>題名</option><option>サムネ</option><option>動画</option><option>音</option></select>
@@ -1268,14 +1270,23 @@ if(e.target.matches('[data-fdel]')){if(!confirm('この餌を消しますか？�
 else if(e.target.matches('[data-ldrop]')){const l=f.lessons[+e.target.dataset.ldrop];l.drop=!l.drop}
 else if(e.target.matches('[data-lrule]')){const l=f.lessons[+e.target.dataset.lrule];if(l.rule)return;const t=prompt('決まりとして残す文',l.text);if(!t||!t.trim())return;const sc={'構成':'構成','肉付け':'肉付け','見せ方':'図解','サムネ':'サムネ','声':'音','音':'音'}[l.area]||'全部';addRule({scope:sc,do:t.trim(),from:'餌から（'+(f.title||f.kind).slice(0,30)+'）'});l.rule=true;renderRules()}
 else return;f.updatedAt=now();save();renderFeeds()})}}
-function renderRules(){if(!$('ruleList'))return;const rs=liveRules();
-$('ruleList').innerHTML=rs.length?rs.map(r=>`<div class="item ${r.active?'':'off'}" data-rule="${r.id}"><div class="tags"><span>${esc(r.scope)}</span><span>${esc(r.from||'')}</span>${r.createdAt>1?`<span>${md(r.createdAt)}</span>`:''}</div>
+let ruleTierF='';
+function ruleTierOf(r){return !r.tier?'まだ':r.tier==='読む'?'読む':r.tdone?r.tier:r.tier+'（これから）'}
+function renderRules(){if(!$('ruleList'))return;const all=liveRules();
+const cnt={};all.forEach(r=>{const k=ruleTierOf(r);cnt[k]=(cnt[k]||0)+1});
+const vid=all.filter(r=>r.active&&['動画','図解','全部'].includes(r.scope));const vread=vid.filter(r=>!r.tier||((r.tier==='読む'||!r.tdone)&&['いつも','カット割り','絵を描く'].includes(r.tag||'いつも')));
+$('ruleSum').textContent=`全部で ${all.length} 個。動画を作るときに当たる決まりは ${vid.length} 個で、そのうち毎回読むのは ${vread.length} 個（残りは部品・機械が守るか、その題材の回だけ読む）。`;
+$('ruleTier').innerHTML=[['','全部'],['読む','読む'],['機械','機械'],['部品','部品'],['機械（これから）','機械（これから）'],['部品（これから）','部品（これから）'],['まだ','仕分けまだ']].filter(x=>!x[0]||cnt[x[0]]).map(x=>`<button data-rtier="${x[0]}" aria-pressed="${ruleTierF===x[0]}">${x[1]}${x[0]?' '+cnt[x[0]]:''}</button>`).join('');
+if(!$('ruleTier').dataset.on){$('ruleTier').dataset.on=1;$('ruleTier').addEventListener('click',e=>{const b=e.target.closest('[data-rtier]');if(!b)return;ruleTierF=b.dataset.rtier;renderRules()})}
+const rs=all.filter(r=>!ruleTierF||ruleTierOf(r)===ruleTierF);
+$('ruleList').innerHTML=rs.length?rs.map(r=>`<div class="item ${r.active?'':'off'}" data-rule="${r.id}"><div class="tags"><span>${esc(r.scope)}</span><span style="border-color:var(--ink)">${esc(ruleTierOf(r)==='まだ'?'仕分けまだ（毎回読む）':ruleTierOf(r))}${r.tier==='読む'&&r.tag?'：'+esc(r.tag):''}</span><span>${esc(r.from||'')}</span>${r.createdAt>1?`<span>${md(r.createdAt)}</span>`:''}</div>
 <div style="font-size:15px;margin-top:2px">${r.when?`<b>${esc(r.when)}</b> → `:''}${esc(r.do)}</div>
+${r.tnote||r.grp?`<div class="lead" style="margin:0">${r.tnote?esc(r.tnote):''}${r.grp?`${r.tnote?'　':''}同じ中身の決まり：「${esc(r.grp)}」の組`:''}</div>`:''}
 ${r.ex&&(r.ex.before||r.ex.after)?`<div class="ba">${/\.png$/.test(r.ex.before||'')?`<div><div class="lead" style="margin:0">前</div><img data-gh="${esc(r.ex.before)}"></div>`:''}${/\.png$/.test(r.ex.after||'')?`<div><div class="lead" style="margin:0">後</div><img data-gh="${esc(r.ex.after)}"></div>`:''}</div>${r.ex.idea?`<div class="lead" style="margin:0">例：${esc(r.ex.idea)}</div>`:''}`:''}
 <div class="st" style="margin-top:4px"><button data-ract class="${r.active?'on':''}">${r.active?'使う':'休み中'}</button><button data-redit>書き換える</button><button data-rdel>消す</button></div></div>`).join(''):'<div class="empty">まだありません。</div>';setTimeout(fillMedia,0);
 if(!$('ruleList').dataset.on){$('ruleList').dataset.on=1;$('ruleList').addEventListener('click',e=>{const it=e.target.closest('[data-rule]');if(!it)return;const r=D.rules.find(x=>x.id===it.dataset.rule);
 if(e.target.matches('[data-ract]')){r.active=!r.active}
-else if(e.target.matches('[data-redit]')){const w=prompt('こういうとき（空でもよい）',r.when||'');if(w===null)return;const d=prompt('こうする',r.do||'');if(!d||!d.trim())return;r.when=w.trim();r.do=d.trim()}
+else if(e.target.matches('[data-redit]')){const w=prompt('こういうとき（空でもよい）',r.when||'');if(w===null)return;const d=prompt('こうする',r.do||'');if(!d||!d.trim())return;if(r.when!==w.trim()||r.do!==d.trim()){delete r.tier;delete r.tdone;delete r.tnote}r.when=w.trim();r.do=d.trim()}
 else if(e.target.matches('[data-rdel]')){if(!confirm('この決まりを消しますか？'))return;r.deleted=true}else return;
 r.updatedAt=now();save();renderRules()});
 $('addRule').onclick=()=>{const d=$('rd').value.trim();if(!d){alert('「こうする」を書いてください');return}addRule({scope:$('rs').value,when:$('rw').value.trim(),do:d});$('rd').value='';$('rw').value='';renderRules()}}}

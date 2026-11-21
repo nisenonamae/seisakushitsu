@@ -165,12 +165,12 @@ res = {'ok': not warn, 'file': give, 'name': os.path.basename(give), 'version': 
        'size_mb': round(mb, 1), 'lufs': lufs, 'true_peak': tp, 'ending': ending_note, 'srt': srt_rel,
        'chapters': open(ch_src, encoding='utf-8').read() if os.path.exists(ch_src) else '', 'sheet': sheet, 'warn': warn, 'log': LOG,
        'minutes': round((time.time() - T0) / 60, 1)}
-json.dump(res, open(os.path.join(od, f'final_v{N}.json'), 'w'), ensure_ascii=False, indent=1)
+json.dump(res, open(os.path.join(od, f'final_v{N}_result.json'), 'w'), ensure_ascii=False, indent=1)
 logf.close()
 print(('OK' if not warn else '要確認') + f'：{give}（{mmss(fd)}・{mb:.0f}MB・{res["minutes"]}分かかった）')
 print(f'音：{lufs} LUFS（目当て -14）・最大 {tp} dBFS／エンディング：{ending_note}')
 print(f'黒い画面：{fmt(blk)}／止まったまま：{fmt(frz)}／無音：{fmt(sil)}')
 print(f'一覧の画像（目で見るのはこの1枚）：{sheet}')
-print(f'字幕：{srt_rel or "なし"}（データに写した・コミットはまだ）／チャプター：{os.path.join(od, f"final_v{N}.json")} の chapters')
+print(f'字幕：{srt_rel or "なし"}（データに写した・コミットはまだ）／チャプター：{os.path.join(od, f"final_v{N}_result.json")} の chapters')
 for w in warn: print('！', w)
 print('次：' + ('一部の章だけの試し（データには写していない）' if a.chapters else ('チャットで送る（SendUserFile）' + ('。100MB を超えるので GitHub には置かない' if mb > 100 else '')) + ' → project.final と publish を書く（WORKER.md「本番の書き出し」の 3）'))
