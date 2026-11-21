@@ -136,12 +136,12 @@ try:
 except Exception as ex:
     warn.append(f'一覧の画像を作れませんでした：{ex}'); sheet = '（なし）'
 # 6. 字幕とチャプターをデータへ写す・渡す名前の動画を作る
-os.makedirs(vdir, exist_ok=True)
+if not a.chapters: os.makedirs(vdir, exist_ok=True)   # 一部の章だけの試しは、データに写さない
 srt_src = os.path.splitext(main)[0] + '.srt'; ch_src = os.path.splitext(main)[0] + '.chapters.txt'
 srt_rel = ''
-if os.path.exists(srt_src):
+if os.path.exists(srt_src) and not a.chapters:
     shutil.copy(srt_src, os.path.join(vdir, f'final_v{N}.srt')); srt_rel = f'videos/{pid}/final_v{N}.srt'
-if os.path.exists(ch_src) and os.path.getsize(ch_src):
+if os.path.exists(ch_src) and os.path.getsize(ch_src) and not a.chapters:
     shutil.copy(ch_src, os.path.join(vdir, f'final_v{N}.chapters.txt'))
 give = os.path.join(od, f'{short}_{a.res}p.mp4')
 shutil.copy(final, give)
@@ -158,4 +158,4 @@ print(f'黒い画面：{fmt(blk)}／止まったまま：{fmt(frz)}／無音：{
 print(f'一覧の画像（目で見るのはこの1枚）：{sheet}')
 print(f'字幕：{srt_rel or "なし"}（データに写した・コミットはまだ）／チャプター：{os.path.join(od, f"final_v{N}.json")} の chapters')
 for w in warn: print('！', w)
-print('次：100MB を超えるので SendUserFile で送る → project.final と publish を書く（WORKER.md「本番の書き出し」の 3）')
+print('次：' + ('一部の章だけの試し（データには写していない）' if a.chapters else ('チャットで送る（SendUserFile）' + ('。100MB を超えるので GitHub には置かない' if mb > 100 else '')) + ' → project.final と publish を書く（WORKER.md「本番の書き出し」の 3）'))
