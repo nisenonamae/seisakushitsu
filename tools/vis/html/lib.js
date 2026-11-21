@@ -73,7 +73,10 @@ function fgGrass(t,col='#5d7a3c',col2='#7d9a4e'){blurOn(7);for(const[bx,dir,n] o
 function fgFrond(t,x=W-120,col='#3f6f3d'){blurOn(8);g.strokeStyle=col;g.lineCap='round';for(let i=0;i<6;i++){const a=Math.PI*0.55+i*0.2+Math.sin(t*1.3+i)*0.05,len=330+(i%2)*60;const ex=x+Math.cos(a)*len,ey=-40+Math.sin(a)*len;g.lineWidth=26;g.beginPath();g.moveTo(x+80,-60);g.quadraticCurveTo(x+Math.cos(a)*len*0.5+40,-60+Math.sin(a)*len*0.35,ex,ey);g.stroke()}g.lineCap='butt';blurOff()}
 // 話題ごとの色：場面の指定に tint:{col,a,mode} を付けると、描いたあとに色を重ねる（mode は soft-light が基本）
 function tintOver(){const q=P.tint;if(!q)return;g.save();g.globalCompositeOperation=q.mode||'soft-light';g.globalAlpha=q.a==null?0.4:q.a;g.fillStyle=q.col||'#5b4a8a';g.fillRect(0,0,W,H);g.restore()}
-window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init();if(!window._tw&&window.render){const r0=window.render;window.render=t=>{r0(t);tintOver();if(P.guide&&window.compGuide){g.setTransform(1,0,0,1,0,0);compGuide(P.guide)}};window._tw=1}};
+// 段（2026-11-21）：場面を「大きな形 → 部品 → 細部 → 動き（大）→ 動き（小）→ 仕上げ」の段に分けて作る。指定に "stage":N を足すと、N 段めまでで止めて描く（無ければ全部）。
+//   場面の中では stg(n) で「n 段めを描いてよいか」を聞く。後ろの段は、前の段の形を作り替えない（足すだけ）。くわしくは docs/notes/composition.md「段を分けて作る」
+const STAGES=['0 設計','1 大きな形','2 部品','3 細部','4 動き（大）','5 動き（小）','6 仕上げ'];let STG=99;const stg=n=>STG>=n;
+window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;STG=P.stage==null?99:P.stage;window.SFX=[];window._done={};if(window.init)init();if(!window._tw&&window.render){const r0=window.render;window.render=t=>{r0(t);tintOver();if(P.guide&&window.compGuide){g.setTransform(1,0,0,1,0,0);compGuide(P.guide)}};window._tw=1}};
 // 画像を読み込む（読み終わるまで撮影を待つ）
 const IMG={};function loadImg(key,src){window.READY=false;const im=new Image();im.onload=()=>{IMG[key]=im;window._pend--;if(!window._pend)window.READY=true};window._pend=(window._pend||0)+1;im.src=src.startsWith('/')?'file://'+src:src}
 
