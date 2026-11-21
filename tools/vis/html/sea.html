@@ -1,0 +1,79 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000"><canvas id="c" width="1280" height="720"></canvas>
+<script src="lib.js"></script>
+<script>
+/* 絵の練習：夜の海の漁船（2026-11-21・12回目。作り手「アリの顔以外の場面も、今までを踏まえて」）。アリで決めた作り方が、別の物でも通るかの試し。
+   先に決めたこと：
+   ・主役＝船のランタン。反対の色みのだいだいは、ランタン・船の窓・灯台の光にだけ使う（面積はごく小さく）
+   ・色の流れ＝濃い紺→青→青緑→緑がかった水色→薄い黄緑。暗い色に黒を使わず、背景の紺に寄せる。明るいほど黄色へ色みをずらす
+   ・形＝船・岩・雲・魚は、だ円や四角を置かず、点で輪郭を描く（blob）。面を分けて色を変える（光の当たる面／影の面）。光の線は足さない
+   ・動き＝カメラは主役に寄った所から引く（主役の位置は画面の中で動かさない・奥ほど少なく動く）。船は波に遅れてゆれ、ランタンはさらに遅れる。
+     魚は、水面がふくらむ「ため」のあとに跳ね、落ちたあとにしぶきと波の輪が残る */
+window.DEF={};
+const C={sky0:'#0a1038',sky1:'#15306a',far:'#123a6c',mid:'#14607c',near:'#157a80',front:'#0f5a6c',crest:'#8fe6b4',foam:'#dcf8c4',dk:'#081430',rock:'#1b2f66',rockL:'#2b4f8a',ac:'#ffa838',ac2:'#ffd884'};
+const GX=582,GY=302;   // 目線の点（ランタン）
+const wave=(k,x,t)=>{const a=[5,9,14,20][k],s=[0.5,0.8,1.1,1.5][k];return a*(Math.sin(x*0.011*(1.6-k*0.25)+t*s+k*1.7)+0.45*Math.sin(x*0.027-t*s*1.3+k))};
+function sea(k,y0,col,hi,t,x0=-400,x1=1700){const top=(dy)=>{g.beginPath();g.moveTo(x0,H+400);for(let x=x0;x<=x1;x+=16)g.lineTo(x,y0+wave(k,x,t)+dy);g.lineTo(x1,H+400);g.closePath()};
+  g.save();top(0);g.fillStyle=hi;g.fill();top(0);g.clip();g.fillStyle=col;g.beginPath();g.moveTo(x0,H+400);for(let x=x0;x<=x1;x+=16)g.lineTo(x+7,y0+wave(k,x,t)+3.5+k*1.6);g.lineTo(x1,H+400);g.fill();g.restore()}   // 波の上のふちに明るい面（形をずらして残す）
+function lighthouse(t){g.save();g.translate(1010,372);
+  // 岩：光の当たる左の面と、影の右の面
+  g.fillStyle=C.rock;g.beginPath();blob([[-150,40,.3],[-118,8,.5],[-70,-6,.4],[-36,-30,.5],[20,-34,.4],[46,-12,.5],[96,-4,.4],[150,40,.3]]);g.fill();
+  g.fillStyle=C.rockL;g.beginPath();blob([[-118,10,.5],[-70,-6,.4],[-36,-30,.5],[-8,-33,.4],[-22,-6,.6],[-60,14,.6],[-96,22,.5]]);g.fill();
+  // 灯台：少し先細り。帯は部分の上塗り
+  const T=[[-17,-32,.2],[-12,-128,.25],[12,-128,.25],[18,-32,.2]];g.fillStyle='#c9e8e0';g.beginPath();blob(T);g.fill();
+  g.save();g.beginPath();blob(T);g.clip();g.fillStyle='#7fb4c4';g.fillRect(2,-140,30,120);g.fillStyle='#2d5f9a';g.fillRect(-30,-100,60,20);g.fillStyle='#1f4578';g.fillRect(2,-100,30,20);g.fillStyle='#2d5f9a';g.fillRect(-30,-56,60,14);g.fillStyle='#1f4578';g.fillRect(2,-56,30,14);g.restore();
+  g.fillStyle=C.rock;g.beginPath();blob([[-19,-128,.2],[19,-128,.2],[16,-136,.3],[-16,-136,.3]]);g.fill();
+  g.fillStyle=C.ac;g.beginPath();blob([[-10,-136,.2],[10,-136,.2],[10,-154,.2],[-10,-154,.2]]);g.fill();g.fillStyle=C.ac2;g.fillRect(-10,-154,9,18);
+  g.fillStyle=C.rock;g.beginPath();blob([[-15,-154,.2],[15,-154,.2],[4,-170,.5],[-4,-170,.5]]);g.fill();
+  // 光のすじ：ゆっくり回る（左右に振れて、幅が変わる）
+  const a=Math.sin(t*0.9+0.6);for(const sd of [-1,1]){const w=0.07+0.10*Math.abs(a),dir=sd>0?(-0.1+a*0.25):(Math.PI+0.1-a*0.25),al=0.10+0.16*(sd*a>0?Math.abs(a):0.2);const gr=g.createRadialGradient(0,-145,10,0,-145,720);gr.addColorStop(0,`rgba(255,216,132,${al})`);gr.addColorStop(1,'rgba(255,216,132,0)');g.fillStyle=gr;g.beginPath();g.moveTo(0,-145);g.arc(0,-145,720,dir-w,dir+w);g.fill()}
+  g.restore()}
+function boat(t){const bx=GX-58,k=1,tl=t-0.28;   // 波より少し遅れてゆれる
+  const y=432+wave(k,bx,tl)*0.8,sl=(wave(k,bx+40,tl)-wave(k,bx-40,tl))/80,rot=Math.atan(sl)*0.55;
+  // ランタン：船よりさらに遅れて振れる
+  const tl2=t-0.62,sl2=(wave(k,bx+40,tl2)-wave(k,bx-40,tl2))/80,sw=-Math.atan(sl2)*2.6+Math.sin(t*2.1)*0.04;
+  g.save();g.translate(bx,y);g.rotate(rot);g.scale(1.45,1.45);g.lineCap='round';g.lineJoin='round';
+  // 帆柱と腕（太い線）
+  g.strokeStyle='#0c1c48';g.lineWidth=6;g.beginPath();g.moveTo(-8,-22);g.lineTo(-8,-112);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(-8,-104);g.lineTo(40,-122);g.stroke();
+  // 船室：正面の面と屋根。窓にだけだいだい
+  g.fillStyle='#1f7f8c';g.beginPath();blob([[-52,-18,.2],[-48,-50,.3],[-12,-52,.3],[-8,-18,.2]]);g.fill();g.fillStyle='#17586e';g.beginPath();blob([[-22,-18,.2],[-20,-51,.3],[-12,-52,.3],[-8,-18,.2]]);g.fill();
+  g.fillStyle='#8fe6b4';g.beginPath();blob([[-58,-49,.3],[-6,-52,.3],[-4,-58,.4],[-56,-56,.4]]);g.fill();
+  g.fillStyle=C.ac;g.beginPath();blob([[-44,-42,.3],[-30,-43,.3],[-30,-30,.3],[-44,-30,.3]]);g.fill();
+  // 船体：へさきが上がる。上の帯は明るく、下半分は暗い面
+  const Hh=[[-84,-22,.35],[66,-24,.3],[96,-36,.4],[82,-6,.6],[60,14,.6],[-62,14,.6],[-80,2,.6]];
+  g.fillStyle='#16306e';g.beginPath();blob(Hh);g.fill();g.save();g.beginPath();blob(Hh);g.clip();g.fillStyle='#0c1c48';g.beginPath();blob(Hh,-4,13);g.fill();g.fillStyle='#35c0a4';g.beginPath();blob([[-90,-26,.3],[70,-28,.3],[100,-40,.4],[96,-30,.4],[68,-17,.3],[-88,-15,.3]]);g.fill();g.restore();
+  // ランタン
+  g.translate(40,-122);g.rotate(sw-rot);g.strokeStyle='#0c1c48';g.lineWidth=3.4;g.beginPath();g.moveTo(0,0);g.lineTo(0,18);g.stroke();
+  const gl=g.createRadialGradient(0,30,2,0,30,120);gl.addColorStop(0,'rgba(255,190,90,.50)');gl.addColorStop(0.35,'rgba(255,170,60,.16)');gl.addColorStop(1,'rgba(255,170,60,0)');g.fillStyle=gl;g.beginPath();g.arc(0,30,120,0,7);g.fill();
+  g.fillStyle='#0c1c48';g.beginPath();blob([[-9,18,.3],[9,18,.3],[7,23,.3],[-7,23,.3]]);g.fill();g.beginPath();blob([[-10,41,.3],[10,41,.3],[7,46,.4],[-7,46,.4]]);g.fill();
+  g.fillStyle=C.ac;g.beginPath();blob([[-8,23,.3],[8,23,.3],[10,41,.3],[-10,41,.3]]);g.fill();g.fillStyle=C.ac2;g.beginPath();blob([[-8,23,.3],[0,23,.3],[-1,41,.3],[-10,41,.3]]);g.fill();
+  g.restore();return [bx+58,y]}
+function fish(t){const T0=4.7,T1=5.15,D=1.0,fx0=800,fy=503;
+  const u=(t-T1)/D;
+  // ため：水面がふくらむ
+  if(t>T0&&t<T1+0.12){const k=ease((t-T0)/(T1-T0))*(1-clamp((t-T1)/0.12));g.fillStyle=C.crest;g.beginPath();blob([[fx0-46,fy+10,.5],[fx0-14,fy-2-k*13,.8],[fx0+14,fy-2-k*13,.8],[fx0+46,fy+10,.5]]);g.fill()}
+  const ring=(x,t0)=>{const a=t-t0;if(a<0||a>1.6)return;for(let i=0;i<2;i++){const r=(a-i*0.22)*90;if(r<=0)continue;g.strokeStyle=`rgba(220,248,196,${0.7*(1-a/1.6)})`;g.lineWidth=4.5;g.beginPath();g.ellipse(x,fy+4,r,r*0.2,0,0,7);g.stroke()}};
+  const drops=(x,t0,dir)=>{const a=t-t0;if(a<0||a>0.9)return;const r=R(Math.round(x)+3);g.fillStyle=C.foam;for(let i=0;i<9;i++){const vx=(r()-0.5+dir*0.25)*260,vy=-(170+r()*230),px=x+vx*a,py=fy+vy*a+520*a*a,s=(3+r()*4)*(1-a*0.6);if(py>fy+6)continue;const an=Math.atan2(vy+1040*a,vx);g.save();g.translate(px,py);g.rotate(an);g.beginPath();blob([[-s*1.5,0,.6],[0,-s*.7,.8],[s*1.2,0,.8],[0,s*.7,.8]]);g.fill();g.restore()}};
+  ring(fx0,T1);drops(fx0,T1,1);ring(fx0+190,T1+D);drops(fx0+190,T1+D,1);
+  if(u>0&&u<1){const x=fx0+190*u,y=fy-150*4*u*(1-u),an=Math.atan2(-150*4*(1-2*u),190),wg=Math.sin(t*26)*0.25;g.save();g.translate(x,y);g.rotate(an);g.scale(1.3,1.3);
+    // 魚：背は暗く、腹は明るく（面を分ける）。尾は遅れて振れる
+    g.save();g.translate(-30,0);g.rotate(wg);g.fillStyle='#17586e';g.beginPath();blob([[2,0,.4],[-22,-15,.4],[-16,0,.6],[-22,15,.4]]);g.fill();g.restore();
+    const B=[[38,2,.5],[20,-13,.7],[-8,-12,.7],[-32,-2,.5],[-10,11,.7],[18,12,.7]];g.fillStyle='#1f7f8c';g.beginPath();blob(B);g.fill();g.save();g.beginPath();blob(B);g.clip();g.fillStyle=C.crest;g.beginPath();blob(B,-2,11);g.fill();g.fillStyle=C.foam;g.beginPath();blob(B,-3,18);g.fill();g.restore();
+    g.fillStyle='#17586e';g.beginPath();blob([[6,-11,.4],[-6,-24,.5],[-12,-11,.5]]);g.fill();g.fillStyle=C.dk;g.beginPath();g.arc(25,-3,2.6,0,7);g.fill();g.restore()}}
+function scene(t){
+  // カメラ：ランタンに寄った所から、ゆっくり動き出して引く。目線の点は動かさない
+  const z=lerp(2.5,1,ease(clamp((t-0.5)/2.9)));const L=(d,fn)=>{const k=1+(z-1)*d;g.save();g.translate(GX,GY);g.scale(k,k);g.translate(-GX,-GY);fn();g.restore()};
+  const s=g.createLinearGradient(0,0,0,430);s.addColorStop(0,C.sky0);s.addColorStop(1,C.sky1);g.fillStyle=s;g.fillRect(0,0,W,H);
+  L(0.15,()=>{const r=R(11);for(let i=0;i<46;i++){const x=r()*1500-110,y=r()*360-20,sz=1.4+r()*2.4,tw=0.45+0.55*Math.sin(t*(1+r()*2)+i);g.fillStyle=`rgba(190,236,216,${0.25+0.55*tw})`;g.beginPath();blob([[x-sz,y,.3],[x,y-sz,.3],[x+sz,y,.3],[x,y+sz,.3]]);g.fill()}
+    // 雲：点で描いた形。下の面を暗く
+    for(const c of [[250,150,1.2],[820,100,1.5],[1150,230,0.9]]){const x=c[0]-t*6,y=c[1],k=c[2],P=[[-90,10,.6],[-60,-14,.8],[-20,-10,.6],[10,-30,.8],[50,-16,.8],[92,8,.6],[40,18,.5],[-40,18,.5]].map(p=>[x+p[0]*k,y+p[1]*k,p[2]]);g.fillStyle='#1d3d7c';g.beginPath();blob(P);g.fill();g.save();g.beginPath();blob(P);g.clip();g.fillStyle='#142a60';g.beginPath();blob(P,6*k,12*k);g.fill();g.restore()}});
+  L(0.35,()=>{sea(0,402,C.far,'#1d5590',t);lighthouse(t)});
+  L(0.6,()=>sea(0,424,'#12507a','#1f78a0',t+3));
+  let lp;L(1,()=>{sea(1,438,C.mid,'#2a9aa0',t);lp=boat(t);
+    // ランタンの映りこみ：太い短い線が、ゆれながら縦に並ぶ
+    g.lineCap='round';for(let i=0;i<5;i++){const yy=lp[1]+34+i*15,w=(26-i*4)*(0.7+0.3*Math.sin(t*3+i*1.3)),xx=lp[0]+Math.sin(t*1.7+i)*7;g.strokeStyle=`rgba(255,168,56,${0.75-i*0.13})`;g.lineWidth=5;g.beginPath();g.moveTo(xx-w,yy);g.lineTo(xx+w,yy);g.stroke()}g.lineCap='butt';
+    sea(2,470,C.near,C.crest,t,-400,1700)});
+  L(1.25,()=>{fish(t);sea(2,512,'#136a78','#6fd0aa',t+5)});
+  L(1.7,()=>{sea(3,590,C.front,'#5fc9a8',t+1);blurOn(7);g.fillStyle=C.dk;g.beginPath();blob([[-80,760,.3],[-60,560,.5],[40,520,.6],[120,566,.5],[210,560,.6],[300,640,.5],[380,760,.3]]);g.fill();g.beginPath();blob([[1010,760,.3],[1090,640,.5],[1180,610,.6],[1260,560,.5],[1400,560,.4],[1400,760,.3]]);g.fill();blurOff()});
+  const vg=g.createRadialGradient(W/2,H*0.5,H*0.4,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(6,10,40,0)');vg.addColorStop(1,'rgba(6,10,40,.5)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);scene(t)};
+</script>

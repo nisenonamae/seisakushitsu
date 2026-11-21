@@ -227,7 +227,7 @@ const HK=[{ // 横：後ろが厚く、口先へ細くなる「くさび」。�
   d:[[-24,-22,-15,-28],[10,-26,18,-28],[-20,10,-13,18]]}];
 const mixK=(a,b,u)=>Array.isArray(a)?a.map((v,i)=>mixK(v,b[i],u)):a+(b-a)*u;
 function headKey(f){f=clamp(f);const o={};for(const k in HK[0])o[k]=f<0.5?mixK(HK[0][k],HK[1][k],f*2):mixK(HK[1][k],HK[2][k],(f-0.5)*2);return o}
-function blob(pts,dx=0,dy=0){const n=pts.length,L=(a,b,u)=>[a[0]+(b[0]-a[0])*u+dx,a[1]+(b[1]-a[1])*u+dy];for(let i=0;i<n;i++){const p=pts[i],a=pts[(i+n-1)%n],b=pts[(i+1)%n],r=p[2]==null?0.5:p[2];const A=L(p,[(a[0]+p[0])/2,(a[1]+p[1])/2],r),B=L(p,[(b[0]+p[0])/2,(b[1]+p[1])/2],r);i?g.lineTo(A[0],A[1]):g.moveTo(A[0],A[1]);g.quadraticCurveTo(p[0]+dx,p[1]+dy,B[0],B[1])}g.closePath()}
+// blob（点で輪郭を描く）は lib.js に移した
 // f＝0 横 … 0.5 ななめ … 1 正面。m＝−1 で左右を返す。wob＝触角のゆれ
 function antHead(cx,cy,s,f,m=1,wob=0){const K=headKey(f);g.save();g.translate(cx,cy);g.scale(s*m,s);g.lineCap='round';g.lineJoin='round';
   const ln=(P,w,col,hi)=>{g.strokeStyle=col;g.lineWidth=w;g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();if(hi){g.strokeStyle=hi;g.lineWidth=w*0.24;g.beginPath();g.moveTo(lerp(P[0][0],P[1][0],.2)-w*.15,lerp(P[0][1],P[1][1],.2)-w*.15);g.lineTo(lerp(P[0][0],P[1][0],.8)-w*.15,lerp(P[0][1],P[1][1],.8)-w*.15);g.stroke()}};

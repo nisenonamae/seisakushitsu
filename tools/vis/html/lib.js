@@ -76,3 +76,6 @@ function tintOver(){const q=P.tint;if(!q)return;g.save();g.globalCompositeOperat
 window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init();if(!window._tw&&window.render){const r0=window.render;window.render=t=>{r0(t);tintOver()};window._tw=1}};
 // 画像を読み込む（読み終わるまで撮影を待つ）
 const IMG={};function loadImg(key,src){window.READY=false;const im=new Image();im.onload=()=>{IMG[key]=im;window._pend--;if(!window._pend)window.READY=true};window._pend=(window._pend||0)+1;im.src=src.startsWith('/')?'file://'+src:src}
+
+// 点で輪郭を描く（図形にしない）：pts＝[x,y,丸み(0＝角〜1＝なめらか)] を時計回りに。dx,dy＝ずらす量（ずらした形で明るい面・暗い面を作る）
+function blob(pts,dx=0,dy=0){const n=pts.length,L=(a,b,u)=>[a[0]+(b[0]-a[0])*u+dx,a[1]+(b[1]-a[1])*u+dy];for(let i=0;i<n;i++){const p=pts[i],a=pts[(i+n-1)%n],b=pts[(i+1)%n],r=p[2]==null?0.5:p[2];const A=L(p,[(a[0]+p[0])/2,(a[1]+p[1])/2],r),B=L(p,[(b[0]+p[0])/2,(b[1]+p[1])/2],r);i?g.lineTo(A[0],A[1]):g.moveTo(A[0],A[1]);g.quadraticCurveTo(p[0]+dx,p[1]+dy,B[0],B[1])}g.closePath()}
