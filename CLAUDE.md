@@ -64,6 +64,7 @@
 - あとはこの作業場と同じ `python3 tools/final_export.py <題材の一部>`（自動で `~/.seisaku/venv` の Python を使う。場面は CPU の数だけ同時に描く）。置き場所・フォントは `tools/vis/sspaths.py` が探す。**決め打ちのパス（/home/claude・/usr/share/fonts）を新しく書かない**
 
 ## 記録の置き場所（必要なときだけ読む）
+- `docs/notes/composition.md`：**構図**。場面の絵を作る前に読む（描く前に決めること12・構図の型18。`"guide":"thirds"` で補助線を重ねて確かめる。本番の前に小さな下絵を作り手に見せて選んでもらう）
 - `docs/notes/draw.md`：お絵描きの機能ごとの決まりと経緯
 - `docs/notes/videos.md`：動画ごとの進み具合（洗濯板道路・人工の土地・ロサンゼルスの水・台湾）、チャンネルの設定、エンディングの経緯
 - `tools/WORKER.md`：頼みごとの手順（見出しで探して一部だけ読む）

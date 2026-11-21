@@ -73,7 +73,7 @@ function fgGrass(t,col='#5d7a3c',col2='#7d9a4e'){blurOn(7);for(const[bx,dir,n] o
 function fgFrond(t,x=W-120,col='#3f6f3d'){blurOn(8);g.strokeStyle=col;g.lineCap='round';for(let i=0;i<6;i++){const a=Math.PI*0.55+i*0.2+Math.sin(t*1.3+i)*0.05,len=330+(i%2)*60;const ex=x+Math.cos(a)*len,ey=-40+Math.sin(a)*len;g.lineWidth=26;g.beginPath();g.moveTo(x+80,-60);g.quadraticCurveTo(x+Math.cos(a)*len*0.5+40,-60+Math.sin(a)*len*0.35,ex,ey);g.stroke()}g.lineCap='butt';blurOff()}
 // 話題ごとの色：場面の指定に tint:{col,a,mode} を付けると、描いたあとに色を重ねる（mode は soft-light が基本）
 function tintOver(){const q=P.tint;if(!q)return;g.save();g.globalCompositeOperation=q.mode||'soft-light';g.globalAlpha=q.a==null?0.4:q.a;g.fillStyle=q.col||'#5b4a8a';g.fillRect(0,0,W,H);g.restore()}
-window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init();if(!window._tw&&window.render){const r0=window.render;window.render=t=>{r0(t);tintOver()};window._tw=1}};
+window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init();if(!window._tw&&window.render){const r0=window.render;window.render=t=>{r0(t);tintOver();if(P.guide&&window.compGuide){g.setTransform(1,0,0,1,0,0);compGuide(P.guide)}};window._tw=1}};
 // 画像を読み込む（読み終わるまで撮影を待つ）
 const IMG={};function loadImg(key,src){window.READY=false;const im=new Image();im.onload=()=>{IMG[key]=im;window._pend--;if(!window._pend)window.READY=true};window._pend=(window._pend||0)+1;im.src=src.startsWith('/')?'file://'+src:src}
 
