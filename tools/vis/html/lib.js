@@ -62,6 +62,17 @@ function cloudShadows(t,a=0.17,sp=50){const r=R(77);for(let i=0;i<5;i++){const y
 function skyClouds(t,y0=30,y1=220,n=4,sp=36){const r=R(31);for(let i=0;i<n;i++){const y=y0+r()*(y1-y0),sz=34+r()*30,x=((t*sp*(0.7+r()*0.6)+i*(W+400)/n+r()*200)%(W+400))-200;g.fillStyle='rgba(255,255,255,.88)';g.beginPath();for(const[dx,dy,k] of [[0,0,1],[sz*0.9,sz*0.12,0.78],[-sz*0.85,sz*0.16,0.7],[sz*0.2,-sz*0.42,0.72]]){g.moveTo(x+dx+sz*k,y+dy);g.arc(x+dx,y+dy,sz*k,0,7)}g.fill();g.fillStyle='rgba(255,255,255,.88)';g.fillRect(x-sz*1.5,y+sz*0.1,sz*3.1,sz*0.62)}}
 // 鳥が何羽か、空を横切る
 function birds(t,y=130,n=3,sp=70){const r=R(53);g.strokeStyle='rgba(50,55,70,.75)';g.lineWidth=2.5;g.lineCap='round';for(let i=0;i<n;i++){const x=((t*sp+i*46+r()*30)%(W+300))-150,yy=y+i*16*(i%2?1:-1)+6*Math.sin(t*1.7+i),fl=0.35+0.3*Math.sin(t*9+i*1.3),w=9;g.beginPath();g.moveTo(x-w,yy-w*fl);g.quadraticCurveTo(x-w*0.4,yy-w*fl*0.2,x,yy);g.quadraticCurveTo(x+w*0.4,yy-w*fl*0.2,x+w,yy-w*fl);g.stroke()}g.lineCap='butt'}
-window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init()};
+// 札：話題の色の札に白い字、ぼかさない影（紙を重ねたように）。k＝0→1 で、行きすぎて戻りながら少し傾いて出る。o.fall＝0→1 で、下へ落ちて出ていく（薄くして消さない）
+function card(x,y,txt,k,o={}){if(k<=0||!txt)return;const size=o.size||54,col=o.col||'#1f6fb0',f=clamp(o.fall||0);g.save();g.translate(x+f*30,y+f*f*(H+200-y));g.rotate((1-ease(clamp(k)))*-0.14+f*0.5);const s=back(clamp(k),1.9);g.scale(s,s);g.font=`900 ${size}px ${FONT}`;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(txt).width+size*0.9,h=size*1.55;g.fillStyle='rgba(20,24,40,.32)';g.beginPath();g.roundRect(-w/2+7,-h/2+8,w,h,size*0.2);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(-w/2,-h/2,w,h,size*0.2);g.fill();g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.roundRect(-w/2,-h/2,w,h*0.46,size*0.2);g.fill();g.fillStyle='#fff';g.fillText(txt,0,3);g.restore()}
+// 奥行き：ぼかし（手前の物・奥の物に）。書き出しの大きさに合わせる
+function blurOn(px){const m=g.getTransform();g.filter=`blur(${(px*Math.hypot(m.a,m.b)).toFixed(1)}px)`}
+function blurOff(){g.filter='none'}
+// 手前の草（画面の下の両すみ。大きく・ぼかして・ゆれる）
+function fgGrass(t,col='#5d7a3c',col2='#7d9a4e'){blurOn(7);for(const[bx,dir,n] of [[40,1,9],[W-50,-1,8]]){for(let i=0;i<n;i++){const x=bx+dir*i*34-dir*60,hh=170+((i*53)%90),sw=Math.sin(t*1.5+i*0.9)*16+dir*30;g.strokeStyle=i%2?col:col2;g.lineWidth=20-(i%3)*4;g.lineCap='round';g.beginPath();g.moveTo(x,H+30);g.quadraticCurveTo(x+sw*0.3,H-hh*0.5,x+sw,H-hh);g.stroke()}}g.lineCap='butt';blurOff()}
+// 手前のヤシの葉（画面の上のすみから下がる。大きく・ぼかして・ゆれる）
+function fgFrond(t,x=W-120,col='#3f6f3d'){blurOn(8);g.strokeStyle=col;g.lineCap='round';for(let i=0;i<6;i++){const a=Math.PI*0.55+i*0.2+Math.sin(t*1.3+i)*0.05,len=330+(i%2)*60;const ex=x+Math.cos(a)*len,ey=-40+Math.sin(a)*len;g.lineWidth=26;g.beginPath();g.moveTo(x+80,-60);g.quadraticCurveTo(x+Math.cos(a)*len*0.5+40,-60+Math.sin(a)*len*0.35,ex,ey);g.stroke()}g.lineCap='butt';blurOff()}
+// 話題ごとの色：場面の指定に tint:{col,a,mode} を付けると、描いたあとに色を重ねる（mode は soft-light が基本）
+function tintOver(){const q=P.tint;if(!q)return;g.save();g.globalCompositeOperation=q.mode||'soft-light';g.globalAlpha=q.a==null?0.4:q.a;g.fillStyle=q.col||'#5b4a8a';g.fillRect(0,0,W,H);g.restore()}
+window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init();if(!window._tw&&window.render){const r0=window.render;window.render=t=>{r0(t);tintOver()};window._tw=1}};
 // 画像を読み込む（読み終わるまで撮影を待つ）
 const IMG={};function loadImg(key,src){window.READY=false;const im=new Image();im.onload=()=>{IMG[key]=im;window._pend--;if(!window._pend)window.READY=true};window._pend=(window._pend||0)+1;im.src=src.startsWith('/')?'file://'+src:src}
