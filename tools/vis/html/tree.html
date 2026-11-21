@@ -11,11 +11,11 @@ window.DEF={};
 const GX=640,GY=300,T1=3.7,TP=6.6,DX=GX-640;
 const K={sky0:'#e6f8c8',sky1:'#9fe0c4',hill0:'#86d4b6',hill1:'#58b89e',lf0:'#17574e',lf1:'#238a58',lf2:'#55bf52',lf3:'#b6e860',tr:'#6f3552',trL:'#a2535e',trD:'#45213f',dk:'#2a1a40',ac:'#ff9c2e',ac2:'#ffd27a',straw:'#f2e2a0',so0:'#255a5c',so1:'#184454',so2:'#0f3048',rt:'#d98a78',rtD:'#9a4f5c'};
 const fill=(P,col)=>{g.fillStyle=col;g.beginPath();blob(P);g.fill()},inside=(P,fn)=>{g.save();g.beginPath();blob(P);g.clip();fn();g.restore()};
-const ln=(P,w,col)=>{g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke()};
+const ln=(P,w,col)=>{if(PERSP){w*=pk((P[0][1]+P[P.length-1][1])/2);P=P.map(p=>pw(p[0],p[1]))}g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke()};
 // でこぼこのかたまり（葉の房・石）：丸を置かず、点をずらして作る
 function bump(cx,cy,rx,ry,seed,n=9,rd=.8){const r=R(seed),P=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2-1.6,k=0.78+r()*0.38;P.push([cx+Math.cos(a)*rx*k,cy+Math.sin(a)*ry*k,rd])}return P}
 // 先へ行くほど細くなる線（根・枝）：折れ線を太さを変えながらつなぐ。len＝0〜1 で伸びる
-function taper(P,w0,w1,col,len=1){g.strokeStyle=col;g.lineCap='round';const n=P.length-1,L=clamp(len)*n;for(let i=0;i<n;i++){if(L<=i)break;const u=Math.min(1,L-i),a=P[i],b=[lerp(a[0],P[i+1][0],u),lerp(a[1],P[i+1][1],u)];g.lineWidth=lerp(w0,w1,(i+0.5)/n);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}}
+function taper(P,w0,w1,col,len=1){if(PERSP){w0*=pk(P[0][1]);w1*=pk(P[P.length-1][1]);P=P.map(p=>pw(p[0],p[1]))}g.strokeStyle=col;g.lineCap='round';const n=P.length-1,L=clamp(len)*n;for(let i=0;i<n;i++){if(L<=i)break;const u=Math.min(1,L-i),a=P[i],b=[lerp(a[0],P[i+1][0],u),lerp(a[1],P[i+1][1],u)];g.lineWidth=lerp(w0,w1,(i+0.5)/n);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}}
 // ───── 場面1：森の中を前へ進む（15回目・構図から作り直し）─────
 // 構図：型＝手前の黒いわく＋V字。主役＝奥の光のすき間（まん中に置かず、右上寄りの点）。支える物＝左手前の黒い大木・右上から対角に伸びる枝。
 // 目の道：左の大木 → ふちを伝って光のすき間 → 右上の枝がまたすき間を指す。空は細い逆三角だけ残す。木は全部すき間のほうへ傾ける。
@@ -89,12 +89,18 @@ function forest(t){const u=clamp(t/T1),Z=0.05*u+2.6*Math.pow(u,4.2);
   const v=clamp((t-(T1-0.6))/0.6);if(v>0){g.save();g.translate(GX,GY);for(let i=0;i<3;i++){const a=-0.5+i*0.55+v*0.2;g.save();g.rotate(a);g.fillStyle=`rgba(255,252,220,${0.34*v})`;g.beginPath();g.moveTo(0,-6);g.lineTo(2600,-70-90*v-i*24);g.lineTo(2600,70+90*v+i*24);g.lineTo(0,6);g.fill();g.rotate(Math.PI);g.beginPath();g.moveTo(0,-6);g.lineTo(2600,-50-70*v);g.lineTo(2600,50+70*v);g.lineTo(0,6);g.fill();g.restore()}
     const r=R(5);for(let i=0;i<26;i++){const a=r()*7,l0=40+r()*120,l1=l0+(200+r()*700)*v;g.strokeStyle=`rgba(255,252,220,${0.5*v})`;g.lineWidth=3+r()*8;g.lineCap='round';g.beginPath();g.moveTo(Math.cos(a)*l0,Math.sin(a)*l0);g.lineTo(Math.cos(a)*l1,Math.sin(a)*l1);g.stroke()}g.restore();g.fillStyle=`rgba(255,253,228,${Math.pow(v,1.8)})`;g.fillRect(0,0,W,H)}}
 // ───── 場面2・3：ジャイアントセコイアと、土の中（根は浅く広い）─────
-function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP)/2.5),cam=200*ease(pu);
+function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP)/2.5),cam=-44+244*ease(pu),up=1-ease(clamp(pu*2.4));   // up＝地上を見ている間は1。下り始めると、手前の草地と木が消えて土の中が見える
   const Lr=(d,fn)=>{g.save();g.translate(GX,GY);g.scale(zm,zm);g.translate(-GX+DX*d,-GY-cam*d+(GY-330)*d);fn();g.restore()};
-  const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,K.sky0);s.addColorStop(1,K.sky1);g.fillStyle=s;g.fillRect(0,0,W,H);
+  // 場面の設計表（18回目）：立つ場所＝巨木の手前の草地・人の目の高さ／向き＝少し見上げる（地平線は下から2割弱）／空＝昼・左上に太陽・雲3つ・鳥3羽／
+  //   奥＝水色のモミの列／中＝モミ（1種類）／主役＝まん中・まわりは寒色で主役だけ暖色／手前＝左右のすみに暗くぼけたモミ（左を大きく）／
+  //   地面＝明るい草地・主役へ向かう小道と、木の影／大きさの手がかり＝小道の上の人3人／動く物＝鳥・雲・落ちる葉
+  const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,'#62c8ee');s.addColorStop(0.62,'#c4f0ee');s.addColorStop(1,'#e2f8e0');g.fillStyle=s;g.fillRect(0,0,W,H);
+  Lr(0.08,()=>{const sg=g.createRadialGradient(262,128,20,262,128,230);sg.addColorStop(0,'rgba(255,255,236,.85)');sg.addColorStop(1,'rgba(255,255,236,0)');g.fillStyle=sg;g.fillRect(0,-200,700,700);g.fillStyle='#fffef2';g.beginPath();g.arc(262,128,34,0,7);g.fill();
+    for(const c of [[930,150,1.5],[1120,300,0.8],[420,250,0.6]]){const x=c[0]+t*5*c[2],y=c[1],k=c[2],P=[[-110,12,.6],[-70,-16,.8],[-26,-10,.6],[8,-36,.8],[56,-18,.8],[112,10,.6],[50,22,.5],[-46,22,.5]].map(p=>[x+p[0]*k,y+p[1]*k,p[2]]);fill(P,'#f4fdfb');inside(P,()=>{g.fillStyle='#cdeef2';g.beginPath();blob(P,-8*k,-13*k);g.fill();g.fillStyle='#f4fdfb';g.beginPath();blob(P,-8*k,-13*k);g.fill();cresIn(P,-6*k,-11*k,'#cdeef2')})}
+    for(let i=0;i<3;i++){const bx=860+i*40+t*14,by=66-i*14+Math.sin(t*2+i)*4,fl=Math.sin(t*9+i*2)*5;ln([[bx-9,by-fl],[bx,by],[bx+9,by-fl]],3,'#2a6a8a')}});
   Lr(0.25,()=>{fill([[-300,470,.5],[-60,380,.8],[200,410,.8],[420,350,.8],[700,400,.8],[980,340,.8],[1240,390,.8],[1600,470,.5],[1600,900,.2],[-300,900,.2]],K.hill0)});
   Lr(0.5,()=>{fill([[-300,520,.5],[60,450,.8],[330,480,.8],[640,440,.8],[960,486,.8],[1220,446,.8],[1600,520,.5],[1600,1000,.2],[-300,1000,.2]],K.hill1);
-    const r=R(77),Tf=c=>mixc(c,'#86d8ea',0.62);for(let x=-200;x<1500;x+=26+r()*22){const h=70+r()*80;fir(x,476+r()*24,h,500+Math.round(x),Tf,1,x<640?1:-1)}});
+    const r=R(77),Tf=c=>mixc(c,'#86d8ea',0.62);PERSP={x:640,y:-1300,g:500};for(let x=-200;x<1500;x+=26+r()*22){const h=70+r()*80;fir(x,476+r()*24,h,500+Math.round(x),Tf,1,-1)}PERSP=null});
   Lr(1,()=>{const sw=h=>Math.sin(t*1.3-h*0.004)*5*(1-h/560);   // 上ほど大きくゆれ、遅れる
     // 土（3層）と石
     fill([[-300,556,.4],[1600,556,.4],[1600,1400,.2],[-300,1400,.2]],K.so0);
@@ -113,11 +119,14 @@ function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP
     const GR=[[-300,566,.4],[80,548,.8],[330,560,.8],[520,552,.6],[760,552,.6],[980,562,.8],[1240,548,.8],[1600,566,.4],[1600,600,.5],[900,612,.8],[400,606,.8],[-300,600,.5]];fill(GR,'#2f9a5a');inside(GR,()=>{g.fillStyle='#8fdc5a';g.beginPath();blob(GR,0,-34);g.fill()});
     // まわりの木：実物どおり、セコイアの半分ほどの高さはある。ただし幹はずっと細い（セコイアは「太さ」が桁違いの木）
     const Tm=c=>mixc(c,'#6ccbdc',0.34),Tn=c=>mixc(c,'#58b8a8',0.08);
-    [[60,560,190,1],[200,564,230,2],[340,560,170,3],[940,562,180,4],[1080,560,240,5],[1220,564,200,6]].forEach(q=>fir(q[0],q[1],q[2],430+q[3],Tm,1,q[0]<640?1:-1));
-    [[130,572,120,11],[1150,572,130,13],[280,574,90,14]].forEach(q=>fir(q[0],q[1],q[2],450+q[3],Tn,2,q[0]<640?1:-1));
+    // 見上げる遠近：縦の線が、画面の上のずっと先の一点へ集まる（幹は上ほど細く、まわりの木は内側へ倒れる）
+    PERSP={x:640,y:-900,g:566};
+    const tf=(x,by,h,sd,T,lv)=>fir(x,by,h,sd,T,lv,-1);
+    [[-30,560,250,1],[70,562,310,2],[170,560,220,3],[262,564,290,4],[356,560,240,5],[440,564,200,6],[836,564,210,7],[926,560,260,8],[1020,564,300,9],[1114,560,230,10],[1208,562,320,11],[1304,560,260,12]].forEach(q=>tf(q[0],q[1],q[2],430+q[3],Tm,1));
+    [[120,574,170,21],[310,576,130,22],[980,576,150,23],[1160,574,180,24]].forEach(q=>tf(q[0],q[1],q[2],450+q[3],Tn,2));
     // ジャイアントセコイア：幹は柱のようにほとんど細くならない。皮は赤茶で縦に深い溝。根元は大きく広がる。下半分は枝が無い。
     //   太い枝は横に出てから上へ曲がる。葉は青みのある緑で、高い所にかたまる。てっぺんは丸く、枯れた先が突き出る。根元に山火事の黒い焼け跡
-    g.save();g.translate(640,566);g.scale(1.5,1.06);g.translate(-640,-566);   // デフォルメ：幹を実物より太く、少し高く
+    g.save();g.translate(640,566);g.scale(1.32,1.06);g.translate(-640,-566);   // デフォルメ：幹を実物より太く、少し高く
     const SQ={b:'#b5533a',l:'#d67a4c',d:'#7c3340',lf0:'#1f5f52',lf1:'#2f8560',lf2:'#55ab66',lf3:'#9ed46a'};
     [[640,92,78,50,51],[578,146,56,38,53],[708,136,60,38,55],[604,198,48,30,57],[686,212,50,30,59],[534,246,38,24,61],[752,220,40,24,63]].forEach(b=>fill(bump(b[0]+sw(b[1]),b[1],b[2],b[3],b[4],11),SQ.lf0));
     ln([[640,70],[645,26]],5,'#d9cdb0');ln([[643,44],[654,34]],3.4,'#d9cdb0');                                         // 枯れた先
@@ -131,17 +140,24 @@ function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP
     for(const q of [[548,566,SQ.l],[590,568,SQ.b],[690,568,SQ.d],[734,566,SQ.d]])fill([[q[0]-20,572,.4],[q[0]-6,548,.7],[q[0]+12,550,.7],[q[0]+22,572,.4]],q[2]);
     // 手前の葉：暗い房を奥、明るい房を手前。大きさを1つずつ変える
     for(const b of [[640,128,72,42,71,SQ.lf1],[584,170,54,34,73,SQ.lf1],[704,170,58,34,75,SQ.lf1],[610,226,44,26,77,SQ.lf1],[690,240,48,26,79,SQ.lf1],[530,256,34,20,81,SQ.lf1],[756,230,36,20,83,SQ.lf1],[622,100,58,32,85,SQ.lf2],[566,156,42,26,87,SQ.lf2],[694,152,44,24,89,SQ.lf2],[598,214,34,20,91,SQ.lf2],[522,250,24,15,93,SQ.lf2],[606,84,38,20,95,SQ.lf3],[556,146,26,15,97,SQ.lf3],[682,140,24,14,99,SQ.lf3]])fill(bump(b[0]+sw(b[1])*1.3,b[1],b[2],b[3],b[4],11),b[5]);
-    g.restore();
+    g.restore();PERSP=null;
+    if(up>0){g.save();g.globalAlpha=up;const MD=[[-300,596,.4],[200,588,.8],[640,594,.7],[1080,586,.8],[1600,596,.4],[1600,1000,.2],[-300,1000,.2]];fill(MD,'#5fc85e');
+      inside(MD,()=>{fill([[-300,650,.5],[300,632,.8],[900,660,.8],[1600,640,.5],[1600,1000,.2],[-300,1000,.2]],'#4db856');
+        fill([[596,590,.4],[700,590,.4],[900,660,.6],[1180,800,.4],[760,800,.4],[660,660,.6]],'#3f9f52');                                   // 木の影（太陽は左上）
+        fill([[606,590,.4],[630,590,.4],[584,640,.7],[470,700,.7],[330,800,.4],[150,800,.4],[380,690,.7],[530,636,.7]],'#e2ecaa')});         // 主役へ向かう小道
+      g.restore()}
+    g.globalAlpha=up;   // 小鳥と人は、手前の草地の上にいる
     // 小鳥（反対の色み）：枝の上。5秒すぎに、しゃがんでから跳ねる
     const hp=clamp((t-5.2)/0.7),cr=hp>0&&hp<0.25?Math.sin(hp/0.25*Math.PI):0,jy=hp>=0.25&&hp<1?Math.sin((hp-0.25)/0.75*Math.PI)*26:0,jx=hp>=0.25?ease((hp-0.25)/0.75)*30:0;
-    g.save();g.translate(880+jx,552-jy*.5+cr*2);g.scale(0.5*(1+cr*0.12),0.5*(1-cr*0.16));const BD=[[-18,-4,.7],[-4,-18,.8],[14,-14,.7],[20,-2,.6],[8,10,.8],[-10,10,.8]];fill(BD,K.ac);inside(BD,()=>{fill([[-22,-2,.6],[-2,-6,.7],[4,12,.7],[-20,14,.5]],'#e0701c');fill([[2,-22,.6],[18,-18,.6],[14,-8,.7],[4,-10,.7]],K.ac2)});
+    g.save();g.translate(800+jx,592-jy*.5+cr*2);g.scale(0.5*(1+cr*0.12),0.5*(1-cr*0.16));const BD=[[-18,-4,.7],[-4,-18,.8],[14,-14,.7],[20,-2,.6],[8,10,.8],[-10,10,.8]];fill(BD,K.ac);inside(BD,()=>{fill([[-22,-2,.6],[-2,-6,.7],[4,12,.7],[-20,14,.5]],'#e0701c');fill([[2,-22,.6],[18,-18,.6],[14,-8,.7],[4,-10,.7]],K.ac2)});
     ln([[-16,2],[-30,8]],6,'#e0701c');fill([[18,-8,.3],[30,-5,.3],[19,-1,.3]],K.dk);g.fillStyle=K.dk;g.beginPath();g.arc(11,-9,2.4,0,7);g.fill();ln([[0,10],[0,17]],2.6,K.dk);g.restore();
     // 小さな人を3人（大きさを伝える。大と小の型）
-    [[440,2,.5],[452,4,.36],[466,2,.54]].forEach((q,i)=>{const px=q[0],py=556+q[1],k=q[2];ln([[px-2*k,py],[px-2*k,py-9*k]],2.6,K.dk);ln([[px+2*k,py],[px+2*k,py-9*k]],2.6,K.dk);fill([[px-5*k,py-8*k,.4],[px-4*k,py-21*k,.6],[px+4*k,py-21*k,.6],[px+5*k,py-8*k,.4]],['#f6fbe6','#cfe8c8','#8fd6c0'][i]);g.fillStyle=K.dk;g.beginPath();g.arc(px,py-25*k,3.6*k,0,7);g.fill()});
+    [[556,56,.56],[568,60,.4],[582,56,.6]].forEach((q,i)=>{const px=q[0],py=556+q[1],k=q[2];ln([[px-2*k,py],[px-2*k,py-9*k]],2.6,K.dk);ln([[px+2*k,py],[px+2*k,py-9*k]],2.6,K.dk);fill([[px-5*k,py-8*k,.4],[px-4*k,py-21*k,.6],[px+4*k,py-21*k,.6],[px+5*k,py-8*k,.4]],['#f6fbe6','#cfe8c8','#8fd6c0'][i]);g.fillStyle=K.dk;g.beginPath();g.arc(px,py-25*k,3.6*k,0,7);g.fill()});
+    g.globalAlpha=1;
     // 落ちる葉：ゆれながら落ちる
     const rl=R(17);for(let i=0;i<7;i++){const a=((t*0.16+rl())%1),x=380+rl()*520+Math.sin(a*9+i)*26,y=250+a*330,an=Math.sin(a*9+i)*0.9;g.save();g.translate(x,y);g.rotate(an);fill([[-9,0,.4],[0,-5,.8],[9,0,.4],[0,5,.8]],i%2?K.lf3:K.lf2);g.restore()}});
   // 手前の草（速く動く）
-  Lr(1.5,()=>{blurOn(5);for(const b of [])fill(bump(b[0],b[1],b[2],b[3],b[4],11),'#17574e');blurOff()});
+  if(up>0)Lr(1.5,()=>{g.globalAlpha=up;blurOn(4.5);const Td=()=>'#0b2a3c';const sy=Math.sin(t*1.1)*0.008;for(const q of [[60,820,640,1],[236,850,400,2],[1250,830,540,3],[1110,870,300,4]]){PERSP={x:640+sy*3000*(q[3]%2?1:-1),y:-1000,g:q[1]};fir(q[0],q[1],q[2],470+q[3],Td,0,-1)}PERSP=null;blurOff();g.globalAlpha=1});
   // 切り替えの白が晴れる
   const w=1-clamp(tt/0.5);if(w>0){g.fillStyle=`rgba(255,253,228,${w*w})`;g.fillRect(0,0,W,H)}
   const dkv=ease(pu)*0.35;const vg=g.createRadialGradient(W/2,H*0.5,H*0.4,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(8,30,50,0)');vg.addColorStop(1,`rgba(8,30,50,${0.2+dkv})`);g.fillStyle=vg;g.fillRect(0,0,W,H)}
