@@ -436,6 +436,8 @@ def _make(spec,dur,out,repo=''):
     if spec['t'] in('bigtext',) or (spec['t']=='year' and not spec.get('allow')):raise ValueError('文字だけの画面は禁止（決まりごと）：'+spec['t']+'。絵のある部品を使う')
     if spec['t']=='clip':parts3.clip_video(spec,dur,out,repo);return
     if spec['t']=='html':parts3.html_scene(spec,dur,out,repo);return
+    if spec['t']=='tri':   # 型「3分割の例」（tri.py）
+        import tri;from base import FB;tri.make(spec,dur,out,repo,make,FPS,SCALE,FB);return
     # カメラは動かさないのがふつう（静止画がゆっくり動くのは不自然）
     c=Clip(out,dur,spec.get('cam','none'),spec.get('punch'));f={'roads':parts3.roads,'wave':parts3.wave,'compare':parts3.compare,'timeline':parts3.timeline,'voices':parts3.voices,'strip':parts3.strip,'gauge':parts3.gauge_q,'picto':parts2.picto,'person':parts2.person,'dustcar':parts2.dustcar,'ruler':parts2.ruler,'year':parts2.year,'photo':photo,'bigtext':bigtext,'map':map_,'cards':cards,'steps':steps,'loop':loop,'graph':graph,'circle':circle,'section':section}[spec['t']]
     f(spec,dur,c,repo);c.close()

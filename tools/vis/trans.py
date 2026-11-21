@@ -7,6 +7,7 @@
   {"k":"shrink","to":[x,y],"d":0.7}                        前の場面が縮んで、次の場面の中の一点（0〜1）へ吸い込まれる
   {"k":"open","from":[x,y],"d":0.7}                        次の場面が、前の場面の中の一点から丸く広がる
   {"k":"wipe","col":"#3f8fca","dir":"right","d":0.7}       手前の物（色の帯）が横切って、通ったあとが次の場面になる
+  {"k":"slide3","dir":"right","d":0.8}                     3分割（"t":"tri"）の3枚が、端から順にすっと入る（型「3分割の例」の入り方①）
 
 使い分け：同じ動きを続けて使わない。向きや点は話の中身に合わせる（水が流れる向きへ押し出す、地図のその場所へ吸い込まれる など）。
 同じ絵が続く所（同じ地図の続きなど）には付けない。効果音は付けない（切り替わりに音を鳴らすだけ、は決まりで禁止）。
@@ -95,6 +96,16 @@ def _wipe(A, B, u, col, dr, i):
     out[foam] = 245
     return out.astype(np.uint8)
 
+def _slide3(A, B, t, D, dr):
+    """3分割の3枚が、端から順にすっと入る（左の1枚から着く）。t＝今の秒、D＝全体の秒"""
+    h, w = A.shape[:2]; pw = w / 3.0; out = A.copy(); st = D * 0.16
+    for p in range(3):
+        order = p if dr == 'right' else 2 - p
+        u = _ease((t - order * st) / (D - 2 * st)); x0, x1 = int(round(p * pw)), int(round((p + 1) * pw))
+        off = int(round((1 - u) * w)) * (1 if dr == 'right' else -1); a, b = max(0, x0 + off), min(w, x1 + off)
+        if b > a: out[:, a:b] = B[:, a - off:b - off]
+    return out
+
 def apply(prev, cur, out, tr, crf='20'):
     """prev の最後のコマから、cur の頭の d 秒でつなぐ。out に書く（cur と同じ長さ）"""
     w, h, fps = _probe(cur); k = tr.get('k', 'push'); n = max(2, int(round(float(tr.get('d', 0.7)) * fps)))
@@ -112,6 +123,7 @@ def apply(prev, cur, out, tr, crf='20'):
             if k == 'push': F = _push(last, B, u, tr.get('dir', 'left'))
             elif k == 'shrink': F = _shrink(last, B, u, tr.get('to', [0.5, 0.5]))
             elif k == 'open': F = _open(last, B, u, tr.get('from', [0.5, 0.5]))
+            elif k == 'slide3': F = _slide3(last, B, (i + 1) / fps, n / fps, tr.get('dir', 'right'))
             elif k == 'wipe': F = _wipe(last, B, u, tr.get('col', '#3f8fca'), tr.get('dir', 'right'), i)
             else: F = B
         else: F = B
