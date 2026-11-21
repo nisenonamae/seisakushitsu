@@ -101,7 +101,15 @@ def tts(text,path):
             except Exception:pass
         else:(s0,q),=VR.queries_for(text,VK,VRULES)[:1] or [(text,None)]
         if a.lead and not LAST.get('led'):q=json.loads(json.dumps(q));q['prePhonemeLength']=max(q.get('prePhonemeLength',0.1),a.lead);LAST['led']=1
-        y=VR.finish(VR.synth_sent(q,VK),VK,tail=False)
+        # 同じ文・同じ声の決まりなら、前に作った声を使う（作り手・2026-11-21「書き出しを速く」。SS_NOCACHE=1 で使わない）
+        import hashlib as _hl;_vk=_hl.sha1(json.dumps([q,VK],sort_keys=True,ensure_ascii=False,default=str).encode()).hexdigest()
+        _vd=os.path.expanduser('~/.cache/seisaku_voice');_vf=os.path.join(_vd,_vk+'.npy')
+        if os.path.exists(_vf) and not os.environ.get('SS_NOCACHE'):_ys=np.load(_vf)
+        else:
+            _ys=VR.synth_sent(q,VK)
+            try:os.makedirs(_vd,exist_ok=True);np.save(_vf+'.tmp.npy',np.asarray(_ys));os.replace(_vf+'.tmp.npy',_vf)
+            except Exception:pass
+        y=VR.finish(_ys,VK,tail=False)
         from scipy.signal import resample_poly
         y=resample_poly(y,SR,VR.SR) if SR!=VR.SR else y
         VR.write_wav(path,y,SR);LAST['ends']=VR.mora_ends(q);return len(y)/SR
@@ -198,6 +206,10 @@ def char_time(sx,i,ends):
     if i<=0 or not ends:return 0.0
     tot=nmora(sx) or 1;m=int(round(nmora(sx[:i])/tot*len(ends)));return 0.0 if m<=0 else ends[min(len(ends)-1,m-1)]
 tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[];ALLSUBS=[]
+# 場面づくりは裏で並べて走らせる（作り手・2026-11-21「書き出しを速く」）：声を作っている間に、前の段の場面を描く。
+# 同時にいくつ描くかは SS_JOBS（ふつうは CPU の数。Mac ならたくさん）。段の仕上げ（字幕を重ねる）も裏で
+from concurrent.futures import ThreadPoolExecutor
+_NJ=int(os.environ.get('SS_JOBS') or max(1,os.cpu_count() or 2));SPOOL=ThreadPoolExecutor(_NJ);CPOOL=ThreadPoolExecutor(max(1,_NJ//2));CFUT=[];SFXP=[]
 for k,b in enumerate(seq,1):
     raw=[s.strip() for s in re.split(r'(?<=[。！？!?])',b['text']) if s.strip()] or ['……']
     sents=[s.replace('《','').replace('》','') for s in raw]   # 《》は強調の印（声だけに効く）
@@ -250,7 +262,7 @@ for k,b in enumerate(seq,1):
                 if st<b0+0.01 and b0<en:en=max(st+0.3,b0)
             subs.append((ct,st,en))
     # 5) 画面：カットごとに部品で作ってつなぐ
-    clips=[]
+    clips=[];sfut=[]
     if shots:
         import scenes
         for i,sh in enumerate(shots):
@@ -265,10 +277,7 @@ for k,b in enumerate(seq,1):
                     ps=ci;tms.append(round(sh_(t_of_char(ci))-vstarts[i],3))
                 spec['times']=tms
             if os.environ.get('SS_DUMP'):open(os.environ['SS_DUMP'],'a').write(json.dumps({'tag':f'{k}-{i+1}','dur':d_,'spec':spec},ensure_ascii=False)+'\n')   # 点検用：場面ごとの指定（言葉の時刻つき）を書き出す
-            cp=f'{tmp}/c{k:03d}_{i:02d}.mp4';scenes.make(spec,d_,cp,a.repo);clips.append(cp)
-            if os.path.exists(cp+'.sfx.json'):
-                for e in json.load(open(cp+'.sfx.json')):
-                    e=[e,'whoosh'] if isinstance(e,(int,float)) else list(e);sfx.append((T+vstarts[i]+e[0],*e[1:]))
+            cp=f'{tmp}/c{k:03d}_{i:02d}.mp4';sfut.append(SPOOL.submit(scenes.make,spec,d_,cp,a.repo));clips.append(cp);SFXP.append((cp,T+vstarts[i]))
             allshots.append({'tag':f'{k}-{i+1}','block':b['id'],'role':b['role'],'start':round(T+vstarts[i],2),'end':round(T+vstarts[i]+d_,2),'t':sh.get('t') or 'seq','at':sh.get('at','')})
     else:
         cp=f'{tmp}/c{k:03d}_00.mp4'
@@ -278,7 +287,7 @@ for k,b in enumerate(seq,1):
             enc(['-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{D:.3f}'],cp)
         clips.append(cp);allshots.append({'tag':f'{k}-1','block':b['id'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'t':'visual'})
     open(f'{tmp}/l{k}.txt','w').write(''.join(f"file '{x}'\n" for x in clips))
-    raw=f'{tmp}/raw{k:03d}.mp4';subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l{k}.txt','-c','copy',raw],check=True)
+    raw=f'{tmp}/raw{k:03d}.mp4'
     # 6) 字幕と場面の番号を重ねる
     inp=['-i',raw];fc=f'[0:v]scale={OW}:{OH}:flags=lanczos,fps={FPS},tpad=stop_mode=clone:stop_duration=2[v0]';last='v0';q=1
     lays=[(sub_overlay(tx),st,en) for tx,st,en in subs]
@@ -286,9 +295,20 @@ for k,b in enumerate(seq,1):
     for li,(im,st,en) in enumerate(lays):
         pth=f'{tmp}/ov{k:03d}_{li:03d}.png';im.save(pth);inp+=['-i',pth]
         fc+=f";[{last}][{q}:v]overlay=0:0:enable='between(t,{st:.3f},{max(st,en-0.001):.3f})'[v{q}]";last=f'v{q}';q+=1
-    bv=f'{tmp}/b{k:03d}.mp4';enc([*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{D:.3f}'],bv);bvids.append(bv)
+    bv=f'{tmp}/b{k:03d}.mp4';bvids.append(bv)
+    def _compose(sfut=sfut,k=k,raw=raw,inp=inp,fc=fc,last=last,D=D,bv=bv):
+        for f_ in sfut:f_.result()   # この段の場面が全部できるのを待つ
+        subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l{k}.txt','-c','copy',raw],check=True)
+        enc([*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{D:.3f}'],bv)
+    CFUT.append(CPOOL.submit(_compose))
     ALLSUBS+=[(T+st,T+en,tx) for tx,st,en in subs]
     tl.append({'id':b['id'],'oid':b['oid'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'visual':vis or ''});T+=D
+for f_ in CFUT:f_.result()   # 全部の段ができるのを待つ（失敗があればここで止まる）
+SPOOL.shutdown();CPOOL.shutdown()
+for cp,t0 in SFXP:
+    if os.path.exists(cp+'.sfx.json'):
+        for e in json.load(open(cp+'.sfx.json')):
+            e=[e,'whoosh'] if isinstance(e,(int,float)) else list(e);sfx.append((t0+e[0],*e[1:]))
 open(f'{tmp}/v.txt','w').write(''.join(f"file '{x}'\n" for x in bvids))
 subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/v.txt','-c','copy',f'{tmp}/v.mp4'],check=True)
 # 7) 効果音：部品が「ここで鳴らす」と決めた所だけ（切り替わりのたびには鳴らさない）

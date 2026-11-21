@@ -1,7 +1,7 @@
 """図解の部品集。make(spec, dur, out) で、spec['t'] の部品を dur 秒の mp4 にする。
 部品：photo / bigtext / map / cards / circle / section / loop / graph / steps
 （新しい見せ方が要るときは、ここに部品を足していく。足したら tools/vis/README.md にも一行書く）"""
-import json, math, os, urllib.request, urllib.parse, io
+import json, math, os, re, urllib.request, urllib.parse, io
 from base import *
 UA={'User-Agent':'seisakushitsu/1.0 (noreply@anthropic.com)'}
 CACHE='/home/claude/vv/cache';os.makedirs(CACHE,exist_ok=True)
@@ -356,7 +356,64 @@ def section(s,dur,c,repo):
                 for k in range(4):yy=y-70+bob+ (k+1)*(y-(y-70+bob))/5;d.line([(wx-70-12+ (k%2)*24,yy),(wx-70+12-(k%2)*24,yy+8)],fill=(200,205,215),width=4)
                 d.text((W/2,120),'上下に揺れる車が、波を育てる',font=font(40),fill=WHITE,anchor='mm')
         c.add(im)
+# ---------- 作った場面を覚えておく（作り手・2026-11-21「書き出しを速く」）----------
+# 同じ指定・同じ長さ・同じ部品のコード・同じ素材なら、前に作った mp4 をそのまま使う（直した場面だけ作り直す）。
+# 置き場所は SS_SCENE_CACHE（ふつうは ~/.cache/seisaku_scenes）。SS_NOCACHE=1 で使わない。3GB を超えたら古い物から消す
+import hashlib, shutil, threading
+_VIS=os.path.dirname(os.path.abspath(__file__));_CH=None;_CLOCK=threading.Lock()
+SCACHE=os.environ.get('SS_SCENE_CACHE') or os.path.expanduser('~/.cache/seisaku_scenes')
+def _code_hash():
+    global _CH
+    if _CH is None:
+        h=hashlib.sha1()
+        for root,ds,fs in os.walk(_VIS):
+            ds.sort()
+            if '__pycache__' in root:continue
+            for f in sorted(fs):
+                fp=os.path.join(root,f)
+                if f.endswith(('.py','.html','.js','.json','.css')):h.update(f.encode());h.update(open(fp,'rb').read())
+                else:st=os.stat(fp);h.update(f'{f}{st.st_size}{st.st_mtime_ns}'.encode())
+        _CH=h.hexdigest()
+    return _CH
+def _files_in(v,repo,acc):
+    if isinstance(v,dict):
+        for x in v.values():_files_in(x,repo,acc)
+    elif isinstance(v,list):
+        for x in v:_files_in(x,repo,acc)
+    elif isinstance(v,str) and not v.startswith('http') and re.search(r'\.(png|jpe?g|webp|gif|svg|mp4|mov|webm|json|geojson)$',v,re.I):
+        fp=v if os.path.isabs(v) else os.path.join(repo or '',v)
+        try:st=os.stat(fp);acc.append(f'{v}:{st.st_size}:{st.st_mtime_ns}')
+        except OSError:acc.append(v+':?')
+def _key(spec,dur,repo):
+    acc=[];_files_in(spec,repo,acc)
+    j=json.dumps({'s':spec,'d':round(float(dur),4),'k':SCALE,'w':[W,H,FPS],'c':_code_hash(),'f':acc},sort_keys=True,ensure_ascii=False)
+    return hashlib.sha1(j.encode()).hexdigest()
+def _prune(limit=3e9):
+    try:
+        fs=[os.path.join(SCACHE,f) for f in os.listdir(SCACHE)];fs=[(os.stat(f).st_atime,os.path.getsize(f),f) for f in fs if os.path.isfile(f)]
+        tot=sum(x[1] for x in fs)
+        for at,sz,f in sorted(fs):
+            if tot<=limit:break
+            os.remove(f);tot-=sz
+    except OSError:pass
+SIDE=('.sfx.json','.pops.json')
 def make(spec,dur,out,repo=''):
+    if os.environ.get('SS_NOCACHE'):return _make_full(spec,dur,out,repo)
+    k=_key(spec,dur,repo);c=os.path.join(SCACHE,k+'.mp4')
+    if os.path.exists(c) and os.path.getsize(c)>0:
+        shutil.copyfile(c,out);os.utime(c)
+        for e in SIDE:
+            if os.path.exists(c+e):shutil.copyfile(c+e,out+e)
+        return
+    _make_full(spec,dur,out,repo)
+    try:
+        os.makedirs(SCACHE,exist_ok=True)
+        for e in SIDE:
+            if os.path.exists(out+e):shutil.copyfile(out+e,c+e)
+        t=c+f'.{threading.get_ident()}.tmp';shutil.copyfile(out,t);os.replace(t,c)
+        with _CLOCK:_prune()
+    except OSError:pass
+def _make_full(spec,dur,out,repo=''):
     _make(spec,dur,out,repo)
     if SCALE>1 and not spec.get('seq'):
         import subprocess,json as _j
