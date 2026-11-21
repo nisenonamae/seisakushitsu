@@ -12,8 +12,8 @@ body{background:var(--paper);color:var(--ink);font-family:"Hiragino Kaku Gothic 
 header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 14px 8px;display:flex;align-items:center;gap:10px}
 header h1{font-size:18px;margin:0}header .sync{font-size:12px;color:var(--sub);margin-left:auto}
 main{max-width:820px;margin:0 auto;padding:12px 14px 30px}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--row);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(11,1fr);padding-bottom:env(safe-area-inset-bottom)}
-nav button,nav a.nl{background:none;border:0;color:var(--sub);font:inherit;font-size:min(12px,2.5vw);letter-spacing:-.05em;white-space:nowrap;padding:8px 0 9px;cursor:pointer;text-align:center;text-decoration:none}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--row);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(12,1fr);padding-bottom:env(safe-area-inset-bottom)}
+nav button,nav a.nl{background:none;border:0;color:var(--sub);font:inherit;font-size:min(12px,2.3vw);letter-spacing:-.07em;white-space:nowrap;padding:8px 0 9px;cursor:pointer;text-align:center;text-decoration:none}
 nav a.nl b{display:block;font-size:18px;line-height:1.2}
 nav button b{display:block;font-size:18px;line-height:1.2}
 nav button[aria-current="true"]{color:var(--sea);font-weight:700}
@@ -236,6 +236,26 @@ details.chap[open]{border:2px solid var(--sea)}
 <div class="row"><button class="b main" id="addKufu">棚に足す</button></div></details>
 </section>
 
+<section data-tab="ops">
+<h2>チャンネル運営</h2>
+<p class="lead">自分で見るための所。上に「これからの方針」を書き、下に「いつも気をつけること」が並びます。YouTube の決まりは変わるので、項目ごとに出どころと確かめた日を付けています。古くなったら、チャットで「運営の項目を調べ直して」と頼んでください。</p>
+<h2 style="margin-top:18px">これからの方針</h2>
+<p class="lead">これからどうしていくかを、自分の言葉で書いておく所。Claude はチャンネル全体に関わる作業の前に、ここを読みます。</p>
+<div id="plList"></div>
+<details id="plForm"><summary>方針を書く</summary>
+<label>見出し（任意）</label><input id="plTitle" placeholder="例：最初の10本は「暮らしの仕組み」に寄せる">
+<label>中身</label><textarea id="plBody" style="min-height:110px" placeholder="考えていること・決めたこと・やめること。途中のメモでもよい"></textarea>
+<div class="row"><button class="b main" id="plAdd">書いておく</button></div></details>
+<h2 style="margin-top:22px">いつも気をつけること</h2>
+<div class="chips" id="opFilter" style="margin:6px 0"></div>
+<div id="opList"></div>
+<details id="opForm"><summary>項目を足す</summary>
+<label>分け方</label><select id="opCat"></select>
+<label>気をつけること</label><input id="opTitle" placeholder="例：概要欄の1行目は毎回同じ文を入れる">
+<label>くわしく（任意）</label><textarea id="opBody" style="min-height:70px"></textarea>
+<div class="row"><button class="b main" id="opAdd">足す</button></div></details>
+</section>
+
 <section data-tab="num">
 <h2>数字</h2>
 <p class="lead">自分のチャンネルの動画ごとの再生数を一覧にします。見るのをやめた場所やサムネイルが押された割合は、YouTube Studio の数字のつなぎ込みで次に足します。</p>
@@ -375,6 +395,7 @@ details.chap[open]{border:2px solid var(--sea)}
 <a class="nl" href="sound.html"><b>≋</b>音調整</a>
 <a class="nl" href="draw.html"><b>✎</b>描く</a>
 <button data-t="num"><b>▦</b>数字</button>
+<button data-t="ops"><b>⚑</b>運営</button>
 <button data-t="set"><b>⚙</b>設定</button>
 </nav>
 
@@ -391,7 +412,7 @@ const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'億':n>=1e4?Math.round(n/1e4).toLocaleSt
 /* ---------- データ ---------- */
 let D;try{D=JSON.parse(LS.get('ss_data','null'))}catch(e){D=null}
 if(!D)D=JSON.parse(JSON.stringify(SEED));
-['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
+['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points','ops','plans'].forEach(k=>{D[k]=D[k]||[];const have=new Set(D[k].map(x=>x.id));for(const x of SEED[k]||[])if(!have.has(x.id))D[k].push(JSON.parse(JSON.stringify(x)))});
 function save(){LS.set('ss_data',JSON.stringify(D));schedulePush()}
 function touch(o){o.updatedAt=now();save()}
 
@@ -403,7 +424,7 @@ const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,''))
 /* 制作（projects）は、新しい方を採ったうえで、新しい方に無い項目を古い方から残す（作りかけの古い控えが勝っても、肉付けや動画の記録が消えないように） */
 const keepFields=(w,l)=>{let o=w;for(const k in l){if(!(k in w)){if(o===w)o={...w};o[k]=l[k]}}return o};
 function merge(a,b){a=a||{};b=b||{};const out={};const byId=(x,y,un)=>{const m=new Map();for(const v of [...(x||[]),...(y||[])]){const w=m.get(v.id);if(!w)m.set(v.id,v);else{const nw=(v.updatedAt||0)>(w.updatedAt||0);m.set(v.id,un?(nw?keepFields(v,w):keepFields(w,v)):(nw?v:w))}}return[...m.values()]};
- for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points'])out[k]=byId(a[k],b[k],k==='projects');
+ for(const k of ['candidates','ideas','kufu','projects','jobs','materials','styles','rules','feeds','sounds','points','ops','plans'])out[k]=byId(a[k],b[k],k==='projects');
  // ほかのページが使う項目（お絵描きの arts など）は、知らなくても消さずに合わせて残す（2026-11-17：ここで落としていて、ほかの端末から絵が見えなくなっていた）
  for(const k of new Set([...Object.keys(a),...Object.keys(b)])){if(k in out)continue;const x=a[k],y=b[k];if(Array.isArray(x)||Array.isArray(y))out[k]=[...(x||[]),...(y||[])].some(v=>!v||typeof v!=='object'||!v.id)?(y||x):byId(x,y,k==='arts');else out[k]=y!==undefined?y:x}
  return out}
@@ -1351,7 +1372,40 @@ document.addEventListener('change',e=>{const t=e.target,it=t.closest&&t.closest(
  if(t.matches('[data-abs]')){ab.shares=ab.shares||[];ab.shares[+t.dataset.abs]=t.value===''?null:+t.value}else ab[t.dataset.abf]=t.value;
  if(!ab.vars||!ab.vars.length||t.dataset.abf==='start')ab.vars=abSnap(p);ab.updatedAt=now();touchP(p);if(t.dataset.abf==='result')abKeep(renderAB)});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ablearn]');if(!b)return;const p=D.projects.find(x=>x.id===b.closest('[data-abp]').dataset.abp);if(!p)return;queueJob({type:'ab_learn',projId:p.id});touchP(p);abKeep(renderAB)});
-function renderAll(){renderAB();renderPoints();renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
+const OPCAT=['収益化の決まり','AI と合成の決まり','違反の警告','素材と権利','投稿のとき','数字の見方','そのほか'];let opF='すべて',plEdit='',opEdit='';
+const ymd=t=>{const d=new Date(t);return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()};
+function renderOps(){if(!$('opList'))return;
+const pls=(D.plans||[]).filter(x=>!x.deleted).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.createdAt||0)-(a.createdAt||0));
+$('plList').innerHTML=pls.length?pls.map(p=>plEdit===p.id?`<div class="item" data-pl="${p.id}"><label>見出し（任意）</label><input data-pet value="${esc(p.title||'')}"><label>中身</label><textarea data-peb style="min-height:130px">${esc(p.body||'')}</textarea><div class="st" style="margin-top:6px"><button data-psave class="on">これで残す</button><button data-pcancel>やめる</button></div></div>`
+:`<div class="item ${p.pin?'picked':''}" data-pl="${p.id}"><div class="tags">${p.pin?'<span style="border-color:var(--ink)">いちばん上に固定</span>':''}<span>${ymd(p.createdAt||p.updatedAt)}${p.updatedAt-(p.createdAt||0)>60000?'（'+ymd(p.updatedAt)+' に書き換え）':''}</span></div>${p.title?`<div class="q" style="font-size:16px">${esc(p.title)}</div>`:''}<div style="font-size:15px;white-space:pre-wrap;margin-top:2px">${esc(p.body||'')}</div><div class="st" style="margin-top:6px"><button data-ppin class="${p.pin?'on':''}">${p.pin?'固定をやめる':'上に固定'}</button><button data-pedit>書き換える</button><button data-pdel>消す</button></div></div>`).join(''):'<div class="empty">まだ書いていません。下の「方針を書く」から。</div>';
+const all=(D.ops||[]).filter(x=>!x.deleted);if(!$('opCat').options.length)$('opCat').innerHTML=OPCAT.map(c=>`<option>${c}</option>`).join('');
+const cats=['すべて','★ 大事',...OPCAT.filter(c=>all.some(x=>x.cat===c))];$('opFilter').innerHTML=cats.map(c=>`<button data-opf="${c}" aria-pressed="${c===opF}">${c}${c==='すべて'||c==='★ 大事'?'':' '+all.filter(x=>x.cat===c).length}</button>`).join('');
+const xs=all.filter(x=>opF==='すべて'||(opF==='★ 大事'?x.star:x.cat===opF)).sort((a,b)=>OPCAT.indexOf(a.cat)-OPCAT.indexOf(b.cat)||(b.star?1:0)-(a.star?1:0)||(a.order||0)-(b.order||0));
+let last='';$('opList').innerHTML=xs.length?xs.map(x=>{const head=x.cat!==last?`<h3 style="font-size:15px;margin:14px 0 4px">${esc(x.cat)}</h3>`:'';last=x.cat;return head+(opEdit===x.id?`<div class="item" data-op="${x.id}"><label>気をつけること</label><input data-oet value="${esc(x.title||'')}"><label>くわしく</label><textarea data-oeb style="min-height:110px">${esc(x.body||'')}</textarea><label>うちの場合（任意）</label><textarea data-oeo style="min-height:60px">${esc(x.ours||'')}</textarea><div class="st" style="margin-top:6px"><button data-osave class="on">これで残す</button><button data-ocancel>やめる</button></div></div>`
+:`<div class="item ${x.star?'picked':''}" data-op="${x.id}"><div class="q" style="font-size:16px">${x.star?'★ ':''}${esc(x.title)}</div>${x.due?`<div class="tags" style="margin-top:3px"><span style="border-color:#c0392b;color:#c0392b">期限：${esc(x.due)}</span></div>`:''}
+${x.body?`<div style="font-size:15px;white-space:pre-wrap;margin-top:3px">${esc(x.body)}</div>`:''}
+${x.ours?`<div style="font-size:14.5px;white-space:pre-wrap;margin-top:5px;border-left:3px solid var(--sea);padding-left:8px"><b>うちの場合：</b>${esc(x.ours)}</div>`:''}
+<div class="lead" style="margin:5px 0 0">${x.unsure?`<b style="color:#c0392b">要確認：</b>${esc(x.unsure)}　`:''}${x.src?`出どころ：<a href="${esc(x.src)}" target="_blank" rel="noopener">${esc(x.srcTitle||x.src)}</a>`:(x.srcTitle?'出どころ：'+esc(x.srcTitle):'')}${x.checkedAt?`　確かめた日：${esc(x.checkedAt)}`:''}${x.by?`　書いた人：${esc(x.by)}`:''}</div>
+<div class="st" style="margin-top:6px"><button data-ostar class="${x.star?'on':''}">${x.star?'★ 大事':'☆ 大事にする'}</button><button data-oedit>書き換える</button><button data-odel>消す</button></div></div>`)}).join(''):'<div class="empty">まだありません。</div>';
+if(!$('opList').dataset.on){$('opList').dataset.on=1;
+$('opFilter').addEventListener('click',e=>{const b=e.target.closest('[data-opf]');if(!b)return;opF=b.dataset.opf;renderOps()});
+$('plAdd').onclick=()=>{const body=$('plBody').value.trim(),title=$('plTitle').value.trim();if(!body&&!title){alert('中身を書いてください');return}D.plans=D.plans||[];D.plans.push({id:uid('pl'),title,body,by:'作り手',createdAt:now(),updatedAt:now()});$('plBody').value='';$('plTitle').value='';$('plForm').open=false;save();renderOps()};
+$('plList').addEventListener('click',e=>{const it=e.target.closest('[data-pl]');if(!it)return;const p=D.plans.find(x=>x.id===it.dataset.pl);
+if(e.target.matches('[data-pedit]')){plEdit=p.id;renderOps();return}
+if(e.target.matches('[data-pcancel]')){plEdit='';renderOps();return}
+if(e.target.matches('[data-psave]')){p.title=it.querySelector('[data-pet]').value.trim();p.body=it.querySelector('[data-peb]').value.trim();plEdit=''}
+else if(e.target.matches('[data-ppin]')){p.pin=!p.pin}
+else if(e.target.matches('[data-pdel]')){if(!confirm('この方針を消しますか？'))return;p.deleted=true}else return;
+p.updatedAt=now();save();renderOps()});
+$('opAdd').onclick=()=>{const title=$('opTitle').value.trim();if(!title){alert('「気をつけること」を書いてください');return}D.ops=D.ops||[];D.ops.push({id:uid('op'),cat:$('opCat').value,title,body:$('opBody').value.trim(),by:'作り手',createdAt:now(),updatedAt:now()});$('opTitle').value='';$('opBody').value='';$('opForm').open=false;save();renderOps()};
+$('opList').addEventListener('click',e=>{const it=e.target.closest('[data-op]');if(!it)return;const x=D.ops.find(v=>v.id===it.dataset.op);
+if(e.target.matches('[data-oedit]')){opEdit=x.id;renderOps();return}
+if(e.target.matches('[data-ocancel]')){opEdit='';renderOps();return}
+if(e.target.matches('[data-osave]')){x.title=it.querySelector('[data-oet]').value.trim();x.body=it.querySelector('[data-oeb]').value.trim();x.ours=it.querySelector('[data-oeo]').value.trim();opEdit=''}
+else if(e.target.matches('[data-ostar]')){x.star=!x.star}
+else if(e.target.matches('[data-odel]')){if(!confirm('この項目を消しますか？'))return;x.deleted=true}else return;
+x.updatedAt=now();save();renderOps()})}}
+function renderAll(){renderOps();renderAB();renderPoints();renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
 renderAll();sync();loadAuto();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script><div id="play" class="play" hidden><div class="pscr"><div class="prole" id="pRole"></div><div class="pshow" id="pShow"></div></div>
