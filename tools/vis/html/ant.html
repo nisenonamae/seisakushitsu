@@ -58,20 +58,26 @@ function ant(x,y,S,ph,t,o={}){const c=o.col||ANT;g.save();g.translate(x,y);g.sca
   g.restore()}
 // 背景の大きな葉（ぼかして奥に）
 function bigLeaf(x,y,s,rot,c1,c2){g.save();g.translate(x,y);g.rotate(rot);g.scale(s,s);g.beginPath();g.moveTo(0,0);g.bezierCurveTo(60,-90,220,-110,330,-20);g.bezierCurveTo(240,70,80,80,0,0);g.fillStyle=c1;g.fill();g.beginPath();g.moveTo(0,0);g.bezierCurveTo(60,-90,220,-110,330,-20);g.bezierCurveTo(200,-40,90,-20,0,0);g.fillStyle=c2;g.fill();g.restore()}
-function walk(t){
+// カメラ（2026-11-21・餌「木の回」の学び）：目線の点 (GX,GY) を画面の同じ所に止めたまま、奥へ進む。
+// 層ごとに広がる量を変える（奥ほど少なく、手前ほど大きく＝手前の物ほど速く外へ流れる）。速さは一定にせず、ゆっくり始めて加速する
+// 場面の指定：kam:{gx,gy,z0,z1,p}（cam という名前は、写真をゆっくり動かす古い指定とぶつかるので使わない）（p＝加速の強さ。2.4 くらい）
+let CZ=1,GX=640,GY=360;
+function Lb(d){g.save();const z=1+(CZ-1)*d;g.translate(GX,GY);g.scale(z,z);g.translate(-GX,-GY)}
+const Le=()=>g.restore();
+function walk(t){const cm=P.kam;if(cm){GX=cm.gx;GY=cm.gy;CZ=lerp(cm.z0||1,cm.z1||1,Math.pow(clamp(t/DUR),cm.p||2.4))}else CZ=1;
   // 1) 背景：青緑の濃淡。上から光がさす
   const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,BG2);s.addColorStop(0.45,BG1);s.addColorStop(1,BG0);g.fillStyle=s;g.fillRect(0,0,W,H);
   const sp=118*1.0;   // 地面が流れる速さ（足の運びに合わせる。すべらせない）
   // 2) 奥：ぼかした大きな葉（ゆっくり流れる）
-  blurOn(14);const r=R(41);for(let i=0;i<7;i++){const bx=((i*330+r()*200-t*sp*0.18)%(W+700)+W+700)%(W+700)-350;bigLeaf(bx,120+r()*380,0.9+r()*0.9,-0.5+r()*1.0+Math.sin(t*0.6+i)*0.03,'#0f5a5c','#17756c')}blurOff();
+  Lb(0.3);blurOn(14);const r=R(41);for(let i=0;i<7;i++){const bx=((i*330+r()*200-t*sp*0.18)%(W+700)+W+700)%(W+700)-350;bigLeaf(bx,120+r()*380,0.9+r()*0.9,-0.5+r()*1.0+Math.sin(t*0.6+i)*0.03,'#0f5a5c','#17756c')}blurOff();Le();
   // 光のすじ
   g.save();g.globalCompositeOperation='screen';for(const[x0,w,a] of [[260,150,0.10],[560,90,0.07],[900,210,0.09]]){const gr=g.createLinearGradient(x0,0,x0+w,0);gr.addColorStop(0,'rgba(190,255,200,0)');gr.addColorStop(0.5,`rgba(190,255,200,${a*(0.8+0.2*Math.sin(t*0.8+x0))})`);gr.addColorStop(1,'rgba(190,255,200,0)');g.fillStyle=gr;g.beginPath();g.moveTo(x0+220,-10);g.lineTo(x0+w+220,-10);g.lineTo(x0+w-160,H);g.lineTo(x0-160,H);g.fill()}g.restore();
   // ただよう粒
-  const rd=R(7);for(let i=0;i<34;i++){const px=((rd()*W*1.3-t*(14+rd()*22))%(W+80)+W+80)%(W+80)-40,py=rd()*H*0.8+Math.sin(t*0.7+i)*14,rr=2+rd()*5;g.fillStyle=`rgba(210,255,190,${0.10+rd()*0.22})`;g.beginPath();g.arc(px,py,rr,0,7);g.fill()}
+  Lb(0.5);const rd=R(7);for(let i=0;i<34;i++){const px=((rd()*W*1.3-t*(14+rd()*22))%(W+80)+W+80)%(W+80)-40,py=rd()*H*0.8+Math.sin(t*0.7+i)*14,rr=2+rd()*5;g.fillStyle=`rgba(210,255,190,${0.10+rd()*0.22})`;g.beginPath();g.arc(px,py,rr,0,7);g.fill()}
   // 3) 中：少しぼかした葉と茎（中くらいの速さ）
-  blurOn(4);const r2=R(19);for(let i=0;i<6;i++){const bx=((i*420+r2()*240-t*sp*0.45)%(W+900)+W+900)%(W+900)-450;bigLeaf(bx,430+r2()*120,0.55+r2()*0.4,-0.9+r2()*0.5+Math.sin(t*0.9+i)*0.04,'#136b63','#22957c')}blurOff();
+  Le();Lb(0.65);blurOn(4);const r2=R(19);for(let i=0;i<6;i++){const bx=((i*420+r2()*240-t*sp*0.45)%(W+900)+W+900)%(W+900)-450;bigLeaf(bx,430+r2()*120,0.55+r2()*0.4,-0.9+r2()*0.5+Math.sin(t*0.9+i)*0.04,'#136b63','#22957c')}blurOff();Le();
   // 4) 枝（主役の地面）。木の皮の模様が流れる
-  const TY=500;const br=()=>{g.beginPath();g.moveTo(-20,TY+6);for(let x=-20;x<=W+20;x+=40)g.lineTo(x,TY+6*Math.sin((x+t*sp)/260)+3*Math.sin((x+t*sp)/71));g.lineTo(W+20,TY+92);for(let x=W+20;x>=-20;x-=40)g.lineTo(x,TY+92+7*Math.sin((x+t*sp)/190+1));g.closePath()};
+  Lb(1);const TY=500;const br=()=>{g.beginPath();g.moveTo(-20,TY+6);for(let x=-20;x<=W+20;x+=40)g.lineTo(x,TY+6*Math.sin((x+t*sp)/260)+3*Math.sin((x+t*sp)/71));g.lineTo(W+20,TY+92);for(let x=W+20;x>=-20;x-=40)g.lineTo(x,TY+92+7*Math.sin((x+t*sp)/190+1));g.closePath()};
   br();g.fillStyle='#6b3f2e';g.fill();g.save();br();g.clip();g.fillStyle='#3f2330';g.fillRect(0,TY+52,W,60);g.fillStyle='#8a5638';g.fillRect(0,TY-8,W,26);
   const rk=R(3);for(let i=0;i<26;i++){const kx=((rk()*W*1.5-t*sp)%(W+200)+W+200)%(W+200)-100,ky=TY+18+rk()*52,kw=30+rk()*70;g.strokeStyle='rgba(50,24,34,.5)';g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(kx,ky);g.quadraticCurveTo(kx+kw/2,ky+4-rk()*8,kx+kw,ky);g.stroke()}
   for(let i=0;i<7;i++){const mx=((rk()*W*1.5-t*sp)%(W+300)+W+300)%(W+300)-150;g.fillStyle='#57b85a';g.beginPath();g.ellipse(mx,TY+6,40+rk()*30,9,0,Math.PI,0);g.fill();g.fillStyle='#8fe04a';g.beginPath();g.ellipse(mx-8,TY+5,22,5,0,Math.PI,0);g.fill()}g.lineCap='butt';g.restore();
@@ -81,10 +87,27 @@ function walk(t){
   ant(150,TY-62,1.05,(f+0.35)%1,t,{col:FAR,carry:true,far:true});ant(1120,TY-60,1.0,(f+0.7)%1,t+2,{col:FAR,far:true});
   ant(610,TY-108,1.9,f%1,t,{carry:true});
   // 6) 手前：ぼかした葉が、速く流れる
-  blurOn(11);const r3=R(5);for(let i=0;i<3;i++){const bx=((i*900+r3()*300-t*sp*1.7)%(W+1400)+W+1400)%(W+1400)-700;bigLeaf(bx,H+150-r3()*30,1.25+r3()*0.3,-0.55+r3()*0.3,'#082f3a','#0d4a4d')}blurOff();
+  Le();Lb(1.9);blurOn(11);const r3=R(5);for(let i=0;i<3;i++){const bx=((i*900+r3()*300-t*sp*1.7)%(W+1400)+W+1400)%(W+1400)-700;bigLeaf(bx,H+150-r3()*30,1.25+r3()*0.3,-0.55+r3()*0.3,'#082f3a','#0d4a4d')}blurOff();Le();
   // ふちを少し暗く（主役に目を集める）
   const vg=g.createRadialGradient(W/2,H*0.5,H*0.35,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(0,20,30,0)');vg.addColorStop(1,'rgba(0,20,30,.45)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);({walk}[P.mode]||walk)(t)};
+// 葉を切るところ（寄った絵）：大きな葉の上で、アリがあごで丸く切っていく
+function leafcut(t){const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,'#1c8f7c');s.addColorStop(1,BG0);g.fillStyle=s;g.fillRect(0,0,W,H);
+  blurOn(12);bigLeaf(-200,260,2.6,-0.2+Math.sin(t*0.5)*0.02,'#0f5a5c','#17756c');bigLeaf(700,700,2.2,-0.9,'#0c4a52','#136b63');blurOff();
+  const sw=Math.sin(t*1.1)*0.012;g.save();g.translate(250,640);g.rotate(-0.33+sw);
+  const lf=()=>{g.beginPath();g.moveTo(0,0);g.bezierCurveTo(180,-330,760,-420,1150,-120);g.bezierCurveTo(900,170,300,210,0,0);g.closePath()};
+  lf();g.fillStyle=LEAF2;g.fill();g.save();lf();g.clip();g.fillStyle=LEAF;g.beginPath();g.ellipse(520,-250,640,150,0.08,0,7);g.fill();
+  g.strokeStyle='rgba(30,110,50,.55)';g.lineWidth=9;g.lineCap='round';g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(560,-110,1140,-120);g.stroke();g.lineWidth=5;for(let q=120;q<1000;q+=130){g.beginPath();g.moveTo(q,-22-q*0.09);g.quadraticCurveTo(q+70,-150,q+150,-250);g.moveTo(q,-20-q*0.09);g.quadraticCurveTo(q+80,40,q+170,110);g.stroke()}
+  // 切り口：あごの先から、丸く切り進む
+  const k=clamp(t/Math.max(2,DUR-0.6));const cx0=600,cy0=-235,rr=150,a0=Math.PI*0.97,a1=a0-Math.PI*0.85*ease(k);
+  g.fillStyle='#1c8f7c';g.beginPath();g.moveTo(cx0,cy0);g.arc(cx0,cy0,rr,a0,a1,true);g.closePath();g.globalAlpha=0.0;g.fill();g.globalAlpha=1;
+  g.strokeStyle='#0d4a4d';g.lineWidth=13;g.beginPath();g.arc(cx0,cy0,rr,a0,a1,true);g.stroke();g.strokeStyle='rgba(235,255,200,.8)';g.lineWidth=3;g.beginPath();g.arc(cx0,cy0,rr+9,a0,a1,true);g.stroke();g.restore();
+  const hx=cx0+Math.cos(a1)*rr,hy=cy0+Math.sin(a1)*rr;g.restore();
+  // アリ（切り口の先にあごが来るように置く）
+  const ca=Math.cos(-0.33+sw),sa=Math.sin(-0.33+sw);const wx=250+hx*ca-hy*sa,wy=640+hx*sa+hy*ca;const S=2.5;
+  ant(wx-104*S,wy-12*S,S,(t*0.55)%1,t,{});
+  const rd=R(7);for(let i=0;i<26;i++){const px=((rd()*W*1.3-t*(10+rd()*18))%(W+80)+W+80)%(W+80)-40,py=rd()*H,rr2=2+rd()*6;g.fillStyle=`rgba(210,255,190,${0.10+rd()*0.2})`;g.beginPath();g.arc(px,py,rr2,0,7);g.fill()}
+  const vg=g.createRadialGradient(W/2,H*0.5,H*0.35,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(0,20,30,0)');vg.addColorStop(1,'rgba(0,20,30,.45)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({walk,leafcut}[P.mode]||walk)(t)};
 </script>
 </content>
 </invoke>

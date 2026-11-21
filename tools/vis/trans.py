@@ -7,6 +7,7 @@
   {"k":"shrink","to":[x,y],"d":0.7}                        前の場面が縮んで、次の場面の中の一点（0〜1）へ吸い込まれる
   {"k":"open","from":[x,y],"d":0.7}                        次の場面が、前の場面の中の一点から丸く広がる
   {"k":"wipe","col":"#3f8fca","dir":"right","d":0.7}       手前の物（色の帯）が横切って、通ったあとが次の場面になる
+  {"k":"dive","at":[x,y],"d":0.7}                          飛びこむ：その一点へ加速して寄り、放射状のぼかしと白い光の下で次の場面に替わる（カメラの動きに切り替えを隠す）
   {"k":"slide3","dir":"left","d":0.6}                      3分割（"t":"tri"）の3枚が、つながったまま端から加速して入る（型「3分割の例」の入り方①。dir＝出てくる側の端）
 
 使い分け：同じ動きを続けて使わない。向きや点は話の中身に合わせる（水が流れる向きへ押し出す、地図のその場所へ吸い込まれる など）。
@@ -112,6 +113,27 @@ def _slide3(A, B, t, D, dr):
         if b2 > a2: out[:, a2:b2] = seg[:, a2 - x:b2 - x]
     return out
 
+def _zoom(F, z, cx, cy):
+    """F を (cx,cy)（0〜1）を止めたまま z 倍に寄せる"""
+    from PIL import Image
+    h, w = F.shape[:2]; cw, ch = w / z, h / z; x0 = min(max(0, cx * w - cw * cx), w - cw); y0 = min(max(0, cy * h - ch * cy), h - ch)
+    return np.asarray(Image.fromarray(F).resize((w, h), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch)))
+
+def _dive(A, B, x, at):
+    """飛びこむ：前の場面の一点へ加速して寄り、いちばん速い所で放射状のぼかしと白い光でおおい、次の場面が少し寄った所から落ち着く。
+    目線の点（at）は動かない。次の場面の主役は、同じ点の近くに置く（餌「木の回」の学び）"""
+    cx, cy = at; h, w = A.shape[:2]
+    if x < 0.55:
+        u = (x / 0.55) ** 2.2; z = 1 + 2.2 * u; acc = np.zeros(A.shape, np.float32); n = 5
+        for k in range(n): acc += _zoom(A, z * (1 + 0.10 * u * k), cx, cy)       # 寄りの向きに重ねて、放射状にぼかす
+        F = acc / n; wh = u ** 1.6
+    else:
+        v = (x - 0.55) / 0.45; e = 1 - (1 - v) ** 2.4; z = 1.22 - 0.22 * e; acc = np.zeros(B.shape, np.float32); n = 4; bl = (1 - e) * 0.07
+        for k in range(n): acc += _zoom(B, z * (1 + bl * k), cx, cy)
+        F = acc / n; wh = (1 - v) ** 1.8
+    yy, xx = _grid(h, w); d = np.hypot((xx - cx * w) / w, (yy - cy * h) / h); glow = np.clip(1.15 - d * 1.5, 0.25, 1)[..., None]   # まん中ほど白い
+    return np.clip(F + (255 - F) * wh * glow, 0, 255).astype(np.uint8)
+
 def apply(prev, cur, out, tr, crf='20'):
     """prev の最後のコマから、cur の頭の d 秒でつなぐ。out に書く（cur と同じ長さ）"""
     w, h, fps = _probe(cur); k = tr.get('k', 'push'); n = max(2, int(round(float(tr.get('d', 0.7)) * fps)))
@@ -130,6 +152,7 @@ def apply(prev, cur, out, tr, crf='20'):
             elif k == 'shrink': F = _shrink(last, B, u, tr.get('to', [0.5, 0.5]))
             elif k == 'open': F = _open(last, B, u, tr.get('from', [0.5, 0.5]))
             elif k == 'slide3': F = _slide3(last, B, (i + 1) / fps, n / fps, tr.get('dir', 'left'))
+            elif k == 'dive': F = _dive(last, B, (i + 1) / (n + 1), tr.get('at', [0.5, 0.5]))
             elif k == 'wipe': F = _wipe(last, B, u, tr.get('col', '#3f8fca'), tr.get('dir', 'right'), i)
             else: F = B
         else: F = B
