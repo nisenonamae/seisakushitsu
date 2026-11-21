@@ -107,7 +107,46 @@ function leafcut(t){const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,'#1
   ant(wx-104*S,wy-12*S,S,(t*0.55)%1,t,{});
   const rd=R(7);for(let i=0;i<26;i++){const px=((rd()*W*1.3-t*(10+rd()*18))%(W+80)+W+80)%(W+80)-40,py=rd()*H,rr2=2+rd()*6;g.fillStyle=`rgba(210,255,190,${0.10+rd()*0.2})`;g.beginPath();g.arc(px,py,rr2,0,7);g.fill()}
   const vg=g.createRadialGradient(W/2,H*0.5,H*0.35,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(0,20,30,0)');vg.addColorStop(1,'rgba(0,20,30,.45)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
-window.render=function(t){g.setTransform(1,0,0,1,0,0);({walk,leafcut}[P.mode]||walk)(t)};
+// ===== 立体のアリ（2026-11-21・作り手「一方向の絵しか用意できない。立体的に捉える。レイヤー分けが大事」）=====
+// 体を部品（腹・腹柄・胸・頭・目・あご・触角・足6本）に分け、部品ごとに「体の中での位置（前後 x・上下 y・左右 z）」を持たせる。
+// 向き（yaw）を決めると、部品ごとに画面の位置と「手前か奥か」が決まるので、奥の部品から順に重ねて描く（＝レイヤー分け）。
+// だから、横・ななめ・正面のどの向きも、同じ部品から描ける。向きを変えると、手前の部品ほど大きく動く（立体に見える理由）
+// お手本のチャンネルのアリの絵は写さない（色・顔・形は、横向きのアリと同じ自分のもの）
+function ant3(cx,cy,S,yaw,ph,t,o={}){const c=o.col||ANT,co=Math.cos(yaw),si=Math.sin(yaw),PITCH=0.16;
+  const pr=(x,y,z)=>{const d=x*si+z*co,k=1+d/1100;return[cx+S*(x*co-z*si)*k,cy+S*(y*k+d*PITCH),d,k]};
+  const bob=Math.sin(ph*Math.PI*4)*1.6,items=[];
+  const ell=(x,y,z,a,b,cc,lit,extra)=>{const[px,py,d,k]=pr(x,y+bob,z);const rx=Math.hypot(a*co,cc*si)*S*k,ry=b*S*k;items.push([d,()=>{const p=()=>{g.beginPath();g.ellipse(px,py,rx,ry,0,0,7)};tone3(p,c,px-rx*0.25,py-ry*0.45,Math.min(rx,ry)*0.9,0.2);if(extra)extra(px,py,rx,ry,k);if(lit){g.strokeStyle=c.rim;g.lineWidth=2.2*S;g.lineCap='round';g.globalAlpha=0.8;g.beginPath();g.ellipse(px,py,rx-1.5*S,ry-1.5*S,0,Math.PI*1.12,Math.PI*1.62);g.stroke();g.globalAlpha=1;g.lineCap='butt'}}])};
+  const bone=(pts,w,col,dd)=>{const q=pts.map(p=>pr(p[0],p[1]+bob,p[2]));const d=dd!=null?dd:q.reduce((a,b)=>a+b[2],0)/q.length;items.push([d,()=>{for(let i=0;i<q.length-1;i++)seg(q[i][0],q[i][1],q[i+1][0],q[i+1][1],w[i]*S*q[i][3],w[i+1]*S*q[i+1][3],col)}])};
+  // 腹（しまの線つき）・腹柄・胸・頭
+  ell(-78,-2,0,46,32,34,true,(px,py,rx,ry)=>{g.save();g.beginPath();g.ellipse(px,py,rx,ry,0,0,7);g.clip();g.strokeStyle='rgba(120,30,50,.38)';g.lineWidth=3*S;for(const q of [-0.45,0,0.45]){const ox=q*46*co*S;g.beginPath();g.ellipse(px+ox+rx*0.9*Math.sign(co||1)*0,py,Math.max(2,rx*0.55*Math.abs(si)+3*S),ry*1.02,0,0,7);if(Math.abs(co)>0.25){g.beginPath();g.ellipse(px+ox+rx*0.7,py,rx*0.75,ry*1.25,0,Math.PI*0.62,Math.PI*1.38)}g.stroke()}g.restore()});
+  ell(-30,6,0,9,8,8,false);ell(2,-2,0,30,19,17,true);
+  const hy=-12+Math.sin(ph*Math.PI*4+1)*1.2;ell(50,hy,0,22,25,27,true);
+  const hd=pr(50,hy+bob,0)[2];
+  // 目・あご・触角（左右）。頭より奥に回った側は、頭の後ろに描かれる（かくれる）
+  for(const sd of [-1,1]){const[ex,ey,ed,ek]=pr(60,hy-6+bob,sd*21);items.push([ed+ (ed>hd-9?40:-40),()=>{g.fillStyle=c.eye;g.beginPath();g.ellipse(ex,ey,(4+4.5*Math.abs(si))*S*ek,9.5*S*ek,0,0,7);g.fill();g.fillStyle='rgba(255,255,255,.9)';g.beginPath();g.arc(ex-2*S,ey-3.5*S,2.4*S,0,7);g.fill()}]);
+    bone([[66,hy+16,sd*10],[84,hy+24,sd*15],[96,hy+22,sd*4]],[5,4.4,2.6],sd*co>0||Math.abs(si)>0.5?c.shade:c.far,hd+ (pr(84,0,sd*15)[2]>hd?45:-45));
+    const wob=Math.sin(t*5.2+sd)*5;bone([[62,hy-20,sd*11],[82,hy-50+wob*0.4,sd*27],[110,hy-40+wob,sd*36]],[4,3.4,2.1],pr(82,0,sd*27)[2]>hd?c.base:c.far,hd+(pr(82,0,sd*27)[2]>hd?50:-50))}
+  // 足6本：3本ずつ交互。地面に着いている足は、体の向きに沿って後ろへ送る
+  const hips=[[20,10],[2,12],[-16,10]],home=[[60,62],[6,72],[-64,62]],stride=38,GYc=58;
+  for(let i=0;i<3;i++)for(const sd of [-1,1]){const off=((i+(sd>0?1:0))%2)*0.5,p=(ph+off)%1;let fx,lift=0;if(p<0.5)fx=stride*(0.5-p*2);else{const q=(p-0.5)*2;fx=stride*(-0.5+q);lift=Math.sin(q*Math.PI)*15}
+    const H3=[hips[i][0],hips[i][1],sd*13],F3=[home[i][0]+fx,GYc-lift-bob,sd*home[i][1]],K3=[(H3[0]+F3[0])/2,Math.min(H3[1],F3[1])-30,sd*(home[i][1]*0.86)];
+    const near=pr(K3[0],0,K3[2])[2]>pr(0,0,0)[2];bone([H3,K3,F3,[F3[0]+10,F3[1]+1,F3[2]+sd*3]],[8.5,6.2,3.8,2.4],near?c.shade:c.far,pr(K3[0],0,K3[2])[2]+(near?20:-20))}
+  // 影（地面）→ 奥の部品から順に
+  const[sx,sy]=pr(-10,GYc+3,0);g.fillStyle='rgba(6,30,40,.35)';g.beginPath();g.ellipse(sx,sy,(96*Math.abs(co)+60*Math.abs(si))*S,(10+22*Math.abs(si))*S,0,0,7);g.fill();
+  items.sort((a,b)=>a[0]-b[0]);for(const it of items)it[1]()}
+// 向きを変えて見せる：横向き → ななめ前 → ほぼ正面 → 反対のななめ後ろ
+function turn(t){const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,BG2);s.addColorStop(0.5,BG1);s.addColorStop(1,BG0);g.fillStyle=s;g.fillRect(0,0,W,H);
+  const k1=ease(clamp((t-0.8)/2.6)),k2=ease(clamp((t-4.4)/2.4));const yaw=1.32*k1-1.95*k2;
+  // 背景も、向きに合わせて横へ流す（奥ほど少なく）
+  const sh=yaw*260;blurOn(14);const r=R(41);for(let i=0;i<7;i++)bigLeaf(i*330+r()*200-350+sh*0.25,120+r()*380,0.9+r()*0.9,-0.5+r()*1.0+Math.sin(t*0.6+i)*0.03,'#0f5a5c','#17756c');blurOff();
+  const rd=R(7);for(let i=0;i<30;i++){const px=((rd()*W*1.3-t*(14+rd()*22)+sh*0.4)%(W+80)+W+80)%(W+80)-40,py=rd()*H*0.8+Math.sin(t*0.7+i)*14,rr=2+rd()*5;g.fillStyle=`rgba(210,255,190,${0.10+rd()*0.22})`;g.beginPath();g.arc(px,py,rr,0,7);g.fill()}
+  blurOn(4);const r2=R(19);for(let i=0;i<6;i++)bigLeaf(i*420+r2()*240-450+sh*0.55,430+r2()*120,0.55+r2()*0.4,-0.9+r2()*0.5,'#136b63','#22957c');blurOff();
+  // 地面：大きな葉の上
+  g.fillStyle='#2f8f4a';g.beginPath();g.ellipse(640,585,760,150,0,0,7);g.fill();g.fillStyle='#5cc04a';g.beginPath();g.ellipse(640,565,740,128,0,0,7);g.fill();g.strokeStyle='rgba(30,110,50,.45)';g.lineWidth=5;g.beginPath();g.moveTo(-60+sh,560);g.quadraticCurveTo(640+sh*0.2,600,1340+sh,560);g.stroke();
+  ant3(640,395,2.7,yaw,(t*1.4)%1,t);
+  blurOn(11);const r3=R(5);for(let i=0;i<3;i++)bigLeaf(i*900+r3()*300-700+sh*1.6,H+150-r3()*30,1.25+r3()*0.3,-0.55+r3()*0.3,'#082f3a','#0d4a4d');blurOff();
+  const vg=g.createRadialGradient(W/2,H*0.5,H*0.35,W/2,H*0.5,H*0.95);vg.addColorStop(0,'rgba(0,20,30,0)');vg.addColorStop(1,'rgba(0,20,30,.45)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+window.render=function(t){g.setTransform(1,0,0,1,0,0);({walk,leafcut,turn}[P.mode]||walk)(t)};
 </script>
 </content>
 </invoke>
