@@ -207,7 +207,7 @@ def char_time(sx,i,ends):
     """文 sx の i 文字目が話され始める時刻（モーラの数で文の声に合わせる）"""
     if i<=0 or not ends:return 0.0
     tot=nmora(sx) or 1;m=int(round(nmora(sx[:i])/tot*len(ends)));return 0.0 if m<=0 else ends[min(len(ends)-1,m-1)]
-tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[];ALLSUBS=[]
+tmp=tempfile.mkdtemp();tl=[];T=0.0;n=len(seq);bvids=[];voice=[];sfx=[];allshots=[];ALLSUBS=[];PREVC=[None]
 # 場面づくりは裏で並べて走らせる（作り手・2026-11-21「書き出しを速く」）：声を作っている間に、前の段の場面を描く。
 # 同時にいくつ描くかは SS_JOBS（ふつうは CPU の数。Mac ならたくさん）。段の仕上げ（字幕を重ねる）も裏で
 from concurrent.futures import ThreadPoolExecutor
@@ -264,13 +264,13 @@ for k,b in enumerate(seq,1):
                 if st<b0+0.01 and b0<en:en=max(st+0.3,b0)
             subs.append((ct,st,en))
     # 5) 画面：カットごとに部品で作ってつなぐ
-    clips=[];sfut=[]
+    clips=[];sfut=[];trs=[]
     if shots:
         import scenes
         for i,sh in enumerate(shots):
             d_=round(((vstarts[i+1] if i+1<len(shots) else D)-vstarts[i])*FPS)/FPS
             if d_<=0.05:continue
-            spec={x:y for x,y in sh.items() if x not in('n','beat','at','ats')}
+            spec={x:y for x,y in sh.items() if x not in('n','beat','at','ats','tr')}
             if sh.get('ats'):
                 ps=full.find(sh['at'],0) if sh.get('at') else 0;tms=[float(sh.get('beat',0))]
                 for w_ in sh['ats']:
@@ -280,6 +280,9 @@ for k,b in enumerate(seq,1):
                 spec['times']=tms
             if os.environ.get('SS_DUMP'):open(os.environ['SS_DUMP'],'a').write(json.dumps({'tag':f'{k}-{i+1}','dur':d_,'spec':spec},ensure_ascii=False)+'\n')   # 点検用：場面ごとの指定（言葉の時刻つき）を書き出す
             cp=f'{tmp}/c{k:03d}_{i:02d}.mp4';sfut.append(SPOOL.submit(scenes.make,spec,d_,cp,a.repo));clips.append(cp);SFXP.append((cp,T+vstarts[i]))
+            # つなぎ（tr）：前の場面の最後のコマから、この場面の頭でつなぐ（tools/vis/trans.py）。前の場面は別の段のこともある
+            if sh.get('tr') and PREVC[0]:trs.append((len(clips)-1,PREVC[0][0],PREVC[0][1],sh['tr']))
+            PREVC[0]=(cp,sfut[-1])
             allshots.append({'tag':f'{k}-{i+1}','block':b['id'],'role':b['role'],'start':round(T+vstarts[i],2),'end':round(T+vstarts[i]+d_,2),'t':sh.get('t') or 'seq','at':sh.get('at','')})
     else:
         cp=f'{tmp}/c{k:03d}_00.mp4'
@@ -287,7 +290,7 @@ for k,b in enumerate(seq,1):
         else:
             fr=f'{tmp}/f{k:03d}.png';(Image.open(vpath).convert('RGB').resize((OW,OH),Image.LANCZOS) if vpath else card(b,k,n).resize((OW,OH),Image.LANCZOS)).save(fr)
             enc(['-loop','1','-framerate',str(FPS),'-i',fr,'-t',f'{D:.3f}'],cp)
-        clips.append(cp);allshots.append({'tag':f'{k}-1','block':b['id'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'t':'visual'})
+        clips.append(cp);allshots.append({'tag':f'{k}-1','block':b['id'],'role':b['role'],'start':round(T,2),'end':round(T+D,2),'t':'visual'});PREVC[0]=(cp,None)
     open(f'{tmp}/l{k}.txt','w').write(''.join(f"file '{x}'\n" for x in clips))
     raw=f'{tmp}/raw{k:03d}.mp4'
     # 6) 字幕と場面の番号を重ねる
@@ -298,8 +301,14 @@ for k,b in enumerate(seq,1):
         pth=f'{tmp}/ov{k:03d}_{li:03d}.png';im.save(pth);inp+=['-i',pth]
         fc+=f";[{last}][{q}:v]overlay=0:0:enable='between(t,{st:.3f},{max(st,en-0.001):.3f})'[v{q}]";last=f'v{q}';q+=1
     bv=f'{tmp}/b{k:03d}.mp4';bvids.append(bv)
-    def _compose(sfut=sfut,k=k,raw=raw,inp=inp,fc=fc,last=last,D=D,bv=bv):
+    def _compose(sfut=sfut,k=k,raw=raw,inp=inp,fc=fc,last=last,D=D,bv=bv,clips=clips,trs=trs):
         for f_ in sfut:f_.result()   # この段の場面が全部できるのを待つ
+        if trs:
+            import trans;cl=list(clips)
+            for ci,pp,pf,tr in trs:
+                if pf:pf.result()
+                np_=clips[ci][:-4]+'_tr.mp4';trans.apply(pp,clips[ci],np_,tr,CRF);cl[ci]=np_
+            open(f'{tmp}/l{k}.txt','w').write(''.join(f"file '{x}'\n" for x in cl))
         subprocess.run(['ffmpeg','-y','-loglevel','error','-f','concat','-safe','0','-i',f'{tmp}/l{k}.txt','-c','copy',raw],check=True)
         enc([*inp,'-filter_complex',fc,'-map',f'[{last}]','-t',f'{D:.3f}'],bv)
     CFUT.append(CPOOL.submit(_compose))

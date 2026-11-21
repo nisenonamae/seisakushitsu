@@ -55,6 +55,13 @@ function speedo(cx,cy,R,v,o={}){const vmax=o.vmax||60,mark=o.mark;g.save();
 function shake(t,amp){return [amp*(Math.sin(t*71)+0.6*Math.sin(t*113)),amp*(Math.sin(t*89+1)+0.5*Math.sin(t*131))]}
 function sfxOnce(key,t,kind,dur,rise){window._done=window._done||{};if(window._done[key])return;window._done[key]=1;window.SFX.push(dur?(rise!=null?[t,kind,dur,rise]:[t,kind,dur]):[t,kind])}
 function arrowLine(x1,y1,x2,y2,col='#ffd36a',w=6){g.strokeStyle=col;g.fillStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const a=Math.atan2(y2-y1,x2-x1);g.beginPath();g.moveTo(x2+Math.cos(a)*12,y2+Math.sin(a)*12);g.lineTo(x2-Math.cos(a-0.6)*18,y2-Math.sin(a-0.6)*18);g.lineTo(x2-Math.cos(a+0.6)*18,y2-Math.sin(a+0.6)*18);g.fill()}
+// いつも何かが小さく動いているように（止まった画面を作らない。2026-11-21・餌の学びから）。場面の指定に amb:1 を付けたときだけ、各ページが呼ぶ
+// 地図の上を、雲の影がゆっくり流れる
+function cloudShadows(t,a=0.17,sp=50){const r=R(77);for(let i=0;i<5;i++){const y=60+r()*(H-120),sz=120+r()*110,x=((t*sp*(0.8+r()*0.5)+i*380+r()*300)%(W+700))-350;for(const[dx,dy,k] of [[0,0,1],[sz*0.7,sz*0.18,0.75],[-sz*0.6,sz*0.1,0.6]]){const gr=g.createRadialGradient(x+dx,y+dy,0,x+dx,y+dy,sz*k);gr.addColorStop(0,`rgba(40,48,70,${a})`);gr.addColorStop(0.6,`rgba(40,48,70,${a*0.75})`);gr.addColorStop(1,'rgba(40,48,70,0)');g.fillStyle=gr;g.beginPath();g.ellipse(x+dx,y+dy,sz*k,sz*k*0.62,0,0,7);g.fill()}}}
+// 空を、雲がゆっくり流れる（y0〜y1 の高さ）
+function skyClouds(t,y0=30,y1=220,n=4,sp=36){const r=R(31);for(let i=0;i<n;i++){const y=y0+r()*(y1-y0),sz=34+r()*30,x=((t*sp*(0.7+r()*0.6)+i*(W+400)/n+r()*200)%(W+400))-200;g.fillStyle='rgba(255,255,255,.88)';g.beginPath();for(const[dx,dy,k] of [[0,0,1],[sz*0.9,sz*0.12,0.78],[-sz*0.85,sz*0.16,0.7],[sz*0.2,-sz*0.42,0.72]]){g.moveTo(x+dx+sz*k,y+dy);g.arc(x+dx,y+dy,sz*k,0,7)}g.fill();g.fillStyle='rgba(255,255,255,.88)';g.fillRect(x-sz*1.5,y+sz*0.1,sz*3.1,sz*0.62)}}
+// 鳥が何羽か、空を横切る
+function birds(t,y=130,n=3,sp=70){const r=R(53);g.strokeStyle='rgba(50,55,70,.75)';g.lineWidth=2.5;g.lineCap='round';for(let i=0;i<n;i++){const x=((t*sp+i*46+r()*30)%(W+300))-150,yy=y+i*16*(i%2?1:-1)+6*Math.sin(t*1.7+i),fl=0.35+0.3*Math.sin(t*9+i*1.3),w=9;g.beginPath();g.moveTo(x-w,yy-w*fl);g.quadraticCurveTo(x-w*0.4,yy-w*fl*0.2,x,yy);g.quadraticCurveTo(x+w*0.4,yy-w*fl*0.2,x+w,yy-w*fl);g.stroke()}g.lineCap='butt'}
 window.setup=(p,d)=>{P=Object.assign({},window.DEF||{},p);DUR=d;window.SFX=[];window._done={};if(window.init)init()};
 // 画像を読み込む（読み終わるまで撮影を待つ）
 const IMG={};function loadImg(key,src){window.READY=false;const im=new Image();im.onload=()=>{IMG[key]=im;window._pend--;if(!window._pend)window.READY=true};window._pend=(window._pend||0)+1;im.src=src.startsWith('/')?'file://'+src:src}
