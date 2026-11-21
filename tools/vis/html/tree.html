@@ -8,7 +8,7 @@
    ・上下のつながりは切らずに、縦に長い1枚の絵の上をカメラが下りる（層ごとに速さを変える。着くときはなめらかに）
    絵は今日の作り方：主役を決める／点で輪郭（blob）／面で色分け（部分塗り）／短く太い一本線／デフォルメ（幹を太く短く）／色みをずらす／反対の色み（だいだい）は小鳥とミミズにだけ */
 window.DEF={};
-const GX=640,GY=330,T1=3.7,TP=6.6;
+const GX=790,GY=300,T1=3.7,TP=6.6,DX=GX-640;
 const K={sky0:'#e6f8c8',sky1:'#9fe0c4',hill0:'#86d4b6',hill1:'#58b89e',lf0:'#17574e',lf1:'#238a58',lf2:'#55bf52',lf3:'#b6e860',tr:'#6f3552',trL:'#a2535e',trD:'#45213f',dk:'#2a1a40',ac:'#ff9c2e',ac2:'#ffd27a',straw:'#f2e2a0',so0:'#255a5c',so1:'#184454',so2:'#0f3048',rt:'#d98a78',rtD:'#9a4f5c'};
 const fill=(P,col)=>{g.fillStyle=col;g.beginPath();blob(P);g.fill()},inside=(P,fn)=>{g.save();g.beginPath();blob(P);g.clip();fn();g.restore()};
 const ln=(P,w,col)=>{g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke()};
@@ -16,27 +16,58 @@ const ln=(P,w,col)=>{g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.lineJoi
 function bump(cx,cy,rx,ry,seed,n=9,rd=.8){const r=R(seed),P=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2-1.6,k=0.78+r()*0.38;P.push([cx+Math.cos(a)*rx*k,cy+Math.sin(a)*ry*k,rd])}return P}
 // 先へ行くほど細くなる線（根・枝）：折れ線を太さを変えながらつなぐ。len＝0〜1 で伸びる
 function taper(P,w0,w1,col,len=1){g.strokeStyle=col;g.lineCap='round';const n=P.length-1,L=clamp(len)*n;for(let i=0;i<n;i++){if(L<=i)break;const u=Math.min(1,L-i),a=P[i],b=[lerp(a[0],P[i+1][0],u),lerp(a[1],P[i+1][1],u)];g.lineWidth=lerp(w0,w1,(i+0.5)/n);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}}
-// ───── 場面1：森の中を前へ進む ─────
+// ───── 場面1：森の中を前へ進む（15回目・構図から作り直し）─────
+// 構図：型＝手前の黒いわく＋V字。主役＝奥の光のすき間（まん中に置かず、右上寄りの点）。支える物＝左手前の黒い大木・右上から対角に伸びる枝。
+// 目の道：左の大木 → ふちを伝って光のすき間 → 右上の枝がまたすき間を指す。空は細い逆三角だけ残す。木は全部すき間のほうへ傾ける。
+// 距離は4つを一緒に変える：色み（水色→青緑→緑→黒に近い紺）／描きこみ（輪郭だけ→2色→3色と筆あと）／大きさ／光の当たるふち（手前だけ）
+// 木は使い回さない：3種類（スギ・モミ・広葉樹）、高さ・幅・段の数・垂れ方・傾きを1本ずつ変え、隣どうしで大きさを倍ほど変える
+const cresIn=(P,dx,dy,col)=>{g.save();g.beginPath();g.rect(-9000,-9000,18000,18000);blob(P,dx,dy);g.clip('evenodd');g.fillStyle=col;g.fillRect(-9000,-9000,18000,18000);g.restore()};
+// 針葉樹：段を下から重ねる。nar＝細さ（スギは細く段が多い）。s＝光の来る側（+1＝右）
+function conifer(x,by,h,w,lean,seed,col,lvl,s,nar){const r=R(seed),n=(nar?8:5)+Math.floor(r()*3),tk=h*(0.08+r()*0.1);
+  taper([[x,by],[x+lean*0.12,by-h*0.35]],w*0.15,w*0.09,col.t||col.d||col.b);
+  for(let i=0;i<n;i++){const u=i/(n-1),cy=by-tk-(h-tk)*u*0.88,cx=x+lean*u,tw=w*0.5*(1-u*0.8)*(0.8+r()*0.4),th=(h/n)*(nar?1.9:1.55),dr=th*(nar?0.08:0.15+r()*0.4),as=(r()-0.5)*0.36;
+    const T=[[cx-tw*(1+as),cy+th*.35+dr,.45],[cx-tw*.55,cy-th*.1,.8],[cx-tw*.12,cy-th*.62,.6],[cx+tw*.14,cy-th*.6,.6],[cx+tw*.6,cy-th*.08,.8],[cx+tw*(1-as),cy+th*.33+dr*(.5+r()),.45],[cx+tw*.42,cy+th*.3,.8],[cx,cy+th*.42,.7],[cx-tw*.4,cy+th*.32,.8]];
+    fill(T,col.b);if(lvl>=1||col.rim)inside(T,()=>{
+      if(lvl>=2)cresIn(T,-s*tw*.06,-th*.2,col.d);                                                              // 段の下の影の面
+      if(lvl>=1)fill([[cx+s*tw*.02,cy-th*.75,.6],[cx+s*tw*1.2,cy-th*.2,.6],[cx+s*tw*1.2,cy+th*.16,.6],[cx+s*tw*.35,cy+th*.02,.7]],col.l);   // 光の側の明るい面
+      if(lvl>=2){ln([[cx-s*tw*.18,cy-th*.12],[cx-s*tw*.55,cy+th*.16]],Math.max(2.5,w*.018),col.d);if(i%2)ln([[cx+s*tw*.3,cy+th*.1],[cx+s*tw*.62,cy+th*.26]],Math.max(2.5,w*.018),col.b)}   // 葉の向きの筆あと（短く）
+      if(col.rim)cresIn(T,-s*col.rw,col.rw*.9,col.rim)})}                                                       // 光の当たるふち（手前だけ）
+  const ty=by-tk-(h-tk)*0.88,tx=x+lean;fill([[tx-w*.045,ty-h*.02,.4],[tx+lean*.04,ty-h*(0.1+r()*.05),.5],[tx+w*.045,ty-h*.02,.4]],col.b)}
+// 広葉樹：曲がった幹に、でこぼこの葉のかたまり
+function broad(x,by,h,w,lean,seed,col,lvl,s){const r=R(seed);taper([[x,by],[x+lean*.3,by-h*.4],[x+lean,by-h*.66]],w*.17,w*.09,col.t||col.d||col.b);
+  const cx=x+lean,cy=by-h*.72,cl=[[-.3,.12,.5,.3,0],[.32,.1,.46,.28,0],[0,-.02,.6,.36,1],[-.26,-.22,.4,.26,1],[.24,-.26,.42,.26,1],[s*.2,-.42,.34,.2,2],[s*.36,-.1,.26,.17,2]];
+  cl.forEach((c,i)=>{if(c[4]==2&&lvl<1)return;const P=bump(cx+c[0]*w,cy+c[1]*h,c[2]*w*.6,c[3]*h*.6,seed+i*3,10),cc=c[4]==0?(lvl>=2?col.d:col.b):c[4]==1?col.b:col.l;fill(P,cc);if(col.rim)inside(P,()=>cresIn(P,-s*col.rw,col.rw*.9,col.rim))})}
 function forest(t){const u=clamp(t/T1),Z=0.05*u+2.6*Math.pow(u,4.2);
-  const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,K.sky0);s.addColorStop(1,K.sky1);g.fillStyle=s;g.fillRect(0,0,W,H);
-  const gl=g.createRadialGradient(GX,GY,10,GX,GY,420);gl.addColorStop(0,'rgba(255,250,200,.95)');gl.addColorStop(1,'rgba(255,250,200,0)');g.fillStyle=gl;g.fillRect(0,0,W,H);
-  const cols=['#9fdcc4','#6cc4a8','#3fa08a','#237a6c','#155a58','#0c3b4a'],N=6;
-  for(let i=0;i<N;i++){const d=[0.1,0.22,0.45,0.9,1.7,3.0][i],k=1+Z*d,r=R(31+i*7),gap=[60,95,150,230,330,470][i],wd=[20,30,46,70,110,170][i],col=cols[i];
-    g.save();g.translate(GX,GY);g.scale(k,k);g.translate(-GX,-GY);if(i>=4)blurOn(i==4?2.5:6);
-    // 地面のうねり
-    const gy=[420,440,468,505,560,640][i];fill([[-700,gy+40,.4],[-200,gy-8,.7],[GX-gap,gy+6,.7],[GX,gy+16+i*2,.8],[GX+gap,gy+4,.7],[1500,gy-6,.7],[2000,gy+40,.4],[2000,1300,.2],[-700,1300,.2]],col);
-    for(const sd of [-1,1]){const cnt=[5,4,4,3,2,2][i];for(let j=0;j<cnt;j++){const x=GX+sd*(gap+wd*0.4+j*(wd*2.3+r()*wd*1.4)+r()*wd),w=wd*(0.75+r()*0.5),lean=(r()-0.5)*w*0.9,by=gy+10;
-      // 幹：まっすぐな棒にしない。根元が広がり、少し傾く
-      fill([[x-w*.45+lean,-500,.3],[x+w*.45+lean,-500,.3],[x+w*.5+lean*.4,by-240,.6],[x+w*.62,by-60,.6],[x+w*1.05,by+8,.4],[x-w*1.0,by+8,.4],[x-w*.6,by-60,.6],[x-w*.52+lean*.4,by-240,.6]],col);
-      if(i>=2&&j%2==0)taper([[x+lean*.4,by-250-r()*90],[x+sd*-w*1.6,by-330-r()*60],[x+sd*-w*2.7,by-350]],w*.34,w*.14,col)}}   // 枝（太い線）
-    // 上をおおう葉のかたまり（まん中だけ空ける）
-    for(const sd of [-1,1])for(let j=0;j<3;j++)fill(bump(GX+sd*(gap*1.5+j*wd*3.4+r()*60),20-i*6+r()*50-j*14,wd*3.2,wd*1.5+34,91+i*11+j*3+sd,10),col);
-    blurOff();g.restore()}
-  // 光のすじと白（いちばん速い所で切り替えを隠す）
-  const v=clamp((t-(T1-0.55))/0.55);if(v>0){g.save();g.translate(GX,GY);const r=R(5);for(let i=0;i<34;i++){const a=r()*7,l0=40+r()*120,l1=l0+(200+r()*700)*v;g.strokeStyle=`rgba(255,252,220,${0.5*v})`;g.lineWidth=3+r()*9;g.lineCap='round';g.beginPath();g.moveTo(Math.cos(a)*l0,Math.sin(a)*l0);g.lineTo(Math.cos(a)*l1,Math.sin(a)*l1);g.stroke()}g.restore();g.fillStyle=`rgba(255,253,228,${Math.pow(v,1.6)})`;g.fillRect(0,0,W,H)}}
+  const s0=g.createLinearGradient(0,0,0,H);s0.addColorStop(0,'#8fe2f2');s0.addColorStop(0.6,'#d6f7ee');s0.addColorStop(1,'#bfeede');g.fillStyle=s0;g.fillRect(0,0,W,H);
+  const gl=g.createRadialGradient(GX,GY,10,GX,GY,380);gl.addColorStop(0,'rgba(255,252,214,.95)');gl.addColorStop(1,'rgba(255,252,214,0)');g.fillStyle=gl;g.fillRect(0,0,W,H);
+  // 層ごとの色（奥→手前）。b＝地の色、l＝明るい面、d＝影、rim＝光の当たるふち
+  const C6=[{b:'#a9e6ee'},{b:'#74cfe2'},{b:'#43b3b6',l:'#6fd0c6'},{b:'#2a9a7c',l:'#5cc48c',d:'#1b7a6a'},{b:'#2f8c48',l:'#86cc52',d:'#1a5a3c',rim:'#e9f2a0',rw:2.6},{b:'#0b2233',rim:'#f2dc8c',rw:5}];
+  const D=[0.1,0.22,0.45,0.9,1.7,3.0],LV=[0,0,1,2,2,0];
+  // 木の置き方：[種類(c＝モミ・n＝スギ・b＝広葉樹), x, 根元のy, 高さ, 幅, 種]。左右で数も大きさも変える（対称にしない）
+  const TR=[
+   [['n',700,360,150,44,1],['c',600,372,230,90,2],['n',842,366,190,50,3],['b',520,380,170,110,4],['c',930,378,260,96,5],['n',1040,384,160,46,6],['c',420,388,210,84,7],['c',1150,390,300,110,8],['n',300,392,180,50,9]],
+   [['c',660,404,300,120,11],['n',880,398,360,74,12],['c',470,414,250,104,13],['b',1010,412,230,150,14],['n',330,420,420,86,15],['c',1190,420,330,130,16],['c',160,424,240,100,17]],
+   [['n',600,446,520,110,21],['c',940,440,330,150,22],['b',400,456,300,200,23],['c',1120,452,560,210,24],['n',220,460,380,90,25],['c',1280,462,300,130,26]],
+   [['c',520,500,470,220,31],['n',1030,492,760,150,32],['c',280,512,720,300,33],['b',1210,506,430,290,34],['c',880,486,250,120,35]],
+   [['c',1160,590,1000,430,41],['n',330,600,700,170,42],['b',470,572,300,220,43]],
+   [['c',40,900,1350,760,51]]];
+  for(let i=0;i<6;i++){const k=1+Z*D[i],col=C6[i];g.save();g.translate(GX,GY);g.scale(k,k);g.translate(-GX,-GY);
+    // 地面：すき間へ向かって下がる斜面（左右で高さを変える）
+    const gy=[378,408,446,494,574,700][i];fill([[-900,gy-30-i*8,.4],[GX-260-i*40,gy-6,.7],[GX-20,gy+14+i*3,.8],[GX+240+i*30,gy+2,.7],[2200,gy-46-i*10,.4],[2200,1600,.2],[-900,1600,.2]],i<5?(col.d||col.b):col.b);
+    for(const q of TR[i]){const s=q[1]<GX?1:-1,lean=Math.max(-q[4]*.3,Math.min(q[4]*.3,(GX-q[1])*0.07*(q[3]/600)));(q[0]=='b'?broad:conifer)(q[1],q[2],q[3],q[4],lean,q[5],col,LV[i],s,q[0]=='n')}
+    if(i==5){ // 右上から対角に伸びる大枝：上のふちに光。葉のかたまりは大きさを変えて5つ
+      const BR=[[1560,-150],[1300,-20],[1120,70],[985,150]];taper(BR.map(p=>[p[0]-2,p[1]-6]),96,34,col.rim);taper(BR,96,34,col.b);
+      for(const b of [[1330,60,150,84,61],[1160,150,104,60,63],[1420,-40,190,100,65],[1040,196,62,36,67],[1255,170,70,44,69]]){const P=bump(b[0],b[1],b[2],b[3],b[4],11);fill(P,col.b);inside(P,()=>cresIn(P,2,6,col.rim))}
+      fill(bump(1210,820,330,150,71,12),col.b)}                                                                  // 右下の暗い茂み（重さの釣り合い）
+    g.restore()}
+  // 鳥は3羽（奇数）。すき間の上を横切る
+  for(let i=0;i<3;i++){const bx=GX-70+i*46+t*16,by=GY-150-i*17+Math.sin(t*2+i)*4,fl=Math.sin(t*9+i*2)*5;ln([[bx-9,by-fl],[bx,by],[bx+9,by-fl]],3,'#1b5a6a')}
+  // 切り替え：光の帯が斜めに横切り、光のすじと白でおおう（木はぼかさない）
+  const v=clamp((t-(T1-0.6))/0.6);if(v>0){g.save();g.translate(GX,GY);for(let i=0;i<3;i++){const a=-0.5+i*0.55+v*0.2;g.save();g.rotate(a);g.fillStyle=`rgba(255,252,220,${0.34*v})`;g.beginPath();g.moveTo(0,-6);g.lineTo(2600,-70-90*v-i*24);g.lineTo(2600,70+90*v+i*24);g.lineTo(0,6);g.fill();g.rotate(Math.PI);g.beginPath();g.moveTo(0,-6);g.lineTo(2600,-50-70*v);g.lineTo(2600,50+70*v);g.lineTo(0,6);g.fill();g.restore()}
+    const r=R(5);for(let i=0;i<26;i++){const a=r()*7,l0=40+r()*120,l1=l0+(200+r()*700)*v;g.strokeStyle=`rgba(255,252,220,${0.5*v})`;g.lineWidth=3+r()*8;g.lineCap='round';g.beginPath();g.moveTo(Math.cos(a)*l0,Math.sin(a)*l0);g.lineTo(Math.cos(a)*l1,Math.sin(a)*l1);g.stroke()}g.restore();g.fillStyle=`rgba(255,253,228,${Math.pow(v,1.8)})`;g.fillRect(0,0,W,H)}}
 // ───── 場面2・3：大きなクスノキと、土の中 ─────
 function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP)/2.5),cam=470*ease(pu);
-  const Lr=(d,fn)=>{g.save();g.translate(GX,GY);g.scale(zm,zm);g.translate(-GX,-GY-cam*d);fn();g.restore()};
+  const Lr=(d,fn)=>{g.save();g.translate(GX,GY);g.scale(zm,zm);g.translate(-GX+DX*d,-GY-cam*d+(GY-330)*d);fn();g.restore()};
   const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,K.sky0);s.addColorStop(1,K.sky1);g.fillStyle=s;g.fillRect(0,0,W,H);
   Lr(0.25,()=>{fill([[-300,470,.5],[-60,380,.8],[200,410,.8],[420,350,.8],[700,400,.8],[980,340,.8],[1240,390,.8],[1600,470,.5],[1600,900,.2],[-300,900,.2]],K.hill0)});
   Lr(0.5,()=>{fill([[-300,520,.5],[60,450,.8],[330,480,.8],[640,440,.8],[960,486,.8],[1220,446,.8],[1600,520,.5],[1600,1000,.2],[-300,1000,.2]],K.hill1);
@@ -76,6 +107,8 @@ function world(t){const tt=t-T1,zm=1+0.32*(1-eout(clamp(tt/1.1))),pu=clamp((t-TP
     const hp=clamp((t-5.2)/0.7),cr=hp>0&&hp<0.25?Math.sin(hp/0.25*Math.PI):0,jy=hp>=0.25&&hp<1?Math.sin((hp-0.25)/0.75*Math.PI)*26:0,jx=hp>=0.25?ease((hp-0.25)/0.75)*30:0;
     g.save();g.translate(876+jx,540-jy+cr*3);g.scale(1.25*(1+cr*0.12),1.25*(1-cr*0.16));const BD=[[-18,-4,.7],[-4,-18,.8],[14,-14,.7],[20,-2,.6],[8,10,.8],[-10,10,.8]];fill(BD,K.ac);inside(BD,()=>{fill([[-22,-2,.6],[-2,-6,.7],[4,12,.7],[-20,14,.5]],'#e0701c');fill([[2,-22,.6],[18,-18,.6],[14,-8,.7],[4,-10,.7]],K.ac2)});
     ln([[-16,2],[-30,8]],6,'#e0701c');fill([[18,-8,.3],[30,-5,.3],[19,-1,.3]],K.dk);g.fillStyle=K.dk;g.beginPath();g.arc(11,-9,2.4,0,7);g.fill();ln([[0,10],[0,17]],2.6,K.dk);g.restore();
+    // 小さな人を3人（大きさを伝える。大と小の型）
+    [[388,0,1],[406,5,.72],[430,1,1.08]].forEach((q,i)=>{const px=q[0],py=556+q[1],k=q[2];ln([[px-2*k,py],[px-2*k,py-9*k]],2.6,K.dk);ln([[px+2*k,py],[px+2*k,py-9*k]],2.6,K.dk);fill([[px-5*k,py-8*k,.4],[px-4*k,py-21*k,.6],[px+4*k,py-21*k,.6],[px+5*k,py-8*k,.4]],['#f6fbe6','#cfe8c8','#8fd6c0'][i]);g.fillStyle=K.dk;g.beginPath();g.arc(px,py-25*k,3.6*k,0,7);g.fill()});
     // 落ちる葉：ゆれながら落ちる
     const rl=R(17);for(let i=0;i<7;i++){const a=((t*0.16+rl())%1),x=380+rl()*520+Math.sin(a*9+i)*26,y=250+a*330,an=Math.sin(a*9+i)*0.9;g.save();g.translate(x,y);g.rotate(an);fill([[-9,0,.4],[0,-5,.8],[9,0,.4],[0,5,.8]],i%2?K.lf3:K.lf2);g.restore()}});
   // 手前の草（速く動く）
