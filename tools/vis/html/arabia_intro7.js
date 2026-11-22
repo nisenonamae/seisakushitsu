@@ -18,7 +18,7 @@ function honk(u,D){D=D||5.6;if(u<0||u>D)return null;
  return{jaw:clamp(.05*lean+.1*wz+(u>=hs&&u<he?.05+.1*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.06*hk:0),fl:-12*lean+(u>=hs&&u<he?5*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
 function honkRings(h0,u,D,out){if(u<0)return;D=D||5.6;out.push({age:u-1.0,x:180,w:140});for(let j=0;j<8;j++){const a=u-(2.3+j*.5);if(2.3+j*.5<D-1.2)out.push({age:a,x:200,w:90})}}
 // ─ 水の中の歩み：1歩＝けって → のびてすべる → あしを戻して着く ─
-function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+eout(clamp((c-.06)/.7)))*stride;
+function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.55*eout(clamp((c-.06)/.7))+.45*c)*stride;   /* けった直後に強く進み、すべる間もゆっくり進み続ける（止まって見えた・7版挑戦の番） */
  return{c,adv,hop:Math.sin(Math.PI*clamp((c-.1)/.72))*1,pitch:kf(c,[[0,.05],[.12,-.13],[.45,-.05],[.82,.07],[1,.05]]),
   ff:kf(c,[[0,.5],[.2,-.6],[.32,-.95],[.74,-.95],[1,.5]]),fh:kf(c,[[0,.1],[.2,-1.0],[.32,-1.35],[.76,-1.3],[1,.1]]),touch:c>.9||c<.04,n}}
 // ─ 世界：左（母子）と右（群れ）で景色をかえる ─
@@ -57,7 +57,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  else if(tl>=15.4&&tl<26.0){lv=1}
  else if(tl>=26.0){lv=1-ease(clamp((tl-26.0)/2.2))}
  // 母の水の中の道すじ
- const g1=gait(Math.max(0,tl-9.6),1.9,128);
+ const g1=gait(Math.max(0,tl-9.6),1.9,150);
  let mx=360+(tl>=9.6?g1.adv:0),my=FLOOR-120,mp=0,mlegs=null;
  if(tl<9.6){const s=clamp((tl-7.3)/2.3);my=lerp(SURF+40,FY7(330)-120,eout(s));mx=lerp(300,360,s);mp=-.05;mlegs=[-.3+Math.sin(tl*2)*.1,-.2,.3,.35]}   // 沈む：あしをたらして、ゆっくり底へ
  else{my=FY7(mx)-120-g1.hop*34;mp=g1.pitch;mlegs=[g1.fh,g1.fh+.12,g1.ff,g1.ff+.14]}
