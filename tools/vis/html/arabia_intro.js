@@ -73,7 +73,7 @@ function hpS(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,jaw=o.jaw||0,tilt=(o.
  g.save();g.globalAlpha=.22;if(fl<84*hu)ell(-85*L,5,160*L,4.5,'#3f4530');if(fl<84)ell(185,5,90,4,'#3f4530');g.restore();   // 水面のすぐ下の細い暗い映り込みだけ（黄土色の楕円の「敷物」をやめた：自然の番・2026-11-22。手本帳 水1・水2）
  for(const e of (o.ev||[])){const age=e.age;if(age<=0||age>=2.4)continue;for(let j=0;j<2;j++){const k=(age-j*.35)/2.05;if(k<=0||k>=1)continue;g.save();g.globalAlpha=(1-k)*.6;g.strokeStyle='#e9eed8';g.lineWidth=Math.min(6,2.2/s);g.beginPath();g.ellipse(e.x,6,e.w*(1+k*1.3)+k*50,(e.w*(1+k*1.3)+k*50)*.07+3,0,0,7);g.stroke();g.restore()}}
  if(fl<118){g.save();g.beginPath();g.rect(-900,-1200,1800,1200);g.clip();g.translate(0,fl);
-  if(jaw>0){g.translate(-250*L,34);g.rotate(-.11*jaw);g.translate(250*L,-34)}   // あくび：後ろを支点に胸を起こす（体の底は水面の下のまま。実物2・7。2周目自然の番）
+  {const ln=o.lean!=null?o.lean:.11*jaw;if(ln>0){g.translate(-250*L,34);g.rotate(-ln);g.translate(250*L,-34)}}   // あくび：後ろを支点に胸を起こす（体の底は水面の下のまま。実物2・7。2周目自然の番）
   // 胴（背中）
   fill([[-250*L,30,.7],[-236*L,-48*hu,.9],[-150*L,-84*hu,.9],[-40*L,-82*hu,.9],[42,-62*hu,.8],[86,-34,.6],[92,40,.5]],cb);
   fill([[-234*L,-44*hu,.8],[-152*L,-82*hu,.9],[-40*L,-80*hu,.9],[38,-60*hu,.8],[30,-54*hu,.8],[-40*L,-72*hu,.9],[-150*L,-73*hu,.9],[-226*L,-38*hu,.8]],cl);   // 背中のふちに沿った細い明るい帯（だ円のふたをやめた：挑戦の番・手本帳 絵10・2026-11-22）
