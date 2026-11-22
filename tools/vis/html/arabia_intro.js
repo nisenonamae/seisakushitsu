@@ -155,7 +155,7 @@ function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl
   add(258,-48,22*d,9,6,9,cb,0,2);add(262,-51,23*d,3,1.1,3,mix(ce,cb,.72),1,2)}
  if(jaw>.1){const k=clamp((jaw-.1)*4);{const bq=rot([128+34,-6],Hg,(a2-a1)/2);add(bq[0],bq[1],0,20*k,9*k,30,mix(ct,'#5a2a30',.3),-2,1)}add(215,3,0,58,8,50,cm,-1,2);add(205,-9,0,54,8,40,'#dc9a9c',1,3);
   for(const d of [-1,1]){add(262,-30,36*d,6,24*k,6,ci,2,3);add(250,12,40*d,5,10*k,5,ci,1,2);add(284,-10,10*d,11,4,5,ci,2,3)}}
- if(o.full){add(-85*L,30,0,150*L,52,72,cb);add(34,22,0,66,48,64,cb);add(-170*L,24,0,62,50,64,cb);add(-85*L,56,0,118*L,24,54,mix(cp,cb,.35),1);const lg=o.legs||[0,0,0,0];
+ if(o.full){add(-85*L,30,0,150*L,52,72,cb);add(34,22,0,66,48,64,cb);add(-170*L,24,0,62,50,64,cb);add(-85*L,56,0,118*L,24,54,mix(cp,cb,.35),1);add(-172*L,-2,0,58,52,50,mix(cb,cl,.34),.4);add(34,-8,0,56,46,48,mix(cb,cl,.34),.4);add(-85*L,38,0,138*L,20,62,mix(cb,cd,.3),.3);const lg=o.legs||[0,0,0,0]; /* 全身のとき：腰・肩の明るい面と体の下側の暗い面（手本帳 絵8・絵1。4周目挑戦） */
   [[-168*L,44],[-150*L,-44],[42,46],[58,-46]].forEach(([X,Z],i)=>{const f=lg[i],sx=Math.sin(f),cx=Math.cos(f);add(X+sx*30,40+cx*30,Z,28,46,24,Z<0?cd:cb,0,0,-f);add(X+sx*66,40+cx*66,Z,29,13,24,cd,.5,0,-f)})}
  P.sort((a,b)=>a.k-b.k);
  g.save();g.translate(h.x,h.y);g.scale(s,s);
@@ -267,13 +267,13 @@ function hpTop3(x,y,s,ang,seed,t,o={}){const v=hv(seed),cb=mix(IC.hb,v.tn>0?'#93
  if(o.pass!=='body'){g.save();g.globalAlpha=.22;fill([[-190*L,0,.9],[-160*L,-66*Wd,.9],[-40*L,-82*Wd,.9],[84,-66*Wd,.9],[150,0,.8],[84,66*Wd,.9],[-40*L,82*Wd,.9],[-160*L,66*Wd,.9]],'#3d4230');g.restore();}
  if(o.pass==='sh'){g.restore();return}
    // 水の下の体（にごって、うっすらとしか見えない）
- const k=.78+.22*up;fill([[-170*L*k,0,.9],[-142*L*k,-56*Wd*k,.9],[-40*L,-70*Wd*k,.9],[66*k,-56*Wd*k,.9],[104*k,0,.8],[66*k,56*Wd*k,.9],[-40*L,70*Wd*k,.9],[-142*L*k,56*Wd*k,.9]],cb);
+ const k=.78+.22*up;fill([[-170*L*k,0,.9],[-142*L*k,-56*Wd*k,.9],[-40*L,-70*Wd*k,.9],[70*k,-62*Wd*k,.9],[120*k,-48*Wd,.8],[136,0,.7],[120*k,48*Wd,.8],[70*k,62*Wd*k,.9],[-40*L,70*Wd*k,.9],[-142*L*k,56*Wd*k,.9]],cb); /* 首のくびれをなくし、頭まで太い樽形でひと続き（真上の実物。4周目自然） */
  fill([[-130*L*k,-4,.9],[-100*L*k,-30*Wd*k,.9],[-20*L,-36*Wd*k,.9],[50*k,-22*Wd*k,.8],[40*k,2,.8],[-40*L,8,.8]],cl);line([[-150*L*k,0],[60*k,0]],cd,2.5);
  for(let i=0;i<v.scar;i++){const xx=(-110+i*50)*L*k;line([[xx,20*Wd],[xx+22,30*Wd]],cl,2.5)}
  if(o.bird){g.save();g.translate(-60*L,(v.sx-.5)*40);g.scale(1/s*.5,1/s*.5);ell(0,0,16,9,'#6b5a45');ell(14,0,7,6,'#6b5a45');fill([[19,-3,.3],[30,0,.3],[19,3,.3]],'#d6452e');g.restore()}
  g.save();g.translate(96,0);g.rotate(o.head||0);g.translate(-96,0);
  for(const d of [-1,1]){g.save();g.translate(116,44*d);g.rotate(d*ear);ell(0,d*4,9,12,cb);ell(0,d*4,4,7,IC.hp);g.restore()}
- fill([[92,-38,.8],[150,-48,.8],[214,-44,.8],[256,-28,.9],[262,0,.9],[256,28,.9],[214,44,.8],[150,48,.8],[92,38,.8]],cb);fill([[186,-34,.8],[240,-22,.9],[246,0,.9],[240,22,.9],[186,34,.8],[176,0,.8]],cl);
+ fill([[86,-50*Wd,.8],[150,-50,.8],[214,-44,.8],[256,-28,.9],[262,0,.9],[256,28,.9],[214,44,.8],[150,50,.8],[86,50*Wd,.8]],cb);fill([[186,-34,.8],[240,-22,.9],[246,0,.9],[240,22,.9],[186,34,.8],[176,0,.8]],cl);
  for(const d of [-1,1]){ell(150,36*d,13,11,cb);ell(151,37*d,9.5,7.5,mix(IC.hp,cb,.35));ell(153,38*d,3.4,3.2,IC.he);ell(154.4,38*d-1.4,1.2,1.2,'#fff');g.strokeStyle=cd;g.lineWidth=2.4;g.lineCap='round';g.beginPath();g.arc(150,36*d,11.5,d>0?.35:-2.2,d>0?2.2:-.35);g.stroke();
   ell(230,14*d,10,8,cl);g.save();g.translate(233,14*d);g.rotate(d*.5);ell(0,0,5.5,1.9,mix(cd,cb,.25));g.restore()}g.restore();
  if(fu>=0){const rr=R(seed+9);for(const d of [-1,1])for(let i=0;i<4;i++){const a=d*(.7+rr()*1.5),dd=(14+rr()*60)*eout(fu),sz=(1.4+rr()*2.4)*(1-fu)+.4;ell(116+Math.cos(a)*dd,44*d+Math.sin(a)*dd,sz,sz,'#eef3e0')}}
