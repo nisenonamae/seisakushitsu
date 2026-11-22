@@ -186,10 +186,10 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
  const pj=(X,Y,Z)=>[X*cT-Z*sT,Y+(X*sT+Z*cT)*kp,X*sT+Z*cT];
  const fall=d=>{const u=clamp((tc-d)/.42),af=tc-d-.42;return{u:u*u,b:af>0?Math.abs(Math.sin(af*13))*14*Math.exp(-af*5):0}};
  const mv=(A,B,f)=>[lerp(A[0],B[0],f.u),lerp(A[1],B[1],f.u)-f.b,lerp(A[2],B[2],f.u)];
- {const f=fall(.18),p1=mv([-205*BL,-82,0],[-215*BL,GY-4,-10],f),p2=mv([70,-84,0],[60,GY-4,14],f);items.push({n:(pj(...p1)[2]+pj(...p2)[2])/2,d:()=>{const a=pj(...p1),b=pj(...p2);line([[a[0],a[1]],[b[0],b[1]]],c,13);for(let j=0;j<=8;j++)ell(lerp(a[0],b[0],j/8),lerp(a[1],b[1],j/8)-(1-f.u)*7,5,6,c)}})}   // 背骨
+ {const f=fall(.18),p1=mv([-205*BL,-82,0],[-215*BL,GY-4,-10],f),p2=mv([128,-80,0],[110,GY-4,14],f);items.push({n:(pj(...p1)[2]+pj(...p2)[2])/2,d:()=>{const a=pj(...p1),b=pj(...p2);line([[a[0],a[1]],[b[0],b[1]]],c,13);for(let j=0;j<=8;j++)ell(lerp(a[0],b[0],j/8),lerp(a[1],b[1],j/8)-(1-f.u)*7,5,6,c)}})}   // 背骨
  for(let i=0;i<NR;i++)for(const d of [-1,1]){const X=(-170+i*(215/(NR-1)))*BL,f=fall(r()*.3),sx=(r()-.5)*70,sz=d*(30+r()*50),w=(1-Math.abs(i/(NR-1)-.45)*.5)*RL,A=[[X,-78,0],[X,-62,d*72*w],[X,-78+58*w,d*52*w]],B=[[X+sx,GY,sz],[X+sx+20,GY,sz+d*30],[X+sx+50,GY,sz+d*36]],P3=A.map((q,k)=>mv(q,B[k],f));   // あばら（左右）
   items.push({n:pj(...P3[1])[2],d:()=>{const q=P3.map(p=>pj(...p));g.strokeStyle=c;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(q[0][0],q[0][1]);g.quadraticCurveTo(q[1][0],q[1][1],q[2][0],q[2][1]);g.stroke()}})}
- for(const [X,Z] of [[-160*BL,44],[-150*BL,-44],[40,46],[50,-46]]){const f=fall(r()*.3),sx=(r()-.5)*60,ang=r()*6.28,A=[[X,-6,Z],[X,GY,Z]],B=[[X+sx,GY,Z],[X+sx+Math.cos(ang)*70,GY,Z+Math.sin(ang)*70]],P3=A.map((q,k)=>mv(q,B[k],f));   // あし
+ for(const [X,Z] of [[-160*BL,44],[-150*BL,-44],[40,46],[50,-46]]){const f=fall(r()*.3),sx=(r()-.5)*60,ang=r()*6.28,A=[[X,-74,Z*.6],[X,GY,Z]],B=[[X+sx,GY,Z],[X+sx+Math.cos(ang)*70,GY,Z+Math.sin(ang)*70]],P3=A.map((q,k)=>mv(q,B[k],f));   // あし
   items.push({n:pj(...P3[1])[2],d:()=>{const a=pj(...P3[0]),b=pj(...P3[1]);line([[a[0],a[1]],[b[0],b[1]]],c,15);ell(a[0],a[1],11,8,c);ell(b[0],b[1],11,8,c)}})}
  {const f=fall(.34),C0=mv([185,-56,0],[205,GY-24,10],f),e=f.u*.5,yw=th+e,cc=Math.cos(yw),sn=Math.sin(yw);   // 頭の骨と下あご
   const sk=(X,Y,Z)=>pj(C0[0]+X*Math.cos(e)-Z*Math.sin(e),C0[1]+Y,C0[2]+X*Math.sin(e)+Z*Math.cos(e));
@@ -203,7 +203,7 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
      g.fillStyle=hole;P([[-18,-36,.9],[-2,-40,.9],[6,-28,.9],[-10,-24,.9]]);g.fill();                     // 目の穴（高い所）
      P([[-50,-6,.8],[-26,-10,.8],[-20,4,.8],[-46,6,.8]]);g.fill();                                       // ほお骨の下の穴
      g.fillStyle=tusk;P([[82,14,.5],[90,12,.5],[88,40,.6],[82,44,.4]]);g.fill();                          // 上の牙（下向き・短い）
-     g.strokeStyle=hole;g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(20,18);for(let k=0;k<6;k++)g.lineTo(26+k*10,k%2?20:15);g.stroke()}   // 歯の列
+     for(let k=0;k<5;k++)rect(22+k*12,13,9,8,k%2?'#e8dcc0':'#ded1b4');g.fillStyle=dk;rect(20,21,62,2,dk)}   /* 歯の列：四角い奥歯（ギザギザはワニに見えた。現実に近く・作り手 2026-11-22） */
     else{const w=Math.max(.5,Math.abs(sn))*SK;g.scale(w,SK);   // 正面に近いとき
      g.fillStyle=c;P([[-60,-30,.8],[-40,-50,.9],[-14,-34,.8],[14,-34,.8],[40,-50,.9],[60,-30,.8],[54,0,.7],[70,24,.7],[40,34,.6],[-40,34,.6],[-70,24,.7],[-54,0,.7]]);g.fill();
      g.fillStyle=dk;P([[-56,18,.6],[56,18,.6],[40,34,.5],[-40,34,.5]]);g.fill();
@@ -233,21 +233,24 @@ function side3(t,tl,st){const dead=st.dead,drain=st.drain||0,dry=st.dry||0,tc=st
 
 // ─── C：正面。1頭が主役。ほかは後ろで好きにしている ───
 function face3(x,y,s,t,o={}){const ear=o.ear||0,blink=o.blink||0,look=o.look||0,nos=o.nos||0,cb=IC.hb,cl=IC.hl,cd=IC.hd,cp=IC.hp;g.save();g.translate(x,y);g.scale(s,s);
- for(const d of [-1,1]){g.save();g.translate(118*d,-136);g.rotate(d*(.2+ear*(d>0?1:.8)));ell(0,-18,18,27,cb);ell(0,-17,8,16,cp);g.restore()}
- fill([[-130,-60,.9],[-122,-128,.9],[-60,-160,.8],[60,-160,.8],[122,-128,.9],[130,-60,.9],[110,10,.8],[-110,10,.8]],cb);ell(-98,-128,30,27,cb);ell(98,-128,30,27,cb);
- fill([[-202,60,.9],[-172,-30,.9],[-80,-66,.8],[80,-66,.8],[172,-30,.9],[202,60,.9],[182,140,.9],[90,178,.8],[-90,178,.8],[-182,140,.9]],cb);
- fill([[-60,-152,.8],[60,-152,.8],[90,-110,.8],[0,-96,.8],[-90,-110,.8]],cl);
- for(const d of [-1,1]){g.save();g.globalAlpha=.5;ell(98*d,-122,26,20,cp);g.restore();ell(98*d+look*4,-124,10,blink?2:9,IC.he);if(!blink)ell(98*d+3+look*4,-127,2,2,'#fff');line([[98*d-17,-135+blink*6],[98*d+17,-135+blink*6]],cd,blink?8:4)}
- fill([[-150,-24,.9],[-80,-58,.8],[80,-58,.8],[150,-24,.9],[110,-4,.8],[-110,-4,.8]],cl);for(const d of [-1,1]){ell(58*d,-26,26,17,cb);ell(58*d,-24,13+nos*3,4+nos*5,IC.he)}
- fill([[-190,90,.9],[0,70,.5],[190,90,.9],[176,140,.9],[90,174,.8],[-90,174,.8],[-176,140,.9]],cp);line([[-186,88],[0,68],[186,88]],cd,6);
- for(const [dx,dy] of [[-120,30],[-90,44],[-140,56],[120,30],[90,44],[140,56],[-60,24],[60,26]])ell(dx,dy,3,3,cd);g.restore()}
+ /* 正面から見たカバの頭：頭は水平に寝ているので、低く横に広い。上に出るのは目と耳のこぶ・鼻づらの上の面。鼻の穴は上を向く（実物 カバ7・2。作り手・2026-11-22 見る役の案を採用） */
+ for(const d of [-1,1]){g.save();g.translate(112*d,-112);g.rotate(d*(.35+ear*(d>0?1:.8)));ell(0,-11,10,17,cb);ell(0,-10,4.5,10,cp);g.restore()}   // 耳：小さく、目のこぶのすぐ後ろ
+ fill([[-158,-30,.9],[-140,-84,.9],[-70,-104,.8],[70,-104,.8],[140,-84,.9],[158,-30,.9],[150,30,.8],[-150,30,.8]],cb);   // 頭（低いドーム）
+ for(const d of [-1,1]){fill([[94*d-38,-80,.8],[94*d-30,-116,.9],[94*d+4,-128,.9],[94*d+36,-112,.9],[94*d+40,-82,.8]],cb)}   // 目のこぶ（頭の上の両はし）
+ fill([[-214,20,.9],[-196,-40,.9],[-110,-62,.8],[110,-62,.8],[196,-40,.9],[214,20,.9],[204,96,.8],[-204,96,.8]],cb);   // 鼻づら（いちばん幅が広い）
+ fill([[-196,-38,.8],[-110,-60,.8],[110,-60,.8],[196,-38,.8],[180,-28,.8],[100,-46,.7],[-100,-46,.7],[-180,-28,.8]],cl);   // 鼻づらの上のふちの明るい帯（ふたにしない）
+ fill([[-128,-98,.8],[-70,-102,.8],[70,-102,.8],[128,-98,.8],[120,-90,.8],[-120,-90,.8]],mix(cb,cl,.6));   // 頭の上のふちの帯
+ for(const d of [-1,1]){g.save();g.globalAlpha=.45;ell(96*d,-104,20,13,cp);g.restore();ell(96*d+look*3,-106,7,blink?1.5:6.5,IC.he);if(!blink)ell(96*d+2+look*3,-108,1.6,1.6,'#fff');line([[96*d-14,-116+blink*4],[96*d+14,-115+blink*4]],mix(cb,cd,.5),3)}
+ for(const d of [-1,1]){ell(62*d,-50,18,7,mix(cb,cl,.3));g.save();g.translate(62*d,-51);g.rotate(d*.35);ell(0,0,11+nos*3,2.2+nos*3,mix(IC.he,cb,.45));g.restore()}   // 鼻の穴：上の面に、上向きの細いすき間（黒い点にしない）
+ fill([[-206,64,.8],[0,52,.5],[206,64,.8],[204,96,.8],[-204,96,.8]],mix(cb,cd,.22));line([[-200,62],[0,50],[200,62]],mix(cb,cd,.55),4);   // 口の線（ほとんど水の下）
+ g.restore()}
 function headF(x,y,s,t,seed){const v=hv(seed),cb=mix(mix(IC.hb,v.tn>0?'#93706a':'#615a5a',Math.abs(v.tn)*.6),'#93a79c',.3),cp=mix(IC.hp,'#93a79c',.3),fu=flickU(t+seed,v.ft),ear=fu<0?0:Math.sin(fu*34)*(1-fu),w=.85+v.L*.2;   // こっちを向いた小さい頭（耳・目・鼻だけ）
  g.save();g.translate(x,y+Math.sin(t*.8+seed)*2);g.scale(s,s);g.save();g.globalAlpha=.5;g.strokeStyle='#e9eed8';g.lineWidth=2/s;const k=(t*.3+v.sx)%1;g.beginPath();g.ellipse(0,2,130+k*150,5+k*12,0,0,7);g.stroke();g.restore();
  for(const d of [-1,1]){g.save();g.translate(70*w*d,-40);g.rotate(d*(.3+ear));ell(0,-12,11*v.ear,17*v.ear,cb);ell(0,-12,5,10,cp);g.restore();ell(58*w*d,-22,17,16,cb)}
  fill([[-86*w,2,.5],[-78*w,-34,.9],[0,-48*v.hu,.9],[78*w,-34,.9],[86*w,2,.5]],cb);for(const d of [-1,1]){ell(58*w*d,-22,5,5,IC.he);ell(30*d,-2,12,7,cb);ell(30*d,-3,5,2.5,IC.he)}
  line([[-84*w,2],[84*w,2]],'rgba(238,242,222,.85)',2.5/s);g.restore()}
 const POD2=[{x:176,y:284,s:.2,yaw:20,seed:41,fl:50},{x:300,y:296,s:.3,yaw:340,seed:43,fl:28,yawn:.3},{x:968,y:338,s:.32,yaw:70,seed:67,fl:40,turn:[1.4,3.2]},{x:905,y:288,s:.23,yaw:200,seed:47,fl:36},{x:1096,y:304,s:.3,yaw:150,seed:53,fl:40},{x:186,y:356,s:.44,yaw:40,seed:59,fl:42,move:7},{x:1150,y:376,s:.46,yaw:250,seed:61,fl:50}];
-function front3(t,tl){rect(0,0,W,H,IC.sky1);world3(t,234,{sunX:260,noBirds:1,trees:[[90,.9,251],[330,.6,252],[560,.8,253],[820,1.0,254],[1010,.6,255],[1200,.85,256]]});rect(0,242,W,10,'#b99b6c');
+function front3(t,tl){rect(0,0,W,H,IC.sky1);world3(t,234,{sunX:260,noBirds:1,acacia:1,trees:[[90,.9,251],[330,.6,252],[560,.8,253],[820,1.0,254],[1010,.6,255],[1200,.85,256]]});rect(0,242,W,10,'#b99b6c');
  water3(250,t,1,260);
  for(const h of POD2){const st=podState(h,t,tl);st.hz=h.s<.35?.4:.22;hp3({...h,x:st.x,v:h.v||(h.v=hv(h.seed))},t,st)}
  // 主役：目だけ出して見ている → ぬっと上がる → 耳をまわす → ゆっくり沈む
@@ -324,7 +327,7 @@ function wisp(x,y,s,seed,a=1,dir=1){const r=R(seed);g.save();g.translate(x,y);g.
  blurOn(11*s);for(let i=0;i<9;i++){const u=i/8,cx=(u-.5)*430*s+(r()-.5)*40*s,cy=-(u-.5)*120*s+(r()-.5)*36*s;g.save();g.translate(cx,cy);g.rotate(-.28);ell(0,0,(64+r()*70)*s,(20+r()*22)*s,'rgba(255,255,255,.5)');g.restore()}
  for(let i=0;i<4;i++){const cx=(-230+r()*200)*s,cy=(40+r()*50)*s;g.save();g.translate(cx,cy);g.rotate(-.42);ell(0,0,(90+r()*80)*s,(7+r()*8)*s,'rgba(255,255,255,.28)');g.restore()}
  blurOn(3*s);for(let i=0;i<8;i++){const u=(i+r()*.6)/8,cx=(u-.5)*380*s,cy=-(u-.5)*110*s-(14+r()*18)*s;ell(cx,cy,(24+r()*32)*s,(13+r()*13)*s,'rgba(255,255,255,.55)')}blurOff();g.restore()}
-function tree4(x,y,s,seed,o={}){const r=R(seed),ty=r(),pale=o.pale||0,dry=o.dry||0,z=c=>mix(mix(c,'#a9cdbf',pale),'#b08a4a',dry),c1=z('#2f6f5c'),c2=z('#4c9070'),c3=z('#6fae7c'),tk=z('#4a4034'),lean=(r()-.5)*24*s;
+function tree4(x,y,s,seed,o={}){const r=R(seed),ty0=r(),ty=o.acacia?ty0*.5:ty0,pale=o.pale||0,dry=o.dry||0,z=c=>mix(mix(c,'#a9cdbf',pale),'#b08a4a',dry),c1=z('#2f6f5c'),c2=z('#4c9070'),c3=z('#6fae7c'),tk=z('#4a4034'),lean=(r()-.5)*24*s;
  if(!o.noShadow){g.save();g.globalAlpha=.16*(1-pale);ell(x+10*s,y+2*s,(44+r()*20)*s,6*s,'#1f3f35');g.restore()}
  if(ty<.5){const h=(54+r()*40)*s,w=(48+r()*34)*s;line([[x,y],[x+lean*.4,y-h*.55],[x+lean,y-h]],tk,5*s);line([[x+lean*.4,y-h*.55],[x+lean+w*.5,y-h*.96]],tk,3*s);line([[x+lean*.3,y-h*.45],[x+lean-w*.55,y-h*.9]],tk,3*s);   // かさ形（枝分かれした幹に、平たい葉の層）
   for(const [dx,dy,ww,c] of [[-w*.5,-h*.9,w*.55,c1],[w*.5,-h*.98,w*.6,c1],[0,-h*1.06,w*.85,c1],[-w*.3,-h*1.0,w*.4,c2],[w*.25,-h*1.14,w*.55,c2],[w*.3,-h*1.2,w*.28,c3]])fill([[x+lean+dx-ww,y+dy+4*s,.9],[x+lean+dx-ww*.5,y+dy-9*s,.9],[x+lean+dx+ww*.5,y+dy-10*s,.9],[x+lean+dx+ww,y+dy+4*s,.9]],c)}
@@ -338,7 +341,7 @@ function world3(t,yh,o={}){const dry=o.dry||0,L=o.L||((p,fn)=>fn()),m=(a,b)=>mix
  L(.06,()=>{band([[-400,yh+2],[-100,yh-10],[200,yh-34],[470,yh-12],[700,yh-4],[940,yh-30],[1200,yh-16],[1500,yh-4],[1700,yh+2],[1700,yh+2]],yh+40,m('#93c0a8','#d9ad6c'),m('#b3d6b6','#e0bb80'));
   const r=R(203);for(let i=0;i<16;i++){const x=-80+i*96+r()*60,y=yh-4-18*Math.max(0,Math.sin((x-40)/150))*(.4+r()*.5);if(k>.1)tree4(x,y,(.2+r()*.14)*k,220+i,{pale:.55,dry,noShadow:1})}});   // 遠い木の列（小さく・うすく）
  L(.08,()=>{band([[-400,yh+6],[-60,yh-2],[260,yh+2],[560,yh+8],[860,yh+2],[1160,yh-4],[1500,yh+4],[1700,yh+8],[1700,yh+8]],yh+40,m('#86b77e','#cf9a58'),m('#a6cf86','#d9a45c'));
-  for(const [x,sc,sd] of (o.trees||[[70,.62,241],[200,.4,242],[452,.5,243],[905,.66,244],[1010,.42,245],[1235,.74,246]]))if(k>.1)tree4(x,yh+4,sc*k,sd,{pale:.22,dry})});   // 中くらいの木
+  for(const [x,sc,sd] of (o.trees||[[70,.62,241],[200,.4,242],[452,.5,243],[905,.66,244],[1010,.42,245],[1235,.74,246]]))if(k>.1)tree4(x,yh+4,sc*k,sd,{pale:.22,dry,acacia:o.acacia})});   // 中くらいの木
  {const gr=g.createLinearGradient(0,yh-50,0,yh+12);gr.addColorStop(0,'rgba(240,248,232,0)');gr.addColorStop(1,`rgba(240,248,232,${(.5*k).toFixed(2)})`);g.fillStyle=gr;g.fillRect(-600,yh-50,W+1200,62)}   // 地平線のかすみ
 }
 function antl(x,y,s,seed){const r=R(seed),c='#b58d5c',d='#8d6a40',dn=r()>.4;g.save();g.translate(x,y);g.scale(s*(r()>.5?1:-1),s);for(const lx of [-14,-9,10,15])line([[lx,-20],[lx+(r()-.5)*3,0]],d,3);ell(0,-26,20,10,c);   // 水を飲みに来たレイヨウ（遠くに小さく）
@@ -383,7 +386,7 @@ SC.intro4=function(t){const TA=2.8,TB=10.4,TC=14.2,TU=17.2,TD=20.8,TX=23.2;
  else if(t<TC){const tl=t-TB,z=1.02+.04*ease(tw(tl,0,3.8));g.translate(640,430);g.scale(z,z);g.translate(-640,-430);front3(t,tl)}
  else if(t<TU){const tl=t-TC,z=1.1-.07*ease(tw(tl,0,3.4));g.translate(640,360);g.scale(z,z);g.rotate(-.02+.02*tl/3.4);g.translate(-640,-360);top3(t,tl)}
  else if(t<TD){const tl=t-TU,z=1.06-.04*ease(tw(tl,0,3.6));g.translate(640,400);g.scale(z,z);g.translate(-640,-400);under3(t,tl)}
- else{const tl=t-TD,td=t-TX,dead=td>=0,drain=dead?1:0,dry=dead?1:0,tc=td-1.0;
+ else{const tl=t-TD,td=t-TX,dead=td>=0,drain=dead?1:0,dry=dead?1:0,tc=td-.45;
   const z=1.05+.04*clamp(tl/2.4)-.07*ease(tw(td,.1,1.2))+.05*tw(td,1.2,4.6);g.translate(600,450);g.scale(z,z);g.translate(-600,-450);
   side3(t,7.6+tl,{dead,drain,dry,tc,td});
   if(dead&&td<.14){g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=1-td/.14;rect(0,0,W,H,'#fff');g.restore()}
