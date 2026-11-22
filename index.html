@@ -443,7 +443,7 @@ let pushTimer=null,busy=false;
 function syncLabel(t,ok){const el=$('sync');el.textContent=t;el.className='sync'+(ok===false?' msg':'')}
 async function ghGet(){const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});
 if(r.status===404)return{data:null,sha:null};if(!r.ok)throw new Error('GitHub '+r.status);const j=await r.json();
-let txt=j.content?b64d(j.content):'';if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${s.p}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}
+let txt=j.content?b64d(j.content):'';if(!txt){const r2=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/git/blobs/${j.sha}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});txt=await r2.text()}
 return{data:JSON.parse(txt),sha:j.sha}}
 async function ghPutFile(path,b64,msg){const s=S();let sha;const g=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},cache:'no-store'});if(g.ok)sha=(await g.json()).sha;
 const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github+json'},body:JSON.stringify({message:msg||'録画を追加',content:b64,...(sha?{sha}:{})})});if(!r.ok)throw new Error('GitHub '+r.status);return true}
