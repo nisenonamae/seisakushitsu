@@ -25,7 +25,7 @@ function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.55*
 const TREES_A=[[70,.62,241],[200,.4,242],[452,.5,243],[905,.66,244],[1010,.42,245],[1235,.74,246]],TREES_B=[[90,.5,261],[300,.82,262],[520,.36,263],[760,.6,264],[980,.9,265],[1180,.44,266]];
 function sky7(dry){rect(-2000,-2000,7000,2000+SURF+60,mix('#dcebe6','#f4dfb2',dry))}
 function panel(t,px,B,dry){g.save();g.translate(px,0);if(B){g.translate(W/2,0);g.scale(-1,1);g.translate(-W/2,0)}   // 右側は左右を反転して丘の形を変え、木を別に置く
- world3(t,316,{dry,noBirds:1,sunX:B?-99999:1010,trees:B?TREES_B:TREES_A,acacia:1});g.restore()}
+ world3(t,316,{dry,noBirds:1,sunX:B?-99999:620,trees:B?TREES_B:TREES_A,acacia:1});g.restore()}
 function banks(t,dry){bank3(t,dry);   // 左の岸（母子の側）
  const m=(a,b)=>mix(a,b,dry);g.save();g.translate(1880,0);   // 右の岸（群れの側）：砂の州と高い葦。遠い景色が切れる右はしをふさぐ
  fill([[-260,330,.3],[-60,326,.6],[120,330,.6],[300,326,.4],[300,372,.4],[-40,366,.8],[-220,352,.8]],m('#b29a6a','#d0a060'));
@@ -47,7 +47,7 @@ function under7(t){const gr=g.createLinearGradient(0,SURF,0,FLOOR+80);gr.addColo
 const HERD=[{x:1180,y:520,s:.74,yaw:200,seed:45,fl:36,c:.4},{x:1330,y:560,s:.9,yaw:170,seed:11,fl:30,c:1.1,F:1},{x:1520,y:500,s:.7,yaw:210,seed:17,fl:40},{x:1700,y:574,s:.95,yaw:160,seed:5,fl:32,c:.9},
  {x:1470,y:520,s:.78,yaw:190,seed:55,fl:38},{x:1560,y:600,s:.86,yaw:230,seed:29,fl:34,c:1.5},{x:1400,y:420,s:.46,yaw:120,seed:8,fl:40},{x:1610,y:400,s:.42,yaw:60,seed:14,fl:44},{x:1340,y:430,s:.5,yaw:300,seed:65,fl:40}];
 const yv=(y,f)=>SURF+(y-SURF)*f;
-const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=484+6*Math.sin(x*.01);const k=clamp((x-860)/220);return lerp(deep,sh,k*k*(3-2*k))};
+const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=484+6*Math.sin(x*.01);const k=clamp((x-720)/240);return lerp(deep,sh,k*k*(3-2*k))};
 SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  const tl=t-TA,K=(a,b,u)=>lerp(a,b,ease(clamp(u)));
  // ─ カメラ ─
@@ -111,10 +111,10 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
    hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:hv(2)},t,o);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
-   hp3({x:870+170*go-30*hide+40*cl,y:yv(640,f),s:.42,yaw:lerp(20,10,hide),seed:33,v:hv(33)},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
+   hp3({x:mx-60+150*go-40*hide+20*cl,y:SURF+6,s:.5,yaw:lerp(20,10,hide),seed:33,v:hv(33)},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
  }else{podBones(t,td-.45,1,[...HERD.map(h=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
  g.restore();
- if(!dead&&cy<SURF+150){g.save();if(tl>=17.6){const sp=ease(clamp((tl-17.6)/1.5));g.translate(W/2,H/2);g.scale(1+.25*sp,1+.25*sp);g.translate(-W/2,-H/2)}fg3(t,dry,0);g.restore()}   /* 手前の葦は画面に固定（カメラと一緒に動かない）。再会では少し大きくして画面のふちへ寄せ、真ん中を空ける */
+ if(!dead&&cy<SURF+150){g.save();if(tl>=17.6){const sp=ease(clamp((tl-17.6)/1.5));g.translate(W/2,H/2);g.scale(1+.25*sp,1+.25*sp);g.translate(-W/2,-H/2)}g.globalAlpha=tl>=17.6?1-ease(clamp((tl-17.6)/1.2)):1;fg3(t,dry,0);g.restore()}   /* 手前の葦は画面に固定（カメラと一緒に動かない）。再会では少し大きくして画面のふちへ寄せ、真ん中を空ける */
  if(dead&&td<.14){g.save();g.globalAlpha=1-td/.14;rect(0,0,W,H,'#fff');g.restore()}
  if(tl<.8){g.save();g.globalAlpha=1-ease(tw(tl,0,.8));rect(0,0,W,H,'#fffdf0');g.restore()}};
 })();
