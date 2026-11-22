@@ -47,7 +47,7 @@ function under7(t){const gr=g.createLinearGradient(0,SURF,0,FLOOR+80);gr.addColo
 const HERD=[{x:1180,y:520,s:.74,yaw:200,seed:45,fl:36,c:.4},{x:1330,y:560,s:.9,yaw:170,seed:11,fl:30,c:1.1,F:1},{x:1520,y:500,s:.7,yaw:210,seed:17,fl:40},{x:1700,y:574,s:.95,yaw:160,seed:5,fl:32,c:.9},
  {x:1470,y:520,s:.78,yaw:190,seed:55,fl:38},{x:1560,y:600,s:.86,yaw:230,seed:29,fl:34,c:1.5},{x:1400,y:420,s:.46,yaw:120,seed:8,fl:40},{x:1610,y:400,s:.42,yaw:60,seed:14,fl:44},{x:1340,y:430,s:.5,yaw:300,seed:65,fl:40}];
 const yv=(y,f)=>SURF+(y-SURF)*f;
-const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=520+8*Math.sin(x*.01);const k=clamp((x-820)/260);return lerp(deep,sh,k*k*(3-2*k))};
+const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=484+6*Math.sin(x*.01);const k=clamp((x-860)/220);return lerp(deep,sh,k*k*(3-2*k))};
 SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  const tl=t-TA,K=(a,b,u)=>lerp(a,b,ease(clamp(u)));
  // ─ カメラ ─
@@ -62,10 +62,10 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  if(tl<9.6){const s=clamp((tl-7.3)/2.3);my=lerp(SURF+40,FY7(330)-120,eout(s));mx=lerp(300,360,s);mp=-.05;mlegs=[-.3+Math.sin(tl*2)*.1,-.2,.3,.35]}   // 沈む：あしをたらして、ゆっくり底へ
  else{my=FY7(mx)-120-g1.hop*34;mp=g1.pitch;mlegs=[g1.fh,g1.fh+.12,g1.ff,g1.ff+.14]}
  const atHerd=tl>=15.4;   // 真下のあとは群れの近く（間の道のりは真下のつなぎで省く）
- if(atHerd){const cr=clamp((tl-15.5)/.5),pu=clamp((tl-16.0)/1.6);mx=940+50*eout(pu);
-  my=lerp(FY7(940)-120+16*cr*(1-pu),SURF+24,eout(pu));mp=lerp(.06*cr,-.5,clamp(pu*3))*(1-ease(clamp((pu-.6)/.4)))-.1*ease(clamp((pu-.6)/.4));mlegs=[lerp(.3*cr,-1.4,clamp(pu*4)),lerp(.3*cr,-1.3,clamp(pu*4)),lerp(.2,-.7,pu)+Math.sin(tl*7)*.25*pu,lerp(.2,-.6,pu)+Math.sin(tl*7+1)*.25*pu]}
+ if(atHerd){const cr=clamp((tl-15.5)/.5),pu=clamp((tl-16.0)/1.6);mx=1000+90*eout(pu);
+  my=lerp(FY7(1000)-120+16*cr*(1-pu),SURF+29,eout(pu));mp=lerp(.06*cr,-.5,clamp(pu*3))*(1-ease(clamp((pu-.6)/.4)))-.1*ease(clamp((pu-.6)/.4));mlegs=[lerp(.3*cr,-1.4,clamp(pu*4)),lerp(.3*cr,-1.3,clamp(pu*4)),lerp(.2,-.7,pu)+Math.sin(tl*7)*.25*pu,lerp(.2,-.6,pu)+Math.sin(tl*7+1)*.25*pu]}
  if(tl>=10.6&&tl<13.6){const u=clamp((tl-10.6)/1.4);cy=lerp(SURF,FLOOR-215,ease(u));cx=lerp(560,mx+170,ease(u));z=lerp(1.15,1.3,ease(u))}
- if(atHerd&&tl<26){const pu=clamp((tl-15.6)/2.0),cl=ease(clamp((tl-17.6)/1.6));cx=lerp(mx+150,1130,ease(clamp((tl-17.6)/2.4)));cy=lerp(lerp(FY7(940)-150,SURF+40,eout(pu)),SURF-40,cl);z=lerp(1.3,1.6,cl)}   /* 再会は母に寄る（線は画面の下の方：水の上の顔が大きく見える） */
+ if(atHerd&&tl<26){const pu=clamp((tl-15.6)/2.0),cl=ease(clamp((tl-17.6)/1.6));cx=lerp(mx+150,1130,ease(clamp((tl-17.6)/2.4)));cy=lerp(lerp(FY7(1000)-150,SURF+40,eout(pu)),SURF-40,cl);z=lerp(1.3,1.6,cl)}   /* 再会は母に寄る（線は画面の下の方：水の上の顔が大きく見える） */
  if(tl>=26){const u=ease(clamp((tl-26)/2.2));cx=lerp(1130,1120,u);cy=lerp(SURF-40,360,u);z=lerp(1.6,1.08,u)+.06*clamp((tl-28.4)/5)}   /* 引いても絵の外が写らない広さ／骨の場面はゆっくり寄る */
  // 真下（動きつなぎ：母は同じ画面の位置・向き・速さのまま、見え方だけ変わる）
  if(tl>=13.6&&tl<15.4){botUp5(t,(tl-13.6)+1.1);return}
@@ -81,7 +81,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
   // 水の上にいるカバの、水の下の体（にごってうすい）
   const surfAll=[];
   for(const h of HERD)surfAll.push(h);
-  for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:Math.min(yv(h.y,f)+h.fl*h.s,FY7(h.x)-125*h.s),s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
+  for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
   if(tl>=7.4){const gc=gait(Math.max(0,tl-9.7),1.25,84),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<9.6?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/2))):FLOOR-70-gc.hop*30);
    hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:hv(33)},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<9.6?-.05:gc.pitch*1.2,legs:tl<9.6?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
@@ -108,7 +108,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    const ck=clamp((tl-7.4)/.9),nz=Math.sin(Math.PI*clamp((tl-3.2)/1.6));   // 子：母の鳴き声のあいだ、母の顔に寄る
    hp3({x:540-60*nz,y:yv(588,f),s:.4,yaw:14+30*nz,seed:33,v:hv(33)},t,{fl:lerp(22,140,ease(ck)),tilt:-.04})}
   if(atHerd&&my<=SURF+150){const up=clamp((tl-17.4)/.6),turn=ease(clamp((tl-18.0)/1.6)),cl=ease(clamp((tl-25)/1.5));
-   const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95+40))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
+   const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
    hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:hv(2)},t,o);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
    hp3({x:870+170*go-30*hide+40*cl,y:yv(640,f),s:.42,yaw:lerp(20,10,hide),seed:33,v:hv(33)},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
