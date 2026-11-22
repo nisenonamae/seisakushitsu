@@ -140,18 +140,21 @@ function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl
  const L=v.L,hu=v.hu,fu=flickU(t+h.seed,v.ft),ew=fu<0?0:Math.sin(fu*34)*(1-fu),blink=Math.max(...v.bt.map(b=>pulse(t+h.seed*.37,b,.2)))>.5;
  const cT=Math.cos(th),sT=Math.sin(th),N=[72,-28],Hg=[128,-8],P=[];
  const tr=(X,Y,Z,grp)=>{let ang=0,yw=th;if(grp){let q=[X,Y];if(grp===2){q=rot(q,Hg,-a1);ang-=a1}if(grp===3){q=rot(q,Hg,a2);ang+=a2}q=rot(q,N,tilt);ang+=tilt;const dx=q[0]-70,c=Math.cos(hy),sn=Math.sin(hy);X=70+dx*c-Z*sn;Z=dx*sn+Z*c;Y=q[1];yw=th+hy}return{X,Y,Z,ang,yw,xs:X*cT-Z*sT,n:X*sT+Z*cT}};
- const add=(X,Y,Z,rx,ry,rz,col,pri=0,grp=0)=>{const q=tr(X,Y,Z,grp),c=Math.cos(q.yw),sn=Math.sin(q.yw),ax=Math.hypot(Math.cos(q.ang)*c,Math.sin(q.ang));
+ const add=(X,Y,Z,rx,ry,rz,col,pri=0,grp=0,a0=0)=>{const q=tr(X,Y,Z,grp);q.ang+=a0;const c=Math.cos(q.yw),sn=Math.sin(q.yw),ax=Math.hypot(Math.cos(q.ang)*c,Math.sin(q.ang));
   P.push({xs:q.xs,ys:q.Y+q.n*kp,n:q.n,Y:q.Y,ry,rn:Math.hypot(rx*sn,rz*c),k:q.n+pri,ra:Math.hypot(rx*ax,rz*sn),rb:Math.hypot(ry,Math.hypot(rx*sn,rz*c)*kp*.6),ro:q.ang?Math.atan2(Math.sin(q.ang),Math.cos(q.ang)*c):0,col})};
  add(-95*L,-4,0,165*L,80*hu,78,cb);add(-190*L,6,0,70,62*hu,66,cb);add(30,-8,0,70,58,62,cb);add(-95*L,-56*hu,0,118*L,22*hu,36,cl,1);add(-262*L,-18,0,7,20,6,cd,1);
  add(135,-34,0,62,44,52,cb,0,2);add(118,-6,0,40,34,50,cb,0,1);add(222,-26,0,62,30,60,cb,0,2);add(140,-62,0,28,11,28,cl,1,2);add(226,-42,0,40,11,42,cl,1,2);
  add(210,8,0,72,22,56,cb,0,3);add(214,19,0,60,12,48,cp,1,3);
- for(const d of [-1,1]){add(160,-72,36*d,14,12,12,cb,0,2);add(160,-69,41*d,13,9,7,mix(cp,cb,.45),.5,2);add(165,-74,46*d,5,blink?1.2:5,3.5,ce,1,2);if(!blink)add(167,-76,49*d,1.6,1.6,1.2,'#ffffff',2,2);add(163,-83,42*d,11,1.7,6,cd,1.5,2);
+ for(const d of [-1,1]){add(160,-72,36*d,14,12,12,cb,0,2);add(160,-69,41*d,13,9,7,mix(cp,cb,.45),.5,2);add(165,-74,46*d,5,blink?1.2:5,3.5,ce,1,2);if(!blink)add(167,-76,49*d,1.6,1.6,1.2,'#ffffff',2,2);add(164,-80,45*d,9,1.6,5,cd,1.5,2);
   add(106+ew*8,-72,38*d,7,15*v.ear*(1-Math.abs(ew)*.3),10,cb,0,2);add(109+ew*8,-73,45*d,3.5,9*v.ear,5,cp,1,2);
   add(258,-50,22*d,12,9,12,cb,0,2);add(263,-53,24*d,5,2.6,5,ce,1,2)}
  if(jaw>.1){const k=clamp((jaw-.1)*4);{const bq=rot([128+34,-6],Hg,(a2-a1)/2);add(bq[0],bq[1],0,13*k,17*k,30,ct,-2,1)}add(215,3,0,58,8,50,cm,-1,2);add(205,-9,0,54,8,40,'#dc9a9c',1,3);
   for(const d of [-1,1]){add(262,-30,36*d,6,24*k,6,ci,2,3);add(250,12,40*d,5,10*k,5,ci,1,2);add(284,-10,10*d,11,4,5,ci,2,3)}}
+ if(o.full){add(-85*L,30,0,150*L,52,72,cb);add(-85*L,56,0,118*L,24,54,mix(cp,cb,.35),1);const lg=o.legs||[0,0,0,0];
+  [[-168*L,44],[-150*L,-44],[42,46],[58,-46]].forEach(([X,Z],i)=>{const f=lg[i],sx=Math.sin(f),cx=Math.cos(f);add(X+sx*32,58+cx*32,Z,27,46,24,Z<0?cd:cb,0,0,-f);add(X+sx*70,58+cx*70,Z,29,13,24,cd,.5,0,-f)})}
  P.sort((a,b)=>a.k-b.k);
  g.save();g.translate(h.x,h.y);g.scale(s,s);
+ if(o.full){for(const q of P){g.save();g.translate(q.xs,q.ys);if(q.ro)g.rotate(q.ro);ell(0,0,q.ra,q.rb,q.col);g.restore()}g.restore();return}
  const wB=Math.hypot(250*L*cT,90*sT),cxB=-40*cT;g.save();g.globalAlpha=.3;ell(cxB,10+16*Math.abs(sT),wB+10,9+20*Math.abs(sT),'#b9a876');g.globalAlpha=.28;if(fl<100)ell(cxB,12+20*Math.abs(sT),wB*.8,8+22*Math.abs(sT),'#3f4530');g.restore();
  for(const e of (o.ev||[])){const age=e.age;if(age<=0||age>=2.4)continue;for(let j=0;j<2;j++){const k=(age-j*.35)/2.05;if(k<=0||k>=1)continue;g.save();g.globalAlpha=(1-k)*.6;g.strokeStyle='#e9eed8';g.lineWidth=Math.min(6,2.2/s);g.beginPath();g.ellipse(e.x*cT,6+(e.x*sT)*kp,e.w*(1+k*1.3)+k*50,(e.w*(1+k*1.3)+k*50)*(.07+.2*Math.abs(sT)*.4)+3,0,0,7);g.stroke();g.restore()}}
  if(fl<118){for(const q of P){const hh=(q.Y+fl)/q.ry,cq=Math.sqrt(Math.max(0,1-hh*hh));g.save();g.beginPath();g.rect(-1200,-1600,2400,1600+q.n*kp);if(cq>.05)g.ellipse(q.xs,q.n*kp,q.ra*cq,Math.max(1,q.rn*cq*kp),0,0,7);g.clip();g.translate(q.xs,q.ys+fl);if(q.ro)g.rotate(q.ro);ell(0,0,q.ra,q.rb,q.col);g.restore()}
@@ -162,8 +165,8 @@ function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl
  else if(o.bub){const r=R(h.seed+5);for(let i=0;i<4;i++){const k=((t*.9+r())%1);g.save();g.globalAlpha=(1-k)*.7;g.strokeStyle='#e9eed8';g.lineWidth=2/s;g.beginPath();g.ellipse((60+r()*120)*cT,4,6+k*14,2+k*4,0,0,7);g.stroke();g.restore()}}
  g.restore()}
 // 群れ（横の場面）。1頭ずつ：場所・大きさ・向き・形の種・浮き方・しぐさ
-const POD=[{x:330,y:356,s:.2,yaw:200,seed:3,fl:52},{x:470,y:362,s:.24,yaw:25,seed:45,fl:40},{x:612,y:366,s:.27,yaw:160,seed:11,fl:26,yawn:5.0},{x:770,y:354,s:.19,yaw:290,seed:17,fl:50},{x:936,y:362,s:.25,yaw:60,seed:5,fl:34,bird:1},{x:1030,y:372,s:.27,yaw:180,seed:55,fl:44},{x:1170,y:356,s:.2,yaw:120,seed:29,fl:46},
- {x:150,y:420,s:.46,yaw:150,seed:8,fl:36,bird:1},{x:340,y:432,s:.5,yaw:35,seed:63,fl:46,move:9},{x:640,y:446,s:.56,yaw:78,seed:21,fl:36,sink:[.9,4.3]},{x:842,y:418,s:.48,yaw:12,seed:14,fl:22},{x:952,y:432,s:.26,yaw:205,seed:33,fl:12,calf:1},{x:1040,y:452,s:.54,yaw:318,seed:65,fl:32,bird:1},{x:1206,y:436,s:.5,yaw:222,seed:26,fl:52},
+const POD=[{x:330,y:356,s:.2,yaw:200,seed:3,fl:52},{x:470,y:362,s:.24,yaw:25,seed:45,fl:40},{x:612,y:366,s:.27,yaw:160,seed:11,fl:26,yawn:5.0},{x:770,y:354,s:.19,yaw:290,seed:17,fl:50},{x:936,y:362,s:.25,yaw:60,seed:5,fl:34,bird:1},{x:1096,y:374,s:.27,yaw:180,seed:55,fl:44},{x:1222,y:354,s:.2,yaw:120,seed:29,fl:46},
+ {x:150,y:420,s:.46,yaw:150,seed:8,fl:36,bird:1},{x:340,y:432,s:.5,yaw:35,seed:63,fl:46,move:9},{x:640,y:446,s:.56,yaw:78,seed:21,fl:36,sink:[.9,4.3]},{x:820,y:418,s:.48,yaw:12,seed:14,fl:22},{x:752,y:450,s:.26,yaw:20,seed:33,fl:12,calf:1},{x:1080,y:452,s:.54,yaw:318,seed:65,fl:32,bird:1},
  {x:270,y:556,s:.98,yaw:0,side:1,seed:2,fl:30,yawn:1.5,bird:1},{x:1050,y:580,s:1.0,yaw:146,seed:19,fl:36,turn:[3.0,5.6]},{x:600,y:676,s:.9,yaw:62,seed:37,fl:56}];
 function podState(h,t,tl){let fl=h.fl,jaw=0,tilt=-.04,puff=0,hyaw=0,x=h.x,bub=0;const ev=[],E=(t0,xx,w)=>ev.push({age:tl-t0,x:xx,w});
  if(h.yawn!=null){jaw=yawnK(tl,h.yawn,3);E(h.yawn+.32,60,230);E(h.yawn+2.6,170,150)}
@@ -171,7 +174,7 @@ function podState(h,t,tl){let fl=h.fl,jaw=0,tilt=-.04,puff=0,hyaw=0,x=h.x,bub=0;
  if(h.calf){const k=ease(pulse(tl,2.2,3));fl=h.fl-k*14+Math.sin(tl*5)*2*k;tilt=-.1-k*.22;E(2.3,60,90);E(4.3,60,90)}
  if(h.turn){const k=ease(tw(tl,h.turn[0],1.1))-ease(tw(tl,h.turn[1],1.2));hyaw=-.3*k;tilt-=.1*k;fl-=6*k;E(h.turn[0]+.2,170,100);E(h.turn[1]+.2,170,100)}
  if(h.move){x+=h.move*tl;fl+=Math.sin(tl*2.2)*3;for(let i=0;i<4;i++)E(Math.floor(tl/.8)*.8-i*.8,150,90)}
- return{fl,jaw,tilt,puff,hyaw,x,bub,ev,hz:h.s<.3?.42:h.s<.6?.16:0}}
+ return{fl,jaw,tilt,puff,hyaw,x,bub,ev,hz:h.y<392?.42:h.y<500?.16:0}}
 function podDraw(t,tl,pod=POD){for(const h of pod){const st=podState(h,t,tl),hh={...h,x:st.x,v:h.v||(h.v=hv(h.seed))};if(h.side){hh.dir=1;hpS(hh,t,st)}else hp3(hh,t,st)}}
 // 骨（どの向きでも）。立った形 → 支えを失って崩れる（tc＝崩れはじめてからの秒。負なら立ったまま）
 function bones3(x,y,s,yawDeg,tc,seed){const r=R(seed),th=yawDeg*Math.PI/180,cT=Math.cos(th),sT=Math.sin(th),kp=.2,c='#f7f0e1',GY=64,items=[];
@@ -199,7 +202,7 @@ function fg3(t,dry=0,kind=0){const sway=Math.sin(t*.9),m=(a)=>mix(a,'#6b4426',dr
 function side3(t,tl,st){const dead=st.dead,drain=st.drain||0,dry=st.dry||0,tc=st.tc==null?-9:st.tc;
  sideBack(t,dry);bed3(dry);if(drain<1)water3(332+ease(drain)*30,t,1-ease(drain));bank3(t,dry);
  if(!dead)podDraw(t,tl);else podBones(t,tc,drain);
- if(dead){const f=tw(st.td,.45,1.6),h=POD[14];if(f<1)birdA(lerp(h.x-90,h.x+420,ease(f)),lerp(h.y-90,40,ease(f)),.8,f>0?Math.abs(Math.sin(t*22))*1.2:0)}
+ if(dead){const f=tw(st.td,.45,1.6),h=POD.find(q=>q.side);if(f<1)birdA(lerp(h.x-90,h.x+420,ease(f)),lerp(h.y-90,40,ease(f)),.8,f>0?Math.abs(Math.sin(t*22))*1.2:0)}
  fg3(t,dry,0)}
 
 // ─── C：正面。1頭が主役。ほかは後ろで好きにしている ───
@@ -294,13 +297,35 @@ function grass4(t){const F=[700,324],push=ease(tw(t,0,2.4))*.42+Math.pow(tw(t,1.
  Ly(1.5,()=>{blurOn(5);tuft(40,790,6.2,41,'#18433b','#245a45',t,{lean:-.12});tuft(330,800,4.2,42,'#1c4a40','#2b6349',t,{lean:-.05,head:1,headCol:'#3f7a55'});tuft(1130,800,5.0,43,'#18433b','#245a45',t,{lean:.1});tuft(1290,780,6.4,44,'#1c4a40','#2b6349',t,{lean:.16});blurOff()});
  Ly(3.2,()=>{blurOn(16);tuft(-60,900,10,51,'#123a35','#123a35',t,{lean:-.2});tuft(1360,900,11,52,'#123a35','#123a35',t,{lean:.22});blurOff()});
  {const k=ease(tw(t,1.95,.75));if(k>0){const rr=40+1900*k,gr=g.createRadialGradient(F[0],F[1],0,F[0],F[1],rr);gr.addColorStop(0,'rgba(255,253,240,1)');gr.addColorStop(.45,`rgba(255,253,240,${.6+.4*k})`);gr.addColorStop(1,'rgba(255,253,240,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);g.save();g.globalAlpha=tw(t,2.45,.3);rect(0,0,W,H,'#fffdf0');g.restore()}}}
+// ─── U：水の中から。カバは泳がず、底をけって、ゆっくりはねるように進む。にごった水・上は水面・小魚がついてくる ───
+function under3(t,tl){const v=130,sc=tl*v;
+ {const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#b9c07c');gr.addColorStop(.3,'#8a9a60');gr.addColorStop(1,'#4d5a3c');g.fillStyle=gr;g.fillRect(-200,-200,W+400,H+400)}
+ // 水面（下から見上げる）と光のすじ
+ g.fillStyle='#dfe3a6';g.beginPath();g.moveTo(-200,-200);g.lineTo(-200,74);for(let x=-200;x<=W+200;x+=40)g.lineTo(x,74+Math.sin(x*.018+t*1.8)*7+Math.sin(x*.05-t*2.6)*3);g.lineTo(W+200,-200);g.closePath();g.fill();
+ for(let i=0;i<6;i++){const x0=((i*260-sc*.15)%1560+1560)%1560-140,w=50+((i*53)%60);g.save();g.globalAlpha=.07+.04*Math.sin(t*1.3+i);poly([[x0,70],[x0+w,70],[x0+w-230,700],[x0-330,700]],'#f6f4c4');g.restore()}
+ // 遠く：水面に浮かぶなかまの腹とあし（かすんだ影）
+ for(const [bx,sz,ph] of [[300,1,0],[820,.8,2],[1350,1.1,4],[1800,.7,1]]){const x=((bx-sc*.25)%1900+1900)%1900-300;g.save();g.globalAlpha=.4;ell(x,96,120*sz,46*sz,'#6f7c52');for(const dx of [-70,-40,50,76])ell(x+dx*sz+Math.sin(t*.8+ph+dx)*3,150*sz+10,13*sz,34*sz,'#6f7c52');ell(x+150*sz,92,54*sz,30*sz,'#6f7c52');g.restore()}
+ // 底：泥。水草・小石が後ろへ流れる
+ fill([[-200,612,.3],[200,600,.8],[620,616,.8],[1000,602,.8],[1480,614,.3],[1480,900,.2],[-200,900,.2]],'#55573a');fill([[-200,650,.3],[400,640,.8],[900,660,.8],[1480,646,.3],[1480,900,.2],[-200,900,.2]],'#494c33');
+ {const r=R(61);for(let i=0;i<16;i++){const wx=r()*2600,x=((wx-sc)%2600+2600)%2600-200,y=622+r()*70,k=r();if(k<.4)ell(x,y,10+r()*16,5+r()*5,'#3e412c');else if(k<.7){for(let j=0;j<3;j++)blade(x+j*9,y,50+r()*60,9,Math.sin(t*1.2+i+j)*10-14,'#5f7a44')}else line([[x,y],[x+40+r()*40,y-2]],'#63664a',3)}}
+ {const r=R(63);for(let i=0;i<40;i++){const x=((r()*1500-sc*(.4+r()*.8))%1500+1500)%1500-100,y=110+r()*500+Math.sin(t+i)*6;g.save();g.globalAlpha=.25+.3*r();ell(x,y,1.5+r()*2.5,1.5+r()*2.5,'#e3e2b0');g.restore()}}
+ // カバ：けって浮く → ふわっと下りる、をくり返す
+ const p=tl*3.1,hop=Math.max(0,Math.sin(p))*46,hx=560+Math.sin(tl*.9)*30,hy=446-hop,ff=.6*Math.sin(p+1.2),fh=.62*Math.sin(p-.5);
+ for(let k=0;k<7;k++){const tk=(Math.floor(p/6.283)-k)*6.283/3.1+.05;if(tk<0)continue;const age=tl-tk,px=hx-150-age*v;if(age<0||age>2.2)continue;g.save();g.globalAlpha=clamp(.55-age*.25);ell(px,606-age*16,26+age*50,16+age*26,'#8a8658');ell(px+30,612-age*8,18+age*34,11+age*18,'#9a9566');g.restore()}   // けった所から泥のけむり
+ g.save();g.globalAlpha=.28;ell(hx+10,612,230-hop*1.4,16-hop*.12,'#2f3222');g.restore();   // 底に落ちる影
+ {const r=R(65);for(let i=0;i<6;i++){const fx=hx-260-i*38+Math.sin(tl*2+i)*14-r()*40,fy=hy+20+((i*37)%90)-40+Math.sin(tl*3+i*1.7)*8,fs=.7+r()*.5;g.save();g.translate(fx,fy);g.scale(fs,fs);fill([[-18,0,.6],[-4,-8,.9],[14,-5,.8],[20,0,.6],[14,5,.8],[-4,8,.9]],'#3f4a36');const w=Math.sin(tl*14+i)*5;poly([[-16,0],[-30,-9+w],[-30,9+w]],'#3f4a36');g.restore()}}   // ついてくる小魚
+ hp3({x:hx,y:hy,s:1.12,yaw:16,seed:21,v:hv(21)},t,{full:1,fl:0,tilt:-.06+Math.sin(p)*.05,legs:[fh,fh+.35,ff,ff+.35]});
+ {const u=(tl%1.5)/1.5;for(let i=0;i<5;i++){const k=(u+i*.2)%1;g.save();g.globalAlpha=(1-k)*.7;g.strokeStyle='#eef0cf';g.lineWidth=2;g.beginPath();g.arc(hx+262+Math.sin(k*9+i)*8-k*40,hy-70-k*300,3+i%3*2+k*3,0,7);g.stroke();g.restore()}}   // 鼻からのあわ
+ g.save();g.globalAlpha=.16;rect(-200,-200,W+400,H+400,'#7f8a58');g.restore();
+ {const gr=g.createRadialGradient(640,360,300,640,360,820);gr.addColorStop(0,'rgba(40,48,30,0)');gr.addColorStop(1,'rgba(40,48,30,.5)');g.fillStyle=gr;g.fillRect(-200,-200,W+400,H+400)}}
 // ─── 通し（4版）───
-SC.intro4=function(t){const TA=2.8,TB=10.4,TC=14.2,TD=17.6,TX=20.0;
+SC.intro4=function(t){const TA=2.8,TB=10.4,TC=14.2,TU=17.2,TD=20.8,TX=23.2;
  if(t<TA)grass4(t);
  else if(t<TB){const tl=t-TA,z=1.16-.1*eout(tw(tl,0,1.6))+.03*ease(tw(tl,1.6,6));g.translate(600,440);g.scale(z,z);g.translate(-600,-440);side3(t,tl,{dead:false});
   if(tl<.8){g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=1-ease(tw(tl,0,.8));rect(0,0,W,H,'#fffdf0');g.restore()}}
  else if(t<TC){const tl=t-TB,z=1.02+.04*ease(tw(tl,0,3.8));g.translate(640,430);g.scale(z,z);g.translate(-640,-430);front3(t,tl)}
- else if(t<TD){const tl=t-TC,z=1.1-.07*ease(tw(tl,0,3.4));g.translate(640,360);g.scale(z,z);g.rotate(-.02+.02*tl/3.4);g.translate(-640,-360);top3(t,tl)}
+ else if(t<TU){const tl=t-TC,z=1.1-.07*ease(tw(tl,0,3.4));g.translate(640,360);g.scale(z,z);g.rotate(-.02+.02*tl/3.4);g.translate(-640,-360);top3(t,tl)}
+ else if(t<TD){const tl=t-TU,z=1.06-.04*ease(tw(tl,0,3.6));g.translate(640,400);g.scale(z,z);g.translate(-640,-400);under3(t,tl)}
  else{const tl=t-TD,td=t-TX,dead=td>=0,drain=tw(td,.75,.9),dry=ease(tw(td,.9,1.4)),tc=td-1.75;
   const z=1.09-.07*ease(tw(td,.6,1.4))+.04*ease(tw(td,3.2,2.2));g.translate(600,450);g.scale(z,z);g.translate(-600,-450);
   side3(t,7.6+tl,{dead,drain,dry,tc,td});
