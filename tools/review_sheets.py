@@ -63,6 +63,7 @@ def main():
     secs = list(range(int(n / fps) + 1)); per = 36; made = []
     for k in range(0, len(secs), per):
         part = [s for s in secs[k:k + per] if int(s * fps) < n]; cols = 6; rows = (len(part) + cols - 1) // cols
+        if not part: continue   # 最後のページが空になるとき（ちょうど36秒など）
         sh = Image.new('RGB', (cols * 324, rows * 184), 'white')
         for j, s in enumerate(part): sh.paste(label(Image.open(fs[int(s * fps)]).convert('RGB').resize((320, 180)), f'{s}s'), ((j % cols) * 324, (j // cols) * 184))
         p = os.path.join(a.out, f'overview_{k // per + 1}.png'); sh.save(p); made.append(p)
