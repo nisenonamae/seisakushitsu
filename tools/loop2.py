@@ -48,7 +48,7 @@ def snap(P, od):
             errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
             await pg.goto('file://' + page); await pg.evaluate('([s,d])=>setup(s,d)', [{'mode': P['mode']}, P['dur']])
             for s in P['scenes']:
-                for t in times_in(s):
+                for t in times_in(s, 3, P):
                     await pg.evaluate('t=>render(t)', t); await pg.screenshot(path=os.path.join(od, f'{t:06.2f}.png'))
             await b.close()
             if errs: print('要確認：ページのエラー', errs[:3])
@@ -71,8 +71,16 @@ def strip(paths, out, labels, w=640):
         S.paste(im.resize((w, h)), (i * (w + 6), 26)); d.text((i * (w + 6) + 4, 3), lb, fill='black', font=F)
     S.save(out); return out
 
-def times_in(sc, n=3):
-    a, b = sc['t']; return [a + (b - a) * k for k in ([.5] if n == 1 else [.2, .5, .85][:n])]
+def times_in(sc, n=3, P=None):
+    a, b = sc['t']; ts = [a + (b - a) * k for k in ([.5] if n == 1 else [.2, .5, .85][:n])]
+    # しぐさ・変化の瞬間（設計図の moments）も必ず入れる。決まった秒だけだと、いちばん動いた所を外す（2026-11-22 あくびの隙間を見逃した）
+    if P: ts += [m['t'] for m in P.get('moments', []) if a <= m['t'] < b]
+    return sorted(round(t, 2) for t in ts)
+
+def moment_name(P, t):
+    for m in P.get('moments', []):
+        if abs(m['t'] - t) < .01: return '★' + m['what']
+    return ''
 
 def tehon_lines(keys):
     out = []
@@ -94,13 +102,15 @@ def pack(P, video, od, stage, names, look='natural'):
     brief = [f'# 見る役に渡す物（段{stage}：{STAGES[stage]}）', '', f'**今回の番：{LOOK[look]}**', '',
              '手順は tools/REVIEW.md の「次の段：サイクルの番ごとに見る」。今回は**この段・この番のことだけ**を見る。ほかの気づきは最後に1行ずつ「ほかの段・ほかの番」として書くだけ。', '']
     for s in scs:
-        tag = s['name']; ts = times_in(s)
+        tag = s['name']; ts = times_in(s, 3, P)
         ours = [frame(video, t, os.path.join(od, f'_{tag}_{i}.jpg')) for i, t in enumerate(ts)]
-        strip(ours, os.path.join(od, f'{tag}_作った絵.png'), [f'作った絵 {t:.1f}秒' for t in ts])
+        rows = [ours[i:i + 3] for i in range(0, len(ours), 3)]; lbs = [f'{t:.1f}秒 {moment_name(P, t)}' for t in ts]
+        for k, rw in enumerate(rows): strip(rw, os.path.join(od, f'{tag}_作った絵' + (f'{k + 1}' if len(rows) > 1 else '') + '.png'), lbs[k * 3:k * 3 + 3])
         for f in ours: os.remove(f)
         its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8) if look != 'challenge' else []
         if its: refs_sheet.sheet(its, os.path.join(od, f'{tag}_実物.png'))
-        brief += [f'## {tag}（{s["t"][0]}〜{s["t"][1]}秒・{s.get("role") or "ふつう"}）', f'- 作った絵：`{tag}_作った絵.png`']
+        names = [f'`{tag}_作った絵' + (f'{k + 1}' if len(rows) > 1 else '') + '.png`' for k in range(len(rows))]
+        brief += [f'## {tag}（{s["t"][0]}〜{s["t"][1]}秒・{s.get("role") or "ふつう"}）', '- 作った絵：' + '・'.join(names) + '（★＝しぐさ・変化のいちばん大きい瞬間）']
         if look != 'challenge': brief.append(f'- 実物：`{tag}_実物.png`（出どころは同じ名前の .txt）' if its else '- 実物：まだない（実物帳に足す）')
         if look == 'challenge': brief += ['- 手本（kurzgesagt）のやり方：'] + (['  ' + x for x in tehon_lines(s.get('tehon', []))] or ['  （まだない：手本帳に足してから挑戦する）'])
         brief.append('')
@@ -114,10 +124,10 @@ def pack(P, video, od, stage, names, look='natural'):
 def pair(P, va, vb, od, scene, stage, what, look='natural'):
     os.makedirs(od, exist_ok=True); s = [x for x in P['scenes'] if x['name'] == scene][0]
     flip = random.random() < .5; L, R = (vb, va) if flip else (va, vb)
-    ts = times_in(s); rows = []
+    ts = times_in(s, 3, P); rows = []
     for i, t in enumerate(ts):
         a = frame(L, t, os.path.join(od, f'_l{i}.jpg')); b = frame(R, t, os.path.join(od, f'_r{i}.jpg'))
-        rows.append(strip([a, b], os.path.join(od, f'_row{i}.png'), [f'左 {t:.1f}秒', f'右 {t:.1f}秒']))
+        rows.append(strip([a, b], os.path.join(od, f'_row{i}.png'), [f'左 {t:.1f}秒 {moment_name(P, t)}', f'右 {t:.1f}秒']))
     ims = [Image.open(r) for r in rows]; S = Image.new('RGB', (ims[0].width, sum(i.height for i in ims)), 'white'); y = 0
     for im in ims: S.paste(im, (0, y)); y += im.height
     S.save(os.path.join(od, f'{scene}_左右.png'))
