@@ -100,7 +100,9 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 .chapbar button.ok{background:#d9f2e1;color:#1c6b37;border-color:#b5dfc3}.chapbar button.fix{background:#ffe5df;color:#9a2b1c;border-color:#f2c2b8}.chapbar button.busy{background:#fff1c7;color:#7a5a00;border-color:#ecd98f}.chapbar button.none{color:var(--sub);border-style:dashed}.chapbar button.cur{outline:2px solid var(--sea);outline-offset:1px}
 details.chap{padding:0}details.chap>summary{padding:10px 12px;cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}details.chap>summary b{font-size:15.5px}details.chap>.cb{padding:0 12px 12px}
 details.chap[open]{border:2px solid var(--sea)}
-.pill.ok{background:#d9f2e1;color:#1c6b37}.pill.fixn{background:#ffe5df;color:#9a2b1c}
+details.bdch,details.stch{padding:0;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--card,#fff)}details.bdch>summary,details.stch>summary{padding:10px 12px;cursor:pointer}details.bdch[open],details.stch[open]{border:2px solid var(--sea)}details.bdch>.bdg,details.bdch>.st,details.stch>*:not(summary){margin-left:10px;margin-right:10px}details.bdch[open],details.stch[open]{padding-bottom:10px}
+.pill.ok{background:#d9f2e1;color:#1c6b37}
+.bdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:6px}.bdc{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card,#fff)}.stg{margin-top:6px}.stg span{display:inline-block;width:24px;text-align:center;font-size:11.5px;padding:1px 0;margin-right:3px;border-radius:4px;border:1px solid var(--line);color:var(--sub)}.stg span.ok{background:#d9f2e1;color:#1c6b37;border-color:#d9f2e1}.stg span.now{background:#dbe9fb;color:#1d4f91;border-color:#dbe9fb}.bdd{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.bdpick{border:2px solid var(--line);border-radius:6px;padding:2px;background:none;font-size:11.5px;cursor:pointer;text-align:left}.bdpick img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px;display:block;background:var(--line)}.bdpick.on{border-color:#2f6fbf}.stt{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px}.stt td,.stt th{border:1px solid var(--line);padding:3px 4px;text-align:center}.stt td:first-child{text-align:left;white-space:nowrap}.stt td.ok{background:#d9f2e1}.stt td.now{background:#dbe9fb}.pill.fixn{background:#ffe5df;color:#9a2b1c}
 .scn{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;margin:3px 0;font-size:13px}.scn .b{padding:3px 9px;font-size:13px}
 .qchips{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;margin:0 0 4px;-webkit-overflow-scrolling:touch}.qchips button{flex:none;white-space:nowrap;font:inherit;font-size:12px;border:1px solid var(--line);background:var(--paper);color:var(--sub);border-radius:999px;padding:2px 8px;cursor:pointer}
 .help details{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px}
@@ -626,8 +628,8 @@ const STEPS=[
 {t:'参考と資料を集める',s:'真似たい場面の録画と、中身の資料（文字起こし）'},
 {t:'構成を磨く',s:'Claude の骨組みに印を付け、残す・削る・差し替えで磨く'},
 {t:'肉付けを磨く',s:'語りと画面を通しで聞いて、段ごとに直す'},
-{t:'図解を選ぶ',s:'Claude の案から気に入った図解を選び、作って直す'},
-{t:'仮の動画を作ってもらう',s:'ここで頼んでおくと、題名とサムネを決めている間にできあがる'},
+{t:'絵コンテ（場面の設計）',s:'語りを場面に分け、構図・カメラ・切り替えを決める。下絵を選ぶ'},
+{t:'段を分けて作る',s:'章ごとに 大きな形 → 部品 → 細部 → 動き → 仕上げ と段を踏んで作る'},
 {t:'題名',s:'人を惹きつける題名の案を出してもらい、選んで磨く'},
 {t:'サムネ',s:'題名に合うサムネを見本で出してもらい、選んで直す'},
 {t:'動画を確かめる',s:'1.5倍速で見て、直す所を書く'},
@@ -639,7 +641,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={izumi:'種の泉',seed_grow:'問いを育てる',research:'深く調べる',art_animate:'絵のアニメ化',summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
+const name={board_make:'絵コンテづくり',board_fix:'下絵の直し',board_narr:'場面のための語りの直し',stage_make:'段の制作',stage_fix:'段の直し',izumi:'種の泉',seed_grow:'問いを育てる',research:'深く調べる',art_animate:'絵のアニメ化',summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（下のボタンで Claude に頼むと片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${(()=>{const pj=j.projId&&D.projects.filter(x=>!x.deleted&&!x.finished).length>1&&D.projects.find(x=>x.id===j.projId);return pj?`<span class="pill">${esc(candQ(pj).slice(0,14))}</span>`:''})()}${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
@@ -711,8 +713,8 @@ ${(()=>{const n=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m
 <div class="row"><button class="b main" data-next>集め終わった</button></div>`,
 outlineStep(p),
 fleshStep(p),
-visualStep(p),
-makeVideoStep(p),
+boardStep(p),
+stageStep(p),
 titleStep(p),
 thumbStep(p),
 videoStep(p),
@@ -724,9 +726,9 @@ ${p.kata?`<div class="item" style="background:var(--paper);margin-top:8px"><labe
 <div class="row"><button class="b main" data-finish>終わる</button></div>`];
 setTimeout(fillMedia,0);const ms=$('makeSteps');const keepOpen=ms.dataset.pid===p.id?new Set([...ms.querySelectorAll('.step.open')].map(x=>x.dataset.k)):null;const keepDet=new Map([...ms.querySelectorAll('details')].map(x=>[(x.querySelector('summary')||{}).textContent,x.open]));ms.dataset.pid=p.id;
 $('makeSteps').innerHTML=STEPS.map((st,k)=>`<div class="step ${k<s?'done':''} ${k===s?'now':''}" data-k="${k}" id="step${k}"><div class="sh"><span class="num">${k<s?'✓':k+1}</span><div><div class="st1">${st.t}</div><div class="st2">${st.s}</div>${stepSum(p,k)?`<div class="st3">${stepSum(p,k)}</div>`:''}</div></div><div class="sb">${body[k]}${k<s?`<div class="row"><button class="b" data-back="${k}">ここからやり直す</button></div>`:''}</div></div>`).join('');
-if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{if(x.classList.contains('chap'))return;const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));x.open=key!==undefined?keepDet.get(key):false});vkMount(p);
+if(keepOpen)ms.querySelectorAll('.step').forEach(x=>{if(keepOpen.has(x.dataset.k))x.classList.add('open')});ms.querySelectorAll('details').forEach(x=>{if(x.matches('.chap,.bdch,.stch'))return;const t=(x.querySelector('summary')||{}).textContent;const key=[...keepDet.keys()].find(k=>k&&t&&k.replace(/[（(].*$/,'')===t.replace(/[（(].*$/,''));x.open=key!==undefined?keepDet.get(key):false});vkMount(p);
 renderStepNav(p,s)}
-function renderStepNav(p,s){const n=$('stepNav');if(!p){n.classList.remove('on');return}n.classList.add('on');const SH=['参考','構成','肉付け','図解','題名','サムネ','動画','音','本番','残す'];
+function renderStepNav(p,s){const n=$('stepNav');if(!p){n.classList.remove('on');return}n.classList.add('on');const SH=['参考','構成','肉付け','絵コンテ','段','題名','サムネ','動画','音','本番','残す'];
  n.innerHTML=STEPS.map((st,k)=>`<button class="${k<s?'done':''} ${k===s?'now':''}" data-jump="${k}" title="${st.t}">${k<s?'✓':k+1}<span class="lb">${SH[k]}</span></button>`).join('')+`<button data-jump="top" title="いちばん上へ">▲</button>`}
 $('stepNav').addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(!b)return;if(b.dataset.jump==='top'){window.scrollTo({top:0,behavior:'smooth'});return}const el=$('step'+b.dataset.jump);if(!el)return;el.classList.add('open');const y=el.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top:y,behavior:'smooth'})});
 // 畳んだときに見える「決まったこと」
@@ -734,8 +736,9 @@ function stepSum(p,k){try{const ob=(p.outline&&p.outline.blocks||[]).filter(b=>b
  if(k===0){const n=(p.refs||[]).length,m=(p.mats||[]).length,f=(p.facts||[]).filter(x=>!x.deleted);return n||m||f.length?`${f.length?`事実 ${f.length}（★${f.filter(x=>x.star).length}）・`:''}参考 ${n}・資料 ${m}`:''}
  if(k===1)return ob.length?`${ob.length} 段`:'';
  if(k===2)return fb.length?`${fb.length} 段・${fb.reduce((a,b)=>a+(b.narr||'').length,0)} 字`:'';
- if(k===3){const v=(p.visuals||[]).filter(v=>v.status==='決定'||v.status==='できた'||v.chosen).length;return v?`図解 ${v}`:''}
+ if(k===3){const sc=bdScenes(p);return sc.length?`場面 ${sc.length}・下絵を選んだ ${sc.filter(x=>x.pick!=null).length}`:''}
  if(k===7){const cs=chapList(p);if(!cs.some(c=>c.built))return'';const n=cs.filter(c=>chapState(p,c).st==='ok').length;return `OK ${n}／${cs.length} 章`}
+ if(k===4&&bdScenes(p).length){const cs=bdChaps(p);return cs.map(c=>esc(c)+' 段'+bdChapPassed(p,c)).join('・')}
  if(k===4){const v=p.video;const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type==='video_make').sort((a,b)=>b.createdAt-a.createdAt)[0];const cs=chapList(p);const nb=cs.filter(c=>c.built).length;const rec=nb?`できた ${nb}／${cs.length} 章`:'';return j&&(j.status==='待ち'||j.status==='作業中')?(rec?rec+'・':'')+'頼んであります'+(j.chapter?'（'+esc(j.chapter)+'）':''):(rec||(v&&v.path?`${v.ver||1}版ができています`:''))}
  if(k===5){const t=(p.titles||[]).find(t=>t.id===p.titleId);return t?'決定：'+esc(t.text):''}
  if(k===9){const f=p.final;return f&&f.done?`${esc(f.res||'')} 書き出し済み${f.uploaded?'・投稿済み':''}`:''}
@@ -771,6 +774,58 @@ function progHTML(j){const g=j.progress||{};const pct=Math.max(3,Math.min(100,Ma
 const blobCache={};
 async function ghBlobURL(path){if(blobCache[path])return blobCache[path];const s=S();const r=await fetch(`https://api.github.com/repos/${s.o}/${s.r}/contents/${path}`,{headers:{Authorization:'Bearer '+s.t,Accept:'application/vnd.github.raw'},cache:'no-store'});if(!r.ok)throw new Error(r.status);const u=URL.createObjectURL(await r.blob());blobCache[path]=u;return u}
 function fillMedia(){document.querySelectorAll('[data-gh]').forEach(el=>{if(el.dataset.done)return;el.dataset.done=1;ghBlobURL(el.dataset.gh).then(u=>{el.src=u}).catch(()=>{el.alt='読み込めませんでした'})})}
+const BDOPEN={};document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.bdch,details.stch'))BDOPEN[(d.classList.contains('bdch')?'b:':'s:')+d.dataset.chap]=d.open},true);
+const bdOpen=(k,def)=>(k in BDOPEN?BDOPEN[k]:def)?'open':'';
+const STG=['下絵','大きな形','部品','細部','動き（大）','動き（小）','仕上げ'];
+const STG_YOU={1:'大きな形を見て通す',3:'細部を1つずつ指示する',6:'仕上がりを見て通す'};
+function bdScenes(p){return ((p.board||{}).scenes||[]).filter(x=>!x.deleted)}
+function bdChaps(p){const n=[];for(const x of bdScenes(p))if(!n.includes(x.chap||'全体'))n.push(x.chap||'全体');return n}
+function bdChapSt(p,c){p.board=p.board||{};p.board.chapStage=p.board.chapStage||{};return p.board.chapStage[c]||{passed:-1,made:-1}}
+function bdChapPassed(p,c){const sc=bdScenes(p).filter(x=>(x.chap||'全体')===c);const st=bdChapSt(p,c);const p0=sc.length&&sc.every(x=>x.pick!=null)?0:-1;return Math.max(st.passed==null?-1:st.passed,p0)}
+function bdChips(n,made){return `<div class="stg">${STG.map((t,k)=>`<span title="${t}" class="${k<=n?'ok':k===n+1&&made>=k?'now':''}">${k}</span>`).join('')}</div>`}
+function bdThumb(x){const d=(x.drafts||[])[x.pick!=null?x.pick:0];const im=(x.stageImgs&&Object.keys(x.stageImgs).length)?x.stageImgs[Math.max(...Object.keys(x.stageImgs).map(Number))]:(d&&d.img);return im?`<img data-gh="${esc(im)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:var(--line)">`:`<div style="aspect-ratio:16/9;border-radius:6px;background:var(--line);display:flex;align-items:center;justify-content:center" class="lead">下絵まだ</div>`}
+const BD_DES=[['stand','立つ場所'],['view','向き'],['sky','空'],['back','奥'],['mid','中'],['hero','主役'],['front','手前'],['ground','地面'],['scale','大きさの手がかり'],['moving','動く物']];
+function bdCard(p,x,passed){const d=x.design||{};const pend=(x.narrFix&&x.narrFix.status!=='済み')?`<div class="chg">語りの直しを頼んであります：${esc(x.narrFix.text)}</div>`:'';
+ return `<div class="bdc"><div class="bdt">${bdThumb(x)}</div><div style="font-weight:700;font-size:14.5px;margin:6px 0 2px">${esc(x.no||'')}　${esc(x.title||'')}</div>
+ <div class="lead" style="margin:0">語り：${esc((x.narr||'').slice(0,60))}${(x.narr||'').length>60?'…':''}</div>
+ <div style="font-size:13.5px;margin-top:4px">${x.comp?`<span class="lead">構図</span> ${esc(x.comp)}<br>`:''}${d.hero?`<span class="lead">主役</span> ${esc(d.hero)}<br>`:''}${x.camera?`<span class="lead">カメラ</span> ${esc(x.camera)}<br>`:''}${x.trans?`<span class="lead">次へ</span> ${esc(x.trans)}`:''}</div>
+ ${bdChips(passed,-1)}${pend}
+ <details style="margin-top:4px"><summary>${esc(x.no||x.id)} の設計表・下絵・直し</summary>
+ ${(x.drafts||[]).length?`<div class="lead" style="margin:4px 0 2px">下絵（段0）　押して選ぶ</div><div class="bdd">${x.drafts.map((g,k)=>`<button class="bdpick ${x.pick===k?'on':''}" data-bdpick="${esc(x.id)}|${k}">${g.img?`<img data-gh="${esc(g.img)}" alt="">`:''}<span>${esc(g.note||('案'+(k+1)))}</span></button>`).join('')}</div>`:''}
+ <div style="font-size:13.5px;margin-top:6px">${BD_DES.filter(([k])=>d[k]).map(([k,n])=>`<div><span class="lead">${n}</span>　${esc(d[k])}</div>`).join('')}</div>
+ <label>この場面への指示（下絵・構図・カメラ）</label><textarea data-bdnote="${esc(x.id)}" style="min-height:48px">${esc(x.note||'')}</textarea>
+ <div class="st"><button data-bdfix="${esc(x.id)}">この指示で下絵を直してもらう</button></div>
+ <label>この場面のために語りを直したい</label><input data-bdnarrin="${esc(x.id)}" placeholder="例：三分割で見せたいので、例を3つにしたい">
+ <div class="st"><button data-bdnarr="${esc(x.id)}">肉付けへ差し戻す</button></div>
+ ${jobLineBy(p,'board_fix',x.id)}${jobLineBy(p,'board_narr',x.id)}</details></div>`}
+function jobLineBy(p,type,sid){const j=(D.jobs||[]).filter(y=>!y.deleted&&y.projId===p.id&&y.type===type&&y.sceneId===sid).sort((a,b)=>b.createdAt-a.createdAt)[0];if(!j||j.status==='できた'&&Date.now()-j.updatedAt>864e5)return'';return `<p class="lead" style="margin:2px 0">${esc({board_fix:'下絵の直し',board_narr:'語りの直し'}[type])}：<b>${esc(j.status)}</b>${j.result?'　'+esc(j.result):''}</p>`}
+function boardStep(p){if(!syncOn())return `<div class="how"><p style="margin:4px 0">同期を設定すると、Claude が絵コンテを作ります。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
+ const sc=bdScenes(p);const chs=bdChaps(p);
+ const old=visualStep(p).replace('<div class="row"><button class="b main" data-next>図解はこれでいい</button></div>','');
+ return `<div class="how"><b>やること</b><ol><li>Claude が肉付けの語りを場面に分け、場面ごとに<b>設計表</b>（立つ場所・向き・空・奥・中・主役・手前…）・<b>構図の型</b>・<b>カメラ</b>・<b>次の場面への切り替え</b>を書き、灰色の箱だけの<b>下絵を3案</b>付ける（docs/notes/composition.md の決まりで）</li><li>場面ごとに下絵を1つ選ぶ。気になる所は「この場面への指示」に書いて直してもらう</li><li>絵の都合で語りを変えたいときは「肉付けへ差し戻す」。語りと絵を行ったり来たりして固める</li></ol></div>
+ <div class="row"><button class="b ${sc.length?'':'main'}" data-bdmake="">${sc.length?'絵コンテを全部作り直してもらう':'絵コンテを作ってもらう'}</button></div>${jobLine(p,'board_make')}
+ ${chs.map((c,ci)=>{const xs=sc.filter(x=>(x.chap||'全体')===c);const np=xs.filter(x=>x.pick!=null).length;const ps=bdChapPassed(p,c);
+  return `<details class="bdch" data-chap="${esc(c)}" ${bdOpen('b:'+c,np<xs.length&&!chs.slice(0,ci).some(c2=>sc.filter(x=>(x.chap||'全体')===c2).some(x=>x.pick==null)))}><summary><b>${esc(c)}</b>　<span class="lead">場面 ${xs.length}・下絵を選んだ ${np}/${xs.length}</span></summary>
+  <div class="bdg">${xs.map(x=>bdCard(p,x,ps)).join('')}</div>
+  <div class="st" style="margin-top:6px"><button data-bdmake="${esc(c)}">この章の絵コンテを作り直してもらう</button></div></details>`}).join('')}
+ <details style="margin-top:8px"><summary>図解（動く図・地図の動き）の案 — 場面の一種として使う</summary>${old}</details>
+ <div class="row"><button class="b main" data-next>絵コンテはこれでいい</button></div>`}
+function stageStep(p){if(!syncOn())return makeVideoStep(p);const chs=bdChaps(p);
+ if(!chs.length)return `<div class="how"><p style="margin:4px 0">先に絵コンテを作ると、章ごとに段を踏んで作れます。</p></div>`+makeVideoStep(p);
+ return `<div class="how"><b>やること</b><ol><li>章ごとに、段を1つずつ進めてもらう（<b>0 下絵 → 1 大きな形 → 2 部品 → 3 細部 → 4 動き（大）→ 5 動き（小）→ 6 仕上げ</b>）。後ろの段で前の段は作り替えない</li><li>あなたが見るのは <b>1（大きな形）</b>と<b>6（仕上げ）</b>。<b>3（細部）</b>は場面ごとに1つずつ指示する。ほかの段は Claude が段の一覧で自分で確かめて進める</li><li>直しは「何段めの話か」を選んで書く。その段だけが直る</li></ol></div>
+ ${chs.map((c,ci)=>{const xs=bdScenes(p).filter(x=>(x.chap||'全体')===c);const st=bdChapSt(p,c);const ps=bdChapPassed(p,c);const made=Math.max(st.made==null?-1:st.made,ps);const nx=ps+1;const waitYou=made>ps&&STG_YOU[made];
+  const job=(D.jobs||[]).filter(j=>!j.deleted&&j.projId===p.id&&(j.type==='stage_make'||j.type==='stage_fix')&&j.chapter===c).sort((a,b)=>b.createdAt-a.createdAt)[0];const busy=job&&(job.status==='待ち'||job.status==='作業中');
+  const sheet=((p.board.sheets||{})[c]||{})[made];
+  return `<details class="stch" data-chap="${esc(c)}" ${bdOpen('s:'+c,ps<6&&!chs.slice(0,ci).some(c2=>bdChapPassed(p,c2)<6))}><summary><b>${esc(c)}</b>　<span class="lead">通った段 ${ps<0?'なし':ps+'（'+STG[ps]+'）'}${made>ps?'・段'+made+'ができて確認待ち':''}</span></summary>
+  <table class="stt"><tr><th></th>${STG.map((t,k)=>`<th title="${t}">${k}</th>`).join('')}</tr>${xs.map(x=>`<tr><td>${esc(x.no||'')} ${esc((x.title||'').slice(0,10))}</td>${STG.map((t,k)=>`<td class="${k<=ps?'ok':k<=made?'now':''}"></td>`).join('')}</tr>`).join('')}</table>
+  ${sheet?`<div class="lead" style="margin:6px 0 2px">段${made}（${STG[made]}）の一覧</div><img data-gh="${esc(sheet)}" alt="" style="width:100%;border-radius:6px">`:''}
+  ${busy?`<div class="chg">${job.status==='作業中'?'Claude が作業中':'Claude に頼んであります'}：段${job.stage}${job.progress&&job.progress.label?'・'+esc(job.progress.label):''}</div>${job.status==='作業中'?progHTML(job):''}`:''}
+  ${waitYou&&!busy?`<div class="item" style="margin:6px 0;background:var(--paper)"><b>あなたの番：段${made}（${STG[made]}）を${made===3?'指示する':'見る'}</b>
+   ${made===3?xs.map(x=>`<label>${esc(x.no||'')} ${esc(x.title||'')} の細部の指示（1つずつ）</label><input data-stdet="${esc(x.id)}" placeholder="例：カバの耳を小さく、目の上に明るい面">`).join(''):`<label>直したい所（段${made}の話だけ）</label><textarea data-stnote="${esc(c)}" style="min-height:48px"></textarea>`}
+   <div class="st"><button data-stfix="${esc(c)}|${made}">${made===3?'この指示で細部を入れてもらう':'この直しを頼む'}</button><button data-stok="${esc(c)}|${made}">段${made}を通す（OK）</button></div></div>`:''}
+  ${!busy&&!waitYou&&nx<=6?`<div class="st" style="margin-top:6px"><button data-stmake="${esc(c)}|${nx}" ${nx===0?'disabled':''}>${nx===0?'先に絵コンテで下絵を選ぶ':`段${nx}（${STG[nx]}）を作ってもらう`}</button>${nx>=2&&nx<=5&&nx!==3?`<button data-stmake="${esc(c)}|auto">段5まで続けて作ってもらう</button>`:''}</div>`:''}
+  ${ps>=6?'<p class="lead" style="margin:4px 0">この章は仕上がりました。下で声と字幕を入れた仮の動画にできます。</p>':''}</details>`}).join('')}
+ <h3 style="font-size:15px;margin:14px 0 4px">声・字幕を入れて、通しの仮の動画にする</h3>`+makeVideoStep(p)}
 function visualStep(p){const vs=p.visuals||[];const props=vs.filter(v=>v.status==='提案');const made=vs.filter(v=>v.status!=='提案');
 if(!syncOn())return `<div class="how"><b>やること</b><p style="margin:4px 0">同期を設定すると、Claude が図解の案を出し、選んだものを作って届けます。今は手順4の動画づくりのときにチャットで相談してください。</p></div><div class="row"><button class="b main" data-next>次へ</button></div>`;
 return `<div class="how"><b>やること</b><ol><li>Claude が台本に合う図解（動く図・地図の動き）の案を、静止画の見本つきで出す</li><li>気に入った案だけに印を付けて「作ってもらう」</li><li>できた図解を見て、直したい所があれば書いて直してもらう</li></ol></div>
@@ -969,7 +1024,7 @@ ${mode==='全部'?'<p class="lead" style="margin:2px 0">構成から動画まで
 ${busy?'':`<div class="row"><button class="b main" data-omgo>この内容で作り直してもらう</button></div>`}${jobLine(p,'rebuild')}</details>`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
 if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
-function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&!['summary','pick','use_item','footage_check','digest','thumb_fix','title_fix','seed_grow'].includes(o.type));
+function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&!['summary','pick','use_item','footage_check','digest','thumb_fix','title_fix','seed_grow','board_fix','board_narr','stage_make','stage_fix'].includes(o.type));
 if(o.type==='gather'&&old.length){const j=old[0];for(const [k] of GK)j.counts[k]=Math.max(j.counts[k]||0,(o.counts||{})[k]||0);for(const x of old.slice(1)){x.deleted=true;x.updatedAt=now()}j.updatedAt=now();save();return j}
 if(o.type==='visual_make'&&old.length){const j=old[0];j.ids=[...new Set([...(j.ids||[]),...(o.ids||[])])];j.updatedAt=now();save();return j}
 for(const x of old){x.deleted=true;x.updatedAt=now()}
@@ -1012,6 +1067,13 @@ if(el.matches('[data-cok]')||el.matches('[data-cunok]')){const n=el.dataset.cok|
 if(el.matches('[data-cfix]')){const n=el.dataset.cfix;const c=chapList(p).find(x=>x.name===n);const op=chapState(p,c).open.map(x=>x.f).filter(f=>f.text);if(!op.length){alert('直したいことを書いてください');return}queueJob({type:'video_fix',projId:p.id,chapter:n,notes:'',fixes:op.map(f=>({sec:f.sec,text:f.text,always:!!f.always}))});renderMake();return}
 if(el.matches('[data-cmake]')){queueJob({type:'video_make',projId:p.id,chapter:el.dataset.cmake,notes:''});renderMake();return}
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
+if(el.closest('[data-bdpick]')){const [sid,k]=el.closest('[data-bdpick]').dataset.bdpick.split('|');const x=bdScenes(p).find(y=>y.id===sid);if(!x)return;x.pick=x.pick===+k?null:+k;x.updatedAt=now();touchP(p);renderMake();return}
+if(el.matches('[data-bdmake]')){const c=el.dataset.bdmake;if(bdScenes(p).length&&!confirm(c?'この章の絵コンテを作り直しますか？（選んだ下絵と指示は Claude が引き継ぎます）':'絵コンテを全部作り直しますか？（選んだ下絵と指示は Claude が引き継ぎます）'))return;queueJob({type:'board_make',projId:p.id,chapter:c});renderMake();return}
+if(el.matches('[data-bdfix]')){const sid=el.dataset.bdfix;const x=bdScenes(p).find(y=>y.id===sid);if(!x||!(x.note||'').trim()){alert('この場面への指示を書いてください');return}queueJob({type:'board_fix',projId:p.id,sceneId:sid,notes:x.note});renderMake();return}
+if(el.matches('[data-bdnarr]')){const sid=el.dataset.bdnarr;const i=document.querySelector(`[data-bdnarrin="${CSS.escape(sid)}"]`);const t=i?i.value.trim():'';if(!t){alert('どう直したいかを書いてください');return}const x=bdScenes(p).find(y=>y.id===sid);x.narrFix={text:t,status:'待ち',at:now()};x.updatedAt=now();queueJob({type:'board_narr',projId:p.id,sceneId:sid,notes:t});touchP(p);renderMake();return}
+if(el.matches('[data-stmake]')){const [c,n]=el.dataset.stmake.split('|');queueJob({type:'stage_make',projId:p.id,chapter:c,stage:n==='auto'?bdChapPassed(p,c)+1:+n,upto:n==='auto'?5:undefined});renderMake();return}
+if(el.matches('[data-stok]')){const [c,n]=el.dataset.stok.split('|');const st=bdChapSt(p,c);st.passed=+n;st.made=Math.max(st.made||0,+n);p.board.chapStage[c]=st;touchP(p);renderMake();return}
+if(el.matches('[data-stfix]')){const [c,n]=el.dataset.stfix.split('|');let notes='',det=[];if(+n===3){document.querySelectorAll('[data-stdet]').forEach(i=>{const v=i.value.trim();if(v)det.push({sceneId:i.dataset.stdet,text:v})});if(!det.length){alert('細部の指示を1つ以上書いてください');return}}else{const t=document.querySelector(`[data-stnote="${CSS.escape(c)}"]`);notes=t?t.value.trim():'';if(!notes){alert('直したい所を書いてください');return}}queueJob({type:'stage_fix',projId:p.id,chapter:c,stage:+n,notes,details:det});renderMake();return}
 if(el.matches('[data-fstar]')){const f=(p.facts||[]).find(x=>x.id===el.dataset.fstar);if(!f)return;f.star=!f.star;touchP(p);renderMake();return}
 if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
 const extra={};if(type==='gather'){const g=gSel();if(!GK.some(([k])=>g[k].on)){alert('集めたいものに印を付けてください');return}extra.counts={};for(const [k] of GK)extra.counts[k]=g[k].on?g[k].n:0}
@@ -1056,6 +1118,7 @@ if(el.matches('[data-falw]')){p.fixes[+el.dataset.falw].always=el.checked;touchP
 if(el.matches('[data-ref]')){p.refs=p.refs||[];const id=el.dataset.ref;if(el.checked){if(!p.refs.includes(id))p.refs.push(id)}else p.refs=p.refs.filter(x=>x!==id);touchP(p);
 const lead=el.closest('.sb').querySelector('.lead');if(lead)lead.textContent=`この動画で参考にするメモに印を付ける（${p.refs.length}件選択中）`}});
 $('makeSteps').addEventListener('input',e=>{const p=projOf();if(!p)return;const el=e.target;if(blkInput(e,p))return;
+if(el.matches('[data-bdnote]')){const x=bdScenes(p).find(y=>y.id===el.dataset.bdnote);if(x){x.note=el.value;x.updatedAt=now();touchP(p)}return}
 if(el.matches('[data-field]')){p[el.dataset.field]=el.value;touchP(p)}
 if(el.matches('[data-fsec]')){p.fixes[+el.dataset.fsec].sec=el.value;touchP(p)}
 if(el.matches('[data-ftxt]')){p.fixes[+el.dataset.ftxt].text=el.value;touchP(p)}});

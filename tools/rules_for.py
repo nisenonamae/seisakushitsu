@@ -46,7 +46,8 @@ ALIAS = {'video_make': 'video', 'video_fix': 'video', 'rebuild': 'video', 'final
          'visual_ideas': 'visual', 'visual_make': 'visual', 'visual_fix': 'visual', 'visual_redesign': 'visual',
          'flesh_fix': 'flesh', 'flesh_sync': 'flesh', 'outline_fix': 'outline',
          'thumb_ideas': 'thumb', 'thumb_fix': 'thumb', 'title_ideas': 'title', 'title_fix': 'title',
-         'sound_ideas': 'sound', 'sound_fix': 'sound'}
+         'sound_ideas': 'sound', 'sound_fix': 'sound',
+         'board_make': 'visual', 'board_fix': 'visual', 'board_narr': 'flesh', 'stage_make': 'video', 'stage_fix': 'video'}
 k = ALIAS.get(a.kind, a.kind)
 if k not in JOB: sys.exit('種類：' + '・'.join(list(JOB) + list(ALIAS)))
 scopes, work = JOB[k]

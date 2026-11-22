@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、sound_ideas は 3、sound_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）、izumi は 3、seed_grow は 2、research は 4（調べる→事実を並べる→別の目で点検→背骨を書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、sound_ideas は 3、sound_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）、izumi は 3、board_make は 3、board_fix と board_narr と stage_fix は 2、stage_make は 作る段の数＋1、seed_grow は 2、research は 4（調べる→事実を並べる→別の目で点検→背骨を書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
@@ -229,6 +229,45 @@ BGM・効果音・始まりの音・環境音をためておく所。音のフ�
 - `focus` の分野ごとに、このチャンネル（地図・図解で「なぜ」を解く、素材なし）で**使える学び**を取り出し、`lessons` に `{"area"（構成／肉付け／見せ方／サムネ）,"text"（どうすればいいか。次の動画でそのまま使える形で一文〜二文）,"why"（餌のどこでそう分かったか。自分の言葉で短く。元の文を長く写さない）,"example"（このチャンネルならどう使うか一文）}` で書く。分野ごとに2〜5個。当たり前のこと（「分かりやすく話す」など）は書かない
 - `status` を「消化済み」に。total は 2
 - 構成・肉付け・図解・サムネを作るときは、決まりごとに加えて、`feeds` の `lessons` のうち `drop` が true でないものを引き出しとして見てよい。使ったら、その段の `uses` に `{"type":"feed","title":餌の題名,"what":学び}` と書く
+
+### 絵コンテと段（board_make・board_fix・board_narr・stage_make・stage_fix）
+2026-11-22・作り手「構成は文章メイン。構図・場面の切り替え・場面ごとの中身をメインにしたものを足したい。そこが一番大事。段々細かさを分けてアニメを作るのと組み合わせて体系化したい」。
+制作の手順の **3＝絵コンテ（場面の設計）**、**4＝段を分けて作る**（前の「図解を選ぶ」「仮の動画を頼む」の場所。番号は変えていない）。図解は場面の一種として絵コンテの中で使う。
+**描く前に必ず `docs/notes/composition.md` を読む**（設計表・構図の型・段の決まり・均等にしすぎない）。
+
+データ：`projects[].board`
+```
+{"scenes":[{"id","chap"（章の名前。肉付けの role の章と同じ）,"no"（"1-2"）,"title"（短い名前）,
+  "narr"（この場面の語り。肉付けの文をそのまま）,"fids"（肉付けの段の id の配列）,
+  "design":{"stand","view","sky","back","mid","hero","front","ground","scale","moving"}（composition.md の設計表）,
+  "comp"（構図の型と置き方を一言）,"camera"（カメラ：止める／寄る→加速／縦に下りる…）,"trans"（次の場面への切り替え：飛びこむ／三分割／横から割り込む／同じ位置で背景だけ替える…）,
+  "drafts":[{"img"（段0の下絵の png のパス）,"note"（案の違いを一言）}],"pick"（作り手が選んだ案の番号。Claude は書かない）,
+  "note"（作り手の指示。Claude は書き換えない）,"narrFix":{"text","status"},"stageImgs":{"1":"…png",…},"page"（描くページ名）,"spec"（描く指定）,"updatedAt"}],
+ "chapStage":{"<章>":{"passed"（通った段）,"made"（作った段）}},"sheets":{"<章>":{"<段>":"段の一覧の png"}},"ver","updatedAt"}
+```
+置き場：画像は `roadmap/apps/seisakushitsu/videos/<projId>/board/`。
+
+**board_make（絵コンテづくり）**：`jobs[].chapter` が空なら全部、あれば その章だけ。total は 3（場面に分ける→設計表→下絵）
+1. 肉付けの語りを、**画面が変わる所**で場面に分ける（1場面 4〜10秒が目安。語りの切れ目ではなく、見せる物が変わる所で切る）。章は肉付けの role の章のまま
+2. 場面ごとに設計表・構図・カメラ・切り替えを書く。**切り替えを先に考える**：前の場面のどこから次へつながるか（主役の位置をそろえる・カメラの動きの中に隠す、など。餌箱の学びと `tools/vis/README.md` の「つなぎ」「カメラ」「3分割」を使う）。同じ切り替えを3回続けない
+3. 下絵を **3案**（段0：灰色の箱と線だけ。立つ場所・向き・主役の位置が違う案にする。数字を少し変えただけの3案にしない）。3案を1枚に並べず、案ごとに png を書く
+4. 作り直しのときは、作り手が選んだ `pick`・`note` の場面は、その下絵を引き継いで直す（勝手に案を捨てない）。`chapStage` は、作り直した章だけ `{"passed":-1,"made":-1}` に戻す
+5. 絵コンテのために語りを変えたくなったら、勝手に肉付けを変えず、場面の `narrFix` に案として書いて result で知らせる
+
+**board_fix（下絵の直し）**：`jobs[].sceneId` の場面を、`notes`（作り手の指示）どおりに直す。直すのは指示された所だけ。案を3つ出し直すか、選ばれた案を直すかは指示に従う（分からなければ選ばれた案を直す）。total は 2
+
+**board_narr（場面のための語りの直し）**：作り手が「この場面のために語りを直したい」と言った。`notes` に沿って、`fids` の肉付けの段の語りを直し（`flesh` の次の版。直した段だけ。事実は facts と sources の通りに）、場面の `narr` も合わせ、`narrFix.status` を「済み」にする。前後の場面とのつながりが崩れたら、その場面の `trans` も直す。total は 2
+
+**stage_make（段の制作）**：`jobs[].chapter` の章を、`stage`（段）まで描く。`upto` があればそこまで続けて作る（ただし作り手が見る段＝1・3・6 の手前で止める）
+- 場面ごとに `page`（`tools/vis/html/` のページ）と `spec` を決めて描く。新しい場面は最初から段に分けて書く（`"stage":N`、`stg(n)`。composition.md の「仕組み」）
+- 段ごとに `python3 tools/stage_sheet.py <page> --spec '…' --stages 0..N --out …` で一覧を出し、自分で確かめる。章の一覧（その段の全場面を1枚に）を `sheets[章][段]` に、場面ごとの最新の絵を `stageImgs[段]` に書く
+- 作った段を `chapStage[章].made` に。**作り手が見ない段（2・4・5）は、自分の点検で通ったら `passed` も進めてよい**。作り手が見る段（1・6）と細部（3）は `made` だけ進めて止める（作り手が「通す」を押すと `passed` になる）
+- 段3（細部）は、作り手の指示（stage_fix の `details`）がある所だけ描く。指示のない場面は段2のまま通してよい
+- 段6まで通った章は、video_make（声・字幕つきの仮の動画）でその絵を使う
+- 後ろの段で前の段を作り替えない。通った段（`passed`）の絵は固定
+- total は（作る段の数＋1）
+
+**stage_fix（段の直し）**：`stage` の段だけを、`notes`（段1・6）か `details`（段3：場面ごとの細部の指示）どおりに直す。**直す前に「何段めの話か」を result に書く**。前の段を直さないと直らないと思ったら、直さずに result でそう言う。直したら `sheets` を出し直し、`made` はそのまま（作り手がもう一度見る）。total は 2
 
 ### video_make（仮の動画づくり）
 声・図解・字幕まで入った下書きの動画を作る。作り手はこれを見て直す所を書く。
