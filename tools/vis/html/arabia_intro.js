@@ -174,6 +174,7 @@ const POD=[{x:552,y:360,s:.24,yaw:55,seed:45,fl:40},{x:668,y:368,s:.27,yaw:160,s
  {x:150,y:420,s:.46,yaw:150,seed:8,fl:36},{x:596,y:446,s:.56,yaw:78,seed:21,fl:36,sink:[.9,4.3]},{x:820,y:418,s:.48,yaw:12,seed:14,fl:22},{x:752,y:450,s:.26,yaw:20,seed:33,fl:12,calf:1},{x:1080,y:452,s:.54,yaw:318,seed:65,fl:32},
  {x:270,y:556,s:.98,yaw:0,side:1,seed:2,fl:30,yawn:1.5},{x:1050,y:580,s:1.0,yaw:146,seed:19,fl:36,turn:[3.0,5.6]},{x:610,y:634,s:.8,yaw:62,seed:37,fl:52}];
 function podState(h,t,tl){let fl=h.fl,jaw=0,tilt=-.04,puff=0,hyaw=0,x=h.x,bub=0;const ev=[],E=(t0,xx,w)=>ev.push({age:tl-t0,x:xx,w});
+ if(h.call!=null){const k=ease(tw(tl,h.call,.35))-ease(tw(tl,h.call+1.2,.5));jaw=Math.max(jaw,.4*k);tilt-=.12*k;E(h.call+.15,60,210)}   /* 鳴く：頭を少し上げ、口を半分あける（ウィーズホンク。水の上と下の両方に届く・Barklow 2004） */
  if(h.yawn!=null){jaw=yawnK(tl,h.yawn,3);E(h.yawn+.32,60,230);E(h.yawn+2.6,170,150)}
  if(h.sink){const [a,b]=h.sink;fl=lerp(fl,128,ease(tw(tl,a,1.3)));bub=tl>a+1.2&&tl<b;E(a+.3,60,170);if(tl>b){fl=lerp(128,h.fl-12,eout(tw(tl,b,.8)));fl=lerp(fl,h.fl,ease(tw(tl,b+.9,1.4)));puff=tw(tl,b+.55,.7);E(b,60,170);E(b+.9,60,150)}}
  if(h.calf){const k=ease(pulse(tl,2.2,3));fl=h.fl-k*14+Math.sin(tl*5)*2*k;tilt=-.1-k*.22;E(2.3,60,90);E(4.3,60,90)}
@@ -266,8 +267,10 @@ function front3(t,tl){rect(0,0,W,H,IC.sky1);world3(t,234,{sunX:260,noBirds:1,aca
  fg3(t,0,1)}
 
 // ─── D：真上。背中が岩のように並ぶ。1頭が水の底をけって進み、泥が舞いあがる ───
-function hpTop3(x,y,s,ang,seed,t,o={}){const v=hv(seed),cb=mix(IC.hb,v.tn>0?'#93706a':'#615a5a',Math.abs(v.tn)*.6),cl=mix(cb,'#cdbfb6',.4),cd=mix(cb,'#2e2626',.4),L=v.L,Wd=.8+v.hu*.25,fu=flickU(t+seed,v.ft),ear=fu<0?0:Math.sin(fu*34)*(1-fu),up=o.up==null?1:o.up;
+function hpTop3(x,y,s,ang,seed,t,o={}){let v=hv(seed),cb=mix(IC.hb,v.tn>0?'#93706a':'#615a5a',Math.abs(v.tn)*.6),cl=mix(cb,'#cdbfb6',.4),cd=mix(cb,'#2e2626',.4),L=v.L,Wd=.8+v.hu*.25,fu=flickU(t+seed,v.ft),ear=fu<0?0:Math.sin(fu*34)*(1-fu),up=o.up==null?1:o.up;
+ if(o.sil){cb=cl=cd=o.sil}   /* 下から見たかげ（真下のビュー） */
  g.save();g.translate(x,y);g.rotate(ang);g.scale(s,s);
+ if(o.sil&&o.pass!=='sh'){for(const [lx,ly] of [[-130*L,62],[-120*L,-62],[50,58],[60,-58]]){const k2=Math.sin(t*5+lx)*6;ell(lx+k2,ly*Wd,26,18,o.sil)}}
  if(o.ring&&o.pass!=='sh')for(let i=0;i<2;i++){const k=((t*.5+i/2+v.sx)%1);g.save();g.globalAlpha=(1-k)*.5;g.strokeStyle='#e9eed8';g.lineWidth=2/s;g.beginPath();g.ellipse(20,0,(230+k*120),(110+k*90)*Wd,0,0,7);g.stroke();g.restore()}
  if(o.pass!=='body'){g.save();g.globalAlpha=.22;fill([[-190*L,0,.9],[-160*L,-66*Wd,.9],[-40*L,-82*Wd,.9],[84,-66*Wd,.9],[150,0,.8],[84,66*Wd,.9],[-40*L,82*Wd,.9],[-160*L,66*Wd,.9]],'#3d4230');g.restore();}
  if(o.pass==='sh'){g.restore();return}
@@ -277,7 +280,7 @@ function hpTop3(x,y,s,ang,seed,t,o={}){const v=hv(seed),cb=mix(IC.hb,v.tn>0?'#93
  for(let i=0;i<v.scar;i++){const xx=(-110+i*50)*L*k;line([[xx,20*Wd],[xx+22,30*Wd]],cl,2.5)}
  if(o.bird){g.save();g.translate(-60*L,(v.sx-.5)*40);g.scale(1/s*.5,1/s*.5);ell(0,0,16,9,'#6b5a45');ell(14,0,7,6,'#6b5a45');fill([[19,-3,.3],[30,0,.3],[19,3,.3]],'#d6452e');g.restore()}
  g.save();g.translate(96,0);g.rotate(o.head||0);g.translate(-96,0);
- for(const d of [-1,1]){g.save();g.translate(116,44*d);g.rotate(d*ear);ell(0,d*4,9,12,cb);ell(0,d*4,4,7,IC.hp);g.restore()}
+ for(const d of [-1,1]){g.save();g.translate(116,44*d);g.rotate(d*ear);ell(0,d*4,9,12,cb);ell(0,d*4,4,7,o.sil||IC.hp);g.restore()}
  fill([[86,-50*Wd,.8],[150,-50,.8],[214,-44,.8],[256,-28,.9],[262,0,.9],[256,28,.9],[214,44,.8],[150,50,.8],[86,50*Wd,.8]],cb);fill([[186,-34,.8],[240,-22,.9],[246,0,.9],[240,22,.9],[186,34,.8],[176,0,.8]],cl);
  for(const d of [-1,1]){ell(150,36*d,13,11,cb);ell(151,37*d,9.5,7.5,mix(IC.hp,cb,.35));ell(153,38*d,3.4,3.2,IC.he);ell(154.4,38*d-1.4,1.2,1.2,'#fff');g.strokeStyle=cd;g.lineWidth=2.4;g.lineCap='round';g.beginPath();g.arc(150,36*d,11.5,d>0?.35:-2.2,d>0?2.2:-.35);g.stroke();
   ell(230,14*d,10,8,cl);g.save();g.translate(233,14*d);g.rotate(d*.5);ell(0,0,5.5,1.9,mix(cd,cb,.25));g.restore()}g.restore();
@@ -399,3 +402,40 @@ SC.turn3=function(t){rect(0,0,W,H,'#cfd8c4');for(const [y] of [[230],[470],[700]
  [[14,1],[60,1],[110,.6],[90,1],[300,0]].forEach(([a,j],i)=>hp3({x:150+i*250,y:700,s:.5,yaw:a,seed:8+i},t,{fl:i===4?56:0,jaw:j}))};
 SC.gape3=function(t){rect(0,0,W,H,'#cfd8c4');rect(0,300,W,60,IC.wNear);rect(0,620,W,100,IC.wNear);
  hpS({x:300,y:300,s:1,dir:1,seed:2},t,{fl:-40,jaw:1});hpS({x:980,y:300,s:1,dir:-1,seed:19},t,{fl:-10,jaw:.5});hpS({x:300,y:620,s:.9,dir:1,seed:8},t,{fl:30});hpS({x:760,y:620,s:.9,dir:1,seed:37},t,{fl:58});hpS({x:1120,y:620,s:.5,dir:-1,seed:33},t,{fl:10})};
+
+// ─── 5版（2026-11-22 作り手）：1頭の母カバ（主役）と子にカメラがついていく。切り替えは主役の動きが理由 ───
+//   横（母子は群れから離れている。群れが鳴き、母が鳴き返す）→ 母子が沈む → カメラも水面をくぐる → 水の中（母子が底をけって進む）
+//   → 真下から見上げる（母子のかげが頭の上を通る）→ 母が鼻を出す → カメラも水面の上へ → 正面 → カメラが上がって真上（母子が群れに入る）
+//   → カメラが下りて横 → 群れの中の母子ごと骨になる。この母の骨が、のちに人に見つかる
+const MOM={x:270,y:556,s:.98,yaw:0,side:1,seed:2,fl:30,call:2.5,sink:[4.3,99]},CALF={x:540,y:590,s:.4,yaw:14,seed:33,fl:22,sink:[4.55,99],calf:1};
+const POD5=POD.filter(h=>h.y<470&&!h.calf&&!h.sink).map((h,i)=>({...h,x:640+(h.x-560)*.62,y:350+(h.y-354)*.5,s:h.s*.62,yawn:null,move:null,call:i===2?.9:(i===5?1.4:null)}));
+function side5(t,tl){sideBack(t,0);bed3(0);water3(332,t,1);bank3(t,0);podDraw(t,tl,POD5);podDraw(t,tl,[CALF,MOM]);fg3(t,0,0)}
+function push5(k,dir,A,B,wl,t=0){const e=ease(clamp(k)),off=dir*H*e;g.save();g.translate(0,off);A();g.restore();
+ g.save();g.beginPath();if(dir>0)g.rect(0,0,W,off);else g.rect(0,H+off,W,-off);g.clip();g.translate(0,off-dir*H);B();g.restore();
+ if(wl){const y=dir>0?off:H+off;g.save();g.strokeStyle='rgba(246,248,226,.85)';g.lineWidth=4;g.beginPath();for(let x=0;x<=W;x+=16)g.lineTo(x,y+Math.sin(x*.02+t*3)*5);g.stroke();g.restore()}}   // 水面をくぐる所は、水面の線を見せる
+function botUp5(t,tl){   // 真下から見上げる：明るい水面を、母と子のかげが横切る（音は水の中のこもった音）
+ {const gr=g.createRadialGradient(640,250,40,640,330,760);gr.addColorStop(0,'#f2f1c6');gr.addColorStop(.45,'#b7bd84');gr.addColorStop(1,'#56603c');g.fillStyle=gr;g.fillRect(0,0,W,H)}
+ {const r=R(88);for(let i=0;i<26;i++){const x=((r()*1500+t*(14+r()*18))%1500)-110,y=r()*H,k=(Math.sin(t*1.3+i*2.1)+1)/2;g.save();g.globalAlpha=.10+.1*k;ell(x,y,60+r()*80,16+r()*18,'#fbfadc');g.restore()}}   // 水面の光のゆらぎ（手本帳 中3）
+ const mx=-260+tl*560,cx=mx-300;
+ hpTop3(cx,430,.5,.06,33,t,{sil:'#404a32',head:Math.sin(t*2)*.1});hpTop3(mx,320,.95,-.03,21,t,{sil:'#3a432d',head:Math.sin(t*1.4)*.08});
+ {const r=R(89);for(let i=0;i<14;i++){const k=((t*.8+r())%1),x=mx+120+r()*80-k*60,y=320-k*300;g.save();g.globalAlpha=(1-k)*.6;g.strokeStyle='#f6f5d8';g.lineWidth=2;g.beginPath();g.arc(x,y,2+r()*4,0,7);g.stroke();g.restore()}}
+ {const gr=g.createRadialGradient(640,360,300,640,360,820);gr.addColorStop(0,'rgba(40,48,30,0)');gr.addColorStop(1,'rgba(40,48,30,.5)');g.fillStyle=gr;g.fillRect(0,0,W,H)}}
+SC.intro5=function(t){const TA=2.8,TB=9.0,TU=9.8,TV=12.0,TW=12.6,TS=14.6,TF=15.3,TC=18.0,TT=18.8,TD=22.0,TE=22.7,TX=24.0;
+ const sideA=()=>side5(t,t-TA),bot=()=>botUp5(t,t-TW);
+ const under=()=>{const tl=t-TU+.2;under3(t,tl);const hx=590+Math.sin(tl*.9)*20-430,hop=Math.abs(Math.sin(tl*3.4))*22;   // 子：母のすぐ後ろを、小さくはねながらついてくる
+  g.save();g.beginPath();g.rect(-400,256,W+800,H);g.clip();hp3({x:hx,y:520-hop,s:.5,yaw:14,seed:33,v:hv(33)},t,{full:1,fl:0,hz:.18,hzc:'#8a9460',tilt:-.08,legs:[Math.sin(tl*6.8)*.6,Math.sin(tl*6.8+1)*.6,Math.sin(tl*6.8+2)*.6,Math.sin(tl*6.8+3)*.6]});g.restore()};
+ const front=()=>{const tl=t-TF+.95;front3(t,tl);const up=ease(tw(tl,1.6,.9));if(up>0){g.save();g.beginPath();g.rect(0,0,W,478);g.clip();headF(1035,478+40*(1-up),.72,t,33);g.restore()}};   // 子も母の右に顔を出す
+ const top=()=>{const tl=t-TT+.4;top3(t,tl);const wa=-.42,sp=tl*38,wx=250+Math.cos(wa)*sp,wy=640+Math.sin(wa)*sp;hpTop3(wx-Math.cos(wa)*95-Math.sin(wa)*70,wy-Math.sin(wa)*95+Math.cos(wa)*70,.32,wa+.1,33,t,{head:Math.sin(tl*2.2)*.2,ring:1})};   // 子が母の横にぴったりついて群れへ
+ if(t<TA)grass4(t);
+ else if(t<TB){sideA();const tl=t-TA;if(tl<.8){g.save();g.globalAlpha=1-ease(tw(tl,0,.8));rect(0,0,W,H,'#fffdf0');g.restore()}}
+ else if(t<TU)push5((t-TB)/(TU-TB),-1,sideA,under,1,t);          // 母子が沈む → カメラも水面をくぐる
+ else if(t<TV)under();
+ else if(t<TW)push5((t-TV)/(TW-TV),1,under,bot,0,t);            // 見上げる
+ else if(t<TS)bot();
+ else if(t<TF)push5((t-TS)/(TF-TS),1,bot,front,1,t);            // 母が鼻を出す → カメラも水面の上へ
+ else if(t<TC)front();
+ else if(t<TT)push5((t-TC)/(TT-TC),1,front,top,0,t);            // カメラが上がって見下ろす
+ else if(t<TD)top();
+ else if(t<TE)push5((t-TD)/(TE-TD),-1,top,()=>side3(t,7.6+(t-TE),{dead:false}),0,t);   // カメラが下りて横へ
+ else{const td=t-TX,dead=td>=0,tc=td-.45;side3(t,7.6+(t-TE),{dead,drain:dead?1:0,dry:dead?1:0,tc,td});
+  if(dead&&td<.14){g.save();g.globalAlpha=1-td/.14;rect(0,0,W,H,'#fff');g.restore()}}};
