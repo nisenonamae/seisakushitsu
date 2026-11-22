@@ -128,6 +128,68 @@ const SC2={
   for(const [x,y] of [[300,520],[980,520],[640,610]]){line([[x-30,y],[x,y-8],[x+34,y+4]],'#a86f37',3);line([[x,y-8],[x+6,y+16]],'#a86f37',3)}hippoHeadP(640,510,.55);reeds(-1,C.fgS,.6)},
 };
 SC.study=function(t){rect(0,0,W,H,'#e9e2d0');rect(0,470,W,250,'#63acc9');hippo(330,300,1.05);hippoFace(980,250,.9);hippoHead(420,590,1.2)};SC2.study=function(t){hippoP(330,300,1.05);hippoFaceP(980,250,.9);hippoHeadP(420,590,1.2)};
+/* ---- 動きの試し（2026-11-22・作り手「問題は動いているとき。自然で、見ていて楽しい動きに」）：序の3場面を通しで。mode:"intro"
+   カバは1体を同じ場所に立たせ、水面の高さだけを下げる（水につかっている → 砂の上に取り残される）。頭・耳・まぶた・しっぽを別々に動かす */
+const tw=(t,t0,d)=>clamp((t-t0)/d);                      // t0 から d 秒で 0→1
+const pulse=(t,t0,d)=>{const u=(t-t0)/d;return u<0||u>1?0:Math.sin(u*Math.PI)};   // 0→1→0
+function hippoA(x,y,s,o={}){const ear=o.ear||0,ear2=o.ear2||0,blink=o.blink||0,tilt=o.tilt||0,br=o.breath||0,tail=o.tail||0,sq=o.squash||0;
+ g.save();g.translate(x,y);g.scale(s*(1+sq*.06),s*(1-sq*.1));
+ fill([[-128,10,.6],[-82,14,.6],[-86,70,.3],[-124,70,.3]],HC.d);fill([[52,14,.6],[104,6,.6],[100,70,.3],[58,70,.3]],HC.d);
+ g.save();g.translate(-196,-44);g.rotate(tail);line([[0,0],[-16,36]],HC.d,9);g.restore();
+ g.save();g.translate(0,46);g.scale(1,1+br*.025);g.translate(0,-46);
+ fill([[-200,-30,.9],[-185,-90,.9],[-120,-112,.8],[-20,-104,.8],[60,-112,.8],[110,-96,.7],[120,-40,.7],[100,20,.8],[20,44,.8],[-100,46,.8],[-180,24,.9]],HC.b);
+ fill([[-172,24,.8],[-100,44,.8],[20,42,.8],[96,18,.8],[60,8,.7],[-100,18,.7]],HC.p);fill([[-170,-86,.9],[-110,-106,.8],[-20,-98,.8],[40,-104,.8],[10,-84,.8],[-120,-80,.8]],HC.l);
+ line([[36,-44],[30,8]],HC.d,4);line([[-112,-54],[-124,8]],HC.d,4);g.restore();
+ fill([[-172,10,.6],[-110,14,.6],[-114,70,.3],[-164,70,.3]],HC.b);fill([[28,16,.6],[90,10,.6],[84,70,.3],[34,70,.3]],HC.b);for(const x0 of [-150,-128,46,70])line([[x0,62],[x0,70]],HC.d,3);
+ // 頭（首を軸に回す）
+ g.save();g.translate(84,-50);g.rotate(tilt);g.translate(-84,50);
+ for(const [ex,ey,rx,ry,a,pk] of [[138,-122,8,12,ear2,0],[112,-120,9,14,ear,1]]){g.save();g.translate(ex,ey);g.rotate(a);ell(0,-8,rx,ry,HC.b);if(pk)ell(0,-8,4,8,HC.p);g.restore()}
+ ell(168,-116,13,12,HC.b);ell(262,-82,11,8,HC.b);
+ fill([[70,-104,.8],[120,-126,.8],[160,-122,.7],[190,-100,.7],[236,-92,.8],[276,-70,.9],[284,-24,.9],[262,6,.8],[200,14,.7],[140,8,.7],[96,-10,.8],[80,-50,.8]],HC.b);
+ fill([[200,-82,.8],[268,-66,.9],[278,-28,.9],[256,-2,.8],[206,2,.7],[186,-32,.7]],HC.l);fill([[140,6,.7],[200,12,.7],[258,4,.8],[240,-14,.7],[170,-12,.7]],HC.p);
+ line([[84,-96],[72,-50],[92,-8]],HC.d,5);line([[278,-32],[236,-17],[190,-20],[156,-40]],HC.d,5);
+ ell(170,-113,5,5*(1-blink),HC.e);if(blink<.6)ell(171.5,-114.5,1.6,1.6,'#fff');line([[160,-121+blink*7],[180,-121+blink*7]],HC.d,3+blink*3);ell(264,-82,4,2.5,HC.e);
+ g.restore();g.restore()}
+function reedsA(side,k,sway,brown){blurOn(9);const r=R(side>0?5:9);const col=brown>0?`rgb(${Math.round(lerp(29,107,brown))},${Math.round(lerp(58,68,brown))},${Math.round(lerp(54,38,brown))})`:C.fg;
+ for(let i=0;i<5;i++){const x=(side>0?W-30:30)-side*i*70*r(),h=(420+r()*320)*k,w=60+r()*70,lean=(r()-.4)*120*side+sway*(40+i*14)+ (1-k)*side*-260;fill([[x-w/2,H+20,.3],[x-w/5+lean*.4,H-h*.6,.8],[x+lean,H-h,.9],[x+w/3+lean*.4,H-h*.5,.8],[x+w/2,H+20,.3]],col)}blurOff()}
+function birdA(x,y,s,flap){g.save();g.translate(x,y);fill([[-14*s,0,.9],[0,-12*s,.9],[16*s,-4*s,.9],[6*s,8*s,.9]],'#f6f1e4');fill([[14*s,-6*s,.3],[26*s,-3*s,.3],[14*s,0,.3]],'#e79a3c');ell(8*s,-5*s,2*s,2*s,'#222');
+ if(flap){g.rotate(-flap);fill([[-10*s,-4*s,.5],[-4*s,-26*s,.9],[8*s,-6*s,.5]],'#e3dccb')}g.restore()}
+SC.intro=function(t){
+ const drain=ease(tw(t,5.2,2.0)),dry=ease(tw(t,5.6,2.2)),poof=tw(t,9.0,.25),after=tw(t,9.0,2.6);
+ const HX=700,HY=520,S=1.15;
+ // カメラ：ゆっくり寄る → 水が引くとき少し引く → 骨へ寄る
+ const z=1+.07*ease(tw(t,0,5))-.05*ease(tw(t,5.2,2.2))+.16*ease(tw(t,9.6,2.4));g.translate(HX,HY-60);g.scale(z,z);g.translate(-HX,-(HY-60));
+ // 奥：湖の景色 → 砂の景色へ重ねる
+ lakeBase();sun(1010,90,34);for(const [cx,cy,cs,sp] of [[330,110,1,9],[700,70,.6,14],[1130,170,.8,6]]){g.save();g.globalAlpha=1-dry;cloud(cx+t*sp,cy,cs);g.restore()}
+ fill([[820,240,.5],[1100,240,.5],[1090,262,.5],[840,266,.5]],'#98b7ae');tufts(338,16);
+ if(dry>0){g.save();g.globalAlpha=dry;sandBase();sun(1010,90,40,'#fffbe6');fill([[820,240,.5],[1100,240,.5],[1090,262,.5],[840,266,.5]],'#dcb37a');duneFaces();g.restore()}
+ // 砂の上の影
+ if(drain>.6){g.save();g.globalAlpha=(drain-.6)/.4*(1-poof);fill([[HX-210,HY+82,.9],[HX,HY+72,.9],[HX+250,HY+84,.9],[HX,HY+98,.9]],'#b97c40');g.restore()}
+ // カバ
+ const inWater=1-drain;
+ const earT=pulse(t,1.3,.22)*.5-pulse(t,1.55,.2)*.25+pulse(t,3.5,.2)*.45+pulse(t,6.0,.25)*.5+pulse(t,8.0,.2)*.4, ear2=pulse(t,1.4,.2)*.4+pulse(t,3.62,.2)*.4+pulse(t,6.1,.25)*.4;
+ const blink=Math.max(pulse(t,2.1,.18),pulse(t,4.3,.18),pulse(t,6.4,.2),pulse(t,6.9,.2),pulse(t,8.4,.3));
+ const bob=inWater*Math.sin(t*1.7)*5;const tilt=-.14*inWater+.05*ease(tw(t,7.3,.6))-.03*pulse(t,2.7,.5);
+ const squash=pulse(t,8.92,.16);
+ if(poof<1){g.save();g.globalAlpha=1-poof;hippoA(HX,HY+bob,S,{ear:-earT,ear2:-ear2,blink,tilt,breath:Math.sin(t*2.1),tail:Math.sin(t*3)*.25*drain,squash});g.restore()}
+ // 骨（ぽん、と入れ替わる。少しはずんで落ち着く）
+ if(poof>0){const b=back(clamp(after*4),1.6);g.save();g.globalAlpha=clamp(poof*2);g.translate(HX+70,HY);g.scale(1,b);g.translate(-(HX+70),-HY);boneHippo(HX+70,HY,S);bonesP(HX+70,HY,S);g.restore();
+  for(let i=0;i<7;i++){const a=i/7*6.283,k=tw(t,9.0,.7),rr=40+k*150;g.save();g.globalAlpha=(1-k)*.8;ell(HX+60+Math.cos(a)*rr,HY-40+Math.sin(a)*rr*.6,34*(1-k*.4),26*(1-k*.4),'#f3dfb4');g.restore()}}
+ // 水：水面が下がっていく。水の下のカバはうっすら見える
+ const wl=lerp(HY-112,H+60,drain)+ (inWater>0?Math.sin(t*1.7+1)*2:0);
+ if(drain<1){g.save();g.globalAlpha=.9;rect(-100,wl,W+200,H,C.water);g.restore();g.save();g.globalAlpha=1-drain;waterBands(Math.max(wl+30,380));
+  for(let i=0;i<3;i++){const k=((t*.45+i/3)%1);g.globalAlpha=(1-k)*(1-drain);g.strokeStyle='#e8f6fa';g.lineWidth=3;g.beginPath();g.ellipse(HX+60,wl+4,90+k*260,6+k*18,0,0,7);g.stroke()}
+  line([[HX-250,wl],[HX+330,wl]],'#e8f6fa',3);g.restore()}
+ // 鼻から水しぶき
+ {const k=tw(t,2.75,.7);if(k>0&&k<1)for(let i=0;i<6;i++){const a=-1.2-i*.14,v=120+i*18;ell(HX+304+Math.cos(a)*v*k,HY-112+Math.sin(a)*v*k+260*k*k,4,4,'#e8f6fa')}}
+ // 小鳥：耳の動きではねる → 水が引くと飛んで逃げる
+ {const fly=tw(t,5.5,1.6);const hop=pulse(t,1.35,.3)*14+pulse(t,3.55,.3)*12;const bx=lerp(HX+40,HX+420,ease(fly)),by=lerp(HY-150+bob-hop,HY-470,ease(fly));if(fly<1)birdA(bx,by,1.1,fly>0?Math.abs(Math.sin(t*22))*1.2:(hop>2?.8:0))}
+ // 砂の筋が流れる・トカゲ
+ if(after>0){g.save();g.globalAlpha=clamp(after*2)*.9;for(let i=0;i<5;i++){const x=((t*60+i*260)%1500)-120;line([[x,628+i*14],[x+90,624+i*14]],'#f0cf93',3)}g.restore()}
+ // 手前：葦がしおれて倒れる → 砂の尾根がせり上がる
+ const sway=Math.sin(t*.9)*.6;if(dry<1){reedsA(-1,1-dry*.95,sway,dry);reedsA(1,1-dry*.95,sway,dry)}
+ {const k=ease(tw(t,7.6,1.6));if(k>0){blurOn(9);fill([[-60,760,.2],[-60,430+300*(1-k),.6],[240,470+300*(1-k),.9],[520,640+200*(1-k),.8],[600,760,.2]],C.sandN);fill([[1340,760,.2],[1340,560+260*(1-k),.6],[1100,640+200*(1-k),.9],[980,760,.2]],C.sandN);blurOff()}}
+};
 window.init=function(){};
 window.render=function(t){g.setTransform(1,0,0,1,0,0);g.filter='none';(SC[P.mode]||SC.s01)(t);if(stg(2)&&SC2[P.mode])SC2[P.mode](t)};
 </script></body></html>
