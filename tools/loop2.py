@@ -2,9 +2,10 @@
 """見直しループの次の段（2026-11-22）：実物帳・手本帳と並べて見る／2案を並べて選ぶ。手順は WORKER.md「見直しループ（次の段）」。
   snap   <設計図.json> <版のフォルダ>                       … 各場面の決まった秒（3つずつ）を止め絵で描く。速い（1版 約1分）。比べるのはこれ
   render <設計図.json> <出力.mp4> [--mode 別のmode]        … 動画にする（約10分。動きを見る周と、作り手に渡す最後だけ）
-  pack   <設計図.json> <動画.mp4> <出力フォルダ> --stage N [--scenes 名前,名前]
-                                                         … 見る役に渡す物を作る（段 N だけを見る。つかみと山場が既定）
-  pair   <設計図.json> <前.mp4> <新.mp4> <出力フォルダ> --scene 名前 --stage N --what "直した所"
+  pack   <設計図.json> <版> <出力フォルダ> --stage N --look miss|natural|challenge [--scenes 名前,名前]
+                                                         … 見る役に渡す物（段 N だけ。つかみと山場が既定）。look＝サイクルの番
+                                                           miss＝ミス（乱れ・事実ちがい）／natural＝自然（実物帳と比べる）／challenge＝挑戦（kurzgesagt＝手本帳に近づける）
+  pair   <設計図.json> <前> <新> <出力フォルダ> --scene 名前 --stage N --what "直した所" --look natural|challenge
                                                          … 選ぶ役に渡す、2案を並べた一覧（左右はくじ。答えは出力フォルダの外）
   liked  <版のフォルダ> <名前> --what "作り手の言葉"          … 作り手が「いい」と言った版の止め絵を好み帳に足す
   decide <出力フォルダ> <左|右|同じ>                        … 選ぶ役の答えから、どちらが勝ったかを出し、記録に足す
@@ -15,6 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, 'vis'))
 import refs_sheet
 LOG = os.path.join(ROOT, 'docs', 'notes', 'review_log.md')
+LOOK = {'miss': 'ミスの番：乱れ・事実ちがいを探す（指摘帳 B・M・F と調べた記録）。重だけ挙げればよい',
+        'natural': '自然の番：実物帳と並べて、実物とちがって不自然な所を探す',
+        'challenge': '挑戦の番：kurzgesagt のクオリティに近づける。手本帳のやり方のうち、こちらにない物を探す'}
 
 STAGES = {
  0: '設計：場面の役割・構図・カメラ・切り替えが、話の流れに合っているか',
@@ -84,28 +88,30 @@ def liked_sheet(out):
     try: return refs_sheet.sheet(refs_sheet.pick('liked', [], [], 8), out)
     except Exception: return None
 
-def pack(P, video, od, stage, names):
+def pack(P, video, od, stage, names, look='natural'):
     os.makedirs(od, exist_ok=True)
     scs = [s for s in P['scenes'] if (s['name'] in names if names else s.get('role'))]
-    brief = [f'# 見る役に渡す物（段{stage}：{STAGES[stage]}）', '',
-             '手順は tools/REVIEW.md の「次の段：実物・手本と比べる」。今回は**この段のことだけ**を見る。ほかの段の気づきは最後に1行ずつ「ほかの段」として書くだけ。', '']
+    brief = [f'# 見る役に渡す物（段{stage}：{STAGES[stage]}）', '', f'**今回の番：{LOOK[look]}**', '',
+             '手順は tools/REVIEW.md の「次の段：サイクルの番ごとに見る」。今回は**この段・この番のことだけ**を見る。ほかの気づきは最後に1行ずつ「ほかの段・ほかの番」として書くだけ。', '']
     for s in scs:
         tag = s['name']; ts = times_in(s)
         ours = [frame(video, t, os.path.join(od, f'_{tag}_{i}.jpg')) for i, t in enumerate(ts)]
         strip(ours, os.path.join(od, f'{tag}_作った絵.png'), [f'作った絵 {t:.1f}秒' for t in ts])
         for f in ours: os.remove(f)
-        its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8)
+        its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8) if look != 'challenge' else []
         if its: refs_sheet.sheet(its, os.path.join(od, f'{tag}_実物.png'))
-        brief += [f'## {tag}（{s["t"][0]}〜{s["t"][1]}秒・{s.get("role") or "ふつう"}）', f'- 作った絵：`{tag}_作った絵.png`', f'- 実物：`{tag}_実物.png`（出どころは同じ名前の .txt）' if its else '- 実物：まだない（実物帳に足す）', '- 手本のやり方：']
-        brief += ['  ' + x for x in tehon_lines(s.get('tehon', []))] or ['  （まだない）']
+        brief += [f'## {tag}（{s["t"][0]}〜{s["t"][1]}秒・{s.get("role") or "ふつう"}）', f'- 作った絵：`{tag}_作った絵.png`']
+        if look != 'challenge': brief.append(f'- 実物：`{tag}_実物.png`（出どころは同じ名前の .txt）' if its else '- 実物：まだない（実物帳に足す）')
+        if look == 'challenge': brief += ['- 手本（kurzgesagt）のやり方：'] + (['  ' + x for x in tehon_lines(s.get('tehon', []))] or ['  （まだない：手本帳に足してから挑戦する）'])
         brief.append('')
-    if liked_sheet(os.path.join(od, '好み_作り手がいいと言った版.png')): brief.append('- 作り手が「いい」と言った版：`好み_作り手がいいと言った版.png`（ここから離れる直しは慎重に）')
+    if look == 'miss': brief += ['## 指摘帳（B・M・F）', open(os.path.join(ROOT, 'docs', 'notes', 'review_points.md'), encoding='utf-8').read().split('## T')[0].split('## B', 1)[1].join(['## B', '']), '']
+    if look != 'miss' and liked_sheet(os.path.join(od, '好み_作り手がいいと言った版.png')): brief.append('- 作り手が「いい」と言った版：`好み_作り手がいいと言った版.png`（ここから離れる直しは慎重に）')
     brief += ['', '## 作り手の好み（指摘帳 T）', t_points(), '']
     if P.get('facts'): shutil.copy(os.path.join(ROOT, P['facts']), os.path.join(od, '調べた記録.md')); brief.append('- 調べた記録：`調べた記録.md`（描いた物が事実に合っているかも見る）')
     open(os.path.join(od, 'brief.md'), 'w', encoding='utf-8').write('\n'.join(brief) + '\n')
     print('出力：', od); print('\n'.join(sorted(os.listdir(od))))
 
-def pair(P, va, vb, od, scene, stage, what):
+def pair(P, va, vb, od, scene, stage, what, look='natural'):
     os.makedirs(od, exist_ok=True); s = [x for x in P['scenes'] if x['name'] == scene][0]
     flip = random.random() < .5; L, R = (vb, va) if flip else (va, vb)
     ts = times_in(s); rows = []
@@ -119,8 +125,8 @@ def pair(P, va, vb, od, scene, stage, what):
     its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8)
     if its: refs_sheet.sheet(its, os.path.join(od, f'{scene}_実物.png'))
     key = od.rstrip('/') + '.key.json'   # 選ぶ役に渡すフォルダの外に置く
-    json.dump({'左': 'B' if flip else 'A', '右': 'A' if flip else 'B', 'A': va, 'B': vb, 'scene': scene, 'stage': stage, 'what': what}, open(key, 'w'), ensure_ascii=False)
-    brief = [f'# 2案を並べて選ぶ（{scene}・段{stage}：{STAGES[stage]}）', '', '手順は tools/JUDGE.md。`' + scene + '_左右.png` の左と右は、同じ場面・同じ秒の2つの版。',
+    json.dump({'左': 'B' if flip else 'A', '右': 'A' if flip else 'B', 'A': va, 'B': vb, 'scene': scene, 'stage': stage, 'what': what, 'look': look}, open(key, 'w'), ensure_ascii=False)
+    brief = [f'# 2案を並べて選ぶ（{scene}・段{stage}：{STAGES[stage]}）', '', f'今回の直しは「{LOOK[look].split("：")[0]}」で入れた物（{LOOK[look].split("：")[1]}）。', '', '手順は tools/JUDGE.md。`' + scene + '_左右.png` の左と右は、同じ場面・同じ秒の2つの版。',
              f'- 今回ちがうのは、この段の1か所だけ：**{what}**（どちらが前の版かは教えない）',
              f'- 実物：`{scene}_実物.png`' if its else '- 実物：なし', '- 手本のやり方：'] + ['  ' + x for x in tehon_lines(s.get('tehon', []))]
     if P.get('facts'): shutil.copy(os.path.join(ROOT, P['facts']), os.path.join(od, '調べた記録.md')); brief.append('- 調べた記録：`調べた記録.md`')
@@ -138,19 +144,31 @@ def liked(sd, name, said):
 def decide(od, ans):
     K = json.load(open(od.rstrip('/') + '.key.json')); win = K.get(ans, '同じ') if ans in ('左', '右') else '同じ'
     res = {'B': '新しい版の勝ち → 残す', 'A': '前の版の勝ち → 戻す', '同じ': '差がない → 安い方（前の版）に戻す。ただし事実の直しなら残す'}[win]
-    line = f"- {time.strftime('%Y-%m-%d')} {K['scene']}・段{K['stage']}：{K['what']} → {res}"
+    look = K.get('look', 'natural'); nm = {'natural': '自然', 'challenge': '挑戦'}.get(look, look)
+    line = f"- {time.strftime('%Y-%m-%d')} {K['scene']}・段{K['stage']}・{nm}：{K['what']} → {res}"
     os.makedirs(os.path.dirname(LOG), exist_ok=True)
     if not os.path.exists(LOG): open(LOG, 'w', encoding='utf-8').write('# 2案比べの記録（tools/loop2.py decide が足す）\n\n負けた直しも残す（同じ直しをくり返さないため）。\n\n')
-    open(LOG, 'a', encoding='utf-8').write(line + '\n'); print(line); return win
+    open(LOG, 'a', encoding='utf-8').write(line + '\n'); print(line)
+    # 止め時：同じ場面・同じ段の挑戦が2回続けて負け（前の版の勝ち・同じ）なら止める。勝った挑戦は5回で作り手に見せる
+    pre = f"{K['scene']}・段{K['stage']}・挑戦："; ch = [l for l in open(LOG, encoding='utf-8') if pre in l]
+    lose = 0
+    for l in reversed(ch):
+        if '新しい版の勝ち' in l: break
+        lose += 1
+    wins = sum('新しい版の勝ち' in l for l in ch)
+    if lose >= 2: print(f'→ 止め時：この段の挑戦が{lose}連敗。今の実力の限界として、動画にして乱れ探し → 作り手へ')
+    elif wins and wins % 5 == 0 and win == 'B': print(f'→ 挑戦が{wins}回勝った。いったん作り手に見せて、方向を確かめる')
+    else: print(f'→ 次はミスの番（挑戦の連敗 {lose}・勝ち {wins}）')
+    return win
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('args', nargs='*')
-    ap.add_argument('--stage', type=int, default=2); ap.add_argument('--scenes', default=''); ap.add_argument('--scene', default=''); ap.add_argument('--what', default=''); ap.add_argument('--mode', default=None)
+    ap.add_argument('--stage', type=int, default=2); ap.add_argument('--scenes', default=''); ap.add_argument('--scene', default=''); ap.add_argument('--what', default=''); ap.add_argument('--mode', default=None); ap.add_argument('--look', default='natural', choices=['miss', 'natural', 'challenge'])
     a = ap.parse_args()
     if a.cmd == 'snap': snap(plan(a.args[0]), a.args[1])
     elif a.cmd == 'render': render(plan(a.args[0]), a.args[1], a.mode)
-    elif a.cmd == 'pack': pack(plan(a.args[0]), a.args[1], a.args[2], a.stage, [x for x in a.scenes.split(',') if x])
-    elif a.cmd == 'pair': pair(plan(a.args[0]), a.args[1], a.args[2], a.args[3], a.scene, a.stage, a.what)
+    elif a.cmd == 'pack': pack(plan(a.args[0]), a.args[1], a.args[2], a.stage, [x for x in a.scenes.split(',') if x], a.look)
+    elif a.cmd == 'pair': pair(plan(a.args[0]), a.args[1], a.args[2], a.args[3], a.scene, a.stage, a.what, a.look)
     elif a.cmd == 'liked': liked(a.args[0], a.args[1], a.what)
     elif a.cmd == 'decide': decide(a.args[0], a.args[1])
     else: sys.exit(__doc__)
