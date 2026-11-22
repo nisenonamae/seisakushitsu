@@ -127,6 +127,10 @@ details.chap[open]{border:2px solid var(--sea)}
 <label>気になったこと</label><textarea id="ownSeed" style="min-height:60px" placeholder="例：木ってあんなに重いのに、根元に穴があかないのはなんで？"></textarea>
 <label>なぜ気になった？（任意）</label><input id="ownWhy" placeholder="例：公園で大きな木を見て">
 <div class="row"><button class="b main" id="ownAdd">問いに育ててもらう</button><span class="lead" id="ownMsg"></span></div></div>
+<div class="item" id="izumiBox"><div class="q">種の泉（世界の科学ニュース）</div><div class="lead" id="izMeta" style="margin:2px 0 6px">読み込み中…</div>
+<div class="chips" id="izF" style="margin:4px 0"></div><div id="izList"></div>
+<div class="row"><button class="b" id="izRun">今すぐ見てきてもらう</button></div>
+<p class="lead" style="margin:4px 0 0">世界中（英語・中国語・ドイツ語・フランス語・スペイン語・韓国語・日本語…）の科学ニュースと解説記事を Claude が定期的に読んで、「直感とずれる」問いの種を置きます。気になった種の「この種を育てる」を押すと、問いの案が届きます（上の「自分の問いから」と同じ流れ）。</p></div>
 <div class="item" id="autoBox"><div class="q">自動で選んだ題材</div><div class="lead" id="autoMeta" style="margin:2px 0 6px">読み込み中…</div><div id="autoList"></div>
 <div class="row"><select id="autoN" style="width:auto"><option>3</option><option selected>5</option><option>10</option><option>20</option></select><button class="b main" id="autoRun">個 持ってきてもらう</button></div>
 <p class="lead" style="margin:4px 0 0">毎朝、海外の動画と日本語の供給を測って、いい題材を自動で選んでここに置きます。数を選んでボタンを押すと、その数だけ追加で探す依頼文がコピーされて Claude が開きます（貼るだけ）。今ある題材は消えません。</p></div>
@@ -635,7 +639,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={seed_grow:'問いを育てる',research:'深く調べる',art_animate:'絵のアニメ化',summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
+const name={izumi:'種の泉',seed_grow:'問いを育てる',research:'深く調べる',art_animate:'絵のアニメ化',summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（下のボタンで Claude に頼むと片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${(()=>{const pj=j.projId&&D.projects.filter(x=>!x.deleted&&!x.finished).length>1&&D.projects.find(x=>x.id===j.projId);return pj?`<span class="pill">${esc(candQ(pj).slice(0,14))}</span>`:''})()}${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
@@ -1057,6 +1061,29 @@ if(el.matches('[data-fsec]')){p.fixes[+el.dataset.fsec].sec=el.value;touchP(p)}
 if(el.matches('[data-ftxt]')){p.fixes[+el.dataset.ftxt].text=el.value;touchP(p)}});
 
 /* ---------- 自動で選んだ題材 ---------- */
+let IZ=null,izF='すべて';
+async function loadIzumi(){try{const r=await fetch('data/izumi.json?'+Date.now(),{cache:'no-store'});IZ=await r.json()}catch(e){IZ=null}renderIzumi()}
+function renderIzumi(){if(!$('izList'))return;if(!IZ){$('izMeta').textContent='まだ読み込めません（公開されたページで開くと出ます）';$('izList').innerHTML='';return}
+ const have=new Set(D.candidates.map(c=>c.id));const all=(IZ.items||[]).filter(x=>!have.has('izumi-'+x.id));
+ const fields=[...new Set(all.map(x=>x.field).filter(Boolean))];const F=['すべて','新発見','定番の不思議',...fields];if(!F.includes(izF))izF='すべて';
+ $('izF').innerHTML=all.length?F.map(f=>`<button data-izf="${esc(f)}" aria-pressed="${f===izF}">${esc(f)}</button>`).join(''):'';
+ const items=all.filter(x=>izF==='すべて'||x.kind===izF||x.field===izF).sort((a,b)=>(b.wow||0)-(a.wow||0)||((b.src||{}).date||'').localeCompare((a.src||{}).date||''));
+ $('izMeta').textContent=IZ.updated?`${IZ.updated} に見てきたもの　まだ見ていない種 ${all.length}件`:'まだ一度も見てきていません';
+ $('izList').innerHTML=items.length?items.map(x=>{const s=x.src||{},pp=x.paper;return `<div style="border-top:1px solid var(--line);padding:8px 0" data-izid="${esc(x.id)}">
+ <div class="q" style="font-size:15.5px">${esc(x.seed)}</div>
+ <div class="tags"><span>${'驚き'+'●'.repeat(x.wow||1)}</span><span>${esc(x.kind||'')}</span>${x.field?`<span>${esc(x.field)}</span>`:''}${s.lang?`<span>${esc(s.lang)}</span>`:''}${x.sure&&x.sure!=='確か'?`<span>${esc(x.sure)}</span>`:''}</div>
+ <div style="font-size:13.5px;margin-top:4px">${esc(x.find||'')}</div>
+ <details style="margin-top:4px"><summary>くわしく</summary><div style="font-size:13.5px">直感とのずれ：${esc(x.gap||'')}<br>動画になりそうな所：${esc(x.why||'')}
+ <br>出どころ：<a href="${esc(s.url||'')}" target="_blank" rel="noopener">${esc(s.outlet||'')}「${esc(s.title||'')}」</a>${s.date?'（'+esc(s.date)+'）':''}
+ ${pp&&pp.url?`<br>論文：<a href="${esc(pp.url)}" target="_blank" rel="noopener">${esc(pp.title||pp.url)}</a>${pp.free?'（無料で読める）':''}`:''}</div></details>
+ <div class="st"><button data-iztake="grow">この種を育てる</button><button data-iztake="捨てる">いらない</button></div></div>`}).join(''):'<div class="empty" style="margin-top:6px">まだ見ていない種はありません。次に見てくるのを待つか、今すぐ見てきてもらってください。</div>'}
+$('izF').addEventListener('click',e=>{const b=e.target.closest('[data-izf]');if(!b)return;izF=b.dataset.izf;renderIzumi()});
+$('izList').addEventListener('click',e=>{const b=e.target.closest('[data-iztake]');if(!b)return;const x=(IZ.items||[]).find(i=>i.id===b.closest('[data-izid]').dataset.izid);if(!x)return;const s=x.src||{};
+ const links=[{src:(s.outlet||'記事')+(s.lang?'（'+s.lang+'）':''),title:s.title||'',url:s.url||''}];if(x.paper&&x.paper.url)links.push({src:'論文',title:x.paper.title||'',url:x.paper.url});
+ const grow=b.dataset.iztake==='grow';
+ const c={id:'izumi-'+x.id,q:x.seed,seed:x.seed,seedWhy:[x.find,x.gap?'直感とのずれ：'+x.gap:''].filter(Boolean).join('　'),origin:'own',pillar:'暮らし',entry:'自分の問い',angle:x.why||'',supply:'',score:0,links,status:grow?'候補':'捨てる',like:0,memo:'種の泉から',updatedAt:now()};
+ D.candidates.push(c);if(grow&&syncOn())queueJob({type:'seed_grow',candId:c.id});else save();renderAll()});
+$('izRun').onclick=()=>{if(syncOn()){queueJob({type:'izumi'});$('izMeta').textContent='頼みました。「頼みごとの状況」から今すぐ片づけてもらうこともできます';return}copyOpen('制作室の「種の泉」を今すぐ見てきてほしい。GitHub の nisenonamae/seisakushitsu を用意して（なければ add_repo で push 権限つきで追加してクローン。あれば git pull）、tools/IZUMI.md の手順どおりに世界の科学ニュースから問いの種を集め、data/izumi.json に足して push して。')};
 let AUTO=null;
 async function loadAuto(){try{const r=await fetch('data/auto.json?'+Date.now(),{cache:'no-store'});AUTO=await r.json()}catch(e){AUTO=null}renderAuto()}
 function renderAuto(){if(!$('autoList'))return;if(!AUTO){$('autoMeta').textContent='まだ読み込めません（公開されたページで開くと出ます）';$('autoList').innerHTML='';return}
@@ -1438,8 +1465,8 @@ if(e.target.matches('[data-osave]')){x.title=it.querySelector('[data-oet]').valu
 else if(e.target.matches('[data-ostar]')){x.star=!x.star}
 else if(e.target.matches('[data-odel]')){if(!confirm('この項目を消しますか？'))return;x.deleted=true}else return;
 x.updatedAt=now();save();renderOps()})}}
-function renderAll(){renderOps();renderAB();renderPoints();renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto()}
-renderAll();sync();loadAuto();
+function renderAll(){renderOps();renderAB();renderPoints();renderRules();renderFeeds();renderSounds();renderStyles();renderCand();renderIdeas();renderKufu();renderMake();renderAuto();renderIzumi()}
+renderAll();sync();loadAuto();loadIzumi();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script><div id="play" class="play" hidden><div class="pscr"><div class="prole" id="pRole"></div><div class="pshow" id="pShow"></div></div>
 <div class="psub" id="pSub"></div>
