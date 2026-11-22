@@ -51,8 +51,10 @@ def snap(P, od):
                 for t in times_in(s, 3, P):
                     await pg.evaluate('t=>render(t)', t); await pg.screenshot(path=os.path.join(od, f'{t:06.2f}.png'))
             await b.close()
-            if errs: print('要確認：ページのエラー', errs[:3])
-    asyncio.run(run()); print('止め絵：', od, len(os.listdir(od)), '枚')
+            return errs
+    errs = asyncio.run(run())
+    if errs: shutil.rmtree(od, ignore_errors=True); sys.exit(f'止めた：ページのエラー {errs[:2]}（書き間違い。行の途中の // は、その行の残りを消すので /* */ にする）')
+    print('止め絵：', od, len(os.listdir(od)), '枚')
 
 def frame(src, t, path, w=640):
     """src が止め絵のフォルダならその秒の絵、動画なら抜き出す"""

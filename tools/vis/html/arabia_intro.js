@@ -217,7 +217,7 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
     else{const w=Math.max(.5,Math.abs(sn))*SK;g.scale(w,SK);g.fillStyle=c;P([[-66,0,.7],[66,0,.7],[60,22,.7],[0,30,.6],[-60,22,.7]]);g.fill();
      g.fillStyle=tusk;for(const d of [-1,1]){P([[d*44,4,.5],[d*54,2,.5],[d*58,-30,.8],[d*50,-36,.6],[d*48,-14,.6]]);g.fill()}}};
   const q0=sk(-10*SK,0,0);items.push({n:q0[2],d:()=>{g.save();g.translate(q0[0],q0[1]);if(side)g.transform(1,sn*kp*.6*Math.sign(fx),0,1,0,0);cran();g.restore()}});
-  const fj=fall(.1),J1=mv([175,-32,0],[150,GY-12,-30],fj),J2=mv([315,-30,0],[290,GY-8,-10],fj);items.push({n:fj.u<.5?q0[2]+1:pj(...J2)[2]-2,d:()=>{const a=pj(...J1),b=pj(...J2),ang=Math.atan2(b[1]-a[1],Math.abs(b[0]-a[0])+1e-3)*.6;g.save();g.translate(a[0]+(side?0:(b[0]-a[0])/2),a[1]);if(side)g.rotate(ang*Math.sign(fx));jaw();g.restore()}})}
+  const fj=fall(.1),J1=mv([175,-32,0],[70,GY-4,56],fj),J2=mv([315,-30,0],[205,GY-2,70],fj); /* 崩れたら下あごは頭の骨の横の地面へ（重なって牙が頭の上から生えて見えた・4周目ミス） */ items.push({n:fj.u<.5?q0[2]+1:pj(...J2)[2]-2,d:()=>{const a=pj(...J1),b=pj(...J2),ang=Math.atan2(b[1]-a[1],Math.abs(b[0]-a[0])+1e-3)*.6;g.save();g.translate(a[0]+(side?0:(b[0]-a[0])/2),a[1]);if(side)g.rotate(ang*Math.sign(fx));jaw();g.restore()}})}
  items.sort((a,b)=>a.n-b.n);g.save();g.translate(x,y);g.scale(s,s);for(const it of items)it.d();g.restore()}
 function podBones(t,tc,drain){POD.forEach((h,i)=>{const s=h.s*1.1,y=h.y+h.fl*h.s,drop=ease(drain)*240*h.s;g.save();if(drain<1){g.beginPath();g.rect(0,0,W,h.y+drop);g.clip()}
   if(h.s<.3)g.globalAlpha=.85;bones3(h.x,y,s,h.side?10:h.yaw,tc-((i*37)%10)*.035,40+i);g.restore()})}
@@ -252,11 +252,11 @@ function front3(t,tl){rect(0,0,W,H,IC.sky1);world3(t,234,{sunX:260,noBirds:1,tre
  for(const h of POD2){const st=podState(h,t,tl);st.hz=h.s<.35?.4:.22;hp3({...h,x:st.x,v:h.v||(h.v=hv(h.seed))},t,st)}
  // 主役：目だけ出して見ている → ぬっと上がる → 耳をまわす → ゆっくり沈む
  const rz=u=>ease(tw(u,.9,1.0))-ease(tw(u,2.9,1.0))*.82,rise=rz(tl),mv=clamp(Math.abs(rz(tl+.06)-rz(tl-.06))*14+.5*pulse(tl,1.9,1.1)),wl=476,y0=lerp(528,424,rise),fu=(tl-2.05)/.75,ear=fu>0&&fu<1?Math.sin(fu*34)*(1-fu):pulse(tl,.45,.2)*.5;
- g.save();g.globalAlpha=.35;ell(640,wl+14,330,26,'#b9a876');g.restore();
+ g.save();g.globalAlpha=.2;ell(640,wl+5,250,5,'#3f4530');g.restore();   // 皿に見えた黄緑の楕円をやめ、水面すぐ下の細い映り込みだけ（4周目ミス）
  g.save();g.beginPath();g.rect(0,0,W,wl);g.ellipse(640,wl,lerp(150,262,clamp((wl-(y0-205))/330)),16,0,0,7);g.clip();face3(640,y0,1.25,t,{ear,blink:Math.max(pulse(tl,.6,.2),pulse(tl,3.3,.2))>.5,look:Math.sin(tl*1.2),nos:pulse(tl,1.5,.5)});
  if(fu>0&&fu<1){const rr=R(77);for(const d of [-1,1])for(let i=0;i<7;i++){const a=-1.57+d*.5+(rr()-.5)*2.2,dd=(24+rr()*130)*eout(fu),sz=(2+rr()*4.5)*(1-fu)+.8;ell(640+d*150+Math.cos(a)*dd,y0-220+Math.sin(a)*dd+(90+rr()*160)*fu*fu,sz*.8,sz*1.2,'#eef3e0')}}
  g.restore();
- for(let i=0;i<3;i++){const k=((t*.4+i/3)%1);g.save();g.globalAlpha=(1-k)*.8*mv;g.strokeStyle='#e9eed8';g.lineWidth=3;g.beginPath();g.ellipse(640,wl+6,240+k*340,7+k*40,0,0,7);g.stroke();g.restore()}
+ for(let i=0;i<3;i++){const k=((t*.4+i/3)%1);g.save();g.globalAlpha=(1-k)*.8*mv;g.strokeStyle='#e9eed8';g.lineWidth=3;g.beginPath();g.ellipse(640,wl+6,240+k*340,7+k*40,0,0,Math.PI);g.stroke();g.restore()} /* 波の輪は手前の半分だけ（奥の半分は体のうしろ。4周目ミス） */ 
 
  fg3(t,0,1)}
 
@@ -288,7 +288,7 @@ function top3(t,tl){rect(0,0,W,H,'#7c8759');
  // 歩く1頭：底をけるたびに背中が上がり、うしろに泥のけむり
  const wa=-.42,sp=tl*38,wx=250+Math.cos(wa)*sp,wy=640+Math.sin(wa)*sp,bn=Math.abs(Math.sin(tl*2.6));
  for(let i=0;i<7;i++){const age=tl-i*.6+((tl*1.0)%0.6)-.2;const tt=Math.floor(tl/.6)*.6-i*.6;if(tt<0)continue;const a2=tl-tt,px=250+Math.cos(wa)*tt*38-Math.cos(wa)*60,py=640+Math.sin(wa)*tt*38-Math.sin(wa)*60;g.save();g.globalAlpha=clamp(.5-a2*.11);ell(px,py,30+a2*26,20+a2*18,'#b3a577');ell(px+14,py+10,18+a2*18,12+a2*12,'#beb083');g.restore()}
- for(const pass of ['sh','body'])for(const [x0,y0,s,a,seed,b] of PODT){const x=770+(x0-770)*1.2,y=345+(y0-345)*1.2;{const mvk=seed%3===0?Math.sin(tl*1.3+seed):0;hpTop3(x+mvk*5*Math.cos(a),y+mvk*5*Math.sin(a),s,a,seed,t,{head:Math.sin(t*.6+seed)*.14,pass,up:mvk?.8+.2*mvk:1,ring:mvk&&Math.abs(Math.cos(tl*1.3+seed))>.5})}}
+ for(const pass of ['sh','body'])for(const [x0,y0,s0,a0,seed,b] of PODT){const x=770+(x0-770)*1.2,y=345+(y0-345)*1.2,a=a0+(((seed*37)%9)-4)*.16,s=s0*(.86+((seed*13)%6)*.055); /* 1頭ずつ向き・大きさを変える（同じ型に見えた・4周目ミス） */ {const mvk=seed%3===0?Math.sin(tl*1.3+seed):0;hpTop3(x+mvk*5*Math.cos(a),y+mvk*5*Math.sin(a),s,a,seed,t,{head:Math.sin(t*.6+seed)*.14,pass,up:mvk?.8+.2*mvk:1,ring:mvk&&Math.abs(Math.cos(tl*1.3+seed))>.5})}}
  
  hpTop3(wx,wy,.6,wa,151,t,{up:bn,head:Math.sin(tl*1.3)*.15,ring:1});
 }
@@ -367,7 +367,7 @@ function under3(t,tl){const v=92,sc=tl*v,SY=250,BY=612,MK='#8a9460';
  for(let k=0;k<5;k++){const tk=(Math.floor(tl/T)-k)*T+.16*T;if(tk<0)continue;const age=tl-tk,px=hx-190-age*v;if(age<0||age>1.8)continue;g.save();g.globalAlpha=clamp(.7-age*.4);ell(px,BY-2-age*6,22+age*44,7+age*9,'#8f8a5c');ell(px+26,BY+2-age*3,14+age*30,5+age*6,'#9c9768');g.restore()}
  g.save();g.globalAlpha=.3;ell(hx+10,BY+2,250-hop*1.2,17-hop*.1,'#33361f');g.restore();
  // 魚：それぞれ自分で動く。群れは奥を通りすぎ、底の2匹は泥をつつき、4匹はカバの体に寄ってはつつき、ときどき離れる（カバの上下にはすぐには付いていかない）
- {const r=R(65);for(let i=0;i<7;i++){const x=((r()*1700-sc*.55+tl*(30+r()*30))%1700+1700)%1700-200,y=330+r()*130+Math.sin(tl*1.3+i*2)*12;fishL(x,y,.42+r()*.4,i%4==3?-1:1,Math.sin(tl*11+i*2)*4,mix(i%2?'#5f6a4a':'#6f6a4f',MK,.4+r()*.2),.8+r()*.5)}
+ {const r=R(65);for(let i=0;i<7;i++){const x=((r()*1700-sc*.55+tl*(30+r()*30))%1700+1700)%1700-200,y=330+r()*130+Math.sin(tl*1.3+i*2)*12;fishL(x,y,.3+r()*.75,i%3==2?-1:1,Math.sin(tl*(8+i)+i*2)*4,mix(['#5f6a4a','#7a6f52','#56684f','#6e6046','#62705a'][i%5],MK,.25+r()*.35),.55+r()*.8)} /* 1匹ずつ大きさ・太さ・色・尾の振りを変える（同じ形に見えた・4周目ミス） */ 
   for(const [bx,ph] of [[380,0],[960,2]]){const x=((bx-sc*.9)%1700+1700)%1700-200,pk=Math.sin(tl*6+ph)*5;g.save();g.translate(x,BY-14+pk);g.rotate(.7);fishL(0,0,.8,1,Math.sin(tl*9+ph)*3);g.restore()}
   [[-200,6,.95,0],[-70,78,.7,1.3],[50,74,.8,2.6],[-130,-74,.6,3.9]].forEach(([ax,ay,fs,ph],i)=>{const hl=HY(tl-.45-i*.1),away=Math.pow(Math.max(0,Math.sin(tl*1.5+ph)),6),nib=Math.sin(tl*9+ph)*4*(1-away),x=hx+ax*1.12-away*(70+i*12)+nib,y=lerp(G,hl,.6)+ay*1.12-22+away*(34-i*22)+Math.sin(tl*2.3+ph)*5;fishL(x,y,fs,i==2?-1:1,Math.sin(tl*13+ph)*4,['#5f6a4a','#6b6448','#566a52','#6f6a4f'][i],.8+i*.13)})}
  hp3({x:hx,y:hy,s:1.12,yaw:16,seed:21,v:hv(21)},t,{full:1,fl:0,tilt:-.05-.05*Math.sin(c*6.283)*(1-up)-.34*up,legs:[fh,fh+.12,ff,ff+.14]});
