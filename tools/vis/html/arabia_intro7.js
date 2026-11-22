@@ -9,6 +9,7 @@
 //  ・背景が使い回し … 世界を横に広く（群れのいる右側は別の景色）。水の底も場所ごとにちがう物（草・石・沈んだ木・踏みならされた泥）
 (function(){
 const SURF=338,FLOOR=880;
+const MV={...hv(2),tn:-.5},CV={...hv(33),tn:1,L:.8};   /* 母は年を経た灰がかった茶、子は桃色がかった明るい茶で短い胴（子が母に溶けて見えた。7版3周目自然） */
 // ─ 鳴く（ウィーズホンク）。u＝鳴きはじめからの秒 ─
 function honk(u,D){D=D||5.6;if(u<0||u>D)return null;
  const lean=ease(clamp((u-.25)/1.1))*(1-ease(clamp((u-(D-1.2))/1.2)));          // 体を水から乗り出す
@@ -84,8 +85,8 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
   for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
   if(tl>=7.4){const gc=gait(Math.max(0,tl-9.7),1.25,84),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<9.6?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/2))):FLOOR-70-gc.hop*30);
-   hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:hv(33)},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<9.6?-.05:gc.pitch*1.2,legs:tl<9.6?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
-   hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:hv(2)},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
+   hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<9.6?-.05:gc.pitch*1.2,legs:tl<9.6?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
+   hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
    if(!atHerd&&tl>=9.6&&g1.touch){}   // 着いた所の泥（下）
    for(let k=0;k<4;k++){const tk=(g1.n-k)*1.9+9.6+1.75;const age=tl-tk;if(tl<9.6||age<0||age>1.8||atHerd)continue;const px=360+(g1.n-k+1)*128-40;g.save();g.globalAlpha=clamp(.6-age*.33);ell(px,FLOOR-2-age*8,22+age*50,7+age*10,'#8f8a5c');g.restore()}
    if(atHerd&&tl>16.7){for(let i=0;i<10;i++){const k=((tl*1.4+i*.1)%1);g.save();g.globalAlpha=(1-k)*.7;g.strokeStyle='#f3f5d4';g.lineWidth=2;g.beginPath();g.arc(mx+250+Math.sin(k*9+i)*8,my-60-k*(my-SURF-40),3+i%3*2,0,7);g.stroke();g.restore()}}}   // 浮かぶ前に、鼻から息をはく
@@ -104,14 +105,14 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    hp3({x,y:yv(h.y,f),s:h.s,yaw,seed:h.seed,v:hv(h.seed)},t,st)}
   // 母と子（水の上）
   if(tl<8.4){const hn=honk(tl-1.9,5.6),sk=clamp((tl-7.2)/1.0);const o=hn?{jaw:hn.jaw,tilt:hn.tilt,fl:30+hn.fl,lean:hn.lean,ev:[]}:{fl:30,ev:[]};o.fl=lerp(o.fl,140,ease(sk));if(hn)honkRings(null,tl-1.9,5.6,o.ev);
-   hpS({x:270,y:yv(556,f),s:.98,dir:1,seed:2,v:hv(2)},t,o);
+   hpS({x:270,y:yv(556,f),s:.98,dir:1,seed:2,v:MV},t,o);
    const ck=clamp((tl-7.4)/.9),nz=Math.sin(Math.PI*clamp((tl-3.2)/1.6));   // 子：母の鳴き声のあいだ、母の顔に寄る
-   hp3({x:540-60*nz,y:yv(588,f),s:.4,yaw:14+30*nz,seed:33,v:hv(33)},t,{fl:lerp(22,140,ease(ck)),tilt:-.04})}
+   hp3({x:540-60*nz,y:yv(588,f),s:.4,yaw:14+30*nz,seed:33,v:CV},t,{fl:lerp(22,140,ease(ck)),tilt:-.04})}
   if(atHerd&&my<=SURF+150){const up=clamp((tl-17.4)/.6),turn=ease(clamp((tl-18.0)/1.6)),cl=ease(clamp((tl-25)/1.5));
    const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
-   hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:hv(2)},t,o);
+   hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:MV},t,o);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
-   hp3({x:mx-60+150*go-40*hide+20*cl,y:SURF+6,s:.5,yaw:lerp(20,10,hide),seed:33,v:hv(33)},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
+   hp3({x:mx-115+150*go-40*hide+20*cl,y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
  }else{podBones(t,td-.45,1,[...HERD.map(h=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
  g.restore();
  if(!dead&&cy<SURF+150){g.save();if(tl>=17.6){const sp=ease(clamp((tl-17.6)/1.5));g.translate(W/2,H/2);g.scale(1+.25*sp,1+.25*sp);g.translate(-W/2,-H/2)}g.globalAlpha=tl>=17.6?1-ease(clamp((tl-17.6)/1.2)):1;fg3(t,dry,0);g.restore()}   /* 手前の葦は画面に固定（カメラと一緒に動かない）。再会では少し大きくして画面のふちへ寄せ、真ん中を空ける */
