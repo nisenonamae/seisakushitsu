@@ -41,7 +41,7 @@ def render(P, out, mode=None):
 def snap(P, od):
     import asyncio
     from playwright.async_api import async_playwright
-    os.makedirs(od, exist_ok=True); page = os.path.join(HERE, 'vis', 'html', P['page'] + '.html')
+    shutil.rmtree(od, ignore_errors=True); os.makedirs(od, exist_ok=True); page = os.path.join(HERE, 'vis', 'html', P['page'] + '.html')   # 古い秒の絵を残さない
     async def run():
         async with async_playwright() as pw:
             b = await pw.chromium.launch(args=['--allow-file-access-from-files']); pg = await b.new_page(viewport={'width': 1280, 'height': 720})
