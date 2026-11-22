@@ -115,7 +115,26 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    hp3({x:mx-115+150*go-40*hide+20*cl,y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
  }else{podBones(t,td-.45,1,[...HERD.map(h=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
  g.restore();
+ if(tl>=10.2&&tl<12.4)lensDip(t,tl,H/2+(yb-cy)*z);   /* カメラが水面をくぐる：レンズの水ぎわ・裏から見た水面・泡・しずく（7版3周目挑戦） */
  if(!dead&&cy<SURF+150){g.save();if(tl>=17.6){const sp=ease(clamp((tl-17.6)/1.5));g.translate(W/2,H/2);g.scale(1+.25*sp,1+.25*sp);g.translate(-W/2,-H/2)}g.globalAlpha=tl>=17.6?1-ease(clamp((tl-17.6)/1.2)):1;fg3(t,dry,0);g.restore()}   /* 手前の葦は画面に固定（カメラと一緒に動かない）。再会では少し大きくして画面のふちへ寄せ、真ん中を空ける */
  if(dead&&td<.14){g.save();g.globalAlpha=1-td/.14;rect(0,0,W,H,'#fff');g.restore()}
  if(tl<.8){g.save();g.globalAlpha=1-ease(tw(tl,0,.8));rect(0,0,W,H,'#fffdf0');g.restore()}};
 })();
+
+/* カメラが水面をくぐる瞬間（画面に固定して描く）。sy＝画面上の水ぎわ */
+function lensDip(t,tl,sy){const k=Math.sin(Math.PI*clamp((tl-10.2)/1.4)),cross=clamp((tl-10.5)/.25),r=R(77);
+ g.save();
+ // 水ぎわ：レンズに張りつく水の膜で、まん中がふくらんだ弧になり、ゆれる
+ if(sy>-40&&sy<H+40){g.beginPath();g.moveTo(-10,H+10);for(let x=-10;x<=W+10;x+=16){const u=(x-W/2)/(W/2);g.lineTo(x,sy+26*k*(1-u*u)+5*Math.sin(x*.02+t*7)+3*Math.sin(x*.047-t*5))}g.lineTo(W+10,H+10);g.closePath();
+  g.fillStyle='rgba(60,90,70,'+(.18*k)+')';g.fill();
+  g.lineWidth=3+5*k;g.strokeStyle='rgba(32,52,40,'+(.55*k+.2)+')';g.stroke();
+  g.save();g.translate(0,-3-3*k);g.lineWidth=2;g.strokeStyle='rgba(235,245,235,'+(.6*k+.15)+')';g.stroke();g.restore();
+  // 裏から見た水面：水ぎわのすぐ下が銀色にゆらめく
+  g.save();g.clip();const gr=g.createLinearGradient(0,sy,0,sy+70+40*k);gr.addColorStop(0,'rgba(220,235,215,'+(.45*k+.1)+')');gr.addColorStop(1,'rgba(220,235,215,0)');g.fillStyle=gr;g.fillRect(0,sy-10,W,140);
+  g.strokeStyle='rgba(240,250,235,'+(.35*k)+')';g.lineWidth=1.5;for(let i=0;i<14;i++){const x0=(i*97+t*40)%(W+200)-100,y0=sy+14+(i%4)*9+26*k*(1-((x0-W/2)/(W/2))**2);g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(x0+30,y0-6,x0+60,y0);g.stroke()}g.restore()}
+ // 泡：くぐった直後、カメラのまわりから一気に上がっていく
+ const bu=clamp((tl-10.5)/1.3);if(bu>0&&bu<1){for(let i=0;i<34;i++){const sz=3+11*r(),x0=W*(.1+.8*r()),sp=.6+.8*r(),d=r()*.3,u=clamp((bu-d)/(1-d));if(u<=0)continue;const y=H+30-u*sp*(H+260),x=x0+18*Math.sin(u*9+i);if(y<-20)continue;
+  g.globalAlpha=(1-u)*.9;g.beginPath();g.arc(x,y,sz,0,7);g.strokeStyle='rgba(235,245,240,.85)';g.lineWidth=1.4;g.stroke();g.fillStyle='rgba(235,245,240,.12)';g.fill();g.beginPath();g.arc(x-sz*.35,y-sz*.35,sz*.25,0,7);g.fillStyle='rgba(255,255,255,.8)';g.fill()}g.globalAlpha=1}
+ // しずく：水の上だった所に、くぐる直前に跳ねたしずくがレンズに残る
+ if(cross>0){const fd=1-clamp((tl-10.8)/.9);if(fd>0){for(let i=0;i<9;i++){const x=W*(.08+.84*r()),y=H*(.06+.4*r()),rr=8+22*r();if(y>sy-10)continue;g.globalAlpha=fd*cross*.7;g.beginPath();g.arc(x,y+30*(1-fd)*r(),rr,0,7);g.fillStyle='rgba(200,225,215,.18)';g.fill();g.lineWidth=2;g.strokeStyle='rgba(250,255,250,.5)';g.stroke()}g.globalAlpha=1}}
+ g.restore()}
