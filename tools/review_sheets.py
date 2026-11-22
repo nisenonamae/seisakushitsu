@@ -81,7 +81,7 @@ def main():
             if bb: box = bb if not box else (min(box[0], bb[0]), min(box[1], bb[1]), max(box[2], bb[2]), max(box[3], bb[3]))
         fw, fh = Image.open(fs[idx[0]]).size; sx, sy = fw / 160, fh / 90
         if box and (box[2] - box[0]) * (box[3] - box[1]) < 160 * 90 * .55:
-            cx, cy = (box[0] + box[2]) / 2 * sx, (box[1] + box[3]) / 2 * sy; cw = max((box[2] - box[0]) * sx * 1.3, fw * .34); ch = cw * 9 / 16
+            cx, cy = (box[0] + box[2]) / 2 * sx, (box[1] + box[3]) / 2 * sy; cw = min(fw, max((box[2] - box[0]) * sx * 1.3, fw * .34)); ch = cw * 9 / 16
             x0 = min(max(0, cx - cw / 2), fw - cw); y0 = min(max(0, cy - ch / 2), fh - ch); crop = (int(x0), int(y0), int(x0 + cw), int(y0 + ch))
         else: crop = (0, 0, fw, fh)
         st = Image.new('RGB', (4 * 484, 2 * 274), 'white')
