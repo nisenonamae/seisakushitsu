@@ -1,5 +1,202 @@
 {
- "updated": "",
- "items": [],
- "history": []
+ "updated": "2026-11-22",
+ "items": [
+  {
+   "id": "i20261122-1",
+   "kind": "新発見",
+   "seed": "なぜ黄河は、まわりの街より高い所を流れているのか（そして今、低くなり始めた）",
+   "find": "黄河の下流は、運ばれてきた泥がたまり続けて川底がまわりの地面より高くなった「天井川」。上流の土砂止め（植林・砂防ダム・段々畑）などで流れ込む泥が9割近く減り、川底が削られて、堤の内側の高低差は最大1.9mから0.4mまで下がった。ただし堤の根元との差は約3mのまま。",
+   "gap": "川はいちばん低い所を流れるはず。なのに人の住む地面より高い所を流れている。",
+   "why": "黄土高原 → ダム → 下流と、泥の流れを地図で追える。日本の天井川と並べられる（日本側は要確認）。",
+   "field": "地理",
+   "wow": 3,
+   "sure": "たぶん",
+   "src": {
+    "outlet": "科学网（中国科学報）",
+    "lang": "中国語",
+    "title": "黄河输沙量减少近90%，“悬河”消失…",
+    "url": "https://news.sciencenet.cn/htmlnews/2026/11/574792.shtm",
+    "date": "2026-11-16"
+   }
+  },
+  {
+   "id": "i20261122-2",
+   "kind": "新発見",
+   "seed": "なぜアラビアの砂漠のまん中に、昔カバがいたのか",
+   "find": "サウジアラビア南部の今は砂漠の場所で、12万5千年前の湖のほとりの跡が見つかった。湖は約340km²・深さ最大29mで、5千点を超える石器と、カバ・水牛・ダチョウなどの化石が出た。",
+   "gap": "アラビアはずっと砂漠だったはず。",
+   "why": "砂漠の地図が緑に塗り替わり、湖が現れる。氷期と暖かい時期のくり返しで「緑のアラビア」が何度も来たという広がりへ。",
+   "field": "地球",
+   "wow": 3,
+   "sure": "確か",
+   "src": {
+    "outlet": "SINC",
+    "lang": "スペイン語",
+    "title": "Cómo vivían y cazaban los primeros humanos en la 'Arabia verde' hace 125 000 años",
+    "url": "https://www.agenciasinc.es/Noticias/como-vivian-y-cazaban-los-primeros-humanos-en-la-arabia-verde-hace-125-000-anos",
+    "date": "2026-11-17"
+   },
+   "paper": {
+    "title": "Poisoned hunting weapons, megafauna, and plant use at a 125,000-year-old Arabian paleolakeshore（Science）",
+    "url": "https://doi.org/10.1126/science.aef9342"
+   }
+  },
+  {
+   "id": "i20261122-3",
+   "kind": "新発見",
+   "seed": "なぜ地球の歴史の10億年ぶんが、地層からまるごと消えているのか",
+   "find": "グランドキャニオンなど世界の多くの場所で、5億4千万年前の地層が、10億年以上古い岩の上にいきなり乗っている（大不整合）。地球の奥の岩の流れ（マントル対流）が大陸の中心を持ち上げて削り、のちに沈んで海の泥がふたをした、という新しい説が出た。",
+   "gap": "地層は古い順に全部積み重なっていて、歴史がそのまま読めるはず。",
+   "why": "断面の一枚絵で「抜けたページ」を見せ、地球の中の流れのアニメへ。答えがまだ決まっていない（ほかの説もある）ので締めの余韻にも使える。",
+   "field": "地球",
+   "wow": 3,
+   "sure": "たぶん",
+   "src": {
+    "outlet": "ScienceDaily（ウーロンゴン大学）",
+    "lang": "英語",
+    "title": "More Than a Billion Years of Earth's History Vanished. Scientists May Finally Know Why",
+    "url": "https://www.sciencedaily.com/releases/2026/11/261116023403.htm",
+    "date": "2026-11-18"
+   },
+   "paper": {
+    "title": "Nature（2026）",
+    "url": "https://doi.org/10.1038/s41586-026-11156-5"
+   }
+  },
+  {
+   "id": "i20261122-4",
+   "kind": "新発見",
+   "seed": "なぜ昔の人のほうが背が高かった地域があるのか",
+   "find": "ユーラシア45か国・約1万8千体の骨から7千年分の身長を調べた研究。東南アジアの男性は7千年前に約1.78mあったが、19世紀には1.6m余りに。中国の女性も約1.57mから約1.48mへ下がった。技術が進んでも背は伸びなかった。",
+   "gap": "人は時代が進むほど背が伸びてきたはず。",
+   "why": "地図の上で、時代ごとに各地の身長の棒が伸び縮みする。食べ物・牛乳・人口の多さとの関係へ広がる。",
+   "field": "暮らし",
+   "wow": 3,
+   "sure": "確か",
+   "src": {
+    "outlet": "SINC",
+    "lang": "スペイン語",
+    "title": "Así ha evolucionado la estatura humana en diferentes regiones del mundo",
+    "url": "https://www.agenciasinc.es/Noticias/asi-ha-evolucionado-la-estatura-humana-en-diferentes-regiones-del-mundo"
+   },
+   "paper": {
+    "title": "PNAS（2026、テュービンゲン大学ほか）",
+    "url": "https://www.pnas.org/doi/10.1073/pnas.2606828123"
+   }
+  },
+  {
+   "id": "i20261122-5",
+   "kind": "定番の不思議",
+   "seed": "なぜ氷はあんなに滑るのか",
+   "find": "氷の表面には、−89℃でもごく薄い水の膜がある。こすると摩擦の熱で膜が厚くなり、さらに滑りやすくなる——という仕組みを、分子のシミュレーションと実験で示した研究が出た。",
+   "gap": "「重さで押されて溶けるから」と思いがちだが、それだけでは説明しきれない（要確認：圧力説の扱いは資料で確かめる）。",
+   "why": "氷の表面に寄って分子の層を見せる。スケート・雪道・カーリングなど身近な話へ広げられる。",
+   "field": "物理",
+   "wow": 3,
+   "sure": "たぶん",
+   "src": {
+    "outlet": "Spektrum der Wissenschaft",
+    "lang": "ドイツ語",
+    "title": "Physik der Eisglätte: Reibung macht Eis rutschiger",
+    "url": "https://www.spektrum.de/news/physik-der-eisglaette-reibung-macht-eis-rutschiger/2354510",
+    "date": "2026-11-18"
+   },
+   "paper": {
+    "title": "Physical Review Letters（オスロ大学・ユーリッヒ研究所）",
+    "url": "https://journals.aps.org/prl/abstract/10.1103/9wv5-ypdm"
+   }
+  },
+  {
+   "id": "i20261122-6",
+   "kind": "定番の不思議",
+   "seed": "なぜ1億匹のカニが、同じ日に一斉に海へ向かうのか",
+   "find": "インド洋のクリスマス島では、雨季の最初の雨をきっかけに1億匹を超える赤いカニが森から海へ移動して産卵する。子ガニは3〜4週間後に森へ戻る。道路にはカニ専用の橋があり、時期には道が通行止めになる。",
+   "gap": "カニは海辺に住んでいるはず（実は森に住む陸のカニ）。",
+   "why": "島の地図の上を赤い流れが海へ向かうアニメ。月の満ち欠けとの関係など、なぜ「その日」なのかへ広がる（要確認）。",
+   "field": "生き物",
+   "wow": 2,
+   "sure": "確か",
+   "src": {
+    "outlet": "Spektrum der Wissenschaft",
+    "lang": "ドイツ語",
+    "title": "Naturphänomen: Der lange Marsch der Roten hat begonnen",
+    "url": "https://www.spektrum.de/news/naturphaenomen-der-lange-marsch-der-roten-hat-begonnen/2355377",
+    "date": "2026-11-20"
+   }
+  },
+  {
+   "id": "i20261122-7",
+   "kind": "新発見",
+   "seed": "深海のこぶし大の石の中に、なぜ何百匹も生き物が住んでいるのか",
+   "find": "太平洋の深さ4千〜6千mの海底に転がる金属の塊（マンガン団塊）は、100万年に数mmしか育たない。その割れ目や穴に小さな生き物が住み、多いものでは1個に245匹。まわりの泥とは違う顔ぶれが、千km離れた場所でも似ていた。",
+   "gap": "深海の石ころに、生き物がぎっしりいるとは思わない。",
+   "why": "海底から石の中へ飛びこむ見せ方ができる。レアメタルの採掘で住みかが失われる話へ広がる（立場は両方並べる）。",
+   "field": "生き物",
+   "wow": 2,
+   "sure": "確か",
+   "src": {
+    "outlet": "ScienceDaily（ブレーメン大学 MARUM）",
+    "lang": "英語",
+    "title": "Hidden Ecosystem: Scientists Discover 245 Animals Living Inside a Single Deep-Sea Rock",
+    "url": "https://www.sciencedaily.com/releases/2026/11/261114202133.htm",
+    "date": "2026-11-16"
+   },
+   "paper": {
+    "title": "Scientific Reports（2026）",
+    "url": "https://doi.org/10.1038/s41598-026-76737-w",
+    "free": true
+   }
+  },
+  {
+   "id": "i20261122-8",
+   "kind": "新発見",
+   "seed": "人類がいちばん遠くへ送った物は、今どこにいるのか",
+   "find": "ボイジャー1号が2026年11月18日、地球から「光で1日」の距離（約259億km）に初めて届いた。命令が届くのに1日、返事が戻るのにもう1日かかる。電源は年に約4Wずつ弱っている。",
+   "gap": "光（電波）なら一瞬で届くはず。半世紀前の探査機とは、もう話せないはず。",
+   "why": "太陽系を縮尺どおりに並べて、光の速さで追いかけるアニメ。人類のいちばん遠い足あとという締めにも向く。",
+   "field": "宇宙",
+   "wow": 2,
+   "sure": "確か",
+   "src": {
+    "outlet": "ScienceDaily（NASA）",
+    "lang": "英語",
+    "title": "NASA's Voyager 1 Is Now so Far Away That Light Takes 24 Hours to Reach It",
+    "url": "https://www.sciencedaily.com/releases/2026/11/261120075554.htm",
+    "date": "2026-11-20"
+   }
+  },
+  {
+   "id": "i20261122-9",
+   "kind": "新発見",
+   "seed": "なぜ水素の炎は、日によってオレンジになったり見えなくなったりするのか",
+   "find": "水素の炎のオレンジ色は、水素そのものではなく、空気にまじったナトリウム（海の塩が風で運ばれてきたもの）の色だった。同じバーナーでも、2週間で光の強さが28倍以上変わった。",
+   "gap": "炎の色は燃やす物で決まり、いつも同じはず。",
+   "why": "海から風で塩が運ばれる地図と、炎の色の変化を並べる。炎の色の仕組み（花火など）へ広がる。",
+   "field": "物理",
+   "wow": 2,
+   "sure": "確か",
+   "src": {
+    "outlet": "ScienceDaily（アデレード大学）",
+    "lang": "英語",
+    "title": "Why Hydrogen Flames Can Glow Orange, Then Turn Nearly Invisible",
+    "url": "https://www.sciencedaily.com/releases/2026/11/261118065509.htm",
+    "date": "2026-11-19"
+   },
+   "paper": {
+    "title": "Next Energy（2026）",
+    "url": "https://doi.org/10.1016/j.nxener.2026.100962"
+   }
+  }
+ ],
+ "history": [
+  "なぜ黄河は、まわりの街より高い所を流れているのか（そして今、低くなり始めた）",
+  "なぜアラビアの砂漠のまん中に、昔カバがいたのか",
+  "なぜ地球の歴史の10億年ぶんが、地層からまるごと消えているのか",
+  "なぜ昔の人のほうが背が高かった地域があるのか",
+  "なぜ氷はあんなに滑るのか",
+  "なぜ1億匹のカニが、同じ日に一斉に海へ向かうのか",
+  "深海のこぶし大の石の中に、なぜ何百匹も生き物が住んでいるのか",
+  "人類がいちばん遠くへ送った物は、今どこにいるのか",
+  "なぜ水素の炎は、日によってオレンジになったり見えなくなったりするのか"
+ ]
 }
