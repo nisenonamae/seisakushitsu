@@ -73,9 +73,14 @@ function hpS(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,jaw=o.jaw||0,tilt=(o.
  g.save();g.globalAlpha=.22;if(fl<84*hu)ell(-85*L,5,160*L,4.5,'#3f4530');if(fl<84)ell(185,5,90,4,'#3f4530');g.restore();   // 水面のすぐ下の細い暗い映り込みだけ（黄土色の楕円の「敷物」をやめた：自然の番・2026-11-22。手本帳 水1・水2）
  for(const e of (o.ev||[])){const age=e.age;if(age<=0||age>=2.4)continue;for(let j=0;j<2;j++){const k=(age-j*.35)/2.05;if(k<=0||k>=1)continue;g.save();g.globalAlpha=(1-k)*.6;g.strokeStyle='#e9eed8';g.lineWidth=Math.min(6,2.2/s);g.beginPath();g.ellipse(e.x,6,e.w*(1+k*1.3)+k*50,(e.w*(1+k*1.3)+k*50)*.07+3,0,0,7);g.stroke();g.restore()}}
  if(fl<118){g.save();g.beginPath();g.rect(-900,-1200,1800,1200);g.clip();g.translate(0,fl);
+  if(jaw>0){g.translate(-250*L,34);g.rotate(-.11*jaw);g.translate(250*L,-34)}   // あくび：後ろを支点に胸を起こす（体の底は水面の下のまま。実物2・7。2周目自然の番）
   // 胴（背中）
   fill([[-250*L,30,.7],[-236*L,-48*hu,.9],[-150*L,-84*hu,.9],[-40*L,-82*hu,.9],[42,-62*hu,.8],[86,-34,.6],[92,40,.5]],cb);
   fill([[-234*L,-44*hu,.8],[-152*L,-82*hu,.9],[-40*L,-80*hu,.9],[38,-60*hu,.8],[30,-54*hu,.8],[-40*L,-72*hu,.9],[-150*L,-73*hu,.9],[-226*L,-38*hu,.8]],cl);   // 背中のふちに沿った細い明るい帯（だ円のふたをやめた：挑戦の番・手本帳 絵10・2026-11-22）
+  {const ch=mix(cb,cl,.32),cs=mix(cb,cd,.28);   // 肩・腰のふくらみを少し明るい面で、体の下側を暗い部分塗りで（手本帳 絵8・絵1。2周目挑戦の番）
+   fill([[-238*L,-6,.8],[-224*L,-46*hu,.9],[-176*L,-66*hu,.9],[-128*L,-50*hu,.9],[-122*L,-8,.8],[-170*L,8,.8]],ch);
+   fill([[-6,-10,.8],[2,-50*hu,.9],[40,-58*hu,.9],[76,-34,.8],[70,0,.8],[30,8,.8]],ch);
+   fill([[-248*L,22,.6],[-200*L,8,.8],[-60*L,12,.8],[60,8,.8],[90,24,.6],[90,44,.5],[-248*L,44,.5]],cs)}
   
   for(let i=0;i<v.scar;i++){const x=(-200+i*70+v.sx*40)*L;line([[x,-56*hu-i*3],[x+26,-44*hu-i*2]],mix(cb,cl,.4),2.5)}   // 傷あとは目立たせない（白い線に見えないように）
   if(h.bird)bird3(-120*L,-84*hu,1/Math.max(s,.4)*.5,t+h.seed);
@@ -97,7 +102,7 @@ function hpS(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,jaw=o.jaw||0,tilt=(o.
   g.save();g.globalAlpha=.5;ell(160,-74,17,11,cp);g.restore();line([[96,-60],[90,-24],[100,4]],mix(cb,cd,.45),2.5);
   if(jaw>.12){g.save();g.globalAlpha=clamp((jaw-.12)*5);fill([[150,-7,.5],[262,-7,.6],[250,6,.8],[170,5,.8]],'#d98f92');fill([[248,-6,.3],[254,14,.5],[262,-6,.3]],'#f4ecd8');fill([[268,-6,.3],[272,6,.5],[278,-7,.3]],'#f4ecd8');g.restore()}
   else line([[279,-8],[232,-5],[184,-7],[142,-15]],cd,3.5);
-  ell(163,-77,5,5*(1-blink*.9),IC.he);if(!blink)ell(164.5,-78.5,1.5,1.5,'#fff');line([[152,-85],[174,-84]],cd,3);ell(264,-51,4.5,2.6,IC.he);
+  ell(163,-77,5,5*(1-blink*.9),IC.he);if(!blink)ell(164.5,-78.5,1.5,1.5,'#fff');line([[152,-85],[174,-84]],cd,3);ell(264,-51,3.2,1.8,mix(IC.he,'#6f6470',.55));
   for(const [dx,dy] of [[236,-30],[250,-24],[222,-26],[262,-30]])ell(dx,dy,1.5,1.5,cd);
   if(fu>=0){const rr=R(h.seed+9);for(let i=0;i<7;i++){const a=-1.75+(rr()-.5)*2.3,dd=(16+rr()*84)*eout(fu),gv=(60+rr()*120)*fu*fu,sz=(1.6+rr()*3.2)*(1-fu)+.5;ell(108+Math.cos(a)*dd,-92+Math.sin(a)*dd+gv,sz*.8,sz*1.2,'#eef3e0')}}   // 耳をまわして、水をとばす
   if(o.puff>0&&o.puff<1){const u=o.puff;for(let i=0;i<8;i++){const a=-1.05+(i%4-1.5)*.16,dd=(20+i*9)*eout(u);g.save();g.globalAlpha=(1-u)*.8;ell(266+Math.cos(a)*dd,-56+Math.sin(a)*dd,5+u*7,4+u*5,'#f1f4e6');g.restore()}}   // 息つぎ
@@ -141,7 +146,7 @@ function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl
  const tr=(X,Y,Z,grp)=>{let ang=0,yw=th;if(grp){let q=[X,Y];if(grp===2){q=rot(q,Hg,-a1);ang-=a1}if(grp===3){q=rot(q,Hg,a2);ang+=a2}q=rot(q,N,tilt);ang+=tilt;const dx=q[0]-70,c=Math.cos(hy),sn=Math.sin(hy);X=70+dx*c-Z*sn;Z=dx*sn+Z*c;Y=q[1];yw=th+hy}return{X,Y,Z,ang,yw,xs:X*cT-Z*sT,n:X*sT+Z*cT}};
  const add=(X,Y,Z,rx,ry,rz,col,pri=0,grp=0,a0=0)=>{const q=tr(X,Y,Z,grp);q.ang+=a0;const c=Math.cos(q.yw),sn=Math.sin(q.yw),ax=Math.hypot(Math.cos(q.ang)*c,Math.sin(q.ang));
   P.push({pri,xs:q.xs,ys:q.Y+q.n*kp,n:q.n,Y:q.Y,ry,rn:Math.hypot(rx*sn,rz*c),k:q.n+pri,ra:Math.hypot(rx*ax,rz*sn),rb:Math.hypot(ry,Math.hypot(rx*sn,rz*c)*kp*.6),ro:q.ang?Math.atan2(Math.sin(q.ang),Math.cos(q.ang)*c):0,col})};
- add(-95*L,-4,0,165*L,80*hu,78,cl,-.6);add(-95*L,5,0,164*L,77*hu,77,cb,-.3);add(-190*L,6,0,70,62*hu,66,cb);add(30,-8,0,70,58,62,cb);   // 背中の明るい帯：明るい胴の上に、少し下にずらした本来の色の胴を重ね、上のふちだけ残す（帯が必ず輪郭に沿う。板に見えた・2周目ミスの番）add(-246*L,-16,0,7,20,6,cd,1);
+ add(-95*L,-4,0,165*L,80*hu,78,cl,-.6);add(-95*L,5,0,164*L,77*hu,77,cb,-.3);add(-190*L,6,0,70,62*hu,66,cb);add(30,-8,0,70,58,62,cb);add(-186*L,-6,0,52,44*hu,48,mix(cb,cl,.3),.2);add(26,-14,0,50,40,46,mix(cb,cl,.3),.2);   // 肩・腰の明るい面（絵8）／背中の明るい帯：明るい胴の上に、少し下にずらした本来の色の胴を重ね、上のふちだけ残す（帯が必ず輪郭に沿う。板に見えた・2周目ミスの番）add(-246*L,-16,0,7,20,6,cd,1);
  add(135,-34,0,62,44,52,cb,0,2);add(184,-32,0,52,34,54,cb,0,2);add(118,-6,0,40,34,50,cb,0,1);add(222,-26,0,62,30,60,cb,0,2);add(140,-62,0,28,11,28,cl,1,2);add(226,-41,0,36,8,38,mix(cl,cb,.45),1,2);
  add(210,8,0,72,22,56,cb,0,3);add(214,19,0,60,12,48,cp,1,3);
  for(const d of [-1,1]){add(160,-72,36*d,14,12,12,cb,0,2);add(160,-69,41*d,13,9,7,mix(cp,cb,.45),.5,2);add(165,-74,46*d,5,blink?1.2:5,3.5,ce,1,2);if(!blink)add(167,-76,49*d,1.6,1.6,1.2,'#ffffff',2,2);if(tr(164,-80,45*d,2).n>tr(135,-34,0,2).n+8)add(164,-80,45*d,9,1.6,5,cd,1.5,2);
@@ -156,7 +161,6 @@ function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl
  if(o.full){for(const q of P){g.save();g.translate(q.xs,q.ys);if(q.ro)g.rotate(q.ro);ell(0,0,q.ra,q.rb,o.flat||q.col);g.restore()}g.restore();return}
  const wB=Math.hypot(250*L*cT,90*sT),cxB=-40*cT;g.save();g.globalAlpha=.22;if(fl<100)ell(cxB,5+8*Math.abs(sT),wB*.78,4+6*Math.abs(sT),'#3f4530');g.restore();   // 同上（敷物をやめ、水面すぐ下の細い映り込みだけ）
  for(const e of (o.ev||[])){const age=e.age;if(age<=0||age>=2.4)continue;for(let j=0;j<2;j++){const k=(age-j*.35)/2.05;if(k<=0||k>=1)continue;g.save();g.globalAlpha=(1-k)*.6;g.strokeStyle='#e9eed8';g.lineWidth=Math.min(6,2.2/s);g.beginPath();g.ellipse(e.x*cT,6+(e.x*sT)*kp,e.w*(1+k*1.3)+k*50,(e.w*(1+k*1.3)+k*50)*(.07+.2*Math.abs(sT)*.4)+3,0,0,7);g.stroke();g.restore()}}
- {const ua=.13*clamp((fl-55)/30)*(1-clamp((fl-105)/50));if(ua>.01){g.save();g.globalAlpha=ua;for(const q of P){if(q.pri>0)continue;g.save();g.translate(q.xs,q.ys+fl);if(q.ro)g.rotate(q.ro);ell(0,0,q.ra,q.rb,'#3f4530');g.restore()}g.restore()}}   // 水の下の体は、にごった水の色のうすいかげで残す（頭と背中が水の下でつながって見える。手本帳 水1・2周目ミスの番）
  if(fl<118){for(const q of P){const hh=(q.Y+fl)/q.ry,cq=Math.sqrt(Math.max(0,1-hh*hh));g.save();g.beginPath();g.rect(-1200,-1600,2400,1600+q.n*kp);if(cq>.05)g.ellipse(q.xs,q.n*kp,q.ra*cq,Math.max(1,q.rn*cq*kp),0,0,7);g.clip();g.translate(q.xs,q.ys+fl);if(q.ro)g.rotate(q.ro);ell(0,0,q.ra,q.rb,q.col);g.restore()}
   if(h.bird){const q=tr(-120*L,-84*hu,0,0);if(fl<60){if(h.bird===2)egret(q.xs,q.Y+q.n*kp+fl+2,.5/Math.max(s,.45),t+h.seed,cT<0?-1:1);else bird3(q.xs,q.Y+q.n*kp+fl,1/Math.max(s,.4)*.5,t+h.seed)}}
   if(fu>=0){const q=tr(108,-92,0,2),rr=R(h.seed+9);for(let i=0;i<7;i++){const a=-1.6+(rr()-.5)*2.3,dd=(16+rr()*84)*eout(fu),gv=(60+rr()*120)*fu*fu,sz=(1.6+rr()*3.2)*(1-fu)+.5;ell(q.xs+Math.cos(a)*dd,q.Y+q.n*kp+fl+Math.sin(a)*dd+gv,sz*.8,sz*1.2,'#eef3e0')}}
