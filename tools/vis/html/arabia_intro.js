@@ -186,9 +186,31 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
   items.push({n:pj(...P3[1])[2],d:()=>{const a=pj(...P3[0]),b=pj(...P3[1]);line([[a[0],a[1]],[b[0],b[1]]],c,15);ell(a[0],a[1],11,8,c);ell(b[0],b[1],11,8,c)}})}
  {const f=fall(.34),C0=mv([185,-56,0],[205,GY-24,10],f),e=f.u*.5,yw=th+e,cc=Math.cos(yw),sn=Math.sin(yw);   // 頭の骨と下あご
   const sk=(X,Y,Z)=>pj(C0[0]+X*Math.cos(e)-Z*Math.sin(e),C0[1]+Y,C0[2]+X*Math.sin(e)+Z*Math.cos(e));
-  const E=(X,Y,Z,rx,ry,rz,col,pri)=>{const q=sk(X,Y,Z);items.push({n:q[2]+pri,d:()=>ell(q[0],q[1],Math.hypot(rx*cc,rz*sn),Math.hypot(ry,Math.hypot(rx*sn,rz*cc)*kp*.6),col)})};
-  E(-10*SK,0,0,52*SK,34*SK,42*SK,c,0);E(58*SK,10,0,46*SK,24*SK,44*SK,c,0);for(const d of [-1,1]){E(-8*SK,-6,36*d*SK,13,12,6,'#b9a98c',1);E(86*SK,2,16*d,6,5,4,'#b9a98c',1)}
-  const fj=fall(.1),J1=mv([120,-8,0],[90,GY,-30],fj),J2=mv([262,-4,0],[230,GY,-10],fj);items.push({n:pj(...J2)[2]-2,d:()=>{const a=pj(...J1),b=pj(...J2);line([[a[0],a[1]],[b[0],b[1]]],c,17);for(const k of [.86,.97]){const tx=lerp(a[0],b[0],k),ty=lerp(a[1],b[1],k);fill([[tx-6,ty,.3],[tx-1,ty-34*SK,.6],[tx+7,ty,.3]],c)}}})}
+  // 頭の骨（2026-11-22 見直しループ次の段・1つめ：実物帳「骨」に合わせる。だ円2つ → 低い頭・高く出っぱる目の穴・四角く広い鼻づら・反り上がる下の牙・前に出る切歯）
+  const sx=cc,side=Math.abs(sx)>=.45,fx=side?sx:1,dk='#d8cbb0',hole='#6a5a46',tusk='#efe2c2';
+  const P=(pts)=>{g.beginPath();blob(pts.map(([X,Y,k])=>[X,Y,k]));};
+  const cran=()=>{if(side){   // 横（右向きが基本。fx で向きと奥行きの縮み）
+     g.scale(fx*SK,SK);
+     g.fillStyle=c;P([[-76,8,.5],[-74,-26,.7],[-52,-38,.8],[-24,-56,.9],[4,-54,.9],[16,-32,.8],[56,-26,.8],[92,-38,.8],[118,-34,.7],[128,-6,.6],[118,18,.6],[60,22,.7],[-30,26,.7]]);g.fill();
+     g.fillStyle=dk;P([[-60,10,.6],[-20,6,.7],[40,10,.7],[96,14,.6],[96,22,.5],[-30,26,.6]]);g.fill();   // 下側の影（部分塗り）
+     g.fillStyle=hole;P([[-18,-36,.9],[-2,-40,.9],[6,-28,.9],[-10,-24,.9]]);g.fill();                     // 目の穴（高い所）
+     P([[-50,-6,.8],[-26,-10,.8],[-20,4,.8],[-46,6,.8]]);g.fill();                                       // ほお骨の下の穴
+     g.fillStyle=tusk;P([[82,14,.5],[90,12,.5],[88,40,.6],[82,44,.4]]);g.fill();                          // 上の牙（下向き・短い）
+     g.strokeStyle=hole;g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(20,18);for(let k=0;k<6;k++)g.lineTo(26+k*10,k%2?20:15);g.stroke()}   // 歯の列
+    else{const w=Math.max(.5,Math.abs(sn))*SK;g.scale(w,SK);   // 正面に近いとき
+     g.fillStyle=c;P([[-60,-30,.8],[-40,-50,.9],[-14,-34,.8],[14,-34,.8],[40,-50,.9],[60,-30,.8],[54,0,.7],[70,24,.7],[40,34,.6],[-40,34,.6],[-70,24,.7],[-54,0,.7]]);g.fill();
+     g.fillStyle=dk;P([[-56,18,.6],[56,18,.6],[40,34,.5],[-40,34,.5]]);g.fill();
+     g.fillStyle=hole;for(const d of [-1,1]){ell(d*38,-36,9,8,hole)}P([[-14,6,.8],[14,6,.8],[10,22,.8],[-10,22,.8]]);g.fill();
+     g.fillStyle=tusk;for(const d of [-1,1]){P([[d*50,26,.5],[d*58,26,.5],[d*56,50,.6],[d*50,52,.4]]);g.fill()}}};
+  const jaw=()=>{if(side){g.scale(fx*SK,SK);   // 下あご：後ろの大きな張り出し・前の角から反り上がる牙・前に出る切歯
+     g.fillStyle=tusk;P([[96,6,.5],[108,2,.5],[110,-22,.7],[100,-46,.8],[92,-50,.6],[98,-26,.7],[90,-4,.5]]);g.fill();
+     g.fillStyle=c;P([[-60,-2,.6],[-20,0,.7],[60,2,.7],[118,0,.6],[122,14,.6],[96,22,.7],[40,18,.7],[-20,26,.8],[-50,50,.9],[-70,40,.8],[-72,14,.6]]);g.fill();
+     g.fillStyle=dk;P([[-56,30,.7],[-20,24,.7],[40,16,.7],[96,20,.6],[96,22,.5],[-50,50,.8]]);g.fill();
+     g.fillStyle=tusk;P([[116,2,.5],[146,0,.5],[146,6,.5],[118,10,.5]]);g.fill()}   // 切歯（前へ）
+    else{const w=Math.max(.5,Math.abs(sn))*SK;g.scale(w,SK);g.fillStyle=c;P([[-66,0,.7],[66,0,.7],[60,22,.7],[0,30,.6],[-60,22,.7]]);g.fill();
+     g.fillStyle=tusk;for(const d of [-1,1]){P([[d*44,4,.5],[d*54,2,.5],[d*58,-30,.8],[d*50,-36,.6],[d*48,-14,.6]]);g.fill()}}};
+  const q0=sk(-10*SK,0,0);items.push({n:q0[2],d:()=>{g.save();g.translate(q0[0],q0[1]);if(side)g.transform(1,sn*kp*.6*Math.sign(fx),0,1,0,0);cran();g.restore()}});
+  const fj=fall(.1),J1=mv([175,-32,0],[150,GY-12,-30],fj),J2=mv([315,-30,0],[290,GY-8,-10],fj);items.push({n:fj.u<.5?q0[2]+1:pj(...J2)[2]-2,d:()=>{const a=pj(...J1),b=pj(...J2),ang=Math.atan2(b[1]-a[1],Math.abs(b[0]-a[0])+1e-3)*.6;g.save();g.translate(a[0]+(side?0:(b[0]-a[0])/2),a[1]);if(side)g.rotate(ang*Math.sign(fx));jaw();g.restore()}})}
  items.sort((a,b)=>a.n-b.n);g.save();g.translate(x,y);g.scale(s,s);for(const it of items)it.d();g.restore()}
 function podBones(t,tc,drain){POD.forEach((h,i)=>{const s=h.s*1.1,y=h.y+h.fl*h.s,drop=ease(drain)*240*h.s;g.save();if(drain<1){g.beginPath();g.rect(0,0,W,h.y+drop);g.clip()}
   if(h.s<.3)g.globalAlpha=.85;bones3(h.x,y,s,h.side?10:h.yaw,tc-((i*37)%10)*.035,40+i);g.restore()})}

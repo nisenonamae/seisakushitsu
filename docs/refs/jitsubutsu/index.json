@@ -1,0 +1,310 @@
+{
+ "about": "実物帳。場面の種類ごとの、実物のコマ（Wikimedia Commons の使ってよい物だけ）。tools/REFS.md",
+ "items": [
+  {
+   "file": "カバ/A_Bloat_Of_Hippopotamus_Cool_Off_In_The_River_Ni.jpg",
+   "kind": "カバ",
+   "tags": [
+    "群れ",
+    "水辺"
+   ],
+   "note": "野生の群れが川で涼む",
+   "title": "File:A Bloat Of Hippopotamus Cool Off In The River Nile in Murchison Falls National Park, Uganda.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:A_Bloat_Of_Hippopotamus_Cool_Off_In_The_River_Nile_in_Murchison_Falls_National_Park,_Uganda.jpg",
+   "license": "CC BY-SA 4.0",
+   "artist": "Vanmulondo",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippopotamus_River_jpg.jpg",
+   "kind": "カバ",
+   "tags": [
+    "口",
+    "あくび",
+    "横"
+   ],
+   "note": "2頭の力くらべ・口を開ける（下あごの牙・水しぶき）",
+   "title": "File:Hippopotamus River.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamus_River.jpg",
+   "license": "CC0",
+   "artist": "safaritravelplus",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "骨/Hippopotamus_amphibius_skull_side_view_Swazi_Hla.jpg",
+   "kind": "骨",
+   "tags": [
+    "頭の骨",
+    "横"
+   ],
+   "note": "頭の骨・横",
+   "title": "File:Hippopotamus amphibius skull, side view, Swazi Hlane reserve.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamus_amphibius_skull,_side_view,_Swazi_Hlane_reserve.jpg",
+   "license": "CC BY 3.0",
+   "artist": "User:J JMesserly",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "骨/Hippopotamus_amphibius_skull_3_4_view_Swazi_Hlan.jpg",
+   "kind": "骨",
+   "tags": [
+    "頭の骨",
+    "斜め"
+   ],
+   "note": "頭の骨・斜め",
+   "title": "File:Hippopotamus amphibius skull, 3.4 view, Swazi Hlane reserve.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamus_amphibius_skull,_3.4_view,_Swazi_Hlane_reserve.jpg",
+   "license": "CC BY 3.0",
+   "artist": "User:J JMesserly",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "骨/Hippopotamus_skull_in_NHM_jpg.jpg",
+   "kind": "骨",
+   "tags": [
+    "頭の骨"
+   ],
+   "note": "頭の骨・牙",
+   "title": "File:Hippopotamus skull in NHM.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamus_skull_in_NHM.jpg",
+   "license": "CC BY 2.0",
+   "artist": "paleobear",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "水中/Hippopotamus_amphibius_San_Diego_Zoo_California.jpg",
+   "kind": "水中",
+   "tags": [
+    "水中"
+   ],
+   "note": "水中のカバ（動物園・水は澄んでいる）",
+   "title": "File:Hippopotamus amphibius -San Diego Zoo, California, USA -under water-8a.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamus_amphibius_-San_Diego_Zoo,_California,_USA_-under_water-8a.jpg",
+   "license": "CC BY 2.0",
+   "artist": "Brian Snelson from Hockley, Essex, England",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippos_in_the_Hluhluwe_Umfolozi_Game_Reserve_web_004.8s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "群れ",
+    "岸",
+    "横"
+   ],
+   "note": "岸の砂地で寝そべる群れ（体が重なる・奥に川と鳥）",
+   "title": "File:Hippos in the Hluhluwe-Umfolozi Game Reserve.webm",
+   "t": 4.8,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippos_in_the_Hluhluwe-Umfolozi_Game_Reserve.webm",
+   "license": "CC BY-SA 3.0",
+   "artist": "Amada44",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippos_in_the_Hluhluwe_Umfolozi_Game_Reserve_web_029.0s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "群れ",
+    "岸",
+    "草原"
+   ],
+   "note": "岸の群れ・手前に草の株、奥に水と葦の帯",
+   "title": "File:Hippos in the Hluhluwe-Umfolozi Game Reserve.webm",
+   "t": 29.0,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippos_in_the_Hluhluwe-Umfolozi_Game_Reserve.webm",
+   "license": "CC BY-SA 3.0",
+   "artist": "Amada44",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/003_Baby_Hippopotamus_in_the_rain_at_Queen_Eliza_001.3s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "親子",
+    "岸"
+   ],
+   "note": "親子・子は全身ピンクがかる。水草の手前",
+   "title": "File:003 Baby Hippopotamus in the rain at Queen Elizabeth National Park Video by Giles Laurent.webm",
+   "t": 1.3,
+   "src": "https://commons.wikimedia.org/wiki/File:003_Baby_Hippopotamus_in_the_rain_at_Queen_Elizabeth_National_Park_Video_by_Giles_Laurent.webm",
+   "license": "CC BY-SA 4.0",
+   "artist": "Giles Laurent",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippohangingout_ogv_003.4s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "水辺",
+    "斜め"
+   ],
+   "note": "水の上は頭と背中だけ・耳と目のこぶ（局のロゴあり）",
+   "title": "File:Hippohangingout.ogv",
+   "t": 3.4,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippohangingout.ogv",
+   "license": "CC BY-SA 3.0",
+   "artist": "Earth-Touch.com",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Mouth_of_a_hippopotamus_Hippopotamus_amphibius_w_003.6s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "口",
+    "正面",
+    "あくび"
+   ],
+   "note": "正面の大あくび（口の中はピンク・下の牙）",
+   "title": "File:Mouth of a hippopotamus (Hippopotamus amphibius).webm",
+   "t": 3.6,
+   "src": "https://commons.wikimedia.org/wiki/File:Mouth_of_a_hippopotamus_(Hippopotamus_amphibius).webm",
+   "license": "CC BY 2.0",
+   "artist": "kartfamily",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippopotamuses_vocalising_in_South_Africa_webm_002.1s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "群れ",
+    "水辺"
+   ],
+   "note": "野生の群れ・鳴く",
+   "title": "File:Hippopotamuses vocalising in South Africa.webm",
+   "t": 2.1,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamuses_vocalising_in_South_Africa.webm",
+   "license": "CC BY-SA 2.0",
+   "artist": "Kent Wang",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippopotamuses_vocalising_in_South_Africa_webm_005.0s.jpg",
+   "kind": "カバ",
+   "tags": [
+    "群れ",
+    "水辺"
+   ],
+   "note": "野生の群れ・鳴く",
+   "title": "File:Hippopotamuses vocalising in South Africa.webm",
+   "t": 5.0,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippopotamuses_vocalising_in_South_Africa.webm",
+   "license": "CC BY-SA 2.0",
+   "artist": "Kent Wang",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Nijlpaarden_in_de_Okovango_Delta_6558975165_jpg.jpg",
+   "kind": "カバ",
+   "tags": [
+    "真上",
+    "群れ"
+   ],
+   "note": "上から見た群れ（デルタ）",
+   "title": "File:Nijlpaarden in de Okovango Delta (6558975165).jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Nijlpaarden_in_de_Okovango_Delta_(6558975165).jpg",
+   "license": "CC BY 2.0",
+   "artist": "Martijn.Munneke from Netherlands",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippo_Trails_jpg.jpg",
+   "kind": "カバ",
+   "tags": [
+    "真上",
+    "通り道"
+   ],
+   "note": "カバの通り道（上から）",
+   "title": "File:Hippo Trails.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippo_Trails.jpg",
+   "license": "Public domain",
+   "artist": "John Storr",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Zambezi_hippos_Livingstone_20260518_P1075517_jpg.jpg",
+   "kind": "カバ",
+   "tags": [
+    "群れ",
+    "水辺"
+   ],
+   "note": "川の群れ",
+   "title": "File:Zambezi hippos, Livingstone (20260518-P1075517).jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Zambezi_hippos,_Livingstone_(20260518-P1075517).jpg",
+   "license": "CC BY-SA 4.0",
+   "artist": "Matti Blume",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "カバ/Hippos_watching_from_the_water_6073670010_jpg.jpg",
+   "kind": "カバ",
+   "tags": [
+    "水辺",
+    "正面"
+   ],
+   "note": "水から目と耳だけ出す",
+   "title": "File:Hippos watching from the water (6073670010).jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Hippos_watching_from_the_water_(6073670010).jpg",
+   "license": "CC BY 2.0",
+   "artist": "Derek Keats from Johannesburg, South Africa",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "草原/Vast_Grasslands_of_Lake_Mburo_National_Park_jpg.jpg",
+   "kind": "草原",
+   "tags": [
+    "草原",
+    "遠景"
+   ],
+   "note": "湖のそばの広い草原",
+   "title": "File:Vast Grasslands of Lake Mburo National Park.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Vast_Grasslands_of_Lake_Mburo_National_Park.jpg",
+   "license": "CC BY-SA 4.0",
+   "artist": "ASally Ruth",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "草原/Green_grasses_around_body_water_at_Manyara_Park.jpg",
+   "kind": "草原",
+   "tags": [
+    "草原",
+    "水辺",
+    "空と雲",
+    "遠景"
+   ],
+   "note": "水辺の草・遠い山・うすく流れる雲",
+   "title": "File:Green grasses around body water at Manyara Park.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Green_grasses_around_body_water_at_Manyara_Park.jpg",
+   "license": "CC BY-SA 4.0",
+   "artist": "Timz art (T.Mbilinyi)",
+   "added": "2026-11-22"
+  },
+  {
+   "file": "水辺/Serengeti_National_Park_11_landscape_jpg.jpg",
+   "kind": "水辺",
+   "tags": [
+    "真上",
+    "水辺",
+    "遠景"
+   ],
+   "note": "上から見た湿地（水の筋と草の島）",
+   "title": "File:Serengeti National Park 11 - landscape.jpg",
+   "t": null,
+   "src": "https://commons.wikimedia.org/wiki/File:Serengeti_National_Park_11_-_landscape.jpg",
+   "license": "CC BY-SA 4.0",
+   "artist": "Thomas Fuhrmann",
+   "added": "2026-11-22"
+  }
+ ]
+}
