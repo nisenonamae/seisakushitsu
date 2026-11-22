@@ -139,7 +139,7 @@ function bank3(t,dry=0){const m=(a,b)=>mix(a,b,dry);   // 左の岸：短い芝 
 
 // 群れ（横）。1頭ずつ：場所・大きさ・向き・形の種・浮き方・しぐさ
 // ─── カバ（どの向きでも）。体を「だ円の玉」の集まりとして持ち、向き（yaw）で回して描く。0＝右向き・90＝こっち向き・180＝左向き・270＝むこう向き ───
-function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl=(o.fl==null?30:o.fl)-14*jaw,hz=o.hz||0,th=(h.yaw||0)*Math.PI/180+(o.dyaw||0),hy=o.hyaw||0,tilt=(o.tilt||0)-.55*jaw,a1=jaw*.4,a2=jaw*1.0;
+function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl=(o.fl==null?30:o.fl)-14*jaw,hz=o.hz||0,th=(h.yaw||0)*Math.PI/180+(o.dyaw||0),hy=o.hyaw||0,tilt=(o.tilt||0)-.78*jaw,a1=jaw*.3,a2=jaw*.95;
  let cb=mix(IC.hb,v.tn>0?'#93706a':'#615a5a',Math.abs(v.tn)*.6),cd=mix(cb,'#2e2626',.42),cl=mix(cb,'#cdbfb6',.36),cp=mix(IC.hp,cb,.15),ce=IC.he,cm='#d98f92',ct='#8a3b47',ci='#f4ecd8';
  if(hz){const hc=o.hzc||'#93a79c',z=c=>mix(c,hc,hz);cb=z(cb);cd=z(cd);cl=mix(cl,o.hzc||'#a9bbb0',hz);cp=z(cp);ce=mix(ce,hc,hz*.6)}
  const L=v.L,hu=v.hu,fu=flickU(t+h.seed,v.ft),ew=fu<0?0:Math.sin(fu*34)*(1-fu),blink=Math.max(...v.bt.map(b=>pulse(t+h.seed*.37,b,.2)))>.5;
@@ -155,7 +155,7 @@ function hp3(h,t,o={}){const v=h.v||(h.v=hv(h.seed)),s=h.s,kp=.2,jaw=o.jaw||0,fl
   add(258,-48,22*d,9,6,9,cb,0,2);add(262,-51,23*d,3,1.1,3,mix(ce,cb,.72),1,2)}
  if(jaw>.1){const k=clamp((jaw-.1)*4);{const bq=rot([128+34,-6],Hg,(a2-a1)/2);add(bq[0],bq[1],0,20*k,9*k,30,mix(ct,'#5a2a30',.3),-2,1)}add(215,3,0,58,8,50,cm,-1,2);add(205,-9,0,54,8,40,'#dc9a9c',1,3);
   for(const d of [-1,1]){add(262,-30,36*d,6,24*k,6,ci,2,3);add(250,12,40*d,5,10*k,5,ci,1,2);add(284,-10,10*d,11,4,5,ci,2,3)}}
- if(o.full){add(-85*L,30,0,150*L,52,72,cb);add(34,22,0,66,48,64,cb);add(-170*L,24,0,62,50,64,cb);add(-85*L,56,0,118*L,24,54,mix(cp,cb,.35),1);add(-172*L,-2,0,58,52,50,mix(cb,cl,.34),.4);add(34,-8,0,56,46,48,mix(cb,cl,.34),.4);add(-85*L,38,0,138*L,20,62,mix(cb,cd,.3),.3);const lg=o.legs||[0,0,0,0]; /* 全身のとき：腰・肩の明るい面と体の下側の暗い面（手本帳 絵8・絵1。4周目挑戦） */
+ if(o.full){add(-85*L,30,0,150*L,52,72,cb);add(34,22,0,66,48,64,cb);add(-170*L,24,0,62,50,64,cb);add(-85*L,56,0,118*L,24,54,mix(cp,cb,.35),1);add(-176*L,-12,0,64,50,52,mix(cb,cl,.42),.4,0,-.35);add(30,-14,0,36,54,40,mix(cb,cl,.36),.4,0,.45);add(-85*L,38,0,138*L,20,62,mix(cb,cd,.3),.3);const lg=o.legs||[0,0,0,0]; /* 全身のとき：腰・肩の明るい面と体の下側の暗い面（手本帳 絵8・絵1。4周目挑戦） */
   [[-168*L,44],[-150*L,-44],[42,46],[58,-46]].forEach(([X,Z],i)=>{const f=lg[i],sx=Math.sin(f),cx=Math.cos(f);add(X+sx*30,40+cx*30,Z,28,46,24,Z<0?cd:cb,0,0,-f);add(X+sx*66,40+cx*66,Z,29,13,24,cd,.5,0,-f)})}
  P.sort((a,b)=>a.k-b.k);
  g.save();g.translate(h.x,h.y);g.scale(s,s);
@@ -201,7 +201,7 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
      g.fillStyle=c;P([[-76,8,.5],[-74,-26,.7],[-52,-38,.8],[-24,-56,.9],[4,-54,.9],[16,-32,.8],[56,-26,.8],[92,-38,.8],[118,-34,.7],[128,-6,.6],[118,18,.6],[60,22,.7],[-30,26,.7]]);g.fill();
      g.fillStyle=dk;P([[-60,10,.6],[-20,6,.7],[40,10,.7],[96,14,.6],[96,22,.5],[-30,26,.6]]);g.fill();   // 下側の影（部分塗り）
      g.fillStyle=hole;P([[-18,-36,.9],[-2,-40,.9],[6,-28,.9],[-10,-24,.9]]);g.fill();                     // 目の穴（高い所）
-     P([[-50,-6,.8],[-26,-10,.8],[-20,4,.8],[-46,6,.8]]);g.fill();                                       // ほお骨の下の穴
+     P([[-66,-22,.8],[-36,-34,.8],[-26,-22,.8],[-58,-10,.8]]);g.fill();                                 // 目のうしろの大きなくぼみ（側頭窩）。目の下うしろに置くと鼻の穴に見えた・5周目ミス
      g.fillStyle=tusk;P([[82,14,.5],[90,12,.5],[88,40,.6],[82,44,.4]]);g.fill();                          // 上の牙（下向き・短い）
      for(let k=0;k<5;k++)rect(22+k*12,13,9,8,k%2?'#e8dcc0':'#ded1b4');g.fillStyle=dk;rect(20,21,62,2,dk)}   /* 歯の列：四角い奥歯（ギザギザはワニに見えた。現実に近く・作り手 2026-11-22） */
     else{const w=Math.max(.5,Math.abs(sn))*SK;g.scale(w,SK);   // 正面に近いとき
@@ -210,7 +210,7 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
      g.fillStyle=hole;for(const d of [-1,1]){ell(d*38,-36,9,8,hole)}P([[-14,6,.8],[14,6,.8],[10,22,.8],[-10,22,.8]]);g.fill();
      g.fillStyle=tusk;for(const d of [-1,1]){P([[d*50,26,.5],[d*58,26,.5],[d*56,50,.6],[d*50,52,.4]]);g.fill()}}};
   const jaw=()=>{if(side){g.scale(fx*SK,SK);   // 下あご：後ろの大きな張り出し・前の角から反り上がる牙・前に出る切歯
-     g.fillStyle=tusk;P([[96,6,.5],[108,2,.5],[110,-22,.7],[100,-46,.8],[92,-50,.6],[98,-26,.7],[90,-4,.5]]);g.fill();
+     g.fillStyle=tusk;P([[94,8,.5],[110,2,.5],[114,-24,.7],[104,-54,.8],[92,-60,.6],[98,-28,.7],[88,-4,.5]]);g.fill();
      g.fillStyle=c;P([[-60,-2,.6],[-20,0,.7],[60,2,.7],[118,0,.6],[122,14,.6],[96,22,.7],[40,18,.7],[-20,26,.8],[-50,50,.9],[-70,40,.8],[-72,14,.6]]);g.fill();
      g.fillStyle=dk;P([[-56,30,.7],[-20,24,.7],[40,16,.7],[96,20,.6],[96,22,.5],[-50,50,.8]]);g.fill();
      g.fillStyle=tusk;P([[116,2,.5],[146,0,.5],[146,6,.5],[118,10,.5]]);g.fill()}   // 切歯（前へ）
@@ -238,7 +238,7 @@ function face3(x,y,s,t,o={}){const ear=o.ear||0,blink=o.blink||0,look=o.look||0,
  fill([[-158,-30,.9],[-140,-84,.9],[-70,-104,.8],[70,-104,.8],[140,-84,.9],[158,-30,.9],[150,30,.8],[-150,30,.8]],cb);   // 頭（低いドーム）
  for(const d of [-1,1]){fill([[94*d-38,-80,.8],[94*d-30,-116,.9],[94*d+4,-128,.9],[94*d+36,-112,.9],[94*d+40,-82,.8]],cb)}   // 目のこぶ（頭の上の両はし）
  fill([[-214,20,.9],[-196,-40,.9],[-110,-62,.8],[110,-62,.8],[196,-40,.9],[214,20,.9],[204,96,.8],[-204,96,.8]],cb);   // 鼻づら（いちばん幅が広い）
- fill([[-196,-38,.8],[-110,-60,.8],[110,-60,.8],[196,-38,.8],[180,-28,.8],[100,-46,.7],[-100,-46,.7],[-180,-28,.8]],cl);   // 鼻づらの上のふちの明るい帯（ふたにしない）
+ fill([[-168,-40,.8],[-104,-58,.8],[104,-58,.8],[168,-40,.8],[150,-32,.8],[96,-46,.7],[-96,-46,.7],[-150,-32,.8]],cl);   // 鼻づらの上のふちの明るい帯（ふたにしない）
  fill([[-128,-98,.8],[-70,-102,.8],[70,-102,.8],[128,-98,.8],[120,-90,.8],[-120,-90,.8]],mix(cb,cl,.6));   // 頭の上のふちの帯
  for(const d of [-1,1]){g.save();g.globalAlpha=.45;ell(96*d,-104,20,13,cp);g.restore();ell(96*d+look*3,-106,7,blink?1.5:6.5,IC.he);if(!blink)ell(96*d+2+look*3,-108,1.6,1.6,'#fff');line([[96*d-14,-116+blink*4],[96*d+14,-115+blink*4]],mix(cb,cd,.5),3)}
  for(const d of [-1,1]){ell(62*d,-50,18,7,mix(cb,cl,.3));g.save();g.translate(62*d,-51);g.rotate(d*.35);ell(0,0,11+nos*3,2.2+nos*3,mix(IC.he,cb,.45));g.restore()}   // 鼻の穴：上の面に、上向きの細いすき間（黒い点にしない）
@@ -256,7 +256,7 @@ function front3(t,tl){rect(0,0,W,H,IC.sky1);world3(t,234,{sunX:260,noBirds:1,aca
  // 主役：目だけ出して見ている → ぬっと上がる → 耳をまわす → ゆっくり沈む
  const rz=u=>ease(tw(u,.9,1.0))-ease(tw(u,2.9,1.0))*.82,rise=rz(tl),mv=clamp(Math.abs(rz(tl+.06)-rz(tl-.06))*14+.5*pulse(tl,1.9,1.1)),wl=476,y0=lerp(528,424,rise),fu=(tl-2.05)/.75,ear=fu>0&&fu<1?Math.sin(fu*34)*(1-fu):pulse(tl,.45,.2)*.5;
  g.save();g.globalAlpha=.2;ell(640,wl+5,250,5,'#3f4530');g.restore();   // 皿に見えた黄緑の楕円をやめ、水面すぐ下の細い映り込みだけ（4周目ミス）
- g.save();g.beginPath();g.rect(0,0,W,wl);g.ellipse(640,wl,lerp(150,262,clamp((wl-(y0-205))/330)),16,0,0,7);g.clip();face3(640,y0,1.25,t,{ear,blink:Math.max(pulse(tl,.6,.2),pulse(tl,3.3,.2))>.5,look:Math.sin(tl*1.2),nos:pulse(tl,1.5,.5)});
+ g.save();g.beginPath();g.rect(0,0,W,wl);g.ellipse(640,wl,lerp(150,262,clamp((wl-(y0-205))/330)),3,0,0,7);g.clip();face3(640,y0,1.25,t,{ear,blink:Math.max(pulse(tl,.6,.2),pulse(tl,3.3,.2))>.5,look:Math.sin(tl*1.2),nos:pulse(tl,1.5,.5)});
  if(fu>0&&fu<1){const rr=R(77);for(const d of [-1,1])for(let i=0;i<7;i++){const a=-1.57+d*.5+(rr()-.5)*2.2,dd=(24+rr()*130)*eout(fu),sz=(2+rr()*4.5)*(1-fu)+.8;ell(640+d*150+Math.cos(a)*dd,y0-220+Math.sin(a)*dd+(90+rr()*160)*fu*fu,sz*.8,sz*1.2,'#eef3e0')}}
  g.restore();
  for(let i=0;i<3;i++){const k=((t*.4+i/3)%1);g.save();g.globalAlpha=(1-k)*.8*mv;g.strokeStyle='#e9eed8';g.lineWidth=3;g.beginPath();g.ellipse(640,wl+6,240+k*340,7+k*40,0,0,Math.PI);g.stroke();g.restore()} /* 波の輪は手前の半分だけ（奥の半分は体のうしろ。4周目ミス） */ 
@@ -362,7 +362,7 @@ function under3(t,tl){const v=92,sc=tl*v,SY=250,BY=612,MK='#8a9460';
  g.save();g.beginPath();g.rect(-400,SY+6,W+800,H);g.clip();
  for(const [bx,by,s,yaw,seed,hz,lg] of [[150,596,.44,30,81,.7,[.1,-.15,.2,-.1]],[1120,600,.52,205,83,.6,[0,0,.05,-.05]]]){const x=bx-sc*.1;hp3({x,y:by-119*s,s,yaw,seed,v:hv(seed)},t,{full:1,fl:0,hz,hzc:MK,legs:lg,tilt:-.18,flat:mix('#7c6c68',MK,hz)})}
  g.restore();
- {const r=R(61);for(let i=0;i<16;i++){const wx=r()*2600,x=((wx-sc)%2600+2600)%2600-200,y=BY+10+r()*70,k=r();if(k<.4)ell(x,y,10+r()*16,5+r()*5,'#44472f');else if(k<.7){for(let j=0;j<3;j++)blade(x+j*9,y,40+r()*50,9,Math.sin(t*1.2+i+j)*10-14,'#667f48')}else line([[x,y],[x+40+r()*40,y-2]],'#6a6d4e',3)}}
+ {const r=R(61);for(let i=0;i<16;i++){const wx=r()*2600,x=((wx-sc)%2600+2600)%2600-200,y=BY+10+r()*70,k=r();if(Math.abs(x-590)<170&&k>=.4){}else if(k<.4)ell(x,y,10+r()*16,5+r()*5,'#44472f');else if(k<.7){for(let j=0;j<3;j++)blade(x+j*9,y,40+r()*50,9,Math.sin(t*1.2+i+j)*10-14,'#667f48')}else line([[x,y],[x+40+r()*40,y-2]],'#6a6d4e',3)}}
  {const r=R(63);for(let i=0;i<40;i++){const x=((r()*1500-sc*(.4+r()*.8))%1500+1500)%1500-100,y=SY+20+r()*340+Math.sin(t+i)*6;g.save();g.globalAlpha=.25+.3*r();ell(x,y,1.5+r()*2.5,1.5+r()*2.5,'#ecebbd');g.restore()}}
  // 主役：けって浮く → ふわっと下りる。最後は大きくけって、鼻を水面に出して息つぎ
  const T=1.9,G=474,HY=u=>{const c=((u/T)%1+1)%1,up=ease(tw(u,2.85,.65));return G-(c>.14&&c<.86?Math.sin((c-.14)/.72*Math.PI)*38:0)*(1-up)-up*118},c=(tl/T)%1,p=tl*3.1,up=ease(tw(tl,2.85,.65)),hx=590+Math.sin(tl*.9)*20,hy=HY(tl),hop=G-hy,
