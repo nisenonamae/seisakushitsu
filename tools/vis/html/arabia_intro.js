@@ -174,7 +174,7 @@ const POD=[{x:552,y:360,s:.24,yaw:55,seed:45,fl:40},{x:668,y:368,s:.27,yaw:160,s
  {x:150,y:420,s:.46,yaw:150,seed:8,fl:36},{x:596,y:446,s:.56,yaw:78,seed:21,fl:36,sink:[.9,4.3]},{x:820,y:418,s:.48,yaw:12,seed:14,fl:22},{x:752,y:450,s:.26,yaw:20,seed:33,fl:12,calf:1},{x:1080,y:452,s:.54,yaw:318,seed:65,fl:32},
  {x:270,y:556,s:.98,yaw:0,side:1,seed:2,fl:30,yawn:1.5},{x:1050,y:580,s:1.0,yaw:146,seed:19,fl:36,turn:[3.0,5.6]},{x:610,y:634,s:.8,yaw:62,seed:37,fl:52}];
 function podState(h,t,tl){let fl=h.fl,jaw=0,tilt=-.04,puff=0,hyaw=0,x=h.x,bub=0;const ev=[],E=(t0,xx,w)=>ev.push({age:tl-t0,x:xx,w});
- if(h.call!=null){const k=ease(tw(tl,h.call,.35))-ease(tw(tl,h.call+1.2,.5));jaw=Math.max(jaw,.4*k);tilt-=.12*k;E(h.call+.15,60,210)}   /* 鳴く：頭を少し上げ、口を半分あける（ウィーズホンク。水の上と下の両方に届く・Barklow 2004） */
+ if(h.call!=null){const d=h.callD||3.6,k=ease(tw(tl,h.call,1.1))-ease(tw(tl,h.call+d-1.1,1.1)),u=tl-h.call-.9,hk=u>0&&u<d-1.6?Math.pow(Math.max(0,Math.sin(u*Math.PI/.85)),2):0;jaw=Math.max(jaw,(.22+.12*hk)*k);tilt-=(.16+.03*hk)*k;fl-=6*k;for(let j=0;j<4;j++)E(h.call+1+j*.85,60,150+j*20)}   /* 鳴く：ゆっくり頭を上げ、口を半分あけたまま、0.85秒ごとに数回鳴く（ウィーズホンク）。作り手「本物のカバみたいにゆっくり」 */   /* 鳴く：頭を少し上げ、口を半分あける（ウィーズホンク。水の上と下の両方に届く・Barklow 2004） */
  if(h.yawn!=null){jaw=yawnK(tl,h.yawn,3);E(h.yawn+.32,60,230);E(h.yawn+2.6,170,150)}
  if(h.sink){const [a,b]=h.sink;fl=lerp(fl,128,ease(tw(tl,a,1.3)));bub=tl>a+1.2&&tl<b;E(a+.3,60,170);if(tl>b){fl=lerp(128,h.fl-12,eout(tw(tl,b,.8)));fl=lerp(fl,h.fl,ease(tw(tl,b+.9,1.4)));puff=tw(tl,b+.55,.7);E(b,60,170);E(b+.9,60,150)}}
  if(h.calf){const k=ease(pulse(tl,2.2,3));fl=h.fl-k*14+Math.sin(tl*5)*2*k;tilt=-.1-k*.22;E(2.3,60,90);E(4.3,60,90)}
@@ -220,7 +220,7 @@ function bones3(x,y,s,yawDeg,tc,seed){const r0=R(seed+500),BL=.82+r0()*.36,NR=5+
   const q0=sk(-10*SK,0,0);items.push({n:q0[2],d:()=>{g.save();g.translate(q0[0],q0[1]);if(side)g.transform(1,sn*kp*.6*Math.sign(fx),0,1,0,0);cran();g.restore()}});
   const fj=fall(.1),J1=mv([175,-32,0],[70,GY-4,56],fj),J2=mv([315,-30,0],[205,GY-2,70],fj); /* 崩れたら下あごは頭の骨の横の地面へ（重なって牙が頭の上から生えて見えた・4周目ミス） */ items.push({n:fj.u<.5?q0[2]+1:pj(...J2)[2]-2,d:()=>{const a=pj(...J1),b=pj(...J2),ang=Math.atan2(b[1]-a[1],Math.abs(b[0]-a[0])+1e-3)*.6;g.save();g.translate(a[0]+(side?0:(b[0]-a[0])/2),a[1]);if(side)g.rotate(ang*Math.sign(fx));jaw();g.restore()}})}
  items.sort((a,b)=>a.n-b.n);g.save();g.translate(x,y);g.scale(s,s);for(const it of items)it.d();g.restore()}
-function podBones(t,tc,drain){POD.forEach((h,i)=>{const s=h.s*1.1,y=h.y+h.fl*h.s,drop=ease(drain)*240*h.s;g.save();if(drain<1){g.beginPath();g.rect(0,0,W,h.y+drop);g.clip()}
+function podBones(t,tc,drain,pod=POD){pod.forEach((h,i)=>{const s=h.s*1.1,y=h.y+h.fl*h.s,drop=ease(drain)*240*h.s;g.save();if(drain<1){g.beginPath();g.rect(0,0,W,h.y+drop);g.clip()}
   if(h.s<.3)g.globalAlpha=.85;bones3(h.x,y,s,h.side?10:h.yaw,tc-((i*37)%10)*.035,40+i);g.restore()})}
 function fg3(t,dry=0,kind=0){const sway=Math.sin(t*.9),m=(a)=>mix(a,'#6b4426',dry),k=1-dry*.9;blurOn(10);   // 手前のぼかした草（左右で形を変える）
  if(kind===0){for(const [x,hh,w,ln] of [[-10,330,60,40],[52,250,46,-14],[108,180,36,30]])blade(x,H+30,hh*k,w,(ln+sway*10)*k+dry*60,m('#1f3f35'));
@@ -439,3 +439,52 @@ SC.intro5=function(t){const TA=2.8,TB=9.0,TU=9.8,TV=12.0,TW=12.6,TS=14.6,TF=15.3
  else if(t<TE)push5((t-TD)/(TE-TD),-1,top,()=>side3(t,7.6+(t-TE),{dead:false}),0,t);   // カメラが下りて横へ
  else{const td=t-TX,dead=td>=0,tc=td-.45;side3(t,7.6+(t-TE),{dead,drain:dead?1:0,dry:dead?1:0,tc,td});
   if(dead&&td<.14){g.save();g.globalAlpha=1-td/.14;rect(0,0,W,H,'#fff');g.restore()}}};
+
+// ─── 6版（2026-11-22 作り手「場面が切り替わる感じでなく、カバの動きにカメラがついていく」）───
+//   横から見た1つの世界（水の上と水の下が上下につながる）の中を、カメラ（cx,cy,z）が母について動く。
+//   カメラが回る所（真下）は、母が同じ画面の位置・向き・速さのまま見え方が変わる「動きつなぎ」。正面は母がこちらへ向く。真上は「引き」に置き換えた
+const MOM6={x:270,y:556,s:.98,yaw:0,side:1,seed:2,fl:30,call:2.0,callD:4.2,sink:[6.4,99]},CALF6={x:520,y:588,s:.4,yaw:14,seed:33,fl:22,sink:[6.75,99],calf:1};
+const POD6=POD5.map((h,i)=>({...h,call:i===2?.6:(i===5?1.0:null),callD:3.4}));
+const FLOOR6=860,SURF6=338;
+function uw6(t,a){if(a<=0)return;g.save();g.globalAlpha=a;   // 水の下（横から）：にごった緑。上が明るく下が暗い・光の筋・底
+ {const gr=g.createLinearGradient(0,SURF6,0,FLOOR6+80);gr.addColorStop(0,'#a9b27a');gr.addColorStop(.45,'#7f8a58');gr.addColorStop(1,'#4c5536');g.fillStyle=gr;g.fillRect(-600,SURF6,W+1200,FLOOR6+400-SURF6)}
+ for(let i=0;i<7;i++){const x0=-300+i*300+Math.sin(t*.3+i)*30;g.save();g.globalAlpha=a*(.07+.03*Math.sin(t*1.2+i));poly([[x0,SURF6],[x0+70,SURF6],[x0-80,FLOOR6],[x0-200,FLOOR6]],'#f2f0c4');g.restore()}
+ fill([[-600,FLOOR6-10,.3],[0,FLOOR6-24,.8],[700,FLOOR6-6,.8],[1300,FLOOR6-20,.8],[1900,FLOOR6,.3],[1900,FLOOR6+400,.2],[-600,FLOOR6+400,.2]],'#5d5e3d');
+ {const r=R(61);for(let i=0;i<22;i++){const x=-500+r()*2300,y=FLOOR6-14+r()*30;if(r()<.5)ell(x,y,10+r()*16,5+r()*5,'#44472f');else for(let j=0;j<3;j++)blade(x+j*9,y,40+r()*50,9,Math.sin(t*1.2+i+j)*10-14,'#667f48')}}
+ {const r=R(63);for(let i=0;i<50;i++){const x=-400+r()*2100,y=SURF6+20+r()*500+Math.sin(t+i)*6;g.save();g.globalAlpha=a*(.25+.3*r());ell(x,y,1.5+r()*2,1.5+r()*2,'#ecebbd');g.restore()}}
+ g.restore()}
+function surf6(t){g.save();g.strokeStyle='rgba(240,244,214,.9)';g.lineWidth=3;g.beginPath();for(let x=-600;x<=W+600;x+=14)g.lineTo(x,SURF6+Math.sin(x*.02+t*2.2)*3);g.stroke();g.restore()}   // 水面（下から見ると明るい線）
+SC.intro6=function(t){const TA=2.8;if(t<TA){grass4(t);return}
+ const tl=t-TA,K=(a,b,u)=>lerp(a,b,ease(clamp(u)));
+ // 母の水の中の道すじ（世界の座標）：沈む → 底をけって右へ → 浮かぶ
+ const sinkU=clamp((tl-6.5)/1.8),walkU=clamp((tl-8.3)/3.9),riseU=clamp((tl-14.0)/1.6);
+ const mx=lerp(lerp(300,330,sinkU),860,ease(walkU)),hopc=walkU>0&&walkU<1?Math.abs(Math.sin(tl*3.2))*26:0,
+       my=riseU>0?lerp(FLOOR6-118,SURF6+40,ease(riseU)):lerp(SURF6+60,FLOOR6-118,ease(sinkU))-hopc;
+ // カメラ
+ let cx=640,cy=360,z=1;
+ if(tl>6.8&&tl<15.7){const dive=K(0,1,(tl-6.8)/1.8),up=K(0,1,(tl-14.0)/1.6);cx=lerp(640,mx+140,dive);cy=lerp(360,lerp(640,400,up),dive);z=lerp(1,1.35,dive)}
+ else if(tl>=15.7&&tl<18.0){const f=K(0,1,(tl-15.7)/1.4);cx=lerp(1000,900,f);cy=lerp(400,370,f);z=lerp(1.35,2.1,f)}
+ else if(tl>=18.0&&tl<21.2){const f=K(0,1,(tl-18.0)/2.4);cx=lerp(900,640,f);cy=lerp(370,360,f);z=lerp(2.1,1,f)}
+ const dead=tl>=21.2,td=tl-21.2,uwA=clamp((cy-430)/160);
+ // 真下（動きつなぎ）：tl 12.2〜14.0
+ if(tl>=12.2&&tl<14.0&&!dead){botUp5(t,(tl-12.2)+.75);return}
+ g.save();g.translate(W/2,H/2);g.scale(z,z);g.translate(-cx,-cy);
+ if(!dead){
+  sideBack(t,0);bed3(0);water3(332,t,1);bank3(t,0);podDraw(t,tl,POD6);
+  // 浮かんだあとの母子は、水の上で群れのそばに（向きをこちらへ）
+  if(tl>=15.4){const f=ease(clamp((tl-15.6)/1.3)),sw=clamp((tl-18.2)/2.6);
+   hp3({x:880+40*sw,y:430,s:.62,yaw:lerp(0,78,f)-30*sw,seed:2,v:hv(2)},t,{fl:lerp(60,30,ease(clamp((tl-15.4)/.6))),puff:clamp((tl-15.7)/.8),hz:0});
+   const cf=clamp((tl-16.3)/.8);if(cf>0)hp3({x:980+30*sw,y:446,s:.3,yaw:lerp(20,70,f),seed:33,v:hv(33)},t,{fl:lerp(60,20,ease(cf)),hz:0})}
+  podDraw(t,tl,[CALF6,MOM6]);
+  // 水の中：カメラが下がると、水面の線が画面の下から上がってくる（線より下が水の中・上が水の上）。透かして重ねない（幽霊に見えた）
+  const syS=(SURF6-cy)*z+H/2,lineY=tl<6.9||tl>=16.0?H+40:tl<8.1?lerp(H+40,syS,ease((tl-6.9)/1.2)):tl<15.0?syS:lerp(syS,H+40,ease((tl-15.0)/1.0));
+  if(lineY<H+30){const wy=(lineY-H/2)/z+cy;g.save();g.beginPath();g.rect(-900,wy,W+1800,2000);g.clip();uw6(t,1);
+   const lg=k=>Math.sin(tl*6.4+k)*.6;
+   hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:hv(2)},t,{full:1,fl:0,hz:.12,hzc:'#8a9460',tilt:-.05-(riseU>0&&riseU<1?.3:0),legs:[lg(0)*.8,lg(1.2)*.8,lg(2.4)*.8,lg(3.6)*.8]});
+   hp3({x:mx-350,y:my+48-Math.abs(Math.sin(tl*3.6))*14,s:.42,yaw:12,seed:33,v:hv(33)},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:-.06,legs:[lg(0),lg(1),lg(2),lg(3)]});   // 子：母のうしろ（重ならない）
+   g.restore();g.save();g.strokeStyle='rgba(240,244,214,.9)';g.lineWidth=3/z;g.beginPath();for(let x=-900;x<=W+900;x+=14)g.lineTo(x,wy+Math.sin(x*.02+t*2.2)*3/z);g.stroke();g.restore()}
+  fg3(t,0,0);
+ }else{const tc=td-.45;sideBack(t,1);bed3(1);bank3(t,1);podBones(t,tc,1,[...POD6,{x:880,y:430,s:.62,yaw:30,seed:2,fl:30},{x:1010,y:446,s:.3,yaw:50,seed:33,fl:20}]);fg3(t,1,0)}
+ g.restore();
+ if(dead&&td<.14){g.save();g.globalAlpha=1-td/.14;rect(0,0,W,H,'#fff');g.restore()}
+ if(tl<.8){g.save();g.globalAlpha=1-ease(tw(tl,0,.8));rect(0,0,W,H,'#fffdf0');g.restore()}};
