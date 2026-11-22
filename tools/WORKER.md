@@ -15,7 +15,7 @@
 作り手はアプリで進み具合を見ている。仕事に取りかかるとき・区切りごとに、データを書き換えて **その都度 commit して push** する。
 - 取りかかるとき：その job の `status` を `"作業中"`、`progress` を `{"done":0,"total":N,"label":"今やっていること"}` にして push
 - 区切りごと：`progress.done` を増やし、`label` を次の作業に書き換えて push。途中で集まった結果（related・sources など）も、その時点で書き込んでおく（作り手は途中の結果から見始められる）
-- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、sound_ideas は 3、sound_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）
+- `total` の目安：gather は「頼まれた項目の数＋1」（頼まれた項目を順に→仕上げ）、visual_ideas は 3（案を考える→見本を描く→仕上げ）、visual_make は 作る数＋1、video_make は 4、video_fix は 3、rebuild は 部分の数＋1、visual_fix と visual_redesign は 2、outline は 3、outline_fix・flesh・flesh_fix・flesh_sync・use_item は 2、footage_check は 3、title_ideas と title_fix は 2、thumb_ideas は 3、thumb_fix は 2、sound_ideas は 3、sound_fix は 2、digest は 2、script は 4、summary と script_fix は 2、pick は 4（集める→選ぶ→供給を測る→書く）、seed_grow は 2、research は 4（調べる→事実を並べる→別の目で点検→背骨を書く）
 - 書き換えのたびに、その job の `updatedAt` も今の時刻（ミリ秒）にする
 
 ## 1.7 決まりごと（必ず読んで守る）
@@ -50,6 +50,28 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 
 ### pick（題材探し）
 - アプリのリポジトリの `tools/AUTO_PICK.md` の「数を指定されたとき」に従い、`n` 個の題材を `data/auto.json`（**アプリのリポジトリ**の方）に追加して push する
+
+### seed_grow（自分の問いを育てる）
+入口が2つある（2026-11-22・作り手）：①データから（`pick`。海外で伸びた動画の問いを持ってくる）②**自分の問いから**（これ）。②は kurzgesagt のように、ありふれた疑問を深く調べて化けさせる回。
+- `jobs[].candId` の候補の `seed`（作り手が気になったこと）と `seedWhy` を読む
+- `qIdeas` に問いの案を3つ（`more` が true なら、今ある案と違う切り口で3つ足す）：`{"q","gap","angle","demand"}`
+  - `q`：直感とずれる問いの形。「なぜ〜ないのか」「〜なのに、なぜ〜」。題名の下書きになる
+  - `gap`：見る人が持ちそうな直感と、実際に起きていることのずれを一文（餌箱の学び「直感を先に言わせて崩す」）
+  - `angle`：調べるとどこへ化けそうか（答えの意外な広がり）を一文。**まだ調べていないので、言い切らず見込みで**
+  - `demand`：その問いの言い方での需要の目安。`python3 tools/jpsupply.py "検索の言葉" "数える言葉"` と、英語の `search()` で近い動画の再生数を見て一文。**需要は題材を決めるためではなく、言い方を選ぶ・ふるいにかけるために使う**（需要がほぼない言い方なら、同じ中身で需要のある言い方を q にする）
+- `status` は触らない（候補のまま）。total は 2
+
+### research（深く調べる）
+自分の問いの回の、いちばん大事な段。データからの回でも頼まれたらやる。参考集め（gather）の「調べた資料」より深く、構成の前に、話の材料を全部そろえる。
+1. 題材（候補の q・gap・angle）と `jobs[].wish`（特に知りたいこと）を読む。2回目以降は、今ある `facts` にない方向・もっと深い所を調べる
+2. WebSearch・WebFetch で、論文・公的機関・大学・百科事典・本の紹介を広く読む（10〜30か所が目安）。動画の文字起こしだけを根拠にしない
+3. 使える事実を `projects[].facts[]` に足す：`{"id","text","wow"（驚き度 1〜3）,"sure"（確か／たぶん／要確認）,"part"（使えそうな所：つかみ・第2章・締め など）,"srcs":[{"title","url"}],"check","createdAt"}`
+   - `text` は自分の言葉で一文〜二文。数字は出どころのとおりに。**`wow` が3のものは、見る人の直感をくつがえすもの**（当たり前の事実に3を付けない）
+   - `sure`：2つ以上の別々の確かな資料で一致したら「確か」、1つだけなら「たぶん」、食い違う・弱い資料しかないなら「要確認」
+   - `star` は作り手が付けるので書かない（すでにある star は消さない）
+4. **別の目で点検**：`wow` が2以上で数字を含む事実を、Agent ツールで別のエージェント（作った経緯を見ていない）に渡し、出どころを開いて確かめてもらう。結果を `check` に一言（「2つの資料で一致」「資料では約〜。直した」など）。食い違えば `sure` を下げるか直す
+5. `projects[].research` に `{"spine","open","updatedAt"}`：`spine`＝話の背骨の案（直感→ひっくり返し→…→広がり、を矢印で一行〜三行。驚き度の高い事実をどこに置くか）、`open`＝まだ分かっていない・議論がある所（締めの余韻に使える）
+6. `result` に「事実 〇件（驚き3が〇件・要確認〇件）」。total は 4
 
 ### gather（参考集め）
 作り手が、集めたい項目に印を付けて頼む。題材（candidates の q・angle・links）について、頼まれた項目だけを集めて projects に書く。
@@ -100,6 +122,7 @@ JSON の中身はすべて ID でつながっている：`jobs[].projId` → `pr
 - 長さは `jobs[].len`（または `projects[].len`）に合わせ、`sec` の合計を近づける。作り手があとから長さを変えたとき（`projects[].len` と今の合計が大きく違うとき）は、outline_fix で長さに合わせて段を足し引きし、`memo` に「〇分に合わせた」と書く。肉付けは1秒あたり約5.5字で合計の長さを見積もる
 
 ### outline（構成づくり・初版）
+0. **`facts` があるとき（自分の問いの回など）は、それが中身の主役**：`star` の付いた事実を必ず使い、`research.spine` を背骨の下敷きにする。参考動画の【流れ】は下敷きにしない（なぞる元がない回なので、事実の驚きの順で組む）。`sure` が「要確認」の事実は使わないか、使うなら `memo` に書く。`research.open` は締めの候補
 1. 題材（candidates の q と angle）、参考メモ（ideas）、資料（materials の summary と、必要なら元の text。【流れ】は構成の組み方の参考に、【使えそうな事実・数字】は中身に使う）、調べた資料（sources）、集めた参考（related）、使ってよいと点検された素材（assets の ok が true）を読む
 2. 録画（recs）があれば ffmpeg でコマに分けて見る。なければ related の「見せ方」のサムネイルと `tools/STYLE_DEFAULT.md` をもとにする。上の「編集スタイル」の決まり（jobs の styleMode・styleId）に従って型紙を `projects[].kata` に書く
 3. 構成の初版を `projects[].outline` に書く（ver 1）。段は 1分なら4〜6、10分なら10〜16、15分なら15〜22、20分以上なら20〜40 が目安。15分以上は、3〜6個の「章」に分けて、章ごとに小さな問いと答え（山場）を置き、途中で見る人が離れないようにする（`role` に「第2章：〜」のように章の名前を入れてよい）。中身が長さに足りないときは、水増しせずに足りない分を `memo` に書き、資料の追加（参考集め）か長さを縮めることを勧める。最初の15秒で問いと答えの気配を見せる。元の動画の構成をなぞらない

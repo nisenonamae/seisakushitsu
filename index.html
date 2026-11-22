@@ -122,6 +122,11 @@ details.chap[open]{border:2px solid var(--sea)}
 
 <section data-tab="cand">
 <h2>題材の候補</h2>
+<div class="item" id="ownBox"><div class="q">自分の問いから</div>
+<p class="lead" style="margin:2px 0 6px">日常で気になったこと・不思議に思ったことを、そのまま書くだけ。Claude が「直感とずれる問い」に育てて、案を3つ返します（題名の言い方に使う需要の目安つき）。気に入った問いを「これにする」と、ふつうの候補になります。作るときは「深く調べる」から始まります。</p>
+<label>気になったこと</label><textarea id="ownSeed" style="min-height:60px" placeholder="例：木ってあんなに重いのに、根元に穴があかないのはなんで？"></textarea>
+<label>なぜ気になった？（任意）</label><input id="ownWhy" placeholder="例：公園で大きな木を見て">
+<div class="row"><button class="b main" id="ownAdd">問いに育ててもらう</button><span class="lead" id="ownMsg"></span></div></div>
 <div class="item" id="autoBox"><div class="q">自動で選んだ題材</div><div class="lead" id="autoMeta" style="margin:2px 0 6px">読み込み中…</div><div id="autoList"></div>
 <div class="row"><select id="autoN" style="width:auto"><option>3</option><option selected>5</option><option>10</option><option>20</option></select><button class="b main" id="autoRun">個 持ってきてもらう</button></div>
 <p class="lead" style="margin:4px 0 0">毎朝、海外の動画と日本語の供給を測って、いい題材を自動で選んでここに置きます。数を選んでボタンを押すと、その数だけ追加で探す依頼文がコピーされて Claude が開きます（貼るだけ）。今ある題材は消えません。</p></div>
@@ -130,7 +135,7 @@ details.chap[open]{border:2px solid var(--sea)}
 <details><summary>候補を手で足す</summary>
 <label>問い</label><input id="nq" placeholder="例：なぜ日本は電柱だらけなのか">
 <div class="grid2"><div><label>柱</label><select id="np"><option>土地</option><option>暮らし</option><option>日本</option></select></div>
-<div><label>入口</label><select id="ne"><option>海外</option><option>最新</option><option>組み合わせ</option><option>ひらめき</option></select></div></div>
+<div><label>入口</label><select id="ne"><option>海外</option><option>最新</option><option>組み合わせ</option><option>ひらめき</option><option>自分の問い</option></select></div></div>
 <label>日本の切り口</label><input id="na"><label>元動画の URL（あれば）</label><input id="nl">
 <div class="row"><button class="b main" id="addCand">候補に足す</button></div></details>
 </section>
@@ -469,30 +474,43 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.data
 $('helpBtn').onclick=()=>showTab('help');
 
 /* ---------- 候補 ---------- */
-let candF='すべて';const CF=['すべて','土地','暮らし','日本','作る','保留'];
+let candF='すべて';const CF=['すべて','自分の問い','土地','暮らし','日本','作る','保留'];
 $('candFilter').innerHTML=CF.map(f=>`<button data-f="${f}" aria-pressed="${f===candF}">${f}</button>`).join('');
 $('candFilter').onclick=e=>{const b=e.target.closest('button');if(!b)return;candF=b.dataset.f;$('candFilter').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderCand()};
 const STATES=['候補','作る','保留','作った','捨てる'];
 function candHTML(c){return `<div class="item" data-id="${c.id}">
 <span class="score">${c.score?c.score+'点':''}</span><div class="q">${esc(c.q)}</div>
 <div class="tags"><span>${esc(c.pillar)}</span><span>${esc(c.entry)}</span>${c.demand?`<span>${esc(c.demand)}</span>`:''}<span>${esc(c.status)}</span>${c.like?`<span>${'★'.repeat(c.like)}</span>`:''}</div>
-<div class="more"><div>切り口：${esc(c.angle||'')}</div><div>日本語の供給：${esc(c.supply||'')}</div>
+${c.seed?`<div class="lead" style="margin:2px 0">種：${esc(c.seed)}</div>`:''}${seedHTML(c)}
+<div class="more">${c.gap?`<div>直感とのずれ：${esc(c.gap)}</div>`:''}<div>切り口：${esc(c.angle||'')}</div><div>日本語の供給：${esc(c.supply||'')}</div>
 ${(c.links||[]).map(l=>`<div>元動画：<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.src)}「${esc(l.title)}」</a>${l.views?'（'+fmt(l.views)+'回）':''}</div>`).join('')}
 <div class="stars" aria-label="作りたい度">${[1,2,3,4,5].map(n=>`<button data-like="${n}" class="${n<=(c.like||0)?'on':''}" aria-label="作りたい度${n}">★</button>`).join('')}</div>
 <div class="st">${STATES.map(s=>`<button data-st="${s}" class="${s===c.status?'on':''}">${s}</button>`).join('')}</div>
 <label>メモ</label><input data-memo value="${esc(c.memo||'')}"></div></div>`}
-function renderCand(){const list=D.candidates.filter(c=>!c.deleted&&c.status!=='捨てる'&&(candF==='すべて'||c.pillar===candF||c.status===candF))
+function seedHTML(c){if(c.origin!=='own')return'';const j=(D.jobs||[]).filter(x=>!x.deleted&&x.type==='seed_grow'&&x.candId===c.id).sort((a,b)=>b.createdAt-a.createdAt)[0];
+ const qs=(c.qIdeas||[]).filter(x=>!x.deleted);
+ if(!qs.length)return j&&j.status!=='できた'?`<div class="lead" style="margin:4px 0">問いに育てています：<b>${esc(j.status)}</b>${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`:'';
+ if(c.qPicked)return '';
+ return `<div style="margin:6px 0"><div class="lead" style="margin:0 0 2px">問いの案（押すとこの問いにする）</div>${qs.map((x,k)=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><b>${esc(x.q)}</b>${x.gap?`<div class="lead" style="margin:0">直感とのずれ：${esc(x.gap)}</div>`:''}${x.angle?`<div class="lead" style="margin:0">切り口：${esc(x.angle)}</div>`:''}${x.demand?`<div class="lead" style="margin:0">需要の目安：${esc(x.demand)}</div>`:''}<div class="st"><button data-qpick="${k}">これにする</button></div></div>`).join('')}<div class="st"><button data-qmore>別の案も出してもらう</button></div></div>`}
+function renderCand(){const list=D.candidates.filter(c=>!c.deleted&&c.status!=='捨てる'&&(candF==='すべて'||c.pillar===candF||c.status===candF||c.entry===candF))
 .sort((a,b)=>(b.like||0)-(a.like||0)||(b.score||0)-(a.score||0));
 $('candList').innerHTML=list.length?list.map(candHTML).join(''):'<div class="empty">この絞り込みの候補はまだありません。</div>'}
 $('candList').addEventListener('click',e=>{const it=e.target.closest('.item');if(!it)return;const c=D.candidates.find(x=>x.id===it.dataset.id);
 const like=e.target.closest('[data-like]'),st=e.target.closest('[data-st]');
 if(like){const n=+like.dataset.like;c.like=c.like===n?0:n;touch(c);it.querySelectorAll('[data-like]').forEach(b=>b.classList.toggle('on',+b.dataset.like<=c.like));refreshTags(it,c);return}
 if(st){c.status=st.dataset.st;touch(c);it.querySelectorAll('[data-st]').forEach(b=>b.classList.toggle('on',b===st));refreshTags(it,c);return}
+const qp=e.target.closest('[data-qpick]');if(qp){const x=(c.qIdeas||[]).filter(y=>!y.deleted)[+qp.dataset.qpick];if(!x)return;c.q=x.q;c.gap=x.gap||'';c.angle=x.angle||c.angle||'';if(x.demand)c.demand=x.demand;c.qPicked=true;touch(c);renderCand();return}
+if(e.target.closest('[data-qmore]')){queueJob({type:'seed_grow',candId:c.id,more:true});renderCand();return}
 if(e.target.closest('a,input,.more'))return;it.classList.toggle('open')});
 $('candList').addEventListener('input',e=>{if(!e.target.matches('[data-memo]'))return;const c=D.candidates.find(x=>x.id===e.target.closest('.item').dataset.id);c.memo=e.target.value;touch(c)});
 function refreshTags(it,c){it.querySelector('.tags').innerHTML=`<span>${esc(c.pillar)}</span><span>${esc(c.entry)}</span>${c.demand?`<span>${esc(c.demand)}</span>`:''}<span>${esc(c.status)}</span>${c.like?`<span>${'★'.repeat(c.like)}</span>`:''}`}
 $('addCand').onclick=()=>{const q=$('nq').value.trim();if(!q)return;const l=$('nl').value.trim();
 D.candidates.push({id:uid('c'),q,pillar:$('np').value,entry:$('ne').value,angle:$('na').value.trim(),supply:'',score:0,links:l?[{src:'元動画',title:l,url:l}]:[],status:'候補',like:0,memo:'',updatedAt:now()});save();['nq','na','nl'].forEach(i=>$(i).value='');renderCand()};
+
+$('ownAdd').onclick=()=>{const seed=$('ownSeed').value.trim();if(!seed){$('ownMsg').textContent='気になったことを書いてください';return}
+const c={id:uid('c'),q:seed,seed,seedWhy:$('ownWhy').value.trim(),origin:'own',pillar:'暮らし',entry:'自分の問い',angle:'',supply:'',score:0,links:[],status:'候補',like:0,memo:'',updatedAt:now()};D.candidates.push(c);
+if(syncOn()){queueJob({type:'seed_grow',candId:c.id});$('ownMsg').textContent='頼みました。案はこの下の候補に届きます'}else{save();$('ownMsg').textContent='候補に入れました（同期を設定すると、Claude が問いに育てます）'}
+['ownSeed','ownWhy'].forEach(i=>$(i).value='');renderCand()};
 
 /* ---------- ひらめき帳 ---------- */
 let ikind='題材',iwhere='全体';const WHERE=['全体','冒頭','中盤','結末','題名','サムネイル','声','地図','字幕・文字','音'];
@@ -617,7 +635,7 @@ const projOf=()=>D.projects.find(p=>p.id===curProj&&!p.deleted);
 function candQ(p){const c=D.candidates.find(x=>x.id===p.candId);return c?c.q:p.title||'（題材なし）'}
 function ensureProj(){const live=D.projects.filter(p=>!p.deleted&&!p.finished).sort((a,b)=>b.updatedAt-a.updatedAt);if(!projOf())curProj=live[0]?live[0].id:null}
 function jobsPanel(){const js=(D.jobs||[]).filter(j=>!j.deleted).sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);if(!js.length)return'';
-const name={art_animate:'絵のアニメ化',summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
+const name={seed_grow:'問いを育てる',research:'深く調べる',art_animate:'絵のアニメ化',summary:'要約',pick:'題材探し',script:'台本づくり',script_fix:'台本の直し',outline:'構成づくり',outline_fix:'構成の直し',flesh:'肉付け',flesh_fix:'肉付けの直し',flesh_sync:'構成の変化を反映',use_item:'集めものを使う',footage_check:'実写の出どころ調べ',gather:'参考集め',visual_ideas:'図解の案',visual_make:'図解づくり',visual_fix:'図解の直し',visual_redesign:'見本の直し',digest:'餌の消化',thumb_ideas:'サムネの案',sound_ideas:'音の案',final_render:'本番の書き出し',ab_learn:'A/B テストの傾向',art_finish:'絵の仕上げ',sound_render:'この音で書き出し',sound_fix:'音の直し',thumb_fix:'サムネの直し',title_ideas:'題名の案',title_fix:'題名の別案',rebuild:'作り直し',video_make:'仮の動画づくり',video_fix:'動画の直し'};
 const wait=js.some(j=>j.status==='待ち');return `<details class="item" ${js.some(j=>j.status!=='できた')?'open':''}><summary>頼みごとの状況（下のボタンで Claude に頼むと片づけます）</summary>${wait?`<div class="row"><button class="b" id="jobsNow">待たずに今すぐ片づけてもらう</button></div><p class="lead" style="margin:0">依頼文がコピーされて Claude が開くので、貼るだけ。</p>`:''}${js.map(j=>`<div class="lead" style="margin:4px 0">${(()=>{const pj=j.projId&&D.projects.filter(x=>!x.deleted&&!x.finished).length>1&&D.projects.find(x=>x.id===j.projId);return pj?`<span class="pill">${esc(candQ(pj).slice(0,14))}</span>`:''})()}${esc(name[j.type]||j.type)}：<b>${esc(j.status)}</b>　${md(j.createdAt)}${j.counts?'　'+esc(cntTxt(j.counts)):''}${j.result?'　'+esc(j.result):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</div>${j.status==='作業中'?progHTML(j):''}`).join('')}</details>`}
 function cntTxt(c){return GK.filter(([k])=>c[k]).map(([k,nm,u])=>nm.replace(/（.*）|の参考|使えそうな|調べた/g,'')+c[k]+u).join('・')}
 function renderMake(){const _y=window.scrollY;renderMake0();if(curTab==='make'){window.scrollTo(0,_y);requestAnimationFrame(()=>window.scrollTo(0,_y))}}
@@ -646,7 +664,7 @@ const refs=D.ideas.filter(i=>!i.deleted&&i.kind==='工夫');
 const rel=p.related||[];const srcs=p.sources||[];const ast=p.assets||[];
 const relHTML=(kind)=>rel.filter(r=>r.kind===kind).map(r=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="lead" style="margin:0">${esc(r.channel||'')}${r.views?'　'+fmt(r.views)+'回':''}${r.lang?'　'+esc(r.lang):''}</div><div>${esc(r.why||'')}</div>${footHTML(p,r.footage,'rel',r.url)}${usedIn(p,r.url)}${useBtn(p,'related',r.url,r.title,'r'+rel.indexOf(r))}
 <div class="st">${kind==='見せ方'?`<button data-relmemo="${esc(r.url)}">録画したらメモを書く</button>`:`<button data-relmat="${esc(r.url)}" data-reltitle="${esc(r.title)}">文字起こしを貼る</button>`}</div></div>`).join('');
-const gatherHTML=`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">Claude が集めた参考</div>
+const gatherHTML=researchHTML(p)+`<div class="item" style="background:var(--paper)"><div class="q" style="font-size:15px">Claude が集めた参考</div>
 ${rel.length||srcs.length||ast.length?`<details ${rel.length?'open':''}><summary>見せ方の参考（${rel.filter(r=>r.kind==='見せ方').length}本）</summary><p class="lead" style="margin:2px 0">同じような題材を、地図やアニメーションで見せて伸びた動画。気に入った場面だけ録画してください。</p>${relHTML('見せ方')}</details>
 <details><summary>中身の参考になる動画（${rel.filter(r=>r.kind==='中身').length}本）</summary><p class="lead" style="margin:2px 0">文字起こしを貼ると、要約して台本の材料にします。</p>${relHTML('中身')}</details>
 <details ${(p.assets||[]).some(a=>a.ok==null)?'open':''}><summary>使えそうな素材（${(p.assets||[]).length}件・未点検${(p.assets||[]).filter(a=>a.ok==null).length}件）</summary><p class="lead" style="margin:2px 0">自由に使えると書かれている画像・地図・データなど。<b>使う前に、利用規約を開いて一つずつ点検してください。</b>点検した結果を押すと、使うものだけが台本と図解づくりに回ります。</p>
@@ -709,7 +727,7 @@ function renderStepNav(p,s){const n=$('stepNav');if(!p){n.classList.remove('on')
 $('stepNav').addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(!b)return;if(b.dataset.jump==='top'){window.scrollTo({top:0,behavior:'smooth'});return}const el=$('step'+b.dataset.jump);if(!el)return;el.classList.add('open');const y=el.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top:y,behavior:'smooth'})});
 // 畳んだときに見える「決まったこと」
 function stepSum(p,k){try{const ob=(p.outline&&p.outline.blocks||[]).filter(b=>b.mark!=='削る'),fb=(p.flesh&&p.flesh.blocks||[]).filter(b=>b.mark!=='削る');
- if(k===0){const n=(p.refs||[]).length,m=(p.mats||[]).length;return n||m?`参考 ${n}・資料 ${m}`:''}
+ if(k===0){const n=(p.refs||[]).length,m=(p.mats||[]).length,f=(p.facts||[]).filter(x=>!x.deleted);return n||m||f.length?`${f.length?`事実 ${f.length}（★${f.filter(x=>x.star).length}）・`:''}参考 ${n}・資料 ${m}`:''}
  if(k===1)return ob.length?`${ob.length} 段`:'';
  if(k===2)return fb.length?`${fb.length} 段・${fb.reduce((a,b)=>a+(b.narr||'').length,0)} 字`:'';
  if(k===3){const v=(p.visuals||[]).filter(v=>v.status==='決定'||v.status==='できた'||v.chosen).length;return v?`図解 ${v}`:''}
@@ -719,6 +737,19 @@ function stepSum(p,k){try{const ob=(p.outline&&p.outline.blocks||[]).filter(b=>b
  if(k===9){const f=p.final;return f&&f.done?`${esc(f.res||'')} 書き出し済み${f.uploaded?'・投稿済み':''}`:''}
  if(k===6){const t=(p.thumbs||[]).find(t=>t.id===p.thumbId);return t?`${t.preview?`<img data-gh="${esc(t.preview)}" alt="">`:''}決定：${esc(t.title||t.text||t.id)}`:''}
  return ''}catch(e){return ''}}
+function researchHTML(p){if(!syncOn())return'';const c=D.candidates.find(x=>x.id===p.candId)||{};const own=c.origin==='own';const fs=(p.facts||[]).filter(f=>!f.deleted);const R=p.research||{};
+ const SURE={'確か':'確か','たぶん':'たぶん','要確認':'要確認'};
+ const list=fs.slice().sort((a,b)=>(b.star?1:0)-(a.star?1:0)||(b.wow||0)-(a.wow||0));
+ const fact=f=>`<div style="border-top:1px solid var(--line);padding:6px 0;font-size:14px"><div style="display:flex;gap:8px;align-items:flex-start"><button class="b" data-fstar="${esc(f.id)}" style="padding:2px 9px;min-width:0;${f.star?'background:var(--sea);color:#fff':''}" aria-label="面白い">★</button><div style="flex:1">${esc(f.text)}
+ <div class="tags" style="margin-top:2px"><span>${'驚き'+'●'.repeat(f.wow||1)}</span><span>${esc(SURE[f.sure]||f.sure||'')}</span>${f.part?`<span>${esc(f.part)}</span>`:''}</div>
+ ${(f.srcs||[]).map(x=>`<div class="lead" style="margin:0"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a></div>`).join('')}${f.check?`<div class="lead" style="margin:0">点検：${esc(f.check)}</div>`:''}</div></div></div>`;
+ return `<div class="item" style="background:var(--paper)${own?';border:2px solid var(--sea)':''}"><div class="q" style="font-size:15px">深く調べる${own?'（自分の問いの回は、ここから）':''}</div>
+ <p class="lead" style="margin:2px 0">論文・公的機関・本まで調べて、使える事実を「驚き度・確かさ」つきで並べます。<b>面白いと思った事実に★を付けるだけ</b>でOK。★の事実を中心に構成を組みます。大事な数字は、作った Claude とは別の目で点検します。</p>
+ ${R.spine?`<div style="margin:6px 0"><b>話の背骨の案</b><div style="white-space:pre-wrap;font-size:14px">${esc(R.spine)}</div></div>`:''}
+ ${R.open?`<div style="margin:6px 0"><b>まだ分かっていないこと</b>（締めの余韻に使える）<div style="white-space:pre-wrap;font-size:14px">${esc(R.open)}</div></div>`:''}
+ ${fs.length?`<details open><summary>調べた事実（${fs.length}件・★${fs.filter(f=>f.star).length}）</summary>${list.map(fact).join('')}</details>`:''}
+ <label>特に知りたいこと（任意）</label><input id="rsWish" placeholder="例：根が岩を割る力はどのくらい？">
+ <div class="row"><button class="b ${own&&!fs.length?'main':''}" data-job="research">${fs.length?'もっと深く調べてもらう':'深く調べてもらう'}</button></div>${jobLine(p,'research')}</div>`}
 function orderText(p){const refs=(p.refs||[]).map(id=>D.ideas.find(i=>i.id===id)).filter(Boolean);const c=D.candidates.find(x=>x.id===p.candId)||{};
 const mats=(p.mats||[]).map(id=>D.materials.find(m=>m.id===id)).filter(m=>m&&!m.deleted);
 const st=(D.styles||[]).find(s=>s.id===(p.styleId||(liveStyles()[0]||{}).id));const smode=p.styleMode||'混ぜる';
@@ -934,7 +965,7 @@ ${mode==='全部'?'<p class="lead" style="margin:2px 0">構成から動画まで
 ${busy?'':`<div class="row"><button class="b main" data-omgo>この内容で作り直してもらう</button></div>`}${jobLine(p,'rebuild')}</details>`}
 function jobLine(p,type){const j=(D.jobs||[]).filter(x=>!x.deleted&&x.projId===p.id&&x.type===type).sort((a,b)=>b.createdAt-a.createdAt)[0];
 if(!j)return'';const nr=j.status==='待ち'?nextRun(j.createdAt):null;return `<p class="lead">頼んだ状況：<b>${esc(j.status)}</b>（${md(j.createdAt)} に頼んだ）${nr?`　→ ${nr.getDate()!==new Date().getDate()?(nr.getMonth()+1)+'/'+nr.getDate()+' ':''}${hm(nr)} ごろ Claude が取りかかり、10〜20分で届きます`:''}${j.result?'　'+esc(j.result):''}${j.error?'　'+esc(j.error):''}${j.status==='待ち'?`　<span class="st"><button data-jcancel="${j.id}">取り消す</button></span>`:''}</p>${j.status==='作業中'?progHTML(j):''}`}
-function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&!['summary','pick','use_item','footage_check','digest','thumb_fix','title_fix'].includes(o.type));
+function queueJob(o){const old=(D.jobs||[]).filter(x=>!x.deleted&&x.status==='待ち'&&x.type===o.type&&x.projId===o.projId&&(x.visualId||'')===(o.visualId||'')&&!['summary','pick','use_item','footage_check','digest','thumb_fix','title_fix','seed_grow'].includes(o.type));
 if(o.type==='gather'&&old.length){const j=old[0];for(const [k] of GK)j.counts[k]=Math.max(j.counts[k]||0,(o.counts||{})[k]||0);for(const x of old.slice(1)){x.deleted=true;x.updatedAt=now()}j.updatedAt=now();save();return j}
 if(o.type==='visual_make'&&old.length){const j=old[0];j.ids=[...new Set([...(j.ids||[]),...(o.ids||[])])];j.updatedAt=now();save();return j}
 for(const x of old){x.deleted=true;x.updatedAt=now()}
@@ -977,8 +1008,10 @@ if(el.matches('[data-cok]')||el.matches('[data-cunok]')){const n=el.dataset.cok|
 if(el.matches('[data-cfix]')){const n=el.dataset.cfix;const c=chapList(p).find(x=>x.name===n);const op=chapState(p,c).open.map(x=>x.f).filter(f=>f.text);if(!op.length){alert('直したいことを書いてください');return}queueJob({type:'video_fix',projId:p.id,chapter:n,notes:'',fixes:op.map(f=>({sec:f.sec,text:f.text,always:!!f.always}))});renderMake();return}
 if(el.matches('[data-cmake]')){queueJob({type:'video_make',projId:p.id,chapter:el.dataset.cmake,notes:''});renderMake();return}
 if(el.matches('[data-back]')){p.step=+el.dataset.back;touchP(p);renderMake();return}
+if(el.matches('[data-fstar]')){const f=(p.facts||[]).find(x=>x.id===el.dataset.fstar);if(!f)return;f.star=!f.star;touchP(p);renderMake();return}
 if(el.matches('[data-job]')){const type=el.dataset.job;if(type==='script_fix'&&!(p.scriptNotes||'').trim()){alert('直しを書いてから押してください');return}
 const extra={};if(type==='gather'){const g=gSel();if(!GK.some(([k])=>g[k].on)){alert('集めたいものに印を付けてください');return}extra.counts={};for(const [k] of GK)extra.counts[k]=g[k].on?g[k].n:0}
+if(type==='research'){const w=$('rsWish');extra.wish=w?w.value.trim():''}
 if(type==='video_fix'){const op=(p.fixes||[]).filter(f=>f.text&&!f.done);if(!op.length){alert('直したいことを書いてください');return}extra.fixes=op.map(f=>({sec:f.sec,text:f.text,always:!!f.always}))}
 if(type==='outline'){extra.styleMode=p.styleMode||'混ぜる';extra.styleId=extra.styleMode==='新しく'?'':(p.styleId||(liveStyles()[0]||{}).id||'');extra.len=p.len||'10分'}
 if(type==='script'){extra.styleMode=p.styleMode||'混ぜる';extra.styleId=extra.styleMode==='新しく'?'':(p.styleId||(liveStyles()[0]||{}).id||'')}
