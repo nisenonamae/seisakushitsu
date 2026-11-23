@@ -19,7 +19,7 @@ function honk(u,D){D=D||5.6;if(u<0||u>D)return null;
  return{jaw:clamp(.05*lean+.1*wz+(u>=hs&&u<he?.05+.1*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.06*hk:0),fl:-12*lean+(u>=hs&&u<he?5*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
 function honkRings(h0,u,D,out){if(u<0)return;D=D||5.6;out.push({age:u-1.0,x:180,w:140});for(let j=0;j<8;j++){const a=u-(2.3+j*.5);if(2.3+j*.5<D-1.2)out.push({age:a,x:200,w:90})}}
 // ─ 水の中の歩み：1歩＝けって → のびてすべる → あしを戻して着く ─
-function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.55*eout(clamp((c-.06)/.7))+.45*c)*stride;   /* けった直後に強く進み、すべる間もゆっくり進み続ける（止まって見えた・7版挑戦の番） */
+function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.72*eout(clamp((c-.06)/.62))+.28*c)*stride;   /* けった直後に速く、すべるにつれて遅く（等速に見えた。自然の番・1周目） */   /* けった直後に強く進み、すべる間もゆっくり進み続ける（止まって見えた・7版挑戦の番） */
  return{c,adv,hop:Math.sin(Math.PI*clamp((c-.1)/.72))*1,pitch:kf(c,[[0,.05],[.12,-.13],[.45,-.05],[.82,.07],[1,.05]]),
   ff:kf(c,[[0,.5],[.2,-.6],[.32,-.95],[.74,-.95],[1,.5]]),fh:kf(c,[[0,.1],[.2,-1.0],[.32,-1.35],[.76,-1.3],[1,.1]]),touch:c>.9||c<.04,n}}
 // ─ 世界：左（母子）と右（群れ）で景色をかえる ─
@@ -31,7 +31,7 @@ function banks(t,dry){bank3(t,dry);   // 左の岸（母子の側）
  const m=(a,b)=>mix(a,b,dry);g.save();g.translate(1880,0);   // 右の岸（群れの側）：砂の州と高い葦。遠い景色が切れる右はしをふさぐ
  fill([[-260,330,.3],[-60,326,.6],[120,330,.6],[300,326,.4],[300,372,.4],[-40,366,.8],[-220,352,.8]],m('#b29a6a','#d0a060'));
  {const r=R(77);for(let i=0;i<30;i++){const x=-120+i*16+r()*10,hh=(60+r()*120)*(1-dry*.8);blade(x,340+i%3*5,hh,8,Math.sin(t*1.2+i)*5+(r()-.5)*12,m(i%2?'#4f8648':'#3f6f4a','#a8873f'))}}g.restore()}
-function water7(t,dry){if(dry>=1)return;bed3(0);g.save();g.translate(W,0);bed3(0);g.restore();water3(332,t,1-dry);g.save();g.beginPath();g.rect(2080,300,3000,800);g.clip();g.translate(1600,0);water3(332,t,1-dry);g.restore()}
+function water7(t,dry){if(dry>=1)return;bed3(0);g.save();g.translate(W,0);bed3(0);g.restore();water3(332,t,1-dry);g.save();g.beginPath();g.rect(1180,300,4000,800);g.clip();g.translate(1100,0);water3(332,t,1-dry);g.restore()}
 // 水の下（横から）：場所ごとにちがう底
 function under7(t){const gr=g.createLinearGradient(0,SURF,0,FLOOR+80);gr.addColorStop(0,'#a9b27a');gr.addColorStop(.45,'#7f8a58');gr.addColorStop(1,'#4c5536');g.fillStyle=gr;g.fillRect(-900,SURF,5200,FLOOR+600-SURF);
  for(let i=0;i<14;i++){const x0=-600+i*300+Math.sin(t*.3+i)*30;g.save();g.globalAlpha=.06+.03*Math.sin(t*1.2+i);poly([[x0,SURF],[x0+70,SURF],[x0-80,FLOOR],[x0-200,FLOOR]],'#f2f0c4');g.restore()}
@@ -78,13 +78,14 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  if(dead){rect(-2000,SURF,8000,800,'#e0b06a');for(const dx of [0,W-40]){g.save();g.translate(dx,30);duneFaces();g.restore()}}else water7(t,0);
  g.restore();banks(t,dry);
  // 2) 水の下：見下ろした水面の帯より下に見える（目の高さでは、線から下がすべて水の中）
- let fy=null;if(!dead&&yb<720*z+cy){g.save();g.beginPath();g.rect(-2000,yb,8000,4000);g.clip();fy=under7(t);
+ if(!dead&&tl>=26)rect(-2000,yb-2,8000,4000,'#66734a');   /* 水の下が薄れた後の、見下ろした湖の続き（黒く抜けていた） */
+ let fy=null;const uw=tl>=26?1-ease(clamp((tl-26)/.9)):1;if(!dead&&uw>0&&yb<cy+H/2/z){g.save();g.globalAlpha=uw;g.beginPath();g.rect(-2000,yb,8000,4000);g.clip();fy=under7(t);
   // 水の上にいるカバの、水の下の体（にごってうすい）
   const surfAll=[];
   for(const h of HERD)surfAll.push(h);
-  for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
+  for(const h of surfAll){if(h.s<.6||true)continue;   /* 群れの水の下の体は描かない：にごった水で見えない（調べた記録）。描くと足が底から浮いた風船に見えた（自然の番・1周目） */const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
-  if(tl>=7.4){const gc=gait(Math.max(0,tl-9.7),1.25,84),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<9.6?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/2))):FLOOR-70-gc.hop*30);
+  if(tl>=7.4){const gc=gait(Math.max(0,tl-9.7),1.6,108),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<9.6?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/2))):FLOOR-70-gc.hop*30);
    hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<9.6?-.05:gc.pitch*1.2,legs:tl<9.6?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
    hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
    if(!atHerd&&tl>=9.6&&g1.touch){}   // 着いた所の泥（下）
