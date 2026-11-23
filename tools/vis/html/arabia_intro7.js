@@ -69,7 +69,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  const atHerd=tl>=15.4;   // 真下のあとは群れの近く（間の道のりは真下のつなぎで省く）
  if(atHerd){const cr=clamp((tl-15.5)/.5),pu=clamp((tl-16.0)/1.6);mx=990+100*eout(pu);   /* 底に4本で立つ→縮む→押す→斜めに上がる（自然2周目） */
   my=lerp(FY7(990)-108+22*ease(cr)*(1-pu),SURF+29,eout(pu));mp=lerp(.06*cr,-.5,clamp(pu*3))*(1-ease(clamp((pu-.6)/.4)))-.1*ease(clamp((pu-.6)/.4));mlegs=[lerp(.3*cr,-1.4,clamp(pu*4)),lerp(.3*cr,-1.3,clamp(pu*4)),lerp(.2,-.7,pu)+Math.sin(tl*7)*.25*pu,lerp(.2,-.6,pu)+Math.sin(tl*7+1)*.25*pu]}
- if(tl>=10.6&&tl<13.6){const u=clamp((tl-10.6)/1.4);cy=lerp(SURF,FLOOR-215,ease(u));cx=lerp(560,mx+170,ease(u));z=lerp(1.15,1.3,ease(u))}
+ if(tl>=10.6&&tl<13.6){const u=clamp((tl-10.6)/2.2);   /* 1.4秒→2.2秒：途中で急に大きく下がって見えた（心地よさ2周目） */cy=lerp(SURF,FLOOR-215,ease(u));cx=lerp(560,mx+170,ease(u));z=lerp(1.15,1.3,ease(u))}
  if(atHerd&&tl<26){const pu=clamp((tl-15.6)/2.0),cl=ease(clamp((tl-17.6)/1.6)),pi=ease(clamp((tl-19.0)/5.0));cx=lerp(lerp(mx+150,1130,ease(clamp((tl-17.6)/2.4))),1105,pi);cy=lerp(lerp(lerp(FY7(1000)-150,SURF+40,ease(clamp((tl-16.3)/2.0))),SURF-40,cl),SURF-30,pi);z=lerp(1.3,1.6,cl)+.32*pi}   /* 再会：子とFのほうへゆっくり寄りつづける（止まって見えた・どこを見ればいいか分からなかった。7版2周目挑戦） */   /* 再会は母に寄る（線は画面の下の方：水の上の顔が大きく見える） */
  if(tl>=26){const u=ease(clamp((tl-26)/2.2));cx=lerp(1130,1120,u);cy=lerp(SURF-40,360,u);z=lerp(1.6,1.08,u)+.06*clamp((tl-28.4)/5)}   /* 引いても絵の外が写らない広さ／骨の場面はゆっくり寄る */
  // 真下（動きつなぎ：母は同じ画面の位置・向き・速さのまま、見え方だけ変わる）
@@ -108,7 +108,8 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    if(meet){const turn=ease(clamp((tl-17.6-i*.12)/1.2));yaw=lerp(h.yaw,h.x>mx?175:10,turn*.8);
     const hn=honk(tl-(22.6+(i%3)*.35),4.8);if(hn&&h.s>.6){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-(22.6+(i%3)*.35),4.8,st.ev)}}
    x=hx(h);if(h.F&&meet){const ap=ease(clamp((tl-18.6)/2.0)),sn=clamp((tl-20.6)/1.4);yaw=lerp(170,190,ap);st.tilt+=.12*Math.sin(Math.PI*sn)}   // 寄ってきて、子のにおいをかぐ
-   hp3({x,y:SURF+(h.y-SURF)*Math.max(f,.08),s:h.s,yaw,seed:h.seed,v:hv(h.seed)},t,st)}
+   const far=!h.F&&h.y<=520&&lv>.5;if(far){st.hz=.38;st.hzc='#a9bbb0'}   /* 奥のカバは空気でうすく（主役のまわりを空ける。心地よさ2周目） */
+   hp3({x,y:SURF+(h.y-SURF)*Math.max(f,.08),s:h.s*(far?.86:1),yaw,seed:h.seed,v:hv(h.seed)},t,st)}
   // 母と子（水の上）
   if(tl<8.4){const hn=honk(tl-1.9,5.6),sk=clamp((tl-7.2)/1.0);const o=hn?{jaw:hn.jaw,tilt:hn.tilt,fl:30+hn.fl,lean:hn.lean,ev:[]}:{fl:30,ev:[]};o.fl=lerp(o.fl,140,ease(sk));if(hn)honkRings(null,tl-1.9,5.6,o.ev);
    hpS({x:270,y:yv(556,f),s:.98,dir:1,seed:2,v:MV},t,o);
