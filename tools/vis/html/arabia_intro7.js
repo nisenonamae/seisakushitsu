@@ -24,7 +24,7 @@ function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.72*
  return{c,adv,hop:Math.sin(Math.PI*clamp((c-.1)/.72))*1,pitch:kf(c,[[0,.05],[.12,-.13],[.45,-.05],[.82,.07],[1,.05]]),
   ff:kf(c,[[0,.5],[.2,-.6],[.32,-.95],[.74,-.95],[1,.5]]),fh:kf(c,[[0,.1],[.2,-1.0],[.32,-1.35],[.76,-1.3],[1,.1]]),touch:c>.9||c<.04,n}}
 // ─ 世界：左（母子）と右（群れ）で景色をかえる ─
-const TREES_A=[[70,.62,241],[200,.4,242],[452,.5,243],[905,.66,244],[1010,.42,245],[1235,.74,246]],TREES_B=[[90,.5,261],[300,.82,262],[520,.36,263],[760,.6,264],[980,.9,265],[1180,.44,266]];
+const TREES_A=[[70,.62,241],[200,.4,242],[452,.5,243],[860,.66,244],[1420,.42,245],[1660,.74,246]]   /* 群れの頭の上から木が生えて見えた（心地よさ3周目）。再会の場面の真上から外す */,TREES_B=[[90,.5,261],[300,.82,262],[520,.36,263],[760,.6,264],[980,.9,265],[1180,.44,266]];
 function sky7(dry){rect(-2000,-2000,7000,2000+SURF+60,mix('#dcebe6','#f4dfb2',dry))}
 function panel(t,px,B,dry){g.save();g.translate(px,0);if(B){g.translate(W/2,0);g.scale(-1,1);g.translate(-W/2,0)}   // 右側は左右を反転して丘の形を変え、木を別に置く
  world3(t,316,{dry,noBirds:1,sunX:B?-99999:620,trees:B?TREES_B:TREES_A,acacia:1});g.restore()}
@@ -121,7 +121,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:MV},t,o);wline(mx+30*cl,SURF+2,.95,lerp(10,40,turn),t,2,1);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
    hp3({x:calfX(tl,mx),y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
- }else{podBones(t,td+.9,1,[...HERD.filter(h=>h.s>=.6).map((h,i)=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x,yaw:h.yaw+[-70,40,110,-30,160,20][i%6]})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
+ }else{podBones(t,td+.9,1,[...HERD.filter(h=>h.s>=.6).map((h,i)=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x-120,y:h.y-[50,90,30,70,110,60][i%6],yaw:h.yaw+[-70,40,110,-30,160,20][i%6]})),{x:860,y:560,s:.95,yaw:40,seed:2,fl:28},{x:700,y:600,s:.42,yaw:10,seed:33,fl:20}])}
  g.restore();
  if(tl>=10.2&&tl<12.4)lensDip(t,tl,H/2+(yb-cy)*z);   /* カメラが水面をくぐる：レンズの水ぎわ・裏から見た水面・泡・しずく（7版3周目挑戦） */
  if(!dead&&cy<SURF+150){g.save();if(tl>=17.6){const sp=ease(clamp((tl-17.6)/1.5));g.translate(W/2,H/2);g.scale(1+.25*sp,1+.25*sp);g.translate(-W/2,-H/2)}g.globalAlpha=tl>=17.6?1-ease(clamp((tl-17.6)/1.2)):1;fg3(t,dry,0);g.restore()}   /* 手前の葦は画面に固定（カメラと一緒に動かない）。再会では少し大きくして画面のふちへ寄せ、真ん中を空ける */
