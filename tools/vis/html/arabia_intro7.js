@@ -83,7 +83,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
   // 水の上にいるカバの、水の下の体（にごってうすい）
   const surfAll=[];
   for(const h of HERD)surfAll.push(h);
-  for(const h of surfAll){if(h.s<.6||true)continue;   /* 群れの水の下の体は描かない：にごった水で見えない（調べた記録）。描くと足が底から浮いた風船に見えた（自然の番・1周目） */const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
+  for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
   if(tl>=7.4){const gc=gait(Math.max(0,tl-9.7),1.6,108),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<9.6?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/2))):FLOOR-70-gc.hop*30);
    hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<9.6?-.05:gc.pitch*1.2,legs:tl<9.6?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
