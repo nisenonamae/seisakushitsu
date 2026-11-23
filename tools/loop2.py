@@ -18,6 +18,7 @@ import refs_sheet
 LOG = os.path.join(ROOT, 'docs', 'notes', 'review_log.md')
 LOOK = {'miss': 'ミスの番：乱れ・事実ちがいを探す（指摘帳 B・M・F と調べた記録）。重だけ挙げればよい',
         'natural': '自然の番：本物のカバに見えるか。形だけでなく、動き・重さ・水とのやりとり・生きている感じを、動きの帯（9コマ）と実物で見る',
+        'comfort': '心地よさの番：見ていて気持ちいいか。構図・デザインとして醜い所（重なり・切れ方・詰まり・色のにごり・目の行き先の迷い・酔うカメラ）を探して直す',
         'challenge': '挑戦の番：kurzgesagt のクオリティに近づける。手本帳のやり方のうち、こちらにない物を探す'}
 
 STAGES = {
@@ -139,16 +140,28 @@ def pack(P, video, od, stage, names, look='natural'):
         rows = [ours[i:i + 3] for i in range(0, len(ours), 3)]; lbs = [f'{t:.1f}秒 {moment_name(P, t)}' for t in ts]
         for k, rw in enumerate(rows): strip(rw, os.path.join(od, f'{tag}_作った絵' + (f'{k + 1}' if len(rows) > 1 else '') + '.png'), lbs[k * 3:k * 3 + 3])
         for f in ours: os.remove(f)
-        its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8) if look != 'challenge' else []
+        its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8) if look in ('miss', 'natural') else []
         if its: refs_sheet.sheet(its, os.path.join(od, f'{tag}_実物.png'))
         names = [f'`{tag}_作った絵' + (f'{k + 1}' if len(rows) > 1 else '') + '.png`' for k in range(len(rows))]
         brief += [f'## {tag}（{s["t"][0]}〜{s["t"][1]}秒・{s.get("role") or "ふつう"}）', '- 作った絵：' + '・'.join(names) + '（★＝しぐさ・変化のいちばん大きい瞬間）']
+        if look == 'comfort':   # デザインを見る人がやる「目を細めて見る」：細部を消して、形・明暗・置き方だけにする
+            sq = [frame(video, t, os.path.join(od, f'_q{i}.jpg')) for i, t in enumerate(ts)]
+            from PIL import ImageFilter
+            for f in sq:
+                im = Image.open(f).convert('L').filter(ImageFilter.GaussianBlur(7)).convert('RGB'); d = ImageDraw.Draw(im); W2, H2 = im.size
+                for k in (1, 2): d.line([(W2 * k // 3, 0), (W2 * k // 3, H2)], fill=(255, 80, 80), width=1); d.line([(0, H2 * k // 3), (W2, H2 * k // 3)], fill=(255, 80, 80), width=1)
+                im.save(f)
+            strip(sq[:3], os.path.join(od, f'{tag}_目を細めた.png'), [l + '（ぼかし・白黒・三分割）' for l in lbs[:3]])
+            for f in sq: os.remove(f)
+            brief.append(f'- 目を細めた絵：`{tag}_目を細めた.png`（細部を消した形と明暗。赤い線は三分割）')
+            for c in [c for c in motion_centers(P) if s['t'][0] <= c < s['t'][1]]:
+                f1 = f'{tag}_動き_{c:.1f}秒.png'; motion_sheet(video, c, os.path.join(od, f1), label=f'{tag}　{(moment_name(P, c) or "まん中").lstrip("★")}（0.15秒おき）'); brief.append(f'- 動き：`{f1}`（カメラ・動きが見ていて気持ちいいか）')
         if look == 'natural':
             for c in [c for c in motion_centers(P) if s['t'][0] <= c < s['t'][1]]:
                 nm = (moment_name(P, c) or 'まん中').lstrip('★'); f1 = f'{tag}_動き_{c:.1f}秒.png'; f2 = f'{tag}_重ね_{c:.1f}秒.png'
                 motion_sheet(video, c, os.path.join(od, f1), label=f'{tag}　{nm}（{c - 4 * STEP:.2f}〜{c + 4 * STEP:.2f}秒・0.15秒おき）'); onion(video, c, os.path.join(od, f2))
                 brief.append(f'- 動き：`{f1}`（9コマ）・`{f2}`（9コマを重ねた残像）＝{nm}')
-        if look != 'challenge': brief.append(f'- 実物：`{tag}_実物.png`（出どころは同じ名前の .txt）' if its else '- 実物：まだない（実物帳に足す）')
+        if look in ('miss', 'natural'): brief.append(f'- 実物：`{tag}_実物.png`（出どころは同じ名前の .txt）' if its else '- 実物：まだない（実物帳に足す）')
         if look == 'challenge': brief += ['- 手本（kurzgesagt）のやり方：'] + (['  ' + x for x in tehon_lines(s.get('tehon', []))] or ['  （まだない：手本帳に足してから挑戦する）'])
         brief.append('')
     if look == 'miss': brief += ['## 指摘帳（B・M・F）', open(os.path.join(ROOT, 'docs', 'notes', 'review_points.md'), encoding='utf-8').read().split('## T')[0].split('## B', 1)[1].join(['## B', '']), '']
@@ -170,7 +183,7 @@ def pair(P, va, vb, od, scene, stage, what, look='natural'):
     S.save(os.path.join(od, f'{scene}_左右.png'))
     for f in glob.glob(os.path.join(od, '_*')): os.remove(f)
     mv = []
-    if look == 'natural':   # 動きも左右で比べる（止め絵だけだと、機械的な動き・重さのなさで差がつかない）
+    if look in ('natural', 'comfort'):   # 動きも左右で比べる（止め絵だけだと、機械的な動き・重さのなさで差がつかない）
         for c in [c for c in motion_centers(P) if s['t'][0] <= c < s['t'][1]]:
             a = motion_sheet(L, c, os.path.join(od, '_ma.png'), w=320, label=f'左　{(moment_name(P, c) or "まん中").lstrip("★")}'); b = motion_sheet(R, c, os.path.join(od, '_mb.png'), w=320, label='右')
             f = f'{scene}_動き_左右_{c:.1f}秒.png'; A, B = Image.open(a), Image.open(b); S = Image.new('RGB', (A.width + B.width + 24, A.height), 'white'); S.paste(A, (0, 0)); S.paste(B, (A.width + 24, 0)); S.save(os.path.join(od, f)); mv.append(f)
@@ -197,7 +210,7 @@ def liked(sd, name, said):
 def decide(od, ans):
     K = json.load(open(od.rstrip('/') + '.key.json')); win = K.get(ans, '同じ') if ans in ('左', '右') else '同じ'
     res = {'B': '新しい版の勝ち → 残す', 'A': '前の版の勝ち → 戻す', '同じ': '差がない → 安い方（前の版）に戻す。ただし事実の直しなら残す'}[win]
-    look = K.get('look', 'natural'); nm = {'natural': '自然', 'challenge': '挑戦'}.get(look, look)
+    look = K.get('look', 'natural'); nm = {'natural': '自然', 'comfort': '心地よさ', 'challenge': '挑戦'}.get(look, look)
     line = f"- {time.strftime('%Y-%m-%d')} {K['scene']}・段{K['stage']}・{nm}：{K['what']} → {res}"
     os.makedirs(os.path.dirname(LOG), exist_ok=True)
     if not os.path.exists(LOG): open(LOG, 'w', encoding='utf-8').write('# 2案比べの記録（tools/loop2.py decide が足す）\n\n負けた直しも残す（同じ直しをくり返さないため）。\n\n')
@@ -216,7 +229,7 @@ def decide(od, ans):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('args', nargs='*')
-    ap.add_argument('--stage', type=int, default=2); ap.add_argument('--scenes', default=''); ap.add_argument('--scene', default=''); ap.add_argument('--what', default=''); ap.add_argument('--mode', default=None); ap.add_argument('--look', default='natural', choices=['miss', 'natural', 'challenge'])
+    ap.add_argument('--stage', type=int, default=2); ap.add_argument('--scenes', default=''); ap.add_argument('--scene', default=''); ap.add_argument('--what', default=''); ap.add_argument('--mode', default=None); ap.add_argument('--look', default='natural', choices=['miss', 'natural', 'comfort', 'challenge'])
     a = ap.parse_args()
     if a.cmd == 'snap': snap(plan(a.args[0]), a.args[1])
     elif a.cmd == 'render': render(plan(a.args[0]), a.args[1], a.mode)
