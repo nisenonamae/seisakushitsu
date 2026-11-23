@@ -16,7 +16,8 @@ function honk(u,D){D=D||5.6;if(u<0||u>D)return null;
  const wz=u>=1.0&&u<2.3?ease(clamp((u-1.0)/.9)):0;                                // ウィーズ：口をゆっくり開けて、ふくらむ
  const hs=2.3,he=D-1.2,hp=.5;let hk=0;if(u>=hs&&u<he){const k=((u-hs)%hp)/hp;hk=Math.exp(-k*5.5)}   // ホンク：0.5秒ごと。笑うように頭が小さくゆれる
  const inh=u<1.0?Math.sin(clamp(u/1.0)*Math.PI):0;                                // 鳴く前に息を吸う（鼻の穴がひらく）
- return{jaw:clamp(.05*lean+.1*wz+(u>=hs&&u<he?.05+.1*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.06*hk:0),fl:-12*lean+(u>=hs&&u<he?5*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
+ const wo=u>=1.0?ease(clamp((u-1.5)/.6)):0;   /* 口を閉じたまま吸い、のどがふくらんでから開く（自然2周目） */
+ return{jaw:clamp(.02*lean+.1*wz*wo+(u>=hs&&u<he?.03+.17*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.1*hk:0),fl:-12*lean+(u>=hs&&u<he?5*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
 function honkRings(h0,u,D,out){if(u<0)return;D=D||5.6;out.push({age:u-1.0,x:180,w:140});for(let j=0;j<8;j++){const a=u-(2.3+j*.5);if(2.3+j*.5<D-1.2)out.push({age:a,x:200,w:90})}}
 // ─ 水の中の歩み：1歩＝けって → のびてすべる → あしを戻して着く ─
 function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.72*eout(clamp((c-.06)/.62))+.28*c)*stride;   /* けった直後に速く、すべるにつれて遅く（等速に見えた。自然の番・1周目） */   /* けった直後に強く進み、すべる間もゆっくり進み続ける（止まって見えた・7版挑戦の番） */
@@ -66,10 +67,10 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  if(tl<T0){const s=clamp((tl-7.3)/(T0-7.3));my=lerp(SURF+40,FY7(330)-120,eout(s));mx=lerp(300,360,s);mp=-.05;mlegs=[-.3+Math.sin(tl*2)*.1,-.2,.3,.35]}   // 沈む：あしをたらして、ゆっくり底へ
  else{my=FY7(mx)-120-g1.hop*34;mp=g1.pitch;mlegs=[g1.fh,g1.fh+.12,g1.ff,g1.ff+.14]}
  const atHerd=tl>=15.4;   // 真下のあとは群れの近く（間の道のりは真下のつなぎで省く）
- if(atHerd){const cr=clamp((tl-15.5)/.5),pu=clamp((tl-16.0)/1.6);mx=1000+90*eout(pu);
-  my=lerp(FY7(1000)-120+16*cr*(1-pu),SURF+29,eout(pu));mp=lerp(.06*cr,-.5,clamp(pu*3))*(1-ease(clamp((pu-.6)/.4)))-.1*ease(clamp((pu-.6)/.4));mlegs=[lerp(.3*cr,-1.4,clamp(pu*4)),lerp(.3*cr,-1.3,clamp(pu*4)),lerp(.2,-.7,pu)+Math.sin(tl*7)*.25*pu,lerp(.2,-.6,pu)+Math.sin(tl*7+1)*.25*pu]}
+ if(atHerd){const cr=clamp((tl-15.5)/.5),pu=clamp((tl-16.0)/1.6);mx=990+100*eout(pu);   /* 底に4本で立つ→縮む→押す→斜めに上がる（自然2周目） */
+  my=lerp(FY7(990)-108+22*ease(cr)*(1-pu),SURF+29,eout(pu));mp=lerp(.06*cr,-.5,clamp(pu*3))*(1-ease(clamp((pu-.6)/.4)))-.1*ease(clamp((pu-.6)/.4));mlegs=[lerp(.3*cr,-1.4,clamp(pu*4)),lerp(.3*cr,-1.3,clamp(pu*4)),lerp(.2,-.7,pu)+Math.sin(tl*7)*.25*pu,lerp(.2,-.6,pu)+Math.sin(tl*7+1)*.25*pu]}
  if(tl>=10.6&&tl<13.6){const u=clamp((tl-10.6)/1.4);cy=lerp(SURF,FLOOR-215,ease(u));cx=lerp(560,mx+170,ease(u));z=lerp(1.15,1.3,ease(u))}
- if(atHerd&&tl<26){const pu=clamp((tl-15.6)/2.0),cl=ease(clamp((tl-17.6)/1.6)),pi=ease(clamp((tl-19.0)/5.0));cx=lerp(lerp(mx+150,1130,ease(clamp((tl-17.6)/2.4))),1105,pi);cy=lerp(lerp(lerp(FY7(1000)-150,SURF+40,eout(pu)),SURF-40,cl),SURF-30,pi);z=lerp(1.3,1.6,cl)+.32*pi}   /* 再会：子とFのほうへゆっくり寄りつづける（止まって見えた・どこを見ればいいか分からなかった。7版2周目挑戦） */   /* 再会は母に寄る（線は画面の下の方：水の上の顔が大きく見える） */
+ if(atHerd&&tl<26){const pu=clamp((tl-15.6)/2.0),cl=ease(clamp((tl-17.6)/1.6)),pi=ease(clamp((tl-19.0)/5.0));cx=lerp(lerp(mx+150,1130,ease(clamp((tl-17.6)/2.4))),1105,pi);cy=lerp(lerp(lerp(FY7(1000)-150,SURF+40,ease(clamp((tl-16.3)/2.0))),SURF-40,cl),SURF-30,pi);z=lerp(1.3,1.6,cl)+.32*pi}   /* 再会：子とFのほうへゆっくり寄りつづける（止まって見えた・どこを見ればいいか分からなかった。7版2周目挑戦） */   /* 再会は母に寄る（線は画面の下の方：水の上の顔が大きく見える） */
  if(tl>=26){const u=ease(clamp((tl-26)/2.2));cx=lerp(1130,1120,u);cy=lerp(SURF-40,360,u);z=lerp(1.6,1.08,u)+.06*clamp((tl-28.4)/5)}   /* 引いても絵の外が写らない広さ／骨の場面はゆっくり寄る */
  // 真下（動きつなぎ：母は同じ画面の位置・向き・速さのまま、見え方だけ変わる）
  if(tl>=13.6&&tl<15.4){botUp5(t,(tl-13.6)+1.1);return}
@@ -94,6 +95,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
    if(!atHerd&&tl>=T0&&g1.touch){}   // 着いた所の泥（下）
    for(let k=0;k<4;k++){const tk=(g1.n-k)*1.9+T0+1.75;const age=tl-tk;if(tl<T0||age<0||age>1.8||atHerd)continue;const px=360+(g1.n-k+1)*128-40;g.save();g.globalAlpha=clamp(.6-age*.33);ell(px,FLOOR-2-age*8,22+age*50,7+age*10,'#8f8a5c');g.restore()}
+   if(atHerd&&tl>15.9&&tl<18.2){const a=tl-15.9;for(let j=0;j<5;j++){g.save();g.globalAlpha=clamp(.55-a*.28);ell(985+j*26-40,FY7(990)-4-a*(14+j*4),20+a*(36+j*8),7+a*(10+j*2),'#8f8a5c');g.restore()}}   /* 押した足もとの泥 */
    if(atHerd&&tl>16.7){for(let i=0;i<10;i++){const k=((tl*1.4+i*.1)%1);g.save();g.globalAlpha=(1-k)*.7;g.strokeStyle='#f3f5d4';g.lineWidth=2;g.beginPath();g.arc(mx+250+Math.sin(k*9+i)*8,my-60-k*(my-SURF-40),3+i%3*2,0,7);g.stroke();g.restore()}}}   // 浮かぶ前に、鼻から息をはく
   g.restore()}
  // 3) 水の上のカバ（見下ろす高さに合わせて y を縮める。体の大きさはそのまま）
