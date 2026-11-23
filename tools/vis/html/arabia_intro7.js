@@ -81,12 +81,13 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  if(dead){rect(-2000,SURF,8000,800,'#e0b06a');for(const dx of [0,W-40]){g.save();g.translate(dx,30);duneFaces();g.restore()}}else water7(t,0);
  g.restore();banks(t,dry);
  // 2) 水の下：見下ろした水面の帯より下に見える（目の高さでは、線から下がすべて水の中）
+ const hx=h=>{let x=h.x;if(h.F&&tl>=17.2)x=lerp(h.x,1150,ease(clamp((tl-18.6)/2.0)));if(tl>=25.0&&h.x<1700)x+=(1050-x)*.08*ease(clamp((tl-25)/1.5));return x};   /* 群れの x は水の上と下で同じ（水の下のかげが置き去りになり、幽霊に見えた。ミス2周目） */
  if(!dead&&tl>=26)rect(-2000,yb-2,8000,4000,'#66734a');   /* 水の下が薄れた後の、見下ろした湖の続き（黒く抜けていた） */
  let fy=null;const uw=tl>=26?1-ease(clamp((tl-26)/.9)):1;if(!dead&&uw>0&&yb<cy+H/2/z){g.save();g.globalAlpha=uw;g.beginPath();g.rect(-2000,yb,8000,4000);g.clip();fy=under7(t);{const gr=g.createLinearGradient(0,yb,0,yb+60/z);gr.addColorStop(0,'rgba(120,135,96,.85)');gr.addColorStop(1,'rgba(120,135,96,0)');g.fillStyle=gr;g.fillRect(-2000,yb,8000,60/z)}   /* 帯の上ふちをやわらげる（心地よさ1周目） */
   // 水の上にいるカバの、水の下の体（にごってうすい）
   const surfAll=[];
   for(const h of HERD)surfAll.push(h);
-  for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
+  for(const h of surfAll){if(h.s<.6)continue;const hz=.72;hp3({x:hx(h),y:SURF+h.fl*h.s+(h.y-SURF)*Math.max(f,.08),s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
   if(tl>=7.4){const gc=gait(Math.max(0,tl-T0-.1),1.6,108),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<T0?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/(T0-7.7)))):FLOOR-70-gc.hop*30);
    hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<T0?-.05:gc.pitch*1.2,legs:tl<T0?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
@@ -104,9 +105,8 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    if(h.c!=null){const hn=honk(tl-h.c,5.0);if(hn){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-h.c,5.0,st.ev)}}
    if(meet){const turn=ease(clamp((tl-17.6-i*.12)/1.2));yaw=lerp(h.yaw,h.x>mx?175:10,turn*.8);
     const hn=honk(tl-(22.6+(i%3)*.35),4.8);if(hn&&h.s>.6){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-(22.6+(i%3)*.35),4.8,st.ev)}}
-   if(h.F&&meet){const ap=ease(clamp((tl-18.6)/2.0)),sn=clamp((tl-20.6)/1.4);x=lerp(h.x,1150,ap);yaw=lerp(170,190,ap);st.tilt+=.12*Math.sin(Math.PI*sn)}   // 寄ってきて、子のにおいをかぐ
-   if(tl>=25.0&&h.x<1700){x+=(1050-x)*.08*ease(clamp((tl-25)/1.5))}   // 身を寄せる
-   hp3({x,y:yv(h.y,f),s:h.s,yaw,seed:h.seed,v:hv(h.seed)},t,st)}
+   x=hx(h);if(h.F&&meet){const ap=ease(clamp((tl-18.6)/2.0)),sn=clamp((tl-20.6)/1.4);yaw=lerp(170,190,ap);st.tilt+=.12*Math.sin(Math.PI*sn)}   // 寄ってきて、子のにおいをかぐ
+   hp3({x,y:SURF+(h.y-SURF)*Math.max(f,.08),s:h.s,yaw,seed:h.seed,v:hv(h.seed)},t,st)}
   // 母と子（水の上）
   if(tl<8.4){const hn=honk(tl-1.9,5.6),sk=clamp((tl-7.2)/1.0);const o=hn?{jaw:hn.jaw,tilt:hn.tilt,fl:30+hn.fl,lean:hn.lean,ev:[]}:{fl:30,ev:[]};o.fl=lerp(o.fl,140,ease(sk));if(hn)honkRings(null,tl-1.9,5.6,o.ev);
    hpS({x:270,y:yv(556,f),s:.98,dir:1,seed:2,v:MV},t,o);
