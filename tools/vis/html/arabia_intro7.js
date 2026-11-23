@@ -91,9 +91,10 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
   for(const h of HERD)surfAll.push(h);
   for(const h of surfAll){if(h.s<.6)continue;const hz=.72;hp3({x:hx(h),y:SURF+h.fl*h.s+(h.y-SURF)*Math.max(f,.08),s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
+  const wh=atHerd?.1+.5*ease(clamp((tl-17.0)/1.0)):.1;   /* 水面に出たら、水の下の体は水の色に沈める（手本 水1・挑戦3周目） */
   if(tl>=7.4){const gc=gait(Math.max(0,tl-T0-.1),1.6,108),cxk=atHerd?(tl>=18.0?calfX(tl,mx):mx-170-30*Math.sin(tl*2)):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?(tl>=18.0?SURF+12+lerp(80,20,eout(clamp((tl-18.0)/.6)))*.42:lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6)))):(tl<T0?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/(T0-7.7)))):FLOOR-70-gc.hop*30);
-   hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<T0?-.05:gc.pitch*1.2,legs:tl<T0?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
-   hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
+   hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:Math.max(.15,wh),hzc:'#6f7c4e',tilt:tl<T0?-.05:gc.pitch*1.2,legs:tl<T0?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
+   hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:wh,hzc:'#6f7c4e',tilt:mp,legs:mlegs});
    if(!atHerd&&tl>=T0&&g1.touch){}   // 着いた所の泥（下）
    for(let k=0;k<4;k++){const tk=(g1.n-k)*1.9+T0+1.75;const age=tl-tk;if(tl<T0||age<0||age>1.8||atHerd)continue;const px=360+(g1.n-k+1)*128-40;g.save();g.globalAlpha=clamp(.6-age*.33);ell(px,FLOOR-2-age*8,22+age*50,7+age*10,'#8f8a5c');g.restore()}
    if(atHerd&&tl>15.9&&tl<18.2){const a=tl-15.9;for(let j=0;j<5;j++){g.save();g.globalAlpha=clamp(.55-a*.28);ell(985+j*26-40,FY7(990)-4-a*(14+j*4),20+a*(36+j*8),7+a*(10+j*2),'#8f8a5c');g.restore()}}   /* 押した足もとの泥 */
