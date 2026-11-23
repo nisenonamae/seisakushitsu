@@ -51,6 +51,7 @@ function under7(t){const gr=g.createLinearGradient(0,SURF,0,FLOOR+80);gr.addColo
 const HERD=[{x:1180,y:520,s:.74,yaw:200,seed:45,fl:36,c:.4},{x:1330,y:560,s:.9,yaw:170,seed:11,fl:30,c:1.1,F:1},{x:1520,y:500,s:.7,yaw:210,seed:17,fl:40},{x:1700,y:574,s:.95,yaw:160,seed:5,fl:32,c:.9},
  {x:1470,y:520,s:.78,yaw:190,seed:55,fl:38},{x:1560,y:600,s:.86,yaw:230,seed:29,fl:34,c:1.5},{x:1400,y:420,s:.46,yaw:120,seed:8,fl:40},{x:1610,y:400,s:.42,yaw:60,seed:14,fl:44},{x:1340,y:430,s:.5,yaw:300,seed:65,fl:40}];
 const yv=(y,f)=>SURF+(y-SURF)*f;
+const calfX=(tl,mx)=>{const hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide),cl=ease(clamp((tl-25)/1.5));return mx+30*cl-115+150*go-40*hide+20*cl-30*cl};   /* 子の位置（水の上と下で同じ） */
 const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=484+6*Math.sin(x*.01);const k=clamp((x-680)/360);return lerp(deep,sh,k*k*(3-2*k))-k*(1-k)*(30*Math.sin(x*.031)+16*Math.sin(x*.073+2))};
 SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  const tl=t-TA,K=(a,b,u)=>lerp(a,b,ease(clamp(u)));
@@ -90,7 +91,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
   for(const h of HERD)surfAll.push(h);
   for(const h of surfAll){if(h.s<.6)continue;const hz=.72;hp3({x:hx(h),y:SURF+h.fl*h.s+(h.y-SURF)*Math.max(f,.08),s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
-  if(tl>=7.4){const gc=gait(Math.max(0,tl-T0-.1),1.6,108),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<T0?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/(T0-7.7)))):FLOOR-70-gc.hop*30);
+  if(tl>=7.4){const gc=gait(Math.max(0,tl-T0-.1),1.6,108),cxk=atHerd?(tl>=18.0?calfX(tl,mx):mx-170-30*Math.sin(tl*2)):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?(tl>=18.0?SURF+12+lerp(80,20,eout(clamp((tl-18.0)/.6)))*.42:lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6)))):(tl<T0?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/(T0-7.7)))):FLOOR-70-gc.hop*30);
    hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<T0?-.05:gc.pitch*1.2,legs:tl<T0?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
    hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
    if(!atHerd&&tl>=T0&&g1.touch){}   // 着いた所の泥（下）
@@ -119,8 +120,8 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
    hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:MV},t,o);wline(mx+30*cl,SURF+2,.95,lerp(10,40,turn),t,2,1);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
-   hp3({x:mx-115+150*go-40*hide+20*cl,y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
- }else{podBones(t,td-.45,1,[...HERD.map(h=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
+   hp3({x:calfX(tl,mx),y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
+ }else{podBones(t,td+.9,1,[...HERD.filter(h=>h.s>=.6).map((h,i)=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x,yaw:h.yaw+[-70,40,110,-30,160,20][i%6]})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
  g.restore();
  if(tl>=10.2&&tl<12.4)lensDip(t,tl,H/2+(yb-cy)*z);   /* カメラが水面をくぐる：レンズの水ぎわ・裏から見た水面・泡・しずく（7版3周目挑戦） */
  if(!dead&&cy<SURF+150){g.save();if(tl>=17.6){const sp=ease(clamp((tl-17.6)/1.5));g.translate(W/2,H/2);g.scale(1+.25*sp,1+.25*sp);g.translate(-W/2,-H/2)}g.globalAlpha=tl>=17.6?1-ease(clamp((tl-17.6)/1.2)):1;fg3(t,dry,0);g.restore()}   /* 手前の葦は画面に固定（カメラと一緒に動かない）。再会では少し大きくして画面のふちへ寄せ、真ん中を空ける */
