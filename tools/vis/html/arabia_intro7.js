@@ -48,7 +48,7 @@ function under7(t){const gr=g.createLinearGradient(0,SURF,0,FLOOR+80);gr.addColo
 const HERD=[{x:1180,y:520,s:.74,yaw:200,seed:45,fl:36,c:.4},{x:1330,y:560,s:.9,yaw:170,seed:11,fl:30,c:1.1,F:1},{x:1520,y:500,s:.7,yaw:210,seed:17,fl:40},{x:1700,y:574,s:.95,yaw:160,seed:5,fl:32,c:.9},
  {x:1470,y:520,s:.78,yaw:190,seed:55,fl:38},{x:1560,y:600,s:.86,yaw:230,seed:29,fl:34,c:1.5},{x:1400,y:420,s:.46,yaw:120,seed:8,fl:40},{x:1610,y:400,s:.42,yaw:60,seed:14,fl:44},{x:1340,y:430,s:.5,yaw:300,seed:65,fl:40}];
 const yv=(y,f)=>SURF+(y-SURF)*f;
-const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=484+6*Math.sin(x*.01);const k=clamp((x-720)/240);return lerp(deep,sh,k*k*(3-2*k))};
+const FY7=x=>{const deep=FLOOR-14*Math.sin(x*.004)-26*Math.sin(x*.0013+1),sh=484+6*Math.sin(x*.01);const k=clamp((x-680)/360);return lerp(deep,sh,k*k*(3-2*k))-k*(1-k)*(30*Math.sin(x*.031)+16*Math.sin(x*.073+2))};
 SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  const tl=t-TA,K=(a,b,u)=>lerp(a,b,ease(clamp(u)));
  // ─ カメラ ─
@@ -58,9 +58,10 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  else if(tl>=15.4&&tl<26.0){lv=1}
  else if(tl>=26.0){lv=1-ease(clamp((tl-26.0)/2.2))}
  // 母の水の中の道すじ
- const g1=gait(Math.max(0,tl-9.6),1.9,150);
- let mx=360+(tl>=9.6?g1.adv:0),my=FLOOR-120,mp=0,mlegs=null;
- if(tl<9.6){const s=clamp((tl-7.3)/2.3);my=lerp(SURF+40,FY7(330)-120,eout(s));mx=lerp(300,360,s);mp=-.05;mlegs=[-.3+Math.sin(tl*2)*.1,-.2,.3,.35]}   // 沈む：あしをたらして、ゆっくり底へ
+ const T0=10.4;   /* 母が底に着いて歩き出す時。ゆっくり沈む（3トンの体・心地よさ1周目） */
+ const g1=gait(Math.max(0,tl-T0),1.9,150);
+ let mx=360+(tl>=T0?g1.adv:0),my=FLOOR-120,mp=0,mlegs=null;
+ if(tl<T0){const s=clamp((tl-7.3)/(T0-7.3));my=lerp(SURF+40,FY7(330)-120,eout(s));mx=lerp(300,360,s);mp=-.05;mlegs=[-.3+Math.sin(tl*2)*.1,-.2,.3,.35]}   // 沈む：あしをたらして、ゆっくり底へ
  else{my=FY7(mx)-120-g1.hop*34;mp=g1.pitch;mlegs=[g1.fh,g1.fh+.12,g1.ff,g1.ff+.14]}
  const atHerd=tl>=15.4;   // 真下のあとは群れの近く（間の道のりは真下のつなぎで省く）
  if(atHerd){const cr=clamp((tl-15.5)/.5),pu=clamp((tl-16.0)/1.6);mx=1000+90*eout(pu);
@@ -79,17 +80,17 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
  g.restore();banks(t,dry);
  // 2) 水の下：見下ろした水面の帯より下に見える（目の高さでは、線から下がすべて水の中）
  if(!dead&&tl>=26)rect(-2000,yb-2,8000,4000,'#66734a');   /* 水の下が薄れた後の、見下ろした湖の続き（黒く抜けていた） */
- let fy=null;const uw=tl>=26?1-ease(clamp((tl-26)/.9)):1;if(!dead&&uw>0&&yb<cy+H/2/z){g.save();g.globalAlpha=uw;g.beginPath();g.rect(-2000,yb,8000,4000);g.clip();fy=under7(t);
+ let fy=null;const uw=tl>=26?1-ease(clamp((tl-26)/.9)):1;if(!dead&&uw>0&&yb<cy+H/2/z){g.save();g.globalAlpha=uw;g.beginPath();g.rect(-2000,yb,8000,4000);g.clip();fy=under7(t);{const gr=g.createLinearGradient(0,yb,0,yb+60/z);gr.addColorStop(0,'rgba(120,135,96,.85)');gr.addColorStop(1,'rgba(120,135,96,0)');g.fillStyle=gr;g.fillRect(-2000,yb,8000,60/z)}   /* 帯の上ふちをやわらげる（心地よさ1周目） */
   // 水の上にいるカバの、水の下の体（にごってうすい）
   const surfAll=[];
   for(const h of HERD)surfAll.push(h);
   for(const h of surfAll){if(h.s<.6)continue;const hz=.5;hp3({x:h.x,y:SURF+h.fl*h.s,s:h.s,yaw:h.yaw,seed:h.seed,v:hv(h.seed)},t,{full:1,fl:0,hz,hzc:'#8a9460',tilt:-.04})}
   // 母と子（水の中）
-  if(tl>=7.4){const gc=gait(Math.max(0,tl-9.7),1.6,108),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<9.6?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/2))):FLOOR-70-gc.hop*30);
-   hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<9.6?-.05:gc.pitch*1.2,legs:tl<9.6?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
+  if(tl>=7.4){const gc=gait(Math.max(0,tl-T0-.1),1.6,108),cxk=atHerd?mx-170-30*Math.sin(tl*2):mx-200+Math.sin(tl*.8)*30,cyk=atHerd?lerp(FLOOR-60,SURF+30,eout(clamp((tl-16.2)/1.6))):(tl<T0?lerp(SURF+40,FLOOR-70,eout(clamp((tl-7.7)/(T0-7.7)))):FLOOR-70-gc.hop*30);
+   hp3({x:cxk,y:cyk,s:.42,yaw:12,seed:33,v:CV},t,{full:1,fl:0,hz:.15,hzc:'#8a9460',tilt:tl<T0?-.05:gc.pitch*1.2,legs:tl<T0?[-.3,-.2,.3,.3]:[gc.fh,gc.fh+.1,gc.ff,gc.ff+.12]});
    hp3({x:mx,y:my,s:.95,yaw:10,seed:2,v:MV},t,{full:1,fl:0,hz:.1,hzc:'#8a9460',tilt:mp,legs:mlegs});
-   if(!atHerd&&tl>=9.6&&g1.touch){}   // 着いた所の泥（下）
-   for(let k=0;k<4;k++){const tk=(g1.n-k)*1.9+9.6+1.75;const age=tl-tk;if(tl<9.6||age<0||age>1.8||atHerd)continue;const px=360+(g1.n-k+1)*128-40;g.save();g.globalAlpha=clamp(.6-age*.33);ell(px,FLOOR-2-age*8,22+age*50,7+age*10,'#8f8a5c');g.restore()}
+   if(!atHerd&&tl>=T0&&g1.touch){}   // 着いた所の泥（下）
+   for(let k=0;k<4;k++){const tk=(g1.n-k)*1.9+T0+1.75;const age=tl-tk;if(tl<T0||age<0||age>1.8||atHerd)continue;const px=360+(g1.n-k+1)*128-40;g.save();g.globalAlpha=clamp(.6-age*.33);ell(px,FLOOR-2-age*8,22+age*50,7+age*10,'#8f8a5c');g.restore()}
    if(atHerd&&tl>16.7){for(let i=0;i<10;i++){const k=((tl*1.4+i*.1)%1);g.save();g.globalAlpha=(1-k)*.7;g.strokeStyle='#f3f5d4';g.lineWidth=2;g.beginPath();g.arc(mx+250+Math.sin(k*9+i)*8,my-60-k*(my-SURF-40),3+i%3*2,0,7);g.stroke();g.restore()}}}   // 浮かぶ前に、鼻から息をはく
   g.restore()}
  // 3) 水の上のカバ（見下ろす高さに合わせて y を縮める。体の大きさはそのまま）
