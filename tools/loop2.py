@@ -17,7 +17,7 @@ sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, 'vis'))
 import refs_sheet
 LOG = os.path.join(ROOT, 'docs', 'notes', 'review_log.md')
 LOOK = {'miss': 'ミスの番：乱れ・事実ちがいを探す（指摘帳 B・M・F と調べた記録）。重だけ挙げればよい',
-        'natural': '自然の番：実物帳と並べて、実物とちがって不自然な所を探す',
+        'natural': '自然の番：本物のカバに見えるか。形だけでなく、動き・重さ・水とのやりとり・生きている感じを、動きの帯（9コマ）と実物で見る',
         'challenge': '挑戦の番：kurzgesagt のクオリティに近づける。手本帳のやり方のうち、こちらにない物を探す'}
 
 STAGES = {
@@ -50,6 +50,9 @@ def snap(P, od):
             for s in P['scenes']:
                 for t in times_in(s, 3, P):
                     await pg.evaluate('t=>render(t)', t); await pg.screenshot(path=os.path.join(od, f'{t:06.2f}.png'))
+            os.makedirs(os.path.join(od, 'm'), exist_ok=True)   # 動きの帯（自然の番で、止め絵では見えない「動き」を見るため。2026-11-23）
+            for t in sorted({x for c in motion_centers(P) for x in motion_times(c)}):
+                await pg.evaluate('t=>render(t)', t); await pg.screenshot(path=os.path.join(od, 'm', f'{t:06.2f}.png'), type='jpeg', quality=85)
             await b.close()
             return errs
     errs = asyncio.run(run())
@@ -78,6 +81,33 @@ def times_in(sc, n=3, P=None):
     # しぐさ・変化の瞬間（設計図の moments）も必ず入れる。決まった秒だけだと、いちばん動いた所を外す（2026-11-22 あくびの隙間を見逃した）
     if P: ts += [m['t'] for m in P.get('moments', []) if a <= m['t'] < b]
     return sorted(round(t, 2) for t in ts)
+
+STEP = .15
+def motion_times(c): return [round(c + STEP * k, 2) for k in range(-4, 5)]
+def motion_centers(P):
+    """★の瞬間ごと。★のない場面は、場面のまん中"""
+    cs = [m['t'] for m in P.get('moments', [])]
+    for s in P['scenes']:
+        a, b = s['t']
+        if not any(a <= c < b for c in cs): cs.append(round((a + b) / 2, 2))
+    return sorted(c for c in cs if c - 4 * STEP >= 0 and c + 4 * STEP <= P['dur'])
+
+def motion_sheet(src, c, out, w=426, label=''):
+    """9コマ（0.15秒おき）を3×3に。コマの間かくが同じ＝機械的、急に飛ぶ＝ぎこちない、が見える"""
+    md = os.path.join(src, 'm'); ts = motion_times(c)
+    if not os.path.isdir(md): sys.exit(f'{src} に動きの帯がない。snap し直す')
+    h = w * 9 // 16; S = Image.new('RGB', (3 * (w + 4), 3 * (h + 22) + 26), 'white'); d = ImageDraw.Draw(S); F = refs_sheet.font(15)
+    d.text((4, 4), label, fill='black', font=refs_sheet.font(18))
+    for i, t in enumerate(ts):
+        x, y = (i % 3) * (w + 4), 26 + (i // 3) * (h + 22)
+        S.paste(Image.open(os.path.join(md, f'{t:06.2f}.png')).convert('RGB').resize((w, h), Image.LANCZOS), (x, y + 20)); d.text((x + 4, y + 2), f'{i + 1}　{t:.2f}秒' + ('　★' if i == 4 else ''), fill='black', font=F)
+    S.save(out); return out
+
+def onion(src, c, out, w=960):
+    """9コマを重ねた1枚。止まっている物はくっきり、動いた物は残像になる（動きの道すじ・間かく・重さを見る）"""
+    md = os.path.join(src, 'm'); import numpy as np
+    A = [np.asarray(Image.open(os.path.join(md, f'{t:06.2f}.png')).convert('RGB').resize((w, w * 9 // 16)), dtype=float) for t in motion_times(c)]
+    Image.fromarray(np.uint8(sum(A) / len(A))).save(out); return out
 
 def moment_name(P, t):
     for m in P.get('moments', []):
@@ -113,6 +143,11 @@ def pack(P, video, od, stage, names, look='natural'):
         if its: refs_sheet.sheet(its, os.path.join(od, f'{tag}_実物.png'))
         names = [f'`{tag}_作った絵' + (f'{k + 1}' if len(rows) > 1 else '') + '.png`' for k in range(len(rows))]
         brief += [f'## {tag}（{s["t"][0]}〜{s["t"][1]}秒・{s.get("role") or "ふつう"}）', '- 作った絵：' + '・'.join(names) + '（★＝しぐさ・変化のいちばん大きい瞬間）']
+        if look == 'natural':
+            for c in [c for c in motion_centers(P) if s['t'][0] <= c < s['t'][1]]:
+                nm = (moment_name(P, c) or 'まん中').lstrip('★'); f1 = f'{tag}_動き_{c:.1f}秒.png'; f2 = f'{tag}_重ね_{c:.1f}秒.png'
+                motion_sheet(video, c, os.path.join(od, f1), label=f'{tag}　{nm}（{c - 4 * STEP:.2f}〜{c + 4 * STEP:.2f}秒・0.15秒おき）'); onion(video, c, os.path.join(od, f2))
+                brief.append(f'- 動き：`{f1}`（9コマ）・`{f2}`（9コマを重ねた残像）＝{nm}')
         if look != 'challenge': brief.append(f'- 実物：`{tag}_実物.png`（出どころは同じ名前の .txt）' if its else '- 実物：まだない（実物帳に足す）')
         if look == 'challenge': brief += ['- 手本（kurzgesagt）のやり方：'] + (['  ' + x for x in tehon_lines(s.get('tehon', []))] or ['  （まだない：手本帳に足してから挑戦する）'])
         brief.append('')
@@ -134,13 +169,19 @@ def pair(P, va, vb, od, scene, stage, what, look='natural'):
     for im in ims: S.paste(im, (0, y)); y += im.height
     S.save(os.path.join(od, f'{scene}_左右.png'))
     for f in glob.glob(os.path.join(od, '_*')): os.remove(f)
+    mv = []
+    if look == 'natural':   # 動きも左右で比べる（止め絵だけだと、機械的な動き・重さのなさで差がつかない）
+        for c in [c for c in motion_centers(P) if s['t'][0] <= c < s['t'][1]]:
+            a = motion_sheet(L, c, os.path.join(od, '_ma.png'), w=320, label=f'左　{(moment_name(P, c) or "まん中").lstrip("★")}'); b = motion_sheet(R, c, os.path.join(od, '_mb.png'), w=320, label='右')
+            f = f'{scene}_動き_左右_{c:.1f}秒.png'; A, B = Image.open(a), Image.open(b); S = Image.new('RGB', (A.width + B.width + 24, A.height), 'white'); S.paste(A, (0, 0)); S.paste(B, (A.width + 24, 0)); S.save(os.path.join(od, f)); mv.append(f)
+        for f in glob.glob(os.path.join(od, '_*')): os.remove(f)
     its = refs_sheet.pick('jitsubutsu', s['kinds'], s['tags'], 8)
     if its: refs_sheet.sheet(its, os.path.join(od, f'{scene}_実物.png'))
     key = od.rstrip('/') + '.key.json'   # 選ぶ役に渡すフォルダの外に置く
     json.dump({'左': 'B' if flip else 'A', '右': 'A' if flip else 'B', 'A': va, 'B': vb, 'scene': scene, 'stage': stage, 'what': what, 'look': look}, open(key, 'w'), ensure_ascii=False)
     brief = [f'# 2案を並べて選ぶ（{scene}・段{stage}：{STAGES[stage]}）', '', f'今回の直しは「{LOOK[look].split("：")[0]}」で入れた物（{LOOK[look].split("：")[1]}）。', '', '手順は tools/JUDGE.md。`' + scene + '_左右.png` の左と右は、同じ場面・同じ秒の2つの版。',
              f'- 今回ちがうのは、この段の1か所だけ：**{what}**（どちらが前の版かは教えない）',
-             f'- 実物：`{scene}_実物.png`' if its else '- 実物：なし', '- 手本のやり方：'] + ['  ' + x for x in tehon_lines(s.get('tehon', []))]
+             f'- 実物：`{scene}_実物.png`' if its else '- 実物：なし'] + [f'- 動き（左右とも 0.15秒おき 9コマ）：`{f}`' for f in mv] + ['- 手本のやり方：'] + ['  ' + x for x in tehon_lines(s.get('tehon', []))]
     if P.get('facts'): shutil.copy(os.path.join(ROOT, P['facts']), os.path.join(od, '調べた記録.md')); brief.append('- 調べた記録：`調べた記録.md`')
     brief += ['', '## 作り手の好み（指摘帳 T）', t_points()]
     open(os.path.join(od, 'brief.md'), 'w', encoding='utf-8').write('\n'.join(brief) + '\n')
