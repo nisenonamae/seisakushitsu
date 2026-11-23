@@ -109,15 +109,15 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
     const hn=honk(tl-(22.6+(i%3)*.35),4.8);if(hn&&h.s>.6){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-(22.6+(i%3)*.35),4.8,st.ev)}}
    x=hx(h);if(h.F&&meet){const ap=ease(clamp((tl-18.6)/2.0)),sn=clamp((tl-20.6)/1.4);yaw=lerp(170,190,ap);st.tilt+=.12*Math.sin(Math.PI*sn)}   // 寄ってきて、子のにおいをかぐ
    const far=!h.F&&h.y<=520&&lv>.5;if(far){st.hz=.38;st.hzc='#a9bbb0'}   /* 奥のカバは空気でうすく（主役のまわりを空ける。心地よさ2周目） */
-   hp3({x,y:SURF+(h.y-SURF)*Math.max(f,.08),s:h.s*(far?.86:1),yaw,seed:h.seed,v:hv(h.seed)},t,st)}
+   hp3({x,y:SURF+(h.y-SURF)*Math.max(f,.08),s:h.s*(far?.86:1),yaw,seed:h.seed,v:hv(h.seed)},t,st);if(!far)wline(x,SURF+(h.y-SURF)*Math.max(f,.08),h.s,yaw,t,h.seed,1)}
   // 母と子（水の上）
   if(tl<8.4){const hn=honk(tl-1.9,5.6),sk=clamp((tl-7.2)/1.0);const o=hn?{jaw:hn.jaw,tilt:hn.tilt,fl:30+hn.fl,lean:hn.lean,ev:[]}:{fl:30,ev:[]};o.fl=lerp(o.fl,140,ease(sk));if(hn)honkRings(null,tl-1.9,5.6,o.ev);
-   hpS({x:270,y:yv(556,f),s:.98,dir:1,seed:2,v:MV},t,o);
+   hpS({x:270,y:yv(556,f),s:.98,dir:1,seed:2,v:MV},t,o);if(sk<.3)wline(270,yv(556,f)-6,.98,0,t,2,1-sk*3.3);
    const ck=clamp((tl-7.4)/.9),nz=Math.sin(Math.PI*clamp((tl-3.2)/1.6));   // 子：母の鳴き声のあいだ、母の顔に寄る
    hp3({x:540-60*nz,y:yv(588,f),s:.4,yaw:14+30*nz,seed:33,v:CV},t,{fl:lerp(22,140,ease(ck)),tilt:-.04})}
   if(atHerd&&my<=SURF+150){const up=clamp((tl-17.4)/.6),turn=ease(clamp((tl-18.0)/1.6)),cl=ease(clamp((tl-25)/1.5));
    const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
-   hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:MV},t,o);
+   hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:MV},t,o);wline(mx+30*cl,SURF+2,.95,lerp(10,40,turn),t,2,1);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
    hp3({x:mx-115+150*go-40*hide+20*cl,y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
  }else{podBones(t,td-.45,1,[...HERD.map(h=>({...h,x:h.x<1700?h.x+(1050-h.x)*.08:h.x})),{x:1030,y:620,s:.95,yaw:40,seed:2,fl:28},{x:900,y:640,s:.42,yaw:10,seed:33,fl:20}])}
@@ -144,4 +144,9 @@ function lensDip(t,tl,sy){const k=Math.sin(Math.PI*clamp((tl-10.2)/1.4)),cross=c
   g.globalAlpha=(1-u)*.9;g.beginPath();g.arc(x,y,sz,0,7);g.strokeStyle='rgba(235,245,240,.85)';g.lineWidth=1.4;g.stroke();g.fillStyle='rgba(235,245,240,.12)';g.fill();g.beginPath();g.arc(x-sz*.35,y-sz*.35,sz*.25,0,7);g.fillStyle='rgba(255,255,255,.8)';g.fill()}g.globalAlpha=1}
  // しずく：水の上だった所に、くぐる直前に跳ねたしずくがレンズに残る
  if(cross>0){const fd=1-clamp((tl-10.8)/.9);if(fd>0){for(let i=0;i<9;i++){const x=W*(.08+.84*r()),y=H*(.06+.4*r()),rr=8+22*r();if(y>sy-10)continue;g.globalAlpha=fd*cross*.7;g.beginPath();g.arc(x,y+30*(1-fd)*r(),rr,0,7);g.fillStyle='rgba(200,225,215,.18)';g.fill();g.lineWidth=2;g.strokeStyle='rgba(250,255,250,.5)';g.stroke()}g.globalAlpha=1}}
+ g.restore()}
+
+/* 水ぎわの白い線（手本 水2）：体が水面を横切る線（hp3 の水の輪と同じ、体の向きに沿った線）の上に、短い白い線を2〜3本 */
+function wline(x,y,s,yaw,t,seed,a){const r=R(seed+300),th=yaw*Math.PI/180,cT=Math.cos(th),sT=Math.sin(th);g.save();g.translate(x,y);g.scale(s,s);g.globalAlpha=.75*clamp(a);g.strokeStyle='#f4f7ea';g.lineCap='round';
+ for(let i=0;i<2;i++){const X0=-135+i*55+r()*12+5*Math.sin(t*1.3+i),w=28+18*r(),P=X=>[X*cT,7+X*sT*.2+1.2*Math.sin(t*2+i+X*.02)];g.lineWidth=2.6-i*.5;g.beginPath();g.moveTo(...P(X0));g.lineTo(...P(X0+w));g.stroke()}
  g.restore()}
