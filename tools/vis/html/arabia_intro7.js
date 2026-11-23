@@ -43,6 +43,8 @@ function under7(t){const gr=g.createLinearGradient(0,SURF,0,FLOOR+80);gr.addColo
  {const x=640,y=fy(640)-10;g.save();g.translate(x,y);g.rotate(-.08);fill([[-160,0,.6],[-150,-26,.8],[150,-20,.8],[170,4,.6],[0,14,.6]],'#4f4632');for(let k=0;k<5;k++)line([[-120+k*55,-14],[-90+k*55,-6]],'#3c3526',3);line([[120,-18],[190,-70]],'#4f4632',9);g.restore()}   // 沈んだ木
  for(let i=0;i<26;i++){const x=1350+r()*1300,y=fy(x);ell(x,y-2,22+r()*30,5+r()*4,'#55553a')}                                          // 右：群れの足で踏みならされた泥のくぼみ
  for(let i=0;i<60;i++){const x=-600+r()*4400,y=SURF+20+r()*520+Math.sin(t+i)*6;g.save();g.globalAlpha=.25+.3*r();ell(x,y,1.5+r()*2,1.5+r()*2,'#ecebbd');g.restore()}
+ {const gr=g.createLinearGradient(0,SURF,0,SURF+70);gr.addColorStop(0,'rgba(236,242,206,.55)');gr.addColorStop(1,'rgba(236,242,206,0)');g.fillStyle=gr;g.fillRect(-900,SURF,5200,70);
+  for(let i=0;i<70;i++){const x0=-800+i*72+30*Math.sin(t*.6+i*1.7),w=18+(i*29%7)*6;g.fillStyle='rgba(248,250,228,'+(.22+.12*Math.sin(t*1.5+i))+')';g.beginPath();g.ellipse(x0,SURF+10+(i%3)*7,w,4+(i%2)*2,0,0,7);g.fill()}}   /* 下から見た水面の明るい帯と光のゆらぎ（手本 中3） */
  return fy}
 // 群れ（右）。y はふだん（見下ろした時）の奥行き。目の高さでは、水面の線に寄る
 const HERD=[{x:1180,y:520,s:.74,yaw:200,seed:45,fl:36,c:.4},{x:1330,y:560,s:.9,yaw:170,seed:11,fl:30,c:1.1,F:1},{x:1520,y:500,s:.7,yaw:210,seed:17,fl:40},{x:1700,y:574,s:.95,yaw:160,seed:5,fl:32,c:.9},
@@ -129,13 +131,13 @@ function lensDip(t,tl,sy){const k=Math.sin(Math.PI*clamp((tl-10.2)/1.4)),cross=c
  // 水ぎわ：レンズに張りつく水の膜で、まん中がふくらんだ弧になり、ゆれる
  if(sy>-40&&sy<H+40){g.beginPath();g.moveTo(-10,H+10);for(let x=-10;x<=W+10;x+=16){const u=(x-W/2)/(W/2);g.lineTo(x,sy+26*k*(1-u*u)+5*Math.sin(x*.02+t*7)+3*Math.sin(x*.047-t*5))}g.lineTo(W+10,H+10);g.closePath();
   g.fillStyle='rgba(60,90,70,'+(.18*k)+')';g.fill();
-  g.lineWidth=3+5*k;g.strokeStyle='rgba(32,52,40,'+(.55*k+.2)+')';g.stroke();
+  g.lineWidth=2+2*k;g.strokeStyle='rgba(70,95,72,'+(.35*k+.1)+')';g.stroke();
   g.save();g.translate(0,-3-3*k);g.lineWidth=2;g.strokeStyle='rgba(235,245,235,'+(.6*k+.15)+')';g.stroke();g.restore();
   // 裏から見た水面：水ぎわのすぐ下が銀色にゆらめく
   g.save();g.clip();const gr=g.createLinearGradient(0,sy,0,sy+70+40*k);gr.addColorStop(0,'rgba(220,235,215,'+(.45*k+.1)+')');gr.addColorStop(1,'rgba(220,235,215,0)');g.fillStyle=gr;g.fillRect(0,sy-10,W,140);
-  g.strokeStyle='rgba(240,250,235,'+(.35*k)+')';g.lineWidth=1.5;for(let i=0;i<14;i++){const x0=(i*97+t*40)%(W+200)-100,y0=sy+14+(i%4)*9+26*k*(1-((x0-W/2)/(W/2))**2);g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(x0+30,y0-6,x0+60,y0);g.stroke()}g.restore()}
+  for(let i=0;i<16;i++){const x0=(i*83+t*26+(i%3)*40)%(W+160)-80,w=26+(i*37%5)*9,y0=sy+16+(i%3)*10+26*k*(1-((x0-W/2)/(W/2))**2)+3*Math.sin(t*2+i);g.fillStyle='rgba(246,250,226,'+((.28+.12*Math.sin(t*1.7+i*1.3))*(.5+k))+')';g.beginPath();g.ellipse(x0,y0,w,5+(i%2)*2,0,0,7);g.fill()}g.restore()}   /* 下から見た水面：明るい帯の中に、丸い光のゆらぎ（手本 中3・挑戦1周目） */
  // 泡：くぐった直後、カメラのまわりから一気に上がっていく
- const bu=clamp((tl-10.5)/1.3);if(bu>0&&bu<1){for(let i=0;i<34;i++){const sz=3+11*r(),x0=W*(.1+.8*r()),sp=.6+.8*r(),d=r()*.3,u=clamp((bu-d)/(1-d));if(u<=0)continue;const y=H+30-u*sp*(H+260),x=x0+18*Math.sin(u*9+i);if(y<-20)continue;
+ const bu=clamp((tl-10.5)/1.3);if(bu>0&&bu<1){for(let i=0;i<12;i++){const sz=(i<3?9:2.5)+6*r(),x0=W*(.3+.45*r()),sp=.6+.8*r(),d=r()*.3,u=clamp((bu-d)/(1-d));if(u<=0)continue;const y=H+30-u*sp*(H+260),x=x0+18*Math.sin(u*9+i);if(y<-20)continue;
   g.globalAlpha=(1-u)*.9;g.beginPath();g.arc(x,y,sz,0,7);g.strokeStyle='rgba(235,245,240,.85)';g.lineWidth=1.4;g.stroke();g.fillStyle='rgba(235,245,240,.12)';g.fill();g.beginPath();g.arc(x-sz*.35,y-sz*.35,sz*.25,0,7);g.fillStyle='rgba(255,255,255,.8)';g.fill()}g.globalAlpha=1}
  // しずく：水の上だった所に、くぐる直前に跳ねたしずくがレンズに残る
  if(cross>0){const fd=1-clamp((tl-10.8)/.9);if(fd>0){for(let i=0;i<9;i++){const x=W*(.08+.84*r()),y=H*(.06+.4*r()),rr=8+22*r();if(y>sy-10)continue;g.globalAlpha=fd*cross*.7;g.beginPath();g.arc(x,y+30*(1-fd)*r(),rr,0,7);g.fillStyle='rgba(200,225,215,.18)';g.fill();g.lineWidth=2;g.strokeStyle='rgba(250,255,250,.5)';g.stroke()}g.globalAlpha=1}}
