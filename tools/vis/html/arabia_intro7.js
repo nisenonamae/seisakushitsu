@@ -14,10 +14,10 @@ const MV={...hv(2),tn:-.5},CV={...hv(33),tn:1,L:.8};   /* 母は年を経た灰�
 function honk(u,D){D=D||5.6;if(u<0||u>D)return null;
  const lean=ease(clamp((u-.25)/1.1))*(1-ease(clamp((u-(D-1.2))/1.2)));          // 体を水から乗り出す
  const wz=u>=1.0&&u<2.3?ease(clamp((u-1.0)/.9)):0;                                // ウィーズ：口をゆっくり開けて、ふくらむ
- const hs=2.3,he=D-1.2,hp=.5;let hk=0;if(u>=hs&&u<he){const k=((u-hs)%hp)/hp;hk=Math.exp(-k*5.5)}   // ホンク：0.5秒ごと。笑うように頭が小さくゆれる
+ const hs=2.3,he=D-1.2,hp=.5;let hk=0;if(u>=hs&&u<he){const k=((u-hs)%hp)/hp;hk=k<.18?Math.sin(k/.18*Math.PI/2):Math.exp(-(k-.18)*5)}   /* 口は数コマかけて開く（1コマでパカッと開いた。自然3周目） */   // ホンク：0.5秒ごと。笑うように頭が小さくゆれる
  const inh=u<1.0?Math.sin(clamp(u/1.0)*Math.PI):0;                                // 鳴く前に息を吸う（鼻の穴がひらく）
  const wo=u>=1.0?ease(clamp((u-1.5)/.6)):0;   /* 口を閉じたまま吸い、のどがふくらんでから開く（自然2周目） */
- return{jaw:clamp(.02*lean+.1*wz*wo+(u>=hs&&u<he?.03+.17*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.1*hk:0),fl:-12*lean+(u>=hs&&u<he?5*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
+ return{jaw:clamp(.02*lean+.1*wz*wo+(u>=hs&&u<he?.03+.17*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.1*hk:0),fl:-3*lean+(u>=hs&&u<he?2*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
 function honkRings(h0,u,D,out){if(u<0)return;D=D||5.6;out.push({age:u-1.0,x:180,w:140});for(let j=0;j<8;j++){const a=u-(2.3+j*.5);if(2.3+j*.5<D-1.2)out.push({age:a,x:200,w:90})}}
 // ─ 水の中の歩み：1歩＝けって → のびてすべる → あしを戻して着く ─
 function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.72*eout(clamp((c-.06)/.62))+.28*c)*stride;   /* けった直後に速く、すべるにつれて遅く（等速に見えた。自然の番・1周目） */   /* けった直後に強く進み、すべる間もゆっくり進み続ける（止まって見えた・7版挑戦の番） */
@@ -107,7 +107,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
   for(const {h,i} of order){let st={fl:h.fl,jaw:0,tilt:-.04,ev:[]},yaw=h.yaw,x=h.x;
    if(h.c!=null){const hn=honk(tl-h.c,5.0);if(hn){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-h.c,5.0,st.ev)}}
    if(meet){const turn=ease(clamp((tl-17.6-i*.12)/1.2));yaw=lerp(h.yaw,h.x>mx?175:10,turn*.8);
-    const hn=honk(tl-(22.6+(i%3)*.35),4.8);if(hn&&h.s>.6){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-(22.6+(i%3)*.35),4.8,st.ev)}}
+    const hs0=21.4+[0,.45,.2,.7,.3][i%5];const hn=honk(tl-hs0,4.8);if(hn&&h.s>.6){st.jaw=hn.jaw;st.tilt+=hn.tilt;st.fl=h.fl+hn.fl;honkRings(h,tl-hs0,4.8,st.ev)}   /* ★の時に鳴いている。加わる時をばらす（自然3周目） */}
    x=hx(h);if(h.F&&meet){const ap=ease(clamp((tl-18.6)/2.0)),sn=clamp((tl-20.6)/1.4);yaw=lerp(170,190,ap);st.tilt+=.12*Math.sin(Math.PI*sn)}   // 寄ってきて、子のにおいをかぐ
    const far=!h.F&&h.y<=520&&lv>.5;if(far){st.hz=.38;st.hzc='#a9bbb0'}   /* 奥のカバは空気でうすく（主役のまわりを空ける。心地よさ2周目） */
    hp3({x,y:SURF+(h.y-SURF)*Math.max(f,.08),s:h.s*(far?.86:1),yaw,seed:h.seed,v:hv(h.seed)},t,st);if(!far)wline(x,SURF+(h.y-SURF)*Math.max(f,.08),h.s,yaw,t,h.seed,1)}
@@ -117,7 +117,7 @@ SC.intro7=function(t){const TA=2.8;if(t<TA){grass4(t);return}
    const ck=clamp((tl-7.4)/.9),nz=Math.sin(Math.PI*clamp((tl-3.2)/1.6));   // 子：母の鳴き声のあいだ、母の顔に寄る
    hp3({x:540-60*nz,y:yv(588,f),s:.4,yaw:14+30*nz,seed:33,v:CV},t,{fl:lerp(22,140,ease(ck)),tilt:-.04})}
   if(atHerd&&my<=SURF+150){const up=clamp((tl-17.4)/.6),turn=ease(clamp((tl-18.0)/1.6)),cl=ease(clamp((tl-25)/1.5));
-   const hn=honk(tl-22.9,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-22.9,4.8,o.ev);
+   const hn=honk(tl-21.1,4.8);const o={fl:Math.max(28,Math.min(120,(my-SURF)/.95))+(hn?hn.fl:0),jaw:hn?hn.jaw:0,tilt:(hn?hn.tilt:0)-.04,puff:clamp((tl-18.05)/.9),ev:[]};if(hn)honkRings(null,tl-21.1,4.8,o.ev);
    hp3({x:mx+30*cl,y:SURF+2,s:.95,yaw:lerp(10,40,turn),seed:2,v:MV},t,o);wline(mx+30*cl,SURF+2,.95,lerp(10,40,turn),t,2,1);
    const cu=clamp((tl-18.0)/.6),hide=ease(clamp((tl-21.3)/.9)),go=ease(clamp((tl-19.6)/1.0))*(1-hide);   // 子：浮かんで、Fと鼻を合わせに出て、母のうしろへもどる
    hp3({x:calfX(tl,mx),y:SURF+12,s:.5,yaw:lerp(20,10,hide),seed:33,v:CV},t,{fl:lerp(80,20,eout(cu)),puff:clamp((tl-18.1)/.7),tilt:-.04+.1*go*Math.sin(tl*6)})}
