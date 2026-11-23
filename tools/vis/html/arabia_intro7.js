@@ -14,10 +14,10 @@ const MV={...hv(2),tn:-.5},CV={...hv(33),tn:1,L:.8};   /* 母は年を経た灰�
 function honk(u,D){D=D||5.6;if(u<0||u>D)return null;
  const lean=ease(clamp((u-.25)/1.1))*(1-ease(clamp((u-(D-1.2))/1.2)));          // 体を水から乗り出す
  const wz=u>=1.0&&u<2.3?ease(clamp((u-1.0)/.9)):0;                                // ウィーズ：口をゆっくり開けて、ふくらむ
- const hs=2.3,he=D-1.2,hp=.5;let hk=0;if(u>=hs&&u<he){const k=((u-hs)%hp)/hp;hk=k<.18?Math.sin(k/.18*Math.PI/2):Math.exp(-(k-.18)*5)}   /* 口は数コマかけて開く（1コマでパカッと開いた。自然3周目） */   // ホンク：0.5秒ごと。笑うように頭が小さくゆれる
+ const hs=2.3,he=D-1.2,hp=.5;let hk=0;if(u>=hs&&u<he){const k=((u-hs)%hp)/hp;hk=Math.exp(-k*5.5)}   // ホンク：0.5秒ごと。笑うように頭が小さくゆれる
  const inh=u<1.0?Math.sin(clamp(u/1.0)*Math.PI):0;                                // 鳴く前に息を吸う（鼻の穴がひらく）
  const wo=u>=1.0?ease(clamp((u-1.5)/.6)):0;   /* 口を閉じたまま吸い、のどがふくらんでから開く（自然2周目） */
- return{jaw:clamp(.02*lean+.1*wz*wo+(u>=hs&&u<he?.03+.17*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.1*hk:0),fl:-3*lean+(u>=hs&&u<he?2*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
+ return{jaw:clamp(.02*lean+.1*wz*wo+(u>=hs&&u<he?.03+.17*hk:0),0,.22),tilt:-.16*lean-.05*wz+(u>=hs&&u<he?.1*hk:0),fl:-12*lean+(u>=hs&&u<he?5*hk:0),lean:.09*lean+.02*hk,hk,inh,honkAt:u>=hs&&u<he?Math.floor((u-hs)/hp):-1}}
 function honkRings(h0,u,D,out){if(u<0)return;D=D||5.6;out.push({age:u-1.0,x:180,w:140});for(let j=0;j<8;j++){const a=u-(2.3+j*.5);if(2.3+j*.5<D-1.2)out.push({age:a,x:200,w:90})}}
 // ─ 水の中の歩み：1歩＝けって → のびてすべる → あしを戻して着く ─
 function gait(tl,T,stride){const n=Math.floor(tl/T),c=((tl/T)%1+1)%1,adv=(n+.72*eout(clamp((c-.06)/.62))+.28*c)*stride;   /* けった直後に速く、すべるにつれて遅く（等速に見えた。自然の番・1周目） */   /* けった直後に強く進み、すべる間もゆっくり進み続ける（止まって見えた・7版挑戦の番） */
