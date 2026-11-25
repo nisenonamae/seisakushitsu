@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><title>加筆 — 素材の直し</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;background:#f4f2ec;color:#2a2926;height:100vh;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#fff;border-bottom:1px solid #dcd8cc}
+header b{font-size:15px;margin-right:8px}header .sp{flex:1}
+button,select,input,textarea{font:inherit}button{border:1px solid #c9c4b6;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer}button:hover{background:#f1eee6}
+button.main{background:#2a2926;color:#fff;border-color:#2a2926}button.on{outline:2px solid #2a2926}
+main{display:grid;grid-template-columns:200px minmax(0,1fr) 290px;min-height:0}
+#list{overflow:auto;background:#fbfaf6;border-right:1px solid #dcd8cc;padding:8px}
+.it{border:1px solid #dcd8cc;border-radius:8px;padding:6px;margin-bottom:8px;cursor:pointer;background:#fff}.it.cur{outline:2px solid #2a2926}
+.it img{width:100%;height:84px;object-fit:contain;background:#e9e6dc;border-radius:4px;display:block}.it .n{font-size:12px;margin-top:4px}.it .m{font-size:11px;color:#77736a;display:flex;justify-content:space-between}
+.v-ok{color:#2c7a4b}.v-fix{color:#a8640a}.v-redo{color:#b23b3b}
+#stage{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:14px;min-height:0}
+canvas{background:#e9e6dc;box-shadow:0 0 0 1px #c9c4b6;cursor:crosshair;max-width:100%;max-height:100%;touch-action:none}
+#side{overflow:auto;background:#fff;border-left:1px solid #dcd8cc;padding:10px 12px}
+h3{font-size:12px;color:#77736a;font-weight:500;margin:12px 0 6px}h3:first-child{margin-top:0}
+.attr{display:grid;gap:5px}.attr button{text-align:left;display:grid;grid-template-columns:14px 1fr;gap:8px;align-items:center;padding:6px 8px}
+.attr small{display:block;color:#77736a;font-size:11px;line-height:1.3}.dot{width:12px;height:12px;border-radius:50%}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:6px}.row label{font-size:12px;color:#77736a;min-width:44px}
+textarea,input[type=text],select{width:100%;border:1px solid #c9c4b6;border-radius:6px;padding:5px 7px;background:#fff}
+.st{border:1px solid #e4e0d4;border-radius:6px;padding:5px 7px;margin-bottom:5px;font-size:12px}.st.hi{background:#f6f1e1}
+.st .h{display:flex;gap:6px;align-items:center}.st .h span.t{flex:1}.st input{margin-top:4px;font-size:12px}.st button{padding:0 6px;border:none;color:#b23b3b;background:none}
+.verd{display:flex;gap:6px}.verd button{flex:1}
+#hint{font-size:11px;color:#77736a;margin-top:10px;line-height:1.6}
+</style></head><body>
+<header><b>加筆</b><span id="title"></span><span class="sp"></span>
+<button id="bView" title="線を、塗った色ではなく属性の色で見る">属性の色で見る</button>
+<button id="bUndo">1つ戻す</button>
+<button id="bOpen">素材を開く</button><input id="file" type="file" accept=".json,image/*" multiple hidden>
+<button id="bOut" class="main">まとめて書き出す</button></header>
+<main><div id="list"></div><div id="stage"><canvas id="cv"></canvas></div>
+<div id="side">
+<h3>この線は何の直しか（1〜5キー）</h3><div class="attr" id="attrs"></div>
+<h3>筆</h3>
+<div class="row"><label>色</label><input type="color" id="col" value="#7a6c6a"><span style="font-size:11px;color:#77736a">Alt＋クリックで絵から色を拾う</span></div>
+<div class="row"><label>太さ</label><input type="range" id="size" min="2" max="60" value="8" style="flex:1"><span id="sizeV">8</span></div>
+<div class="row"><label>部品</label><select id="part"></select></div>
+<h3>この素材の判定</h3><div class="verd" id="verd"></div>
+<h3>この素材へのひとこと</h3><textarea id="note" rows="2" placeholder="例：全体にもっと丸く。鼻づらは四角く広い"></textarea>
+<h3>描いた線（<span id="cnt">0</span>）</h3><div id="strokes"></div>
+<div id="hint">線は自動で保存される。全部見終わったら「まとめて書き出す」で1つのファイルになるので、それを Claude に渡す。</div>
+</div></main>
+<script>
+const ATTR=[['fine','細かい直し','色・線・模様を、描いたとおりに','#2c7a4b'],['shape','形を変える','輪郭をこの線の形へ寄せる','#1f6fb2'],['redo','作り直す','この下描きから学んで描き直す','#b23b3b'],['erase','消す','塗った・囲んだ所をなくす','#77736a'],['place','置き方・構図','位置・大きさ・重なりを変える','#8a4fb5']];
+const AN=Object.fromEntries(ATTR.map(a=>[a[0],a])),VERD=[['ok','合格','v-ok'],['fix','直す','v-fix'],['redo','作り直す','v-redo']];
+let PACK=/*PACK*/null,items=[],cur=0,attr='fine',view=false,draw=null,hi=-1;const imgs={},cv=document.getElementById('cv'),g=cv.getContext('2d'),$=id=>document.getElementById(id);
+const key=()=>'kahitsu:'+(PACK?.pack||'own');
+function save(){try{localStorage.setItem(key(),JSON.stringify(items.map(i=>({id:i.id,strokes:i.strokes,note:i.note,verdict:i.verdict}))))}catch(e){}}
+function load(p){PACK=p;items=p.items.map(i=>({...i,strokes:[],note:'',verdict:''}));try{const s=JSON.parse(localStorage.getItem(key())||'[]');for(const o of s){const it=items.find(i=>i.id===o.id);if(it)Object.assign(it,o)}}catch(e){}
+ $('title').textContent=p.title||'';let n=0;items.forEach(it=>{const im=new Image();im.onload=()=>{it.w=im.naturalWidth;it.h=im.naturalHeight;if(++n===items.length){cur=0;all()}};im.src=it.src;imgs[it.id]=im})}
+function all(){list();sel(cur)}
+function list(){$('list').innerHTML='';items.forEach((it,i)=>{const d=document.createElement('div');d.className='it'+(i===cur?' cur':'');const v=VERD.find(v=>v[0]===it.verdict);
+ d.innerHTML=`<img src="${it.src}"><div class="n">${it.name}</div><div class="m"><span>${it.kind||''}</span><span class="${v?v[2]:''}">${v?v[1]:(it.strokes.length?'線 '+it.strokes.length:'まだ')}</span></div>`;d.onclick=()=>sel(i);$('list').appendChild(d)})}
+function sel(i){cur=i;const it=items[i];if(!it)return;cv.width=it.w;cv.height=it.h;$('part').innerHTML='<option value="">（決めない）</option>'+(it.parts||[]).map(p=>`<option>${p}</option>`).join('');$('note').value=it.note||'';list();side();paint()}
+function side(){const it=items[cur];$('cnt').textContent=it.strokes.length;$('strokes').innerHTML='';it.strokes.forEach((s,k)=>{const d=document.createElement('div');d.className='st'+(k===hi?' hi':'');
+  d.innerHTML=`<div class="h"><span class="dot" style="background:${AN[s.attr][3]}"></span><span class="t">${k+1}　${AN[s.attr][1]}${s.part?'・'+s.part:''}</span><button title="消す">×</button></div><input type="text" placeholder="ひとこと（なくてもいい）">`;
+  const inp=d.querySelector('input');inp.value=s.note||'';inp.oninput=()=>{s.note=inp.value;save()};d.onmouseenter=()=>{hi=k;paint()};d.onmouseleave=()=>{hi=-1;paint()};d.querySelector('button').onclick=()=>{it.strokes.splice(k,1);hi=-1;save();side();paint();list()};$('strokes').appendChild(d)});
+ $('verd').innerHTML='';VERD.forEach(v=>{const b=document.createElement('button');b.textContent=v[1];if(it.verdict===v[0])b.className='on';b.onclick=()=>{it.verdict=it.verdict===v[0]?'':v[0];save();side();list()};$('verd').appendChild(b)})}
+function stroke(s,k){const c=view?AN[s.attr][3]:(s.attr==='erase'?'#ffffff':s.attr==='place'?'#8a4fb5':s.color);g.save();g.lineCap=g.lineJoin='round';g.lineWidth=s.size;g.strokeStyle=c;g.fillStyle=c;g.globalAlpha=s.attr==='erase'&&!view?.8:(s.attr==='redo'||s.attr==='shape')&&!view?.9:1;
+ if(s.attr==='erase'&&!view)g.setLineDash([2,s.size*1.6]);if(s.attr==='place')g.setLineDash([s.size*2,s.size*1.5]);
+ g.beginPath();if(s.pts.length<2){g.arc(s.pts[0][0],s.pts[0][1],s.size/2,0,7);g.fill()}else{g.moveTo(...s.pts[0]);for(const p of s.pts)g.lineTo(...p);g.stroke()}
+ if(s.attr==='place'&&s.pts.length>3){const a=s.pts[s.pts.length-1],b=s.pts[Math.max(0,s.pts.length-6)],th=Math.atan2(a[1]-b[1],a[0]-b[0]),L=s.size*3+8;g.setLineDash([]);g.beginPath();g.moveTo(a[0]+L*Math.cos(th),a[1]+L*Math.sin(th));g.lineTo(a[0]+L*.7*Math.cos(th+2.2),a[1]+L*.7*Math.sin(th+2.2));g.lineTo(a[0]+L*.7*Math.cos(th-2.2),a[1]+L*.7*Math.sin(th-2.2));g.fill()}
+ if(k===hi||view){const p=s.pts[0];g.setLineDash([]);g.globalAlpha=1;g.font='500 15px system-ui';g.fillStyle='#fff';g.strokeStyle='#2a2926';g.lineWidth=3;g.strokeText(k+1,p[0]+6,p[1]-6);g.fillText(k+1,p[0]+6,p[1]-6)}
+ if(k===hi){g.globalAlpha=.35;g.lineWidth=s.size+10;g.strokeStyle='#f2c230';g.beginPath();g.moveTo(...s.pts[0]);for(const p of s.pts)g.lineTo(...p);g.stroke()}g.restore()}
+function paint(){const it=items[cur];if(!it)return;g.clearRect(0,0,cv.width,cv.height);g.drawImage(imgs[it.id],0,0);it.strokes.forEach(stroke);if(draw)stroke(draw,-2)}
+function pos(e){const r=cv.getBoundingClientRect();return[Math.round((e.clientX-r.left)*cv.width/r.width),Math.round((e.clientY-r.top)*cv.height/r.height)]}
+cv.onpointerdown=e=>{const p=pos(e),it=items[cur];if(e.altKey){g.clearRect(0,0,cv.width,cv.height);g.drawImage(imgs[it.id],0,0);const d=g.getImageData(p[0],p[1],1,1).data;$('col').value='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');paint();return}
+ cv.setPointerCapture(e.pointerId);draw={attr,part:$('part').value,color:$('col').value,size:+$('size').value,pts:[p],note:''};paint()};
+cv.onpointermove=e=>{if(!draw)return;const p=pos(e),q=draw.pts[draw.pts.length-1];if(Math.hypot(p[0]-q[0],p[1]-q[1])>=2){draw.pts.push(p);paint()}};
+cv.onpointerup=cv.onpointercancel=()=>{if(!draw)return;const it=items[cur];it.strokes.push(draw);if(it.verdict==='ok'||!it.verdict)it.verdict=draw.attr==='redo'?'redo':'fix';draw=null;save();side();paint();list()};
+function attrs(){$('attrs').innerHTML='';ATTR.forEach((a,i)=>{const b=document.createElement('button');if(a[0]===attr)b.className='on';b.innerHTML=`<span class="dot" style="background:${a[3]}"></span><span>${i+1}　${a[1]}<small>${a[2]}</small></span>`;b.onclick=()=>{attr=a[0];attrs()};$('attrs').appendChild(b)})}
+function undo(){const it=items[cur];if(it&&it.strokes.pop()){save();side();paint();list()}}
+$('bUndo').onclick=undo;$('bView').onclick=()=>{view=!view;$('bView').className=view?'on':'';paint()};$('size').oninput=()=>$('sizeV').textContent=$('size').value;$('note').oninput=()=>{items[cur].note=$('note').value;save()};
+addEventListener('keydown',e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}else if(e.key>='1'&&e.key<='5'){attr=ATTR[+e.key-1][0];attrs()}else if(e.key==='['||e.key===']'){$('size').value=+$('size').value+(e.key===']'?3:-3);$('size').oninput()}else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel(Math.max(0,Math.min(items.length-1,cur+(e.key==='ArrowDown'?1:-1))))}});
+$('bOpen').onclick=()=>$('file').click();
+$('file').onchange=async e=>{const fs=[...e.target.files];if(!fs.length)return;if(fs[0].name.endsWith('.json')){load(JSON.parse(await fs[0].text()));return}
+ const rd=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});const its=[];for(const f of fs)its.push({id:f.name,name:f.name,kind:'自分で開いた絵',own:true,parts:[],src:await rd(f)});load({pack:'own_'+fs.map(f=>f.name).join('_').slice(0,60),title:'自分で開いた絵',items:its})};
+$('bOut').onclick=()=>{const d=new Date(),ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'_'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0');
+ const out={kahitsu:1,pack:PACK.pack,title:PACK.title,exported:d.toISOString(),attrs:Object.fromEntries(ATTR.map(a=>[a[0],a[1]+'：'+a[2]])),items:items.map(i=>({id:i.id,name:i.name,kind:i.kind,w:i.w,h:i.h,verdict:i.verdict,note:i.note,strokes:i.strokes,...(i.own?{src:i.src}:{})}))};
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out)],{type:'application/json'}));a.download='kahitsu_'+PACK.pack+'_'+ds+'.json';a.click()};
+attrs();if(PACK)load(PACK);
+</script></body></html>
