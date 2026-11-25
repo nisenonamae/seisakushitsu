@@ -29,7 +29,7 @@ def main(packf,retf,od):
     pack={i['id']:i for i in json.load(open(packf,encoding='utf-8'))['items']};ret=json.load(open(retf,encoding='utf-8'));os.makedirs(od,exist_ok=True);md=[f'# 部品の直し：{ret.get("title","")}（{ret["exported"][:16]}）','']
     for r in ret['items']:
         it=pack[r['id']];md+=[f'## {r["name"]}（{r["id"]}）','- 判定：'+VERD.get(r.get('verdict',''),'?'),'- ひとこと：'+(r.get('memo') or 'なし')]
-        if not r.get('log'): md+=['- 直し：なし',''];continue
+        if not r.get('log') and not r.get('sketch'): md+=['- 直し：なし',''];continue
         a=render(it,it['parts']);b=render(it,r['parts'],r.get('sketch'));S=Image.new('RGB',(a.width*2+10,a.height),'white');S.paste(a,(0,0));S.paste(b,(a.width+10,0));S.save(os.path.join(od,r['id']+'.png'))
         md+=['- やった直し（順に）：']+['  - '+l.get('text',json.dumps(l,ensure_ascii=False)) for l in r['log']]
         o={p['id']:p for p in it['parts']}
@@ -45,6 +45,8 @@ def main(packf,retf,od):
             if p.get('strokes'): ch.append(f'塗り {len(p["strokes"])} 本')
             if abs(p['z']-q['z'])>1e-6: ch.append(f'重なり {q["z"]}→{p["z"]}')
             if ch: md.append(f'  - 変わった部品：{p["name"]}（'+'・'.join(ch)+'）')
+        for q in it['parts']:
+            if not any(p['id']==q['id'] for p in r['parts']): md.append(f'  - 消えた部品：{q["name"]}')
         md+=[f'- 絵：`{r["id"]}.png`（左＝直す前、右＝直した後）','']
     open(os.path.join(od,'読む.md'),'w',encoding='utf-8').write('\n'.join(md));print('出力：',od)
 if __name__=='__main__': main(*sys.argv[1:4])
