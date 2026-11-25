@@ -11,6 +11,7 @@
 ## アプリの中身
 - `index.html`：制作（11の手順）／候補／ひらめき／検索／ポイント／工夫／数字／設定。頼みごと（jobs）を出す所。A/B テストもここ
 - `bgm.html` 音楽の棚／`sound.html` 音の調整室（BGM 編集）／`voice.html` 声の調整（Mac 用）／`draw.html` お絵描き（Photoshop 風・作り手の手描き）
+- 素材の直し（作り手が種類を付けて描き込む）：お絵描きの「🩹 直し」。受け取ったら `tools/WORKER.md` の「素材の直し（art_fix）」。素材を作る前に `docs/refs/sozai_kimari.md` を読む（あれば）
 - `draw.html` を直すときは `docs/notes/draw.md` を読む。**レイヤーの絵を書き換える処理は `pushPatch`／`structOp` を通すか `bump()` を呼ぶ**。直したら `tools/draw_selfcheck.js`（fails 0）
 - `tools/WORKER.md`：頼みごと（jobs）の種類ごとの手順。**とても長いので全部は読まない**。見出し（`## 〜`）を grep で探して、その頼みごとの所だけ読む
 - `tools/final_export.py`：本番の書き出しを1つの命令で（下の「トークンの節約」）。`tools/render_draft.py`（動画の書き出し）、`tools/vis/`（図解の部品）ほか

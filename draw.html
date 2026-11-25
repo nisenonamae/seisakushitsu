@@ -106,9 +106,9 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .fin img{width:100%;border-radius:6px;border:1px solid var(--line);background:repeating-conic-gradient(#888 0 25%,#bbb 0 50%) 0 0/12px 12px}
 #dlgBody .rowx>label{min-width:7em}
 #sideTabs{position:sticky;top:0;z-index:5;display:flex;gap:3px;padding:5px 6px 0;background:var(--paper);border-bottom:1px solid #000}
-#sideTabs button{flex:1;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:var(--row);color:var(--sub);font-size:12.5px;padding:6px 0;cursor:pointer}
+#sideTabs button{flex:1;white-space:nowrap;min-width:0;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:var(--row);color:var(--sub);font-size:12.5px;padding:6px 0;cursor:pointer}
 #sideTabs button.on{background:#2e4a6d;color:#fff;font-weight:700;border-color:var(--sea)}
-#side .panel.tabOff{display:none!important}
+#side .panel.tabOff{display:none!important}#fixBox .fxNav{display:flex;align-items:center;gap:6px;margin-bottom:8px}#fixBox .fxNav b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}#fixBox .fxSub{font-size:11.5px;color:var(--sub);margin:-4px 0 8px}#fixBox h4{font-size:11.5px;color:var(--sub);margin:12px 0 5px;font-weight:700;letter-spacing:.04em}#fixBox .fxA{display:grid;gap:4px}#fixBox .fxA button{display:grid;grid-template-columns:12px 1fr;gap:8px;align-items:center;text-align:left;background:var(--row);border:1px solid var(--line);border-radius:7px;padding:6px 8px}#fixBox .fxA button:hover{background:var(--row2)}#fixBox .fxA button.on{border-color:var(--sea);background:var(--row2);box-shadow:inset 3px 0 0 var(--sea)}#fixBox .fxA i{width:11px;height:11px;border-radius:50%;display:block}#fixBox .fxA small{display:block;color:var(--sub);font-size:11px}#fixBox .fxV{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}#fixBox .fxV button{background:var(--row);border:1px solid var(--line);border-radius:7px;padding:6px 0}#fixBox .fxV button.on.ok{background:var(--good);border-color:var(--good);color:#10231a}#fixBox .fxV button.on.fix{background:#e0a23a;border-color:#e0a23a;color:#2a1c05}#fixBox .fxV button.on.redo{background:var(--busy);border-color:var(--busy);color:#2a0f0a}#fixBox textarea,#fixBox select{width:100%;padding:5px 7px}#fixBox textarea{resize:vertical;min-height:52px}#fixBox .fxList{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}#fixBox .fxList button{padding:0;border:2px solid transparent;border-radius:6px;background:var(--stage);position:relative;overflow:hidden;aspect-ratio:4/3}#fixBox .fxList button.cur{border-color:var(--sea)}#fixBox .fxList img{width:100%;height:100%;object-fit:contain;display:block}#fixBox .fxList em{position:absolute;right:2px;bottom:2px;width:9px;height:9px;border-radius:50%;border:1px solid #000}#fixBox .fxSum{font-size:11.5px;color:var(--sub);margin:6px 0}#fixBox .fxOut{display:grid;gap:5px;margin-top:6px}
 #layWrap{max-height:max(220px,calc(100vh - 330px));overflow:auto;overscroll-behavior:contain;margin-top:4px;border-radius:6px}
 .lay.fold{background:#3a3550}.lay.fold .nm{font-weight:700}.lay.fold .cnt{color:var(--sub);font-weight:400;font-size:11px;margin-left:4px}
 .lay.fold.on{border-color:var(--sea);background:#40416d}
@@ -152,7 +152,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div id="tools"></div>
 <div id="stage"><canvas id="view"></canvas><div id="zoomLab"></div><div id="hint"></div></div>
 <aside id="side">
- <div id="sideTabs"><button data-st="col">🎨 色</button><button data-st="lay">📚 レイヤー</button><button data-st="etc">🕘 ほか</button></div>
+ <div id="sideTabs"><button data-st="col">🎨 色</button><button data-st="lay">📚 レイヤー</button><button data-st="etc">🕘 ほか</button><button data-st="fix" id="fixTab" style="display:none">🩹 直し</button></div>
  <div class="panel" id="colPanel" data-tab="col"><h3>色<span class="sp"></span><button class="b" id="colDel" title="押してから色を押すと、その色を消せます（取った色・最近・色のセット）">✕ いらない色を消す</button></h3>
  <div class="rowx"><span id="curSw" class="sw" style="width:34px;height:34px;display:inline-block"></span><button class="b main" id="pickNew">＋ 新しい色を作る</button><button class="b" id="saveMy" title="今の描画色を、選んでいる色のセットに足す（名前を付けられます）">＋ 今の色をセットに足す</button></div>
  <div class="rowx"><button class="b" id="screenPick" title="ほかのタブやアプリに出ている色も取れます">🎯 画面のどこからでも色を取る</button><button class="b" id="pickFloat" title="小さなスポイトの窓を、ほかのタブ・アプリの上に浮かせておく。ほかの画面を見ながら、いつでも押して色を取れる">📌 スポイトを浮かせる</button><button class="b" id="imgPick" title="スクショや画像を貼って、押した所の色を取る">🖼 画像から色を取る</button></div>
@@ -180,6 +180,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
   <div class="lead" style="margin:6px 0 2px;font-weight:700">絵や素材を足す</div>
   <div class="rowx"><button class="b" id="reuseBtn" title="前に描いた絵のレイヤーを、今の絵に取り込む">＋ 前の絵から</button><button class="b" id="traceBtn" title="なぞり用の画像をうすく後ろに置く">＋ なぞる画像</button><button class="b" id="traceXfBtn" title="なぞる画像を選んで、大きさ・位置・向きを変える（自由変形）。四すみをつまむと大きさ、中をつまむと移動" style="display:none">↔ なぞる画像を動かす</button><button class="b" id="traceTopBtn" title="なぞる画像を、塗った色の上に透かして見る（見るだけ・書き出しには入らない）。もう一度押すと後ろに戻る" style="display:none">👁 なぞる画像を上に</button><button class="b" id="partPutBtn" title="保存しておいた素材を、今の絵に置く">＋ 素材を置く</button><button class="b" id="partSaveBtn" title="選んでいるレイヤー（選択範囲があればその中だけ）を、ほかの絵でも使える素材として保存する">⭐ 素材にする</button><button class="b" id="flatBtn" title="写真の似た色をまとめて、Kurzgesagt 風の平らな絵にする（物の色ごとにレイヤーを分け、影・光はクリップで重ねる）">📷 写真を絵に</button></div>
  </div>
+ <div class="panel" data-tab="fix" id="fixPanel"><div id="fixBox"></div></div>
  <div class="panel" data-tab="etc"><h3>ヒストリー</h3><div id="hist"></div></div>
  <div class="panel" data-tab="etc"><h3>見え方（実際の大きさ）</h3><div class="pv" id="pv"></div></div>
  <div class="panel" data-tab="etc" id="finPanel" style="display:none"><h3 id="finPanelT">Claude の仕上げ</h3><div id="finBox"></div></div>
@@ -201,7 +202,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
  <textarea id="finNote" rows="4" style="width:100%;padding:6px 8px" placeholder=""></textarea>
  <div class="rowx" style="justify-content:flex-end"><button class="b" id="finCancel">やめる</button><button class="b main" id="finSend">頼む</button></div>
 </dialog>
-<input type="file" id="fileIn" accept="image/*,.psd" hidden><input type="file" id="fontIn" accept=".ttf,.otf,.woff,.woff2,font/*" hidden>
+<input type="file" id="fileIn" accept="image/*,.psd" hidden><input type="file" id="fixIn" accept=".json,application/json" hidden><input type="file" id="fontIn" accept=".ttf,.otf,.woff,.woff2,font/*" hidden>
 
 <script>
 'use strict';
@@ -216,7 +217,7 @@ const cloneCv=c=>{const n=mk(c.width,c.height);g2(n).drawImage(c,0,0);return n};
 const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);const CMD=isMac?'⌘':'Ctrl+';
 
 /* ===== 描くもの（YouTube の決まりの大きさ） ===== */
-const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},video:{n:'動画用',w:1920,h:1080,note:'動画の場面に使う絵。動かしたい物はレイヤーを分けて、レイヤーに名前を付けてください（例：雲・車・人の腕）。下の点線より下は字幕が出ます'},free:{n:'自由',w:1200,h:1200,note:''},part:{n:'素材',w:1000,h:1000,note:'よく使う素材。ほかの絵で「＋ 素材を置く」から置けます'}};
+const KINDS={icon:{n:'アイコン',w:800,h:800,note:'丸く切り取られます。大事なものは真ん中に、太い線で'},banner:{n:'バナー',w:2560,h:1440,note:'スマホで見えるのは赤い枠の中だけ。左右はパソコン・テレビ用のおまけ'},mark:{n:'透かし',w:600,h:600,note:'動画の右下に小さく出ます。形は1つに'},thumb:{n:'サムネ',w:1280,h:720,note:'右下は再生時間で隠れます'},ending:{n:'エンディング',w:1920,h:1080,note:'宇宙と地球だけ描きます。文字と動画の枠は、動画にするときに上から重ねます（点線は目安）'},video:{n:'動画用',w:1920,h:1080,note:'動画の場面に使う絵。動かしたい物はレイヤーを分けて、レイヤーに名前を付けてください（例：雲・車・人の腕）。下の点線より下は字幕が出ます'},free:{n:'自由',w:1200,h:1200,note:''},part:{n:'素材',w:1000,h:1000,note:'よく使う素材。ほかの絵で「＋ 素材を置く」から置けます'},fix:{n:'素材の直し',w:1000,h:1000,note:'右の「直し」で、直しの種類を選んでから描きます。元の絵は変わりません'}};
 const FONT_LIST=[
  ['丸い','Zen Maru Gothic',900,'丸ゴシック 太'],['丸い','Zen Maru Gothic',500,'丸ゴシック'],['丸い','M PLUS Rounded 1c',800,'M+ 丸ゴシック 太'],['丸い','Kosugi Maru',400,'小杉丸ゴシック'],['丸い','Kiwi Maru',500,'キウイ丸'],
  ['ポップ','Mochiy Pop One',400,'もちもちポップ'],['ポップ','Hachi Maru Pop',400,'はちまるポップ'],['ポップ','Potta One',400,'ぽってり'],['ポップ','Darumadrop One',400,'だるまドロップ'],['ポップ','RocknRoll One',400,'ロックンロール'],
@@ -735,7 +736,7 @@ function layerPickMenu(cx,cy){if(!art)return;const p=toDoc({clientX:cx,clientY:c
 const lpress={t:0,x:0,y:0};function lpCancel(){clearTimeout(lpress.t);lpress.t=0}
 /* ===== 右の欄の見出し（🎨 色／📚 レイヤー／🕘 ほか） ===== */
 let sideTab=LS.get('pd_sideTab','lay');const sideScroll={};
-function setSideTab(t,keep){if(!['col','lay','etc'].includes(t))t='lay';const S=$('side');if(t!==sideTab)sideScroll[sideTab]=S.scrollTop;const ch=t!==sideTab;sideTab=t;LS.set('pd_sideTab',t);
+function setSideTab(t,keep){if(!['col','lay','etc','fix'].includes(t)||(t==='fix'&&!(art&&art.kind==='fix')))t='lay';const S=$('side');if(t!==sideTab)sideScroll[sideTab]=S.scrollTop;const ch=t!==sideTab;sideTab=t;LS.set('pd_sideTab',t);
  document.querySelectorAll('#side .panel[data-tab]').forEach(p=>p.classList.toggle('tabOff',p.dataset.tab!==t));document.querySelectorAll('#sideTabs [data-st]').forEach(b=>b.classList.toggle('on',b.dataset.st===t));if(ch)S.scrollTop=sideScroll[t]||0}
 $('sideTabs').onclick=e=>{const b=e.target.closest('[data-st]');if(b)setSideTab(b.dataset.st)};setSideTab(sideTab);
 $('miniCol').onclick=e=>{const b=e.target.closest('[data-c]');if(b){setFg(b.dataset.c,true);return}if(e.target.closest('#curSw2'))setSideTab('col')};
@@ -1402,7 +1403,7 @@ document.addEventListener('paste',async e=>{if(imgPickOn){const it=[...((e.clipb
 
 /* ===== メニュー ===== */
 const MENUS={
- 'ファイル':[['新規・作品一覧…',()=>openGal()],['画像・写真を開く（新しいレイヤーに）…',()=>pickFile('layer')],['前に描いた絵から取り込む（レイヤーとして）…',()=>openGal('pick')],['なぞり用の画像を置く…',()=>pickFile('trace')],['写真を Kurzgesagt 風の絵にする…',()=>flatDialog()],['紙の絵を線として取り込む…',()=>pickFile('lines')],['PSD を開く…',()=>pickFile('psd')],'-',['保存',()=>{flushSave(true);hint('保存しました')},CMD+'S'],['PNG で書き出す',()=>exportImg('png')],['JPEG で書き出す',()=>exportImg('jpeg')],['PSD で書き出す（Photoshop・アイビス用）',()=>exportPSD()]],
+ 'ファイル':[['新規・作品一覧…',()=>openGal()],['画像・写真を開く（新しいレイヤーに）…',()=>pickFile('layer')],['前に描いた絵から取り込む（レイヤーとして）…',()=>openGal('pick')],['なぞり用の画像を置く…',()=>pickFile('trace')],['素材パックを開く（Claude の素材を直す）…',()=>$('fixIn').click()],['写真を Kurzgesagt 風の絵にする…',()=>flatDialog()],['紙の絵を線として取り込む…',()=>pickFile('lines')],['PSD を開く…',()=>pickFile('psd')],'-',['保存',()=>{flushSave(true);hint('保存しました')},CMD+'S'],['PNG で書き出す',()=>exportImg('png')],['JPEG で書き出す',()=>exportImg('jpeg')],['PSD で書き出す（Photoshop・アイビス用）',()=>exportPSD()]],
  '編集':[['取り消し',undo,CMD+'Z'],['やり直し',redo,'⇧'+CMD+'Z'],'-',['カット',ACT.cut,CMD+'X'],['コピー',ACT.copy,CMD+'C'],['ペースト',ACT.paste,CMD+'V'],['消去',()=>ACT.clear(),'Delete'],'-',['描画色で塗りつぶし',ACT.fillFg,'⌥Delete'],['背景色で塗りつぶし',ACT.fillBg,CMD+'Delete'],['境界線を描く…',ACT.strokeSel],'-',['自由変形',startXform,CMD+'T'],['曲げる（ワープ）',()=>ACT.warpStart()],['左右に反転（レイヤー）',ACT.flipH],['上下に反転（レイヤー）',ACT.flipV]],
  'イメージ':[{h:'色調補正'},['明るさ・コントラスト…',()=>openAdj('bc')],['レベル補正…',()=>openAdj('lv'),CMD+'L'],['色相・彩度…',()=>openAdj('hs'),CMD+'U'],['カラーバランス…',()=>openAdj('cb'),CMD+'B'],['彩度を下げる',()=>openAdj('desat'),'⇧'+CMD+'U'],['階調の反転',()=>openAdj('inv'),CMD+'I'],['2階調化…',()=>openAdj('th')],['ポスタリゼーション…',()=>openAdj('post')],'-',['画像解像度…',()=>ACT.imgSize()],['カンバスサイズ…',()=>ACT.canvasSize()],['選択範囲で切り抜き',ACT.cropSel],'-',['画像の回転 90°（時計回り）',ACT.rot90],['画像の回転 90°（反時計回り）',ACT.rot270],['画像の回転 180°',ACT.rot180],['カンバスを左右に反転',ACT.cflipH],['カンバスを上下に反転',ACT.cflipV],'-',['背景（紙）の色…',()=>bgDialog()]],
  'レイヤー':[['新規レイヤー',()=>LA.new(),'⇧'+CMD+'N'],['レイヤーを複製',()=>LA.dup(),CMD+'J'],['レイヤーを削除',()=>LA.del()],'-',['クリッピングマスクを作成／解除',()=>LA.clip(),'⌥'+CMD+'G'],['重ね順：前面へ',()=>LA.up(),CMD+']'],['重ね順：背面へ',()=>LA.down(),CMD+'['],'-',['下のレイヤーと結合',()=>LA.merge(),CMD+'E'],['表示レイヤーを結合',()=>LA.mergeVis(),'⇧'+CMD+'E'],['画像を統合',()=>LA.flatten()],'-',['選んでいるレイヤーを新しいフォルダに入れる',()=>folderNew(),CMD+'G'],['フォルダから出す',()=>{const l=act();if(l&&l.grp)lyOut(l);else hint('このレイヤーはフォルダに入っていません')}],['フォルダを解く',()=>ACT.grpFree()],['見えているレイヤーを全部1つのフォルダに',()=>ACT.grpMake()],'-',['周りを暗くする（ビネット）',()=>addVignette()],['影のレイヤーを足す（紫がかった紺・薄め）',()=>addShade('dark')],['光のレイヤーを足す（白・薄め）',()=>addShade('light')],['形に沿って明暗を付ける…',()=>autoShade()]],
@@ -1496,23 +1497,23 @@ function renderPreview(){if(!art)return;thumbLayers();const src=composite(true);
 /* ===== 開く・新しく・保存・同期 ===== */
 function updKindTag(){$('kindTag').textContent=KINDS[art.kind].n+` ${art.w}×${art.h}`;updFinBtn()}
 async function openArt(rec){if(art)await flushSave(true);float=null;adj=null;textEdit=null;crop=null;stroke=null;drag=null;SEL=null;selPath=null;hist=[];hpos=0;histBytes=0;lastEnd=null;
- art={id:rec.id,kind:KINDS[rec.kind]?rec.kind:'free',name:rec.name,w:rec.w,h:rec.h,bg:rec.bg??'',rev:rec.rev||0,updatedAt:rec.updatedAt||now(),thumb:rec.thumb};allocTemps();layers=[];
+ art={id:rec.id,kind:KINDS[rec.kind]?rec.kind:'free',name:rec.name,w:rec.w,h:rec.h,bg:rec.bg??'',rev:rec.rev||0,updatedAt:rec.updatedAt||now(),thumb:rec.thumb,fix:rec.fix||null};allocTemps();layers=[];
  if(Array.isArray(rec.layerData)){for(const d of rec.layerData){const{blob,...meta}=d;const l=newLayer(d.name,meta);l.id=d.id;l.cv=mk(art.w,art.h);if(blob){try{const bm=await createImageBitmap(blob);g2(l.cv).drawImage(bm,0,0)}catch(e){}}layers.push(l)}}
  else if(rec.layers&&!Array.isArray(rec.layers)){for(const[k,n]of[['sketch','なぞり用（下書き）'],['color','色'],['line','線']]){const l=newLayer(n,k==='sketch'?{opacity:rec.sketchAlpha??.45,noExport:true,trace:true}:{});if(rec.layers[k]){try{const bm=await createImageBitmap(rec.layers[k]);g2(l.cv).drawImage(bm,0,0)}catch(e){}}layers.push(l)}}
  if(!layers.length)layers=[newLayer('レイヤー 1')];activeId=(rec.activeId&&layers.some(l=>l.id===rec.activeId))?rec.activeId:layers[layers.length-1].id;if(byId(activeId).trace&&layers.some(l=>!l.trace))activeId=layers.filter(l=>!l.trace).pop().id;
- LS.set('pd_open',art.id);$('artName').value=art.name||'';updKindTag();changedIds=new Set();savedCv.clear();layers.forEach(l=>savedCv.set(l.id,l._tok));resize();fit();renderLayers();renderHist();renderPreview();renderFin();renderOpts();if(KINDS[art.kind].note)hint(KINDS[art.kind].note)}
+ LS.set('pd_open',art.id);$('artName').value=art.name||'';updKindTag();changedIds=new Set();savedCv.clear();layers.forEach(l=>savedCv.set(l.id,l._tok));resize();fit();renderLayers();renderHist();renderPreview();renderFin();renderOpts();if(KINDS[art.kind].note)hint(KINDS[art.kind].note);fixOpened()}
 function newArt(kind){const k=KINDS[kind];const n=(D.arts||[]).filter(a=>a.kind===kind&&!a.deleted).length+1;return{id:uid('art'),kind,name:k.n+(n>1?n:''),w:k.w,h:k.h,bg:kind==='icon'||kind==='mark'||kind==='video'?'':kind==='ending'?'#0a0f2c':'#ffffff',rev:0,updatedAt:now(),layerData:[]}}
 async function startNew(kind){await openArt(newArt(kind));OPT.brush.size=({icon:14,banner:24,mark:12,thumb:14,ending:18,free:14}[kind]||14);saveOpt();renderOpts();markAll();await flushSave(false)}
 function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(function go(){if(busyNow()){saveT=setTimeout(go,400);return}flushSave(false)},900);clearTimeout(upT);upT=setTimeout(()=>upload(),600000)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
-function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
-const META=l=>({id:l.id,grp:l.grp||undefined,gname:l.grp&&l.gname||undefined,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text,blur:l.blur||undefined,glow:l.glow||undefined});
+function thumbOf(){const s=Math.min(240/art.w,150/art.h);const c=mk(art.w*s,art.h*s);const k=g2(c);k.fillStyle='#fff';k.fillRect(0,0,c.width,c.height);if(art.kind==='fix')layers.filter(l=>l.trace&&l.visible).forEach(l=>k.drawImage(l.cv,0,0,c.width,c.height));k.drawImage(composite(true),0,0,c.width,c.height);return c.toDataURL('image/jpeg',.72)}
+const META=l=>({id:l.id,grp:l.grp||undefined,gname:l.grp&&l.gname||undefined,name:l.name,opacity:l.opacity,blend:l.blend,visible:l.visible,lockAlpha:l.lockAlpha,clip:l.clip,noExport:l.noExport,trace:l.trace,text:l.text,blur:l.blur||undefined,glow:l.glow||undefined,fix:l.fix||undefined,part:l.part||undefined});
 let saving=null;
 // 保存：レイヤーごとに「版（v）」と「まだ送っていない印（up）」を付けて覚える（ページを開き直しても、送り残しを忘れない）
 async function flushSave(alsoUp){if(!art)return;if(saving)await saving;saving=(async()=>{const old=await dbGet(art.id);const om=new Map(((old&&old.layerData)||[]).map(d=>[d.id,d]));const layerData=[];
  for(const l of layers){const o=om.get(l.id);let blob=o&&o.blob,v=(o&&o.v)||0,up=o?o.up:true;if(!blob||changedIds.has(l.id)||savedCv.get(l.id)!==l._tok){blob=await toBlob(l.cv);v++;up=true}savedCv.set(l.id,l._tok);layerData.push({...META(l),blob,v,up})}
- const changed=!!(changedIds.size||art.structDirty||!old);const dirty=changed||!!(old&&old.localDirty);const rec={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,rev:art.rev,updatedAt:art.updatedAt,activeId,thumb:thumbOf(),layerData,localDirty:dirty,sv:((old&&old.sv)||0)+(changed?1:0)};await dbPut(rec);art.thumb=rec.thumb;changedIds=new Set();art.structDirty=false;upsertMeta()})();await saving;saving=null;hibSweep();if(alsoUp)upload()}
-function upsertMeta(){const m=(D.arts||[]).find(a=>a.id===art.id);const meta={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,thumb:art.thumb,rev:art.rev||0,files:(m&&m.files)||{},layers:(m&&m.layers)||[],finished:(m&&m.finished)||[],updatedAt:art.updatedAt||now()};if(m)Object.assign(m,meta);else D.arts.push(meta);LS.set('ss_data',JSON.stringify(D))}
+ const changed=!!(changedIds.size||art.structDirty||!old);const dirty=changed||!!(old&&old.localDirty);const rec={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,rev:art.rev,updatedAt:art.updatedAt,activeId,thumb:thumbOf(),fix:art.fix||undefined,layerData,localDirty:dirty,sv:((old&&old.sv)||0)+(changed?1:0)};await dbPut(rec);art.thumb=rec.thumb;changedIds=new Set();art.structDirty=false;upsertMeta()})();await saving;saving=null;hibSweep();if(alsoUp)upload()}
+function upsertMeta(){const m=(D.arts||[]).find(a=>a.id===art.id);const meta={id:art.id,kind:art.kind,name:art.name,w:art.w,h:art.h,bg:art.bg,thumb:art.thumb,rev:art.rev||0,files:(m&&m.files)||{},layers:(m&&m.layers)||[],finished:(m&&m.finished)||[],updatedAt:art.updatedAt||now()};if(art.fix)meta.fix=art.fix;if(m)Object.assign(m,meta);else D.arts.push(meta);LS.set('ss_data',JSON.stringify(D))}
 // 送る：開いている絵でなくても送れる。送っている間に描き足した分は消さない（版が変わっていたら「まだ送っていない」のまま残す）
 let upChain=Promise.resolve();
 function uploadRec(id,force){const p=upChain.then(()=>uploadRec0(id,force));upChain=p.catch(()=>{});return p}
@@ -1522,7 +1523,7 @@ async function uploadRec0(id,force){if(!syncOn())return false;const rec=await db
   await ghPutFile(dir+d.id+'.png',await blobB64(d.blob),`お絵描き ${rec.name||id} ${d.name}`);files[d.id]=dir+d.id+'.png';sent[d.id]=d.v||0}
  const cur=(await dbGet(id))||rec;let still=false;for(const d of cur.layerData||[]){if(d.id in sent){if((d.v||0)===sent[d.id])d.up=false}else if(d.id in files&&d.up===undefined)d.up=false;if(d.up)still=true}
  const m1=(D.arts||[]).find(a=>a.id===id);cur.rev=Math.max(cur.rev||0,(m1&&m1.rev)||0)+1;cur.localDirty=still||(cur.sv||0)!==(rec.sv||0);await dbPut(cur);
- let mm=m1;if(!mm){mm={id};D.arts.push(mm)}Object.assign(mm,{kind:rec.kind,name:rec.name,w:rec.w,h:rec.h,bg:rec.bg,thumb:rec.thumb,files,layers:rec.layerData.map(d=>{const{blob,up,v,...r}=d;return r}),finished:mm.finished||[],rev:cur.rev,updatedAt:now()});
+ let mm=m1;if(!mm){mm={id};D.arts.push(mm)}Object.assign(mm,{kind:rec.kind,name:rec.name,w:rec.w,h:rec.h,bg:rec.bg,thumb:rec.thumb,files,layers:rec.layerData.map(d=>{const{blob,up,v,...r}=d;return r}),finished:mm.finished||[],rev:cur.rev,updatedAt:now()});if(rec.fix)mm.fix=rec.fix;
  if(art&&art.id===id)art.rev=cur.rev;saveD();return true}
 let upBusy=false;
 async function upload(force){if(!art||!syncOn()||upBusy)return;const rec=await dbGet(art.id);if(!rec||(!rec.localDirty&&!force))return;upBusy=true;lab('絵を送っています…');
@@ -1540,8 +1541,8 @@ $('artName').addEventListener('keydown',e=>e.stopPropagation());
 /* ===== 作品一覧 ===== */
 $('galClose').onclick=()=>$('gal').close();
 $('gal').addEventListener('close',()=>{setTimeout(()=>{if(!art&&!newPending)startNew('icon')},0)});
-$('newKinds').innerHTML=Object.entries(KINDS).map(([k,v])=>`<button class="b" data-new="${k}">＋ ${v.n} <small class="lead">${v.w}×${v.h}</small></button>`).join('');
-$('newKinds').onclick=async e=>{const b=e.target.closest('[data-new]');if(!b)return;const k=b.dataset.new;newPending=true;$('gal').close();await startNew(k);newPending=false};
+$('newKinds').innerHTML=Object.entries(KINDS).filter(([k])=>k!=='fix').map(([k,v])=>`<button class="b" data-new="${k}">＋ ${v.n} <small class="lead">${v.w}×${v.h}</small></button>`).join('')+'<button class="b" id="galFix" title="Claude が作った素材をまとめて開き、種類を付けて直す">📦 素材パックを開く（直し）</button>';
+$('newKinds').onclick=async e=>{if(e.target.closest('#galFix')){$('gal').close();$('fixIn').click();return}const b=e.target.closest('[data-new]');if(!b)return;const k=b.dataset.new;newPending=true;$('gal').close();await startNew(k);newPending=false};
 let newPending=false;
 let galMode='open';   // open＝ふつうの一覧／pick＝今の絵に取り込む作品を選ぶ
 async function openGal(mode){galMode=mode==='pick'?'pick':'open';const pick=galMode==='pick';const loc=await dbAll();const ids=new Set(loc.map(a=>a.id));const cloud=(D.arts||[]).filter(a=>!a.deleted&&!ids.has(a.id)&&a.files&&Object.keys(a.files).length);
@@ -1557,7 +1558,7 @@ async function getRec(id){getRec.failed=false;let loc=await dbGet(id);const m=(D
  if(m&&m.files&&Object.keys(m.files).length&&(!loc||((m.rev||0)>(loc.rev||0)&&!loc.localDirty))){lab('ほかの端末の絵を読み込んでいます…');try{const layerData=[];
    if(m.layers&&m.layers.length){for(const d of m.layers)layerData.push({...d,blob:m.files[d.id]?await ghBlob(m.files[d.id]):null})}
    else{const nm={sketch:'なぞり用（下書き）',color:'色',line:'線'};for(const k of ['sketch','color','line'])if(m.files[k])layerData.push({id:uid('ly'),name:nm[k],opacity:k==='sketch'?.45:1,blend:'source-over',visible:true,noExport:k==='sketch',trace:k==='sketch',blob:await ghBlob(m.files[k])})}
-   loc={id:m.id,kind:m.kind,name:m.name,w:m.w,h:m.h,bg:m.bg,rev:m.rev,updatedAt:m.updatedAt,thumb:m.thumb,layerData,localDirty:false};await dbPut(loc);lab('読み込みました','okk')}catch(e){lab('読み込めません：'+e.message,'bad');if(!loc){getRec.failed=true;return null}}}
+   loc={id:m.id,kind:m.kind,name:m.name,w:m.w,h:m.h,bg:m.bg,rev:m.rev,updatedAt:m.updatedAt,thumb:m.thumb,fix:m.fix||undefined,layerData,localDirty:false};await dbPut(loc);lab('読み込みました','okk')}catch(e){lab('読み込めません：'+e.message,'bad');if(!loc){getRec.failed=true;return null}}}
  return loc||null}
 async function loadAny(id){const loc=await getRec(id);if(loc)await openArt(loc);else if(!art&&!getRec.failed)await startNew('icon')}
 
@@ -1622,8 +1623,8 @@ async function reuseAsNew(id){lab('絵を読み込んでいます…');const rec
 /* ===== Claude に仕上げてもらう ===== */
 const FIN_DEF={icon:'線を整えて色を付け、チャンネルのアイコン（丸く切り取られる）に仕上げて。手書きの味は残す',banner:'線を整えて色を付け、YouTube のバナーに仕上げて。スマホで見える範囲に大事なものを収める',mark:'動画の右下に小さく出る透かしにして。小さくても形が分かるように',thumb:'サムネとして仕上げて',ending:'動画の最後に出すエンディングの背景に仕上げて。手書きの味は残す',video:'この絵を動画の場面にして、動かして（例：雲がゆっくり流れる、車が左から右へ走る）',free:'整えて仕上げて'};
 function finMode(){return art&&art.kind==='video'?'anim':'fin'}
-function updFinBtn(){const v=finMode()==='anim';$('finBtn').innerHTML=v?'<span class="long">Claude に</span>アニメにしてもらう':'<span class="long">Claude に</span>仕上げを頼む'}
-$('finBtn').onclick=()=>{if(!art)return;if(!syncOn())return hint('制作室の設定で同期をつなぐと頼めます');const v=finMode()==='anim';$('finNote').placeholder=FIN_DEF[art.kind];
+function updFinBtn(){if(art&&art.kind==='fix'){$('finBtn').innerHTML='<span class="long">Claude に</span>直しを渡す';return}const v=finMode()==='anim';$('finBtn').innerHTML=v?'<span class="long">Claude に</span>アニメにしてもらう':'<span class="long">Claude に</span>仕上げを頼む'}
+$('finBtn').onclick=()=>{if(!art)return;if(art.kind==='fix')return fixSend();if(!syncOn())return hint('制作室の設定で同期をつなぐと頼めます');const v=finMode()==='anim';$('finNote').placeholder=FIN_DEF[art.kind];
  $('finTitle').textContent=v?'Claude にアニメにしてもらう':'Claude に仕上げてもらう';$('finLead').textContent=v?'今の絵をレイヤーごとに渡します。レイヤー1枚ずつを部品にして動かし、動画の場面（1920×1080）にします。どの動画のどこで使うか、どう動かしたいかを書いてください。できると、右の「Claude のアニメ」に見本の動画が並びます。':'今の絵をそのまま渡します。手書きの味は残したまま、線を整え、色を付け、YouTube の大きさに合わせて仕上げます。仕上がると、右の「Claude の仕上げ」に並びます。';
  $('finProjRow').style.display=v?'':'none';if(v){const ps=(D.projects||[]).filter(p=>!p.deleted).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));$('finProj').innerHTML='<option value="">（まだ決めていない）</option>'+ps.map(p=>{const c=(D.candidates||[]).find(x=>x.id===p.candId);return `<option value="${esc(p.id)}">${esc((c&&c.q)||p.title||'無題')}</option>`}).join('')}
  $('finDlg').showModal()};
@@ -1651,5 +1652,63 @@ $('hUndo').onclick=()=>undo();$('hRedo').onclick=()=>redo();
   else{const loc=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));if(loc[0])await openArt(loc[0])}}catch(e){console.error(e)}
  if(!art)await startNew('icon');
  try{await sync();await healArts()}catch(e){}})();
+
+/* ===== 素材の直し（作り手・2026-11-25「加筆をレイアウトを整えて『描く』に入れて」）=====
+ Claude が作った素材（素材パック＝{pack,title,items:[{id,name,kind,parts,src}]}）を、種類「素材の直し」の絵としてまとめて開く。元の絵は、なぞる画像（見るだけ・不透明度100%）として下に敷く。
+ 描いた線には「何の直しか」を持たせる：直しの種類ごと（＋部品ごと）のレイヤーに描く（l.fix・l.part。色では表さない）。絵ごとに判定とひとこと（art.fix.verdict・memo）。
+ 渡し方：同期をつないでいれば「Claude に渡す」（頼みごと art_fix）、つないでいなくても「ファイルに書き出す」。読み方は tools/kahitsu/read.py */
+const FIXA=[['fine','細かい直し','色・線・模様を、描いたとおりに','#5cc28a'],['shape','形を変える','輪郭をこの線の形へ寄せる','#3d8ef0'],['redo','作り直す','この下描きから学んで描き直す','#ef7b65'],['erase','消す','塗った・囲んだ所をなくす','#9aa2ae'],['place','置き方・構図','位置・大きさ・重なりを変える','#b48cf0']];
+const FIXV=[['ok','合格','#5cc28a'],['fix','直す','#e0a23a'],['redo','作り直す','#ef7b65']];
+let fixAttr=LS.get('pd_fixAttr','fine');if(!FIXA.some(a=>a[0]===fixAttr))fixAttr='fine';
+const isFix=()=>!!(art&&art.kind==='fix'&&art.fix);
+const fixArts=pk=>(D.arts||[]).filter(a=>!a.deleted&&a.fix&&a.fix.pack===pk).sort((a,b)=>(a.fix.order||0)-(b.fix.order||0));
+function fixPick(k,part){if(!isFix())return;const a0=act();const pt=part!==undefined?part:((a0&&a0.fix&&a0.part)||'');fixAttr=k;LS.set('pd_fixAttr',k);
+ let l=layers.find(x=>!x.trace&&x.fix===k&&(x.part||'')===pt);
+ const nm='直し：'+FIXA.find(a=>a[0]===k)[1]+(pt?'・'+pt:'');
+ if(!l&&a0&&!a0.trace&&a0.fix&&!bboxQuick(a0.cv)){structOp('直しの種類',()=>{a0.fix=k;a0.part=pt||undefined;a0.name=nm});l=a0}   /* まだ何も描いていない直しのレイヤーは、作り直さずに種類だけ付け替える（空のレイヤーが増えない） */
+ if(!l)structOp('直しのレイヤー',()=>{l=newLayer('直し：'+FIXA.find(a=>a[0]===k)[1]+(pt?'・'+pt:''),{fix:k,part:pt||undefined});layers.push(l);activeId=l.id});else{activeId=l.id;renderLayers();need()}
+ if(tool==='move'||tool==='pick')setTool('brush');renderFix()}
+function fixSet(o){if(!isFix())return;Object.assign(art.fix,o);art.updatedAt=now();art.structDirty=true;upsertMeta();scheduleSave()}
+function fixOpened(){const on=isFix();$('fixTab').style.display=on?'':'none';if(!on){if(sideTab==='fix')setSideTab('lay');return}
+ const a=act();if(!a||a.trace||!a.fix){const l=layers.filter(x=>!x.trace&&x.fix).pop();if(l){activeId=l.id;renderLayers()}else fixPick(fixAttr,'')}setSideTab('fix');renderFix()}
+function renderFix(){if(!isFix())return;const f=art.fix,ms=fixArts(f.pack),i=ms.findIndex(m=>m.id===art.id),a=act(),ak=a&&!a.trace&&a.fix||'',ap=a&&a.part||'';const cnt={ok:0,fix:0,redo:0,'':0};ms.forEach(m=>cnt[(m.id===art.id?f.verdict:m.fix.verdict)||'']++);
+ const col=v=>(FIXV.find(x=>x[0]===v)||[,, 'transparent'])[2];
+ $('fixBox').innerHTML=`<div class="fxNav"><button class="b" data-fx="prev" ${i<=0?'disabled':''} title="前の素材">◀</button><b title="${esc(art.name||'')}">${i+1} / ${ms.length}　${esc(art.name||'')}</b><button class="b" data-fx="next" ${i>=ms.length-1?'disabled':''} title="次の素材">▶</button></div>
+ <div class="fxSub">${esc(f.title||'')}${f.kindName?'・'+esc(f.kindName):''}</div>
+ <h4>この線は何の直しか</h4><div class="fxA">${FIXA.map(x=>`<button data-fa="${x[0]}" class="${x[0]===ak?'on':''}"><i style="background:${x[3]}"></i><span>${x[1]}<small>${x[2]}</small></span></button>`).join('')}</div>
+ ${ak?'':'<div class="fxSub" style="margin-top:6px;color:var(--busy)">種類のないレイヤーを選んでいます。上から種類を選ぶと、その種類のレイヤーに描けます</div>'}
+ <h4>どの部品か</h4><select id="fxPart"><option value="">（決めない）</option>${(f.parts||[]).map(p=>`<option ${p===ap?'selected':''}>${esc(p)}</option>`).join('')}</select>
+ <h4>この素材の判定</h4><div class="fxV">${FIXV.map(v=>`<button data-fv="${v[0]}" class="${v[0]} ${f.verdict===v[0]?'on':''}">${v[1]}</button>`).join('')}</div>
+ <h4>この素材へのひとこと</h4><textarea id="fxMemo" placeholder="例：全体にもっと丸く。鼻づらは四角く広い">${esc(f.memo||'')}</textarea>
+ <h4>素材の一覧</h4><div class="fxList">${ms.map(m=>`<button data-fo="${m.id}" class="${m.id===art.id?'cur':''}" title="${esc(m.name||'')}"><img src="${m.id===art.id?(art.thumb||m.thumb||''):(m.thumb||'')}" alt=""><em style="background:${col(m.id===art.id?f.verdict:m.fix.verdict)}"></em></button>`).join('')}</div>
+ <div class="fxSum">合格 ${cnt.ok}・直す ${cnt.fix}・作り直す ${cnt.redo}・まだ ${cnt['']}</div>
+ <div class="fxOut"><button class="b main" data-fx="send" title="全部の素材の直しを、Claude への頼みごとにする（同期をつないでいるとき）">Claude にまとめて渡す</button><button class="b" data-fx="file" title="1つのファイルに書き出す。チャットで Claude に渡すとき">ファイルに書き出す</button></div>`;
+ $('fxPart').onchange=e=>fixPick(ak||fixAttr,e.target.value);$('fxMemo').oninput=e=>fixSet({memo:e.target.value})}
+$('fixBox').onclick=async e=>{const b=e.target.closest('button');if(!b||!isFix())return;const d=b.dataset;
+ if(d.fa){const sp=$('fxPart');fixPick(d.fa,sp?sp.value:'');return}
+ if(d.fv){fixSet({verdict:art.fix.verdict===d.fv?'':d.fv});renderFix();return}
+ if(d.fo||d.fx==='prev'||d.fx==='next'){const ms=fixArts(art.fix.pack),i=ms.findIndex(m=>m.id===art.id);const id=d.fo||(ms[i+(d.fx==='next'?1:-1)]||{}).id;if(id&&id!==art.id)await loadAny(id);return}
+ if(d.fx==='file')return fixExport();if(d.fx==='send')return fixSend()};
+// 描いたら、まだ判定のない素材は「直す」（作り直すの線なら「作り直す」）にする。合格を押したあとに描いたときも
+function fixTouched(){if(!isFix())return;const a=act();if(!a||a.trace||!a.fix)return;const v=art.fix.verdict;if(!v||v==='ok'){fixSet({verdict:a.fix==='redo'?'redo':'fix'});renderFix()}}
+{const pushHist0=pushHist;pushHist=function(h){const r=pushHist0.apply(this,arguments);try{if(h&&h.type!=='struct')fixTouched()}catch(e){}return r}}
+async function fixImport(p){if(!p||!p.pack||!Array.isArray(p.items))return hint('素材パックではないファイルです',2600);if(art)await flushSave(false);
+ const have=new Set(fixArts(p.pack).map(a=>a.fix.item));let n=0;lab('素材を開いています…');
+ for(const[i,it]of p.items.entries()){if(have.has(it.id)||!it.src)continue;let im;try{im=await new Promise((r,j)=>{const x=new Image();x.onload=()=>r(x);x.onerror=j;x.src=it.src})}catch(e){continue}
+  const w=im.naturalWidth,h=im.naturalHeight,c=mk(w,h);g2(c).drawImage(im,0,0);const blob=await toBlob(c);const s=Math.min(240/w,150/h),tc=mk(w*s,h*s);g2(tc).drawImage(im,0,0,tc.width,tc.height);
+  const id=uid('art'),lid=uid('ly'),t=now()+i,BG='',fix={pack:p.pack,title:p.title||'',item:it.id,order:i,kindName:it.kind||'',parts:it.parts||[],verdict:'',memo:''},thumb=tc.toDataURL('image/jpeg',.72);
+  await dbPut({id,kind:'fix',name:it.name||it.id,w,h,bg:BG,rev:0,updatedAt:t,activeId:lid,thumb,fix,layerData:[{id:lid,name:'元の絵（Claude）',opacity:1,blend:'source-over',visible:true,lockAlpha:false,clip:false,noExport:true,trace:true,text:null,blob,v:1,up:true}],localDirty:true,sv:1});
+  D.arts.push({id,kind:'fix',name:it.name||it.id,w,h,bg:BG,thumb,rev:0,files:{},layers:[],finished:[],fix,updatedAt:t});n++}
+ saveD();lab(n?`素材を ${n} 枚開きました`:'この素材パックはもう開いてあります','okk');const ms=fixArts(p.pack);if(ms[0]){newPending=true;try{await loadAny((ms.find(m=>!m.fix.verdict)||ms[0]).id)}finally{newPending=false}}}
+$('fixIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{await fixImport(JSON.parse(await f.text()))}catch(x){hint('このファイルは開けません：'+x.message,3000)}};
+async function fixCollect(){await flushSave(false);const pk=art.fix.pack,items=[];for(const m of fixArts(pk)){const rec=await dbGet(m.id);const fx=(rec&&rec.fix)||m.fix;const it={id:fx.item,artId:m.id,name:m.name,w:m.w,h:m.h,verdict:fx.verdict||'',memo:fx.memo||'',layers:[]};
+  if(rec)for(const d of rec.layerData||[]){if(d.trace||!d.blob||d.visible===false)continue;let bm;try{bm=await createImageBitmap(d.blob)}catch(e){continue}const c=mk(rec.w,rec.h);g2(c).drawImage(bm,0,0);if(!bboxQuick(c))continue;it.layers.push({name:d.name,fix:d.fix||'',part:d.part||'',opacity:d.opacity,blend:d.blend,png:c.toDataURL('image/png')})}
+  items.push(it)}return{kahitsu:2,pack:pk,title:art.fix.title||'',exported:new Date().toISOString(),attrs:Object.fromEntries(FIXA.map(a=>[a[0],a[1]+'：'+a[2]])),items}}
+async function fixExport(){if(!isFix())return;lab('書き出しています…');const out=await fixCollect();const d=new Date(),p2=n=>String(n).padStart(2,'0');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out)],{type:'application/json'}));
+ a.download=`kahitsu_${out.pack}_${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);const n=out.items.filter(i=>i.verdict).length;lab('書き出しました','okk');hint(`書き出しました（判定あり ${n} / ${out.items.length}）。このファイルを Claude に渡してください`,3200)}
+async function fixSend(){if(!isFix())return;if(!syncOn())return hint('同期をつないでいないので、「ファイルに書き出す」で渡してください',3200);const pk=art.fix.pack,ms=fixArts(pk);lab('素材を送っています…');
+ try{await flushSave(false);for(const m of ms){const rec=await dbGet(m.id);if(rec&&rec.localDirty)await uploadRec(m.id,false)}
+  D.jobs.filter(j=>!j.deleted&&j.type==='art_fix'&&j.pack===pk&&j.status==='待ち').forEach(j=>{j.deleted=true;j.updatedAt=now()});
+  D.jobs.push({id:uid('j'),type:'art_fix',status:'待ち',pack:pk,name:art.fix.title||pk,artIds:ms.map(m=>m.id),notes:'素材の直し（種類つき）。arts[].fix の判定・ひとことと、レイヤーの fix・part を読んで素材を直す',createdAt:now(),updatedAt:now()});saveD();lab('頼みました','okk');hint('Claude に渡しました。直した素材は、次の素材パックとして届きます',3200)}catch(e){lab('送れません：'+e.message,'bad')}}
 </script>
 </body></html>

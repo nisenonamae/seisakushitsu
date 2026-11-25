@@ -17,6 +17,7 @@ def line(d,s,c):
     for p in (pts[0],pts[-1]): d.ellipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],fill=c)
 def main(packf,retf,od):
     pack={i['id']:i for i in json.load(open(packf,encoding='utf-8'))['items']};ret=json.load(open(retf,encoding='utf-8'));os.makedirs(od,exist_ok=True)
+    if ret.get('kahitsu')==2: return main2(pack,ret,od)
     md=[f'# 加筆の読み取り：{ret.get("title","")}（{ret["exported"][:16]}）','','属性の意味：']+[f'- {v}' for v in NAME.values()]+['']
     for it in ret['items']:
         src=it.get('src') or pack.get(it['id'],{}).get('src')
@@ -32,5 +33,22 @@ def main(packf,retf,od):
             S=Image.new('RGB',(2*w*z+8,h*z),'white');S.paste(base.crop(box).resize((w*z,h*z),Image.LANCZOS),(0,0));S.paste(one.crop(box).resize((w*z,h*z),Image.LANCZOS),(w*z+8,0));S.save(os.path.join(od,f'{it["id"]}_{k+1}.png'))
             md.append(f'- 線{k+1}：**{NAME[s["attr"]]}**／部品：{s.get("part") or "決めていない"}／色 {s["color"]}・太さ {s["size"]}／場所 x{box[0]}〜{box[2]} y{box[1]}〜{box[3]}／ひとこと：{s.get("note") or "なし"}　→ `{it["id"]}_{k+1}.png`（左＝元、右＝加筆）')
         a.save(os.path.join(od,f'{it["id"]}_塗り.png'));b.save(os.path.join(od,f'{it["id"]}_属性.png'));md+=[f'- 全体：`{it["id"]}_塗り.png`・`{it["id"]}_属性.png`','']
+    open(os.path.join(od,'読む.md'),'w',encoding='utf-8').write('\n'.join(md));print('出力：',od)
+def main2(pack,ret,od):
+    """お絵描き（draw.html の「直し」）から。線ではなく、直しの種類ごとのレイヤー（透明な PNG）で来る"""
+    md=[f'# 加筆の読み取り：{ret.get("title","")}（{ret["exported"][:16]}）','','属性の意味：']+[f'- {v}' for v in NAME.values()]+['- 種類なし＝作り手が種類を付けずに描いたレイヤー（何の直しかを聞く）','']
+    for it in ret['items']:
+        src=pack.get(it['id'],{}).get('src');md+=[f'## {it["name"]}（{it["id"]}）','- 判定：'+VERD.get(it.get('verdict',''),'?'),'- ひとこと：'+(it.get('memo') or 'なし')]
+        if not it.get('layers'): md+=['- 直しのレイヤー：なし',''];continue
+        base=img(src).convert('RGBA') if src else Image.new('RGBA',(it['w'],it['h']),'white');allc=base.copy()
+        for k,l in enumerate(it['layers']):
+            L=Image.open(io.BytesIO(base64.b64decode(l['png'].split(',',1)[1]))).convert('RGBA')
+            if L.size!=base.size: L=L.resize(base.size)
+            if l.get('opacity',1)<1: L.putalpha(L.getchannel('A').point(lambda a:int(a*l['opacity'])))
+            allc=Image.alpha_composite(allc,L);box=L.getchannel('A').getbbox() or (0,0)+base.size;m=50;box=(max(0,box[0]-m),max(0,box[1]-m),min(base.width,box[2]+m),min(base.height,box[3]+m))
+            w=box[2]-box[0];h=box[3]-box[1];z=max(1,min(3,520//max(w,h,1)));one=Image.alpha_composite(base,L);S=Image.new('RGB',(2*w*z+8,h*z),'white')
+            S.paste(base.crop(box).convert('RGB').resize((w*z,h*z),Image.LANCZOS),(0,0));S.paste(one.crop(box).convert('RGB').resize((w*z,h*z),Image.LANCZOS),(w*z+8,0));f=f'{it["id"]}_{k+1}_{l.get("fix") or "none"}.png';S.save(os.path.join(od,f))
+            md.append(f'- レイヤー{k+1}「{l["name"]}」：**{NAME.get(l.get("fix"),"種類なし")}**／部品：{l.get("part") or "決めていない"}／場所 x{box[0]}〜{box[2]} y{box[1]}〜{box[3]}　→ `{f}`（左＝元、右＝加筆）')
+        allc.convert('RGB').save(os.path.join(od,f'{it["id"]}_全部.png'));md+=[f'- 全体：`{it["id"]}_全部.png`','']
     open(os.path.join(od,'読む.md'),'w',encoding='utf-8').write('\n'.join(md));print('出力：',od)
 if __name__=='__main__': main(*sys.argv[1:4])
