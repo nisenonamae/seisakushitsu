@@ -19,7 +19,10 @@ def render(it,parts,sketch=None,S=2):
     w,h=it['w'],it['h'];im=Image.new('RGB',(w*S,h*S),it.get('bg','#e9e6dc'))
     sc=lambda ps:[(x*S,y*S) for x,y in ps]
     for p in sorted(parts,key=lambda p:p['z']):
-        poly=sc(smooth(p['pts']));ImageDraw.Draw(im).polygon(poly,fill=p['color'])
+        poly=sc(smooth(p['pts']))
+        if p.get('a',1)<1:
+            L0=Image.new('RGB',im.size,p['color']);m0=Image.new('L',im.size,0);ImageDraw.Draw(m0).polygon(poly,fill=int(255*p['a']));im.paste(L0,(0,0),m0)
+        else: ImageDraw.Draw(im).polygon(poly,fill=p['color'])
         if p.get('strokes'):
             L=Image.new('RGB',im.size);m=Image.new('L',im.size,0);ImageDraw.Draw(m).polygon(poly,fill=255);L.paste(im);strokes(ImageDraw.Draw(L),[dict(s,pts=sc(s['pts']),size=s['size']*S) for s in p['strokes']]);im.paste(L,(0,0),m)
     if sketch: strokes(ImageDraw.Draw(im),[dict(s,pts=sc(s['pts']),size=s['size']*S) for s in sketch])
