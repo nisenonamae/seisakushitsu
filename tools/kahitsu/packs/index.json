@@ -4,5 +4,11 @@
   "pack": "arabia_parts_002",
   "title": "緑のアラビア 序・本番の絵1",
   "n": 5
+ },
+ {
+  "file": "arabia_parts_003.json",
+  "pack": "arabia_parts_003",
+  "title": "緑のアラビア 序・素材2（葦・しぶき・波紋・泥・丸太・頭の骨）",
+  "n": 8
  }
 ]

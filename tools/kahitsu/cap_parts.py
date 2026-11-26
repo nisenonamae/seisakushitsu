@@ -9,12 +9,13 @@ def cen(p): return (sum(q[0] for q in p)/len(p),sum(q[1] for q in p)/len(p))
 def turn(p,i):
     a,b,c=p[i-1],p[i],p[(i+1)%len(p)];v=(b[0]-a[0],b[1]-a[1]);u=(c[0]-b[0],c[1]-b[1]);d=math.hypot(*v)*math.hypot(*u)
     return 0 if d<1e-9 else math.acos(max(-1,min(1,(v[0]*u[0]+v[1]*u[1])/d)))
-def thin(p,n=26,sharp=True):
+def thin(p,n=26,sharp=True,ends=False):
     """点を n 個くらいに減らす。とがった所（向きが 50 度より急に変わる点）は必ず残して角の点 [x,y,1] にする（parts.html で丸くならない）"""
     if len(p)>1 and math.hypot(p[0][0]-p[-1][0],p[0][1]-p[-1][1])<.5: p=p[:-1]
     C=set(i for i in range(len(p)) if sharp and len(p)>3 and turn(p,i)>math.radians(50))
     if len(C)>n*.6: C=set()   # ほとんど全部が角＝ぎざぎざの線。角にしない
     keep=range(len(p)) if len(p)<=n else sorted(C|set(int(i*len(p)/n) for i in range(n)))
+    if ends: keep=sorted(set(keep)|{0,len(p)-1})   # つなぎ目の部品は、最初と最後の点（付け根）を必ず残す
     return [(p[i][0],p[i][1],1) if i in C else (p[i][0],p[i][1]) for i in keep]
 def fat(p,w):
     L=[];R=[]
@@ -34,12 +35,28 @@ def build(id,name,kind,shapes,mode):
         p=[tuple(q) for q in s['pts']]
         st=s['k']=='stroke'
         if st: p=fat(p,max(2,s['w']))
-        p=thin(p,sharp=not st)   # 線をふくらませた形は、端が丸い（lineCap round）ので角にしない
+        p=thin(p,sharp=not st,ends=bool((s.get('nm') or {}).get('j')))   # 線をふくらませた形は、端が丸い（lineCap round）ので角にしない
         if len(p)<3 or area(p)<2: continue
-        S.append(dict(pts=p,color=hexa(s['c']),a=s.get('a',1)))
+        S.append(dict(pts=p,color=hexa(s['c']),a=s.get('a',1),nm=s.get('nm')))
     xs=[q[0] for s in S for q in s['pts']];ys=[q[1] for s in S for q in s['pts']];m=40;x0,y0=min(xs)-m,min(ys)-m;w,h=int(max(xs)-min(xs)+2*m),int(max(ys)-min(ys)+2*m)
     for s in S: s['pts']=[[round(q[0]-x0,1),round(q[1]-y0,1)]+([1] if len(q)>2 else []) for q in s['pts']]
     W,Hh=max(xs)-min(xs),max(ys)-min(ys);parts=[];cnt={}
+    if mode=='named':   # 描く式が名前とまとまりを付けた素材（extra_art.js の NM）。まとまりの頭を動かすと、同じまとまりがついてくる
+        heads={};root=None
+        for i,s in enumerate(S):
+            m=s['nm'] or {};q=dict(id=f'p{i}',name=m.get('n') or f'部品 {i+1}',z=i,color=s['color'],pts=s['pts'],joint=bool(m.get('j')),parent=None,strokes=[],**({'a':round(s['a'],2)} if s['a']<1 else {}))
+            if m.get('r') and root is None: root=q
+            if m.get('h') and m.get('g') and m['g'] not in heads: heads[m['g']]=q
+            q['_g']=m.get('g','');parts.append(q)
+        seen={}
+        for q in parts:
+            seen[q['name']]=seen.get(q['name'],0)+1
+            if seen[q['name']]>1: q['name']+=f' {seen[q["name"]]}'   # 同じ名前（年輪を2度塗った等）は番号で分ける
+            hd=heads.get(q['_g'])
+            q['parent']=None if q is root else (hd['id'] if hd and hd is not q else (root['id'] if root else None))
+            del q['_g']
+        if root: root['name']+='（全体）'
+        return dict(id=id,name=name,kind=kind,w=w,h=h,bg='#e9e6dc',parts=parts)
     def nm(b):
         cnt[b]=cnt.get(b,0)+1;return b if cnt[b]==1 else f'{b} {cnt[b]}'
     for i,s in enumerate(S):
@@ -73,6 +90,8 @@ def build(id,name,kind,shapes,mode):
     for p in parts: del p['_g'],p['_a']
     return dict(id=id,name=name,kind=kind,w=w,h=h,bg='#e9e6dc',parts=parts)
 ITEMS=[('haha','母カバ（全身）','動かす素材','hippo'),('haha_kuchi','母カバ（口を開ける）','差し替え絵','hippo'),('ko','子カバ（全身）','動かす素材','hippo'),('shomen','カバの顔（正面）','動かす素材','face'),('acacia','アカシアの木','背景の素材','tree')]
+ITEMS+=[('ashi','葦の株','背景の素材','named'),('shibuki','水しぶき','動かす素材','named'),('hamon','波紋（横から）','動かす素材','named'),('hamon_ue','波紋（上から）','動かす素材','named'),
+ ('doro','泥の雲（水の中）','動かす素材','named'),('maruta','丸太','背景の素材','named'),('zugaikotsu','カバの頭の骨（横）','動かす素材','named'),('zugaikotsu_hiraku','カバの頭の骨（下あごが外れる）','差し替え絵','named')]
 def main(capf,out,pack,title):
     C=json.load(open(capf));its=[build(k,n,kd,C[k],md) for k,n,kd,md in ITEMS if k in C]
     json.dump(dict(v=3,pack=pack,title=title,items=its),open(out,'w',encoding='utf-8'),ensure_ascii=False)
