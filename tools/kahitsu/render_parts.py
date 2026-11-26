@@ -3,10 +3,12 @@
 素材ごとに <id>.png（左＝直す前、右＝直した後＋下描き）と、読む.md（判定・ひとこと・やった直しの記録・部品ごとの点の動き）"""
 import sys,os,json,math
 from PIL import Image,ImageDraw
-def smooth(pts,k=.5,n=10):
+def _u(p,q):
+    x,y=q[0]-p[0],q[1]-p[1];n=math.hypot(x,y) or 1;return (x/n,y/n)
+def smooth(pts,k=.5,n=10):   # parts.html の HND と同じ式（取っ手の長さ＝区間の長さ×0.36。2026-11-26）
     N=len(pts);out=[]
     for i in range(N):
-        a,b,c,d=pts[(i-1)%N],pts[i],pts[(i+1)%N],pts[(i+2)%N];kb=0 if len(b)>2 and b[2] else k;kc=0 if len(c)>2 and c[2] else k;c1=(b[0]+(c[0]-a[0])*kb/3,b[1]+(c[1]-a[1])*kb/3);c2=(c[0]-(d[0]-b[0])*kc/3,c[1]-(d[1]-b[1])*kc/3)   # [x,y,1]＝角（parts.html と同じ）
+        a,b,c,d=pts[(i-1)%N],pts[i],pts[(i+1)%N],pts[(i+2)%N];kb=0 if len(b)>2 and b[2] else k;kc=0 if len(c)>2 and c[2] else k;L=math.hypot(c[0]-b[0],c[1]-b[1])*.72;ub=_u(a,c);uc=_u(b,d);c1=(b[0]+ub[0]*L*kb,b[1]+ub[1]*L*kb);c2=(c[0]-uc[0]*L*kc,c[1]-uc[1]*L*kc)   # [x,y,1]＝角（parts.html と同じ）
         for j in range(n):
             t=j/n;u=1-t;out.append((u**3*b[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t**3*c[0],u**3*b[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t**3*c[1]))
     return out
@@ -26,7 +28,7 @@ def render(it,parts,sketch=None,S=2):
         return False
     for p in sorted(parts,key=lambda p:p['z']):
         if p.get('folder') or len(p['pts'])<3 or hid(p): continue   # フォルダ・見せない部品は描かない
-        poly=sc(smooth(p['pts']))
+        poly=sc(smooth(p['pts'],p.get('k') or .5))
         if p.get('a',1)<1:
             L0=Image.new('RGB',im.size,p['color']);m0=Image.new('L',im.size,0);ImageDraw.Draw(m0).polygon(poly,fill=int(255*p['a']));im.paste(L0,(0,0),m0)
         else: ImageDraw.Draw(im).polygon(poly,fill=p['color'])
