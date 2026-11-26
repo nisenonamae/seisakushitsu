@@ -45,4 +45,10 @@ def main(out):
        P('canT','葉（上）',5,'#6fae82',circ(436,158,150,40,10),False,'trunk')]
     its=[item('haha','母カバ（横・全身）','動かす素材',1000,600,m),item('haha_kuchi','母カバ（口を開ける）','差し替え絵',1000,600,o),item('ko','子カバ','動かす素材',1000,600,c),item('acacia','アカシアの木','背景の素材',800,600,t)]
     json.dump(dict(v=3,pack='arabia_parts_001',title='緑のアラビア 序・部品1',items=its),open(out,'w',encoding='utf-8'),ensure_ascii=False);print('作った：',out,len(its))
+    import glob,os;d=os.path.dirname(out);L=[]
+    for f in sorted(glob.glob(os.path.join(d,'*.json'))):
+        if f.endswith('index.json'): continue
+        q=json.load(open(f,encoding='utf-8'))
+        if q.get('v')==3: L.append(dict(file=os.path.basename(f),pack=q['pack'],title=q.get('title',q['pack']),n=len(q['items'])))
+    json.dump(L,open(os.path.join(d,'index.json'),'w',encoding='utf-8'),ensure_ascii=False,indent=1)   # 一覧（parts.html が自分で読む。作り手がファイルを選ばなくていい）
 if __name__=='__main__': main(sys.argv[1])

@@ -31,10 +31,11 @@ textarea{width:100%;min-height:50px;background:var(--row);border:1px solid var(-
 @media(max-width:820px){#pk{display:none}header{justify-content:flex-end;overflow:hidden}#ver{margin-right:auto;overflow:hidden;text-overflow:ellipsis;min-width:0}header .lg{display:none}#side{min-width:0}main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#side{border-left:0;border-top:1px solid #000;max-height:46vh}.pc{display:none}#items{grid-template-columns:repeat(6,1fr)}.nav{margin-bottom:5px}
  #tools{grid-template-columns:repeat(5,minmax(0,1fr))}#tools button span{overflow:hidden;white-space:nowrap}#verd{margin-top:5px}.mh{display:none}#tools button{grid-template-columns:1fr;justify-items:center;text-align:center;gap:2px;padding:6px 1px;font-size:12px;min-height:46px}#tools small{display:none}#tools button.on{box-shadow:inset 0 -3px 0 var(--sea)}}
 </style></head><body>
-<header><a href="draw.html" id="back">← 描く</a><b id="pk"></b><span id="ver" style="font-size:11px;color:var(--sub);white-space:nowrap">版 11/26 02:13</span><button id="finger" title="指で直す／指は画面を動かすだけ（ペン・マウスで直す）"></button><button id="undo" title="1つ戻す">↶<span class="lg"> 戻す</span></button><button id="orig" title="押している間、直す前の絵を見る">👁<span class="lg"> 元を見る</span></button></header>
+<header><a href="draw.html" id="back">← 描く</a><b id="pk"></b><span id="ver" style="font-size:11px;color:var(--sub);white-space:nowrap">版 11/26 13:25</span><button id="finger" title="指で直す／指は画面を動かすだけ（ペン・マウスで直す）"></button><button id="undo" title="1つ戻す">↶<span class="lg"> 戻す</span></button><button id="orig" title="押している間、直す前の絵を見る">👁<span class="lg"> 元を見る</span></button></header>
 <main>
 <div id="stageW"><canvas id="cv"></canvas><div id="hint"></div></div>
 <div id="side">
+ <select id="packSel" style="display:none;width:100%;margin-bottom:8px;background:var(--row);border:1px solid var(--line);border-radius:6px;padding:5px 7px"></select>
  <div class="nav"><button id="prev">◀</button><b id="ttl"></b><button id="next">▶</button></div>
  <h4 class="pc">どう直すか</h4><div id="tools"></div>
  <h4 class="mh">この素材の判定</h4><div id="verd"></div>
@@ -93,7 +94,7 @@ function ui(){const i=it();if(!i)return;$('ttl').textContent=`${cur+1} / ${items
  $('chips').innerHTML=[...i.parts].sort((a,b)=>b.z-a.z).map(q=>`<button data-p="${q.id}" class="${q.id===sel?'on':''}"><i style="background:${q.color}"></i>${q.name}</button>`).join('');
  $('verd').innerHTML=VERD.map(v=>`<button data-v="${v[0]}" class="${v[0]} ${i.verdict===v[0]?'on':''}">${v[1]}</button>`).join('');if(document.activeElement!==$('memo'))$('memo').value=i.memo||'';
  $('items').innerHTML=items.map((q,k)=>`<button data-i="${k}" class="${k===cur?'cur':''}" title="${q.name}"><canvas></canvas><em style="background:${VC[q.verdict||'']}"></em></button>`).join('');$('items').querySelectorAll('canvas').forEach((c,k)=>thumb(c,items[k]));
- $('log').innerHTML=i.log.length?i.log.map(logTxt).join('<br>'):'まだ何も直していません';$('file').style.display=TRY?'none':'';$('open').style.display=TRY?'none':'';$('back').style.display=TRY?'none':''}
+ $('log').innerHTML=i.log.length?i.log.map(logTxt).join('<br>'):'まだ何も直していません';$('file').style.display=TRY?'none':'';$('open').style.display=TRY?'none':'';$('open').textContent='ほかの素材パックをファイルから開く';$('back').style.display=TRY?'none':''}
 /* ---- 直しの記録・戻す ---- */
 function begin(){const i=it();undoS.push(JSON.stringify({parts:i.parts,sketch:i.sketch,log:i.log,verdict:i.verdict}));if(undoS.length>60)undoS.shift()}
 function logOp(o){const i=it(),L=i.log,l=L[L.length-1];if(l&&l.op===o.op&&l.part===o.part){if(o.op==='move'){l.dx+=o.dx;l.dy+=o.dy}else if(o.op==='rot')l.deg+=o.deg;else if(o.op==='scale')l.k*=o.k;else l.n=(l.n||1)+1}else L.push(o);if(!i.verdict||i.verdict==='ok')i.verdict=o.op==='sketch'&&!L.some(x=>x.op!=='sketch')?'redo':'fix'}
@@ -169,6 +170,14 @@ $('file').onclick=()=>{const d=new Date(),p2=n=>String(n).padStart(2,'0'),a=docu
 $('open').onclick=()=>$('fin').click();$('fin').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const p=JSON.parse(await f.text());if(!p.items||!p.items[0].parts)throw 0;LS.set('parts:last',JSON.stringify(p));load(p)}catch(x){hint('部品の素材パックではないファイルです',3000)}};
 addEventListener('keydown',e=>{if(/TEXTAREA|INPUT/.test(e.target.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}else if(e.key>='1'&&e.key<='5'){tool=TOOLS[+e.key-1][0];selPt=-1;ui();draw()}});
 new ResizeObserver(()=>{const c=[cv.width,cv.height];resize();if(c[0]!==cv.width||c[1]!==cv.height){if(it())fit();draw()}}).observe(cv);
-if(!PACK){try{PACK=JSON.parse(LS.get('parts:last'))}catch(e){}}
-if(PACK)load(PACK);else{resize();$('ttl').textContent='素材パックを開いてください';$('tools').innerHTML='';hint('右（下）の「素材パックを開く」から始めます',5000)}
+/* 素材パックは、制作室の中の一覧（tools/kahitsu/packs/index.json）から自分で読む（作り手・2026-11-26「ダウンロードして選ぶのは面倒」）。いちばん新しい物を開き、上の欄で切りかえる。読めない時だけ、前に開いた物かファイルから */
+const PK='tools/kahitsu/packs/';
+async function openPack(file){const r=await fetch(PK+file,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const p=await r.json();LS.set('parts:last',JSON.stringify(p));LS.set('parts:file',file);load(p)}
+async function boot(){if(TRY){load(PACK);return}let L=null;try{const r=await fetch(PK+'index.json',{cache:'no-store'});if(r.ok)L=await r.json()}catch(e){}
+ if(L&&L.length){const s=$('packSel');s.style.display='';s.innerHTML=L.map(x=>`<option value="${x.file}">${x.title}（${x.n}）</option>`).join('');const last=LS.get('parts:file'),seen=LS.get('parts:seen')||'',newest=L[L.length-1].file;
+  const pick=(newest!==seen||!L.some(x=>x.file===last))?newest:last;LS.set('parts:seen',newest);s.value=pick;s.onchange=()=>openPack(s.value).catch(()=>hint('読めませんでした',2500));
+  try{await openPack(pick);if(pick===newest&&newest!==seen&&seen)hint('新しい素材パックが届いています',3000);return}catch(e){}}
+ try{PACK=JSON.parse(LS.get('parts:last'))}catch(e){}
+ if(PACK)load(PACK);else{resize();$('ttl').textContent='素材パックを開いてください';$('tools').innerHTML='';hint('素材パックが読めませんでした。「素材パックを開く」から選べます',5000)}}
+boot();
 </script></body></html>
