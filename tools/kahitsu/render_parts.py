@@ -6,7 +6,7 @@ from PIL import Image,ImageDraw
 def smooth(pts,k=.5,n=10):
     N=len(pts);out=[]
     for i in range(N):
-        a,b,c,d=pts[(i-1)%N],pts[i],pts[(i+1)%N],pts[(i+2)%N];c1=(b[0]+(c[0]-a[0])*k/3,b[1]+(c[1]-a[1])*k/3);c2=(c[0]-(d[0]-b[0])*k/3,c[1]-(d[1]-b[1])*k/3)
+        a,b,c,d=pts[(i-1)%N],pts[i],pts[(i+1)%N],pts[(i+2)%N];kb=0 if len(b)>2 and b[2] else k;kc=0 if len(c)>2 and c[2] else k;c1=(b[0]+(c[0]-a[0])*kb/3,b[1]+(c[1]-a[1])*kb/3);c2=(c[0]-(d[0]-b[0])*kc/3,c[1]-(d[1]-b[1])*kc/3)   # [x,y,1]＝角（parts.html と同じ）
         for j in range(n):
             t=j/n;u=1-t;out.append((u**3*b[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t**3*c[0],u**3*b[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t**3*c[1]))
     return out
@@ -42,8 +42,10 @@ def main(packf,retf,od):
             ch=[]
             if len(p['pts'])!=len(q['pts']): ch.append(f'点 {len(q["pts"])}→{len(p["pts"])}')
             else:
-                mv=max(math.hypot(x-u,y-v) for (x,y),(u,v) in zip(p['pts'],q['pts']))
+                mv=max(math.hypot(P[0]-Q[0],P[1]-Q[1]) for P,Q in zip(p['pts'],q['pts']))
                 if mv>1: ch.append(f'点が最大 {mv:.0f} 動いた')
+            nc=lambda ps:sum(1 for t in ps if len(t)>2 and t[2])
+            if nc(p['pts'])!=nc(q['pts']): ch.append(f'角の点 {nc(q["pts"])}→{nc(p["pts"])}')
             if p['color']!=q['color']: ch.append(f'色 {q["color"]}→{p["color"]}')
             if p.get('strokes'): ch.append(f'塗り {len(p["strokes"])} 本')
             if abs(p['z']-q['z'])>1e-6: ch.append(f'重なり {q["z"]}→{p["z"]}')

@@ -5,11 +5,17 @@
 「胴（全体）」「頭（全体）」を動かすと、その子の部品が全部ついてくる"""
 import json,sys,math,glob,os
 def area(p): return abs(sum(p[i][0]*p[(i+1)%len(p)][1]-p[(i+1)%len(p)][0]*p[i][1] for i in range(len(p))))/2
-def cen(p): return (sum(x for x,y in p)/len(p),sum(y for x,y in p)/len(p))
-def thin(p,n=26):
+def cen(p): return (sum(q[0] for q in p)/len(p),sum(q[1] for q in p)/len(p))
+def turn(p,i):
+    a,b,c=p[i-1],p[i],p[(i+1)%len(p)];v=(b[0]-a[0],b[1]-a[1]);u=(c[0]-b[0],c[1]-b[1]);d=math.hypot(*v)*math.hypot(*u)
+    return 0 if d<1e-9 else math.acos(max(-1,min(1,(v[0]*u[0]+v[1]*u[1])/d)))
+def thin(p,n=26,sharp=True):
+    """点を n 個くらいに減らす。とがった所（向きが 50 度より急に変わる点）は必ず残して角の点 [x,y,1] にする（parts.html で丸くならない）"""
     if len(p)>1 and math.hypot(p[0][0]-p[-1][0],p[0][1]-p[-1][1])<.5: p=p[:-1]
-    if len(p)<=n: return p
-    return [p[int(i*len(p)/n)] for i in range(n)]
+    C=set(i for i in range(len(p)) if sharp and len(p)>3 and turn(p,i)>math.radians(50))
+    if len(C)>n*.6: C=set()   # ほとんど全部が角＝ぎざぎざの線。角にしない
+    keep=range(len(p)) if len(p)<=n else sorted(C|set(int(i*len(p)/n) for i in range(n)))
+    return [(p[i][0],p[i][1],1) if i in C else (p[i][0],p[i][1]) for i in keep]
 def fat(p,w):
     L=[];R=[]
     for i,(x,y) in enumerate(p):
@@ -26,12 +32,13 @@ def build(id,name,kind,shapes,mode):
     S=[]
     for s in shapes:
         p=[tuple(q) for q in s['pts']]
-        if s['k']=='stroke': p=fat(p,max(2,s['w']))
-        p=thin(p)
+        st=s['k']=='stroke'
+        if st: p=fat(p,max(2,s['w']))
+        p=thin(p,sharp=not st)   # 線をふくらませた形は、端が丸い（lineCap round）ので角にしない
         if len(p)<3 or area(p)<2: continue
         S.append(dict(pts=p,color=hexa(s['c']),a=s.get('a',1)))
-    xs=[x for s in S for x,y in s['pts']];ys=[y for s in S for x,y in s['pts']];m=40;x0,y0=min(xs)-m,min(ys)-m;w,h=int(max(xs)-min(xs)+2*m),int(max(ys)-min(ys)+2*m)
-    for s in S: s['pts']=[[round(x-x0,1),round(y-y0,1)] for x,y in s['pts']]
+    xs=[q[0] for s in S for q in s['pts']];ys=[q[1] for s in S for q in s['pts']];m=40;x0,y0=min(xs)-m,min(ys)-m;w,h=int(max(xs)-min(xs)+2*m),int(max(ys)-min(ys)+2*m)
+    for s in S: s['pts']=[[round(q[0]-x0,1),round(q[1]-y0,1)]+([1] if len(q)>2 else []) for q in s['pts']]
     W,Hh=max(xs)-min(xs),max(ys)-min(ys);parts=[];cnt={}
     def nm(b):
         cnt[b]=cnt.get(b,0)+1;return b if cnt[b]==1 else f'{b} {cnt[b]}'
