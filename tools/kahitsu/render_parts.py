@@ -18,7 +18,14 @@ def strokes(d,ss):
 def render(it,parts,sketch=None,S=2):
     w,h=it['w'],it['h'];im=Image.new('RGB',(w*S,h*S),it.get('bg','#e9e6dc'))
     sc=lambda ps:[(x*S,y*S) for x,y in ps]
+    byid={p['id']:p for p in parts}
+    def hid(p,n=0):
+        while p and n<50:
+            if p.get('hide'): return True
+            p=byid.get(p.get('parent'));n+=1
+        return False
     for p in sorted(parts,key=lambda p:p['z']):
+        if p.get('folder') or len(p['pts'])<3 or hid(p): continue   # フォルダ・見せない部品は描かない
         poly=sc(smooth(p['pts']))
         if p.get('a',1)<1:
             L0=Image.new('RGB',im.size,p['color']);m0=Image.new('L',im.size,0);ImageDraw.Draw(m0).polygon(poly,fill=int(255*p['a']));im.paste(L0,(0,0),m0)
@@ -38,8 +45,10 @@ def main(packf,retf,od):
         o={p['id']:p for p in it['parts']}
         for p in r['parts']:
             q=o.get(p['id'])
-            if not q: md.append(f'  - 新しい部品：{p["name"]}');continue
+            if not q: md.append(f'  - 新しい{"フォルダ" if p.get("folder") else "部品"}：{p["name"]}'+(f'（中身：'+'・'.join(x["name"] for x in r["parts"] if x.get("parent")==p["id"])+'）' if p.get('folder') else '')+('（見せない）' if p.get('hide') else ''));continue
             ch=[]
+            if p.get('parent')!=q.get('parent'): ch.append('入れ物 '+next((x['name'] for x in it['parts'] if x['id']==q.get('parent')),'なし')+'→'+next((x['name'] for x in r['parts'] if x['id']==p.get('parent')),'なし'))
+            if p.get('hide'): ch.append('見せない')
             if len(p['pts'])!=len(q['pts']): ch.append(f'点 {len(q["pts"])}→{len(p["pts"])}')
             else:
                 mv=max(math.hypot(P[0]-Q[0],P[1]-Q[1]) for P,Q in zip(p['pts'],q['pts']))
