@@ -1,0 +1,42 @@
+{
+  "format": "p3a-steps",
+  "v": 1,
+  "note": "手で書いた見本（本物の操作の記録ではない）。AI が頭の下組み → 人が整える → AI が手直し → 人がさらに直す。",
+  "init": { "scenes": [{ "id": "s1" }], "stages": { "art": "ai", "motion": "ai" }, "perms": { "remove": "propose" } },
+  "steps": [
+    { "by": "ai", "group": "job-shitagumi", "note": "AI：頭の下組み", "ops": [
+      { "type": "node.add", "node": { "id": "head", "scene": "s1", "kind": "group", "name": "頭", "order": "i" } },
+      { "type": "node.add", "node": { "id": "skull", "scene": "s1", "kind": "shape", "name": "頭の形", "parent": "head", "order": "c",
+        "geo": { "t": "path", "closed": true, "pts": [
+          { "id": "a", "p": { "k": "static", "v": [0, 0] } }, { "id": "b", "p": { "k": "static", "v": [120, -20] } },
+          { "id": "c", "p": { "k": "static", "v": [200, 40] } }, { "id": "d", "p": { "k": "static", "v": [110, 110] } }, { "id": "e", "p": { "k": "static", "v": [10, 90] } } ] },
+        "fill": { "color": { "k": "static", "v": { "k": "hex", "v": "#8a7a90" } } } } },
+      { "type": "node.add", "node": { "id": "eye", "scene": "s1", "kind": "shape", "name": "目", "parent": "head", "order": "k",
+        "geo": { "t": "ellipse", "size": { "k": "static", "v": [14, 14] } }, "xf": { "pos": { "k": "static", "v": [70, 10] } },
+        "fill": { "color": { "k": "static", "v": { "k": "hex", "v": "#222222" } } } } },
+      { "type": "node.add", "node": { "id": "ear", "scene": "s1", "kind": "shape", "name": "耳", "parent": "head", "order": "r",
+        "geo": { "t": "ellipse", "size": { "k": "static", "v": [26, 30] } }, "xf": { "pos": { "k": "static", "v": [30, -18] } },
+        "fill": { "color": { "k": "static", "v": { "k": "hex", "v": "#7a6a80" } } } } }
+    ] },
+    { "by": "human", "note": "人：鼻先の点を動かす", "ops": [{ "type": "pt.nudge", "node": "skull", "pt": "c", "d": [12, 6] }] },
+    { "by": "human", "note": "人：あごに点を足す", "ops": [{ "type": "pt.add", "node": "skull", "pt": { "id": "jaw", "p": { "k": "static", "v": [160, 100] } }, "after": "c" }] },
+    { "by": "human", "note": "人：色を変える", "ops": [{ "type": "prop.set", "node": "skull", "path": "fill.color", "value": { "k": "static", "v": { "k": "hex", "v": "#85748c" } } }] },
+    { "by": "human", "note": "人：鼻の穴を足す", "ops": [{ "type": "node.add", "node": { "id": "nostril", "scene": "s1", "kind": "shape", "name": "鼻の穴", "parent": "head", "order": "m",
+        "geo": { "t": "ellipse", "size": { "k": "static", "v": [8, 5] } }, "xf": { "pos": { "k": "static", "v": [185, 30] } }, "fill": { "color": { "k": "static", "v": { "k": "hex", "v": "#4a3f50" } } } } }] },
+    { "by": "ai", "group": "job-tenaoshi", "note": "AI：手直し（輪郭をなめらかに・目を少し動かす・耳の色）", "ops": [
+      { "type": "pt.handle", "node": "skull", "pt": "b", "which": "out", "value": { "k": "static", "v": [30, 0] } },
+      { "type": "pt.handle", "node": "skull", "pt": "c", "which": "in", "value": { "k": "static", "v": [0, -25] } },
+      { "type": "pt.nudge", "node": "skull", "pt": "d", "d": [-4, 3] },
+      { "type": "pt.add", "node": "skull", "pt": { "id": "brow", "p": { "k": "static", "v": [60, -22] } }, "after": "a" },
+      { "type": "prop.nudge", "node": "eye", "path": "xf.pos", "d": [3, -2] },
+      { "type": "prop.set", "node": "ear", "path": "fill.color", "value": { "k": "static", "v": { "k": "hex", "v": "#70607a" } } },
+      { "type": "node.move", "node": "ear", "parent": "head", "order": "b" }
+    ] },
+    { "by": "human", "note": "人：AI が動かした点 d をさらに動かす", "ops": [{ "type": "pt.nudge", "node": "skull", "pt": "d", "d": [0, 5] }] },
+    { "by": "human", "note": "人：AI が足した眉の点を直す", "ops": [{ "type": "pt.nudge", "node": "skull", "pt": "brow", "d": [2, -3] }] },
+    { "by": "human", "note": "人：耳の色を自分で決める", "ops": [{ "type": "prop.set", "node": "ear", "path": "fill.color", "value": { "k": "static", "v": { "k": "hex", "v": "#6b5b75" } } }] },
+    { "by": "human", "note": "人：目を動かす", "ops": [{ "type": "prop.nudge", "node": "eye", "path": "xf.pos", "d": [0, 1.5] }] },
+    { "by": "human", "note": "人：直前を取り消す", "undo": true },
+    { "by": "human", "proposal": "pr-1", "note": "人：AI の「鼻の穴を消す」提案を採る", "ops": [{ "type": "node.remove", "node": "nostril" }] }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "lab-p4-log",
+  "v": 1,
+  "mode": "s",
+  "note": "P4 の「操作の記録」の形をまねて手で書いた見本（本物の操作の記録ではない）。start は始めの文書（AI の下組み）。",
+  "synthetic": true,
+  "start": { "kind": "lab-p4-doc", "v": 1, "nodes": [
+    { "id": "s-dou", "name": "胴", "kind": "shape", "parent": null, "xf": { "pos": [915, 445], "rot": 0 }, "geo": { "t": "rect", "size": [620, 330], "round": 150 }, "fill": "#8A7A90", "stroke": null },
+    { "id": "s-atama", "name": "頭", "kind": "shape", "parent": null, "xf": { "pos": [520, 420], "rot": 0 }, "geo": { "t": "ellipse", "size": [330, 250] }, "fill": "#8A7A90", "stroke": null },
+    { "id": "s-ashi", "name": "前脚", "kind": "shape", "parent": null, "xf": { "pos": [700, 660], "rot": 90 }, "geo": { "t": "capsule", "len": 240, "w": 120 }, "fill": "#7A6A80", "stroke": null },
+    { "id": "s-me", "name": "目", "kind": "shape", "parent": null, "xf": { "pos": [470, 360], "rot": 0 }, "geo": { "t": "ellipse", "size": [26, 26] }, "fill": "#222222", "stroke": null }
+  ] },
+  "ops": [
+    { "n": 1, "at": 0, "ms": 1000, "type": "prop.nudge", "ids": ["s-atama"], "args": { "what": "move", "m": [1, 0, 0, 1, -18, 6] } },
+    { "n": 2, "at": 0, "ms": 4000, "type": "prop.set", "ids": ["s-dou", "s-atama"], "args": { "path": "fill", "value": "#85748C" } },
+    { "n": 3, "at": 0, "ms": 9000, "type": "prop.nudge", "ids": ["s-ashi"], "args": { "what": "rotate", "deg": -6, "m": [1, 0, 0, 1, 0, 0] } },
+    { "n": 4, "at": 0, "ms": 12000, "type": "convert", "ids": ["s-atama"], "args": { "to": "path" } },
+    { "n": 5, "at": 0, "ms": 15000, "type": "pt.nudge", "ids": ["p_x1"], "args": { "d": [4, -3] } },
+    { "n": 6, "at": 0, "ms": 20000, "type": "node.add", "ids": ["n_hana"], "args": { "via": "ellipse", "name": "鼻の穴", "geo": { "t": "ellipse", "size": [18, 10] }, "xf": { "pos": [380, 430], "rot": 0 }, "fill": "#4A3F50" } },
+    { "n": 7, "at": 0, "ms": 24000, "type": "pt.add", "ids": ["n_shiwa"], "args": { "pt": "q1", "p": [600, 380], "out": null, "corner": false, "via": "pen" } },
+    { "n": 8, "at": 0, "ms": 25000, "type": "pt.add", "ids": ["n_shiwa"], "args": { "pt": "q2", "p": [640, 400], "out": [10, 4], "corner": false, "via": "pen" } },
+    { "n": 9, "at": 0, "ms": 26000, "type": "pen.end", "ids": ["n_shiwa"], "args": {} },
+    { "n": 10, "at": 0, "ms": 30000, "type": "pt.nudge", "ids": ["q2"], "args": { "d": [3, 3] } },
+    { "n": 11, "at": 0, "ms": 33000, "type": "node.rename", "ids": ["s-me"], "args": { "name": "右目" } },
+    { "n": 12, "at": 0, "ms": 36000, "type": "node.move", "ids": ["s-me"], "args": { "dir": "top", "order": ["s-dou", "s-atama", "s-ashi", "n_hana", "n_shiwa", "s-me"] } },
+    { "n": 13, "at": 0, "ms": 40000, "type": "node.add", "ids": ["g_1"], "args": { "via": "group", "name": "顔", "children": ["s-me", "n_hana"] } },
+    { "n": 14, "at": 0, "ms": 43000, "type": "prop.nudge", "ids": ["s-dou"], "args": { "what": "scale", "m": [1.1, 0, 0, 1, -90, 0] } },
+    { "n": 15, "at": 0, "ms": 46000, "type": "undo", "ids": [] },
+    { "n": 16, "at": 0, "ms": 50000, "type": "node.add", "ids": ["n_copy"], "args": { "via": "duplicate", "from": ["s-ashi"], "m": [1, 0, 0, 1, 20, 20] } },
+    { "n": 17, "at": 0, "ms": 55000, "type": "node.remove", "ids": ["s-ashi"] }
+  ]
+}
