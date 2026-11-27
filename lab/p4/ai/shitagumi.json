@@ -1,0 +1,247 @@
+{
+ "kind": "lab-p4-doc",
+ "v": 1,
+ "w": 1600,
+ "h": 900,
+ "bg": "#DDE9C8",
+ "meta": {
+  "by": "ai",
+  "note": "AI の下組み。図形（円・角丸の四角・長丸）だけで、大きな形と主な部品を置いた。輪郭の調整・あご・口・しわ・光・つめ・しっぽは、人に残してある。"
+ },
+ "nodes": [
+  {
+   "id": "s-kage",
+   "name": "地面の影",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     830,
+     772
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     1100,
+     46
+    ]
+   },
+   "fill": "#BCD3A2",
+   "stroke": null
+  },
+  {
+   "id": "s-ashi-oku-ushiro",
+   "name": "奥の後ろ脚",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1140,
+     650
+    ],
+    "rot": 90
+   },
+   "geo": {
+    "t": "capsule",
+    "len": 250,
+    "w": 120
+   },
+   "fill": "#6E6075",
+   "stroke": null
+  },
+  {
+   "id": "s-ashi-oku-mae",
+   "name": "奥の前脚",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     650,
+     655
+    ],
+    "rot": 90
+   },
+   "geo": {
+    "t": "capsule",
+    "len": 240,
+    "w": 115
+   },
+   "fill": "#6E6075",
+   "stroke": null
+  },
+  {
+   "id": "s-dou",
+   "name": "胴",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     915,
+     445
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "rect",
+    "size": [
+     860,
+     440
+    ],
+    "round": 215
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "s-ashi-ushiro",
+   "name": "手前の後ろ脚",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1235,
+     640
+    ],
+    "rot": 90
+   },
+   "geo": {
+    "t": "capsule",
+    "len": 270,
+    "w": 135
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "s-ashi-mae",
+   "name": "手前の前脚",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     735,
+     650
+    ],
+    "rot": 90
+   },
+   "geo": {
+    "t": "capsule",
+    "len": 250,
+    "w": 125
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "s-atama",
+   "name": "頭",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     500,
+     420
+    ],
+    "rot": -12
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     400,
+     330
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "s-hanazura",
+   "name": "鼻づら",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     320,
+     455
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "rect",
+    "size": [
+     290,
+     270
+    ],
+    "round": 110
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "s-mimi",
+   "name": "耳",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     590,
+     262
+    ],
+    "rot": 18
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     58,
+     84
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "s-me",
+   "name": "目",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     505,
+     322
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     28,
+     30
+    ]
+   },
+   "fill": "#2F2734",
+   "stroke": null
+  }
+ ]
+}

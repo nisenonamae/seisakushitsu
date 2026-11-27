@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>曲線の画面（P4 試作）</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="top">
+  <b class="ttl">曲線の画面 <small>P4 試作</small></b>
+  <div class="seg" id="modes">
+    <button data-mode="h" title="空の画面から、自分で描く">① 人のみ</button>
+    <button data-mode="s" title="AI が図形で下組みした物を、自分で直す">② 下組み＋人</button>
+    <button data-mode="a" title="AI が仕上げまでやった物（見るだけ）">③ AI のみ</button>
+  </div>
+  <button id="bCompare" class="pri">見比べる・評価する</button>
+  <button id="bGoal">目標</button>
+  <span class="sp"></span>
+  <span id="timeBox" title="この作り方で、作業していた正味の時間（30秒より長く手が止まった分は数えない）">時間 0:00</span>
+  <button id="bUndo" title="取り消し（⌘Z）">↶ 取り消し</button>
+  <button id="bRedo" title="やり直し（⇧⌘Z）">↷ やり直し</button>
+  <details id="fileMenu" class="menu"><summary>保存・書き出し ▾</summary>
+    <div class="pop">
+      <button id="bSaveFile">絵をファイルに書き出す（JSON）</button>
+      <button id="bLoadFile">絵のファイルを読みこむ（JSON）</button>
+      <button id="bPng">PNG で書き出す（1600×900）</button>
+      <button id="bLog">操作の記録を書き出す（JSON）</button>
+      <hr>
+      <button id="bReset" class="danger">この作り方を最初からやり直す</button>
+      <p class="note">絵は、この端末の中に自動で残ります（押さなくてよい）。</p>
+    </div>
+  </details>
+  <input type="file" id="fDoc" accept=".json,application/json" hidden>
+</div>
+
+<div id="main">
+  <div id="tools">
+    <button data-tool="select" title="選ぶ・動かす（V）"><i>↖</i>選ぶ<kbd>V</kbd></button>
+    <button data-tool="point" title="点と取っ手を直す（A）"><i>◇</i>点を直す<kbd>A</kbd></button>
+    <button data-tool="pen" title="ペン（P）"><i>✒</i>ペン<kbd>P</kbd></button>
+    <hr>
+    <button data-tool="ellipse" title="円・だ円（O）"><i>◯</i>円<kbd>O</kbd></button>
+    <button data-tool="rect" title="角丸の四角（R）"><i>▢</i>四角<kbd>R</kbd></button>
+    <button data-tool="capsule" title="長丸（L）"><i>⬭</i>長丸<kbd>L</kbd></button>
+    <hr>
+    <button data-tool="hand" title="画面を動かす（スペースを押しながら引いても同じ）"><i>✋</i>動かす<kbd>H</kbd></button>
+  </div>
+
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="banner" hidden></div>
+    <div id="bottom">
+      <span id="hint"></span>
+      <span class="sp"></span>
+      <label class="chk" title="マウスのホイールで拡大・縮小したいときに入れる（入れないと、ホイール＝画面を動かす）"><input type="checkbox" id="cWheel">ホイールで拡大</label>
+      <button id="bZoomOut" title="縮小（−）">−</button><span id="zoomBox">100%</span><button id="bZoomIn" title="拡大（＋）">＋</button>
+      <button id="bFit" title="全体を見る（0）">全体</button>
+    </div>
+  </div>
+
+  <div id="side">
+    <section id="secMode"><div id="modeInfo"></div>
+      <label class="chk" id="ghostRow" hidden><input type="checkbox" id="cGhost">元の下組みを赤い線で重ねる</label>
+    </section>
+
+    <section>
+      <h3>色</h3>
+      <div class="seg" id="colTarget"><button data-t="fill" class="on">塗り</button><button data-t="stroke">線</button></div>
+      <div id="pal"></div>
+      <div class="row"><label>自由な色 <input type="color" id="colFree" value="#8C7B90"></label><button id="bColNone">なし</button></div>
+      <div class="row"><label>線の太さ <input type="range" id="sw" min="1" max="60" step="1" value="8"><input type="number" id="swN" min="0.5" max="200" step="0.5" value="8"></label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="cCap" checked>線の端を丸く</label></div>
+      <div class="cur">いまの色：塗り <i id="curFill"></i>　線 <i id="curStroke"></i></div>
+    </section>
+
+    <section id="secPen">
+      <h3>ペン・長丸</h3>
+      <label class="chk" title="入れると、押しただけの点も、前後からなめらかにつながる点になる（取っ手は自動）"><input type="checkbox" id="cAuto">押すだけでも、なめらかな点にする</label>
+      <div class="row"><label>長丸の太さ <input type="number" id="capW" min="4" max="600" step="2" value="90"></label></div>
+    </section>
+
+    <section id="secShape" hidden>
+      <h3>図形の数値</h3>
+      <div class="grid2">
+        <label>横の位置<input type="number" id="pX" step="1"></label><label>縦の位置<input type="number" id="pY" step="1"></label>
+        <label id="lW">幅<input type="number" id="pW" step="1" min="1"></label><label id="lH">高さ<input type="number" id="pH" step="1" min="1"></label>
+        <label id="lR">丸み<input type="number" id="pR" step="1" min="0"></label><label>回転（度）<input type="number" id="pRot" step="1"></label>
+      </div>
+      <button id="bToPath">自由な形に変える（点を直せるようにする）</button>
+    </section>
+
+    <section id="secPoint" hidden>
+      <h3>選んだ点</h3>
+      <div class="btns">
+        <button id="bSmooth">なめらかにする</button><button id="bCorner">角にする</button>
+        <button id="bAutoH">取っ手を自動に戻す</button><button id="bDelPt">点を消す</button>
+      </div>
+      <p class="note">線の上を押すと点が足せます。点を2回続けて押すと、なめらか⇔角。取っ手は、⌥（option）を押しながら引くと片側だけ動きます。</p>
+    </section>
+
+    <section id="secPart">
+      <h3>選んだ部品 <small id="selInfo"></small></h3>
+      <div class="btns">
+        <button id="bDup" title="⌘D">複製</button><button id="bCopy" title="⌘C">コピー</button><button id="bPaste" title="⌘V">貼り付け</button><button id="bDel" title="delete">消す</button>
+        <button id="bFlipH">左右反転</button><button id="bFlipV">上下反転</button><button id="bMirror">左右反転の写しを作る</button>
+      </div>
+      <div class="row"><button id="bSeisho">清書（点を減らす）</button><label>強さ <input type="range" id="seiTol" min="0.5" max="12" step="0.5" value="2.5"></label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="cFillOn">塗る</label><label class="chk"><input type="checkbox" id="cStrokeOn">線を付ける</label></div>
+    </section>
+
+    <section>
+      <h3>部品の一覧 <small>（上にある物ほど手前）</small></h3>
+      <div class="btns">
+        <button id="bUp" title="］">手前へ</button><button id="bDown" title="［">奥へ</button><button id="bTop">いちばん手前</button><button id="bBottom">いちばん奥</button>
+        <button id="bGroup" title="⌘G">グループにする</button><button id="bUngroup" title="⇧⌘G">グループをとく</button>
+      </div>
+      <div id="list"></div>
+      <p class="note">名前を2回続けて押すと、名前を変えられます。⇧ か ⌘ を押しながら押すと、複数選べます。</p>
+    </section>
+
+    <section>
+      <h3>なぞる下敷き</h3>
+      <div class="btns"><button id="bUnder">画像を選ぶ</button><button id="bUnderMove">下敷きを動かす</button><button id="bUnderOff">外す</button></div>
+      <input type="file" id="fUnder" accept="image/*" hidden>
+      <div class="row"><label>濃さ <input type="range" id="uA" min="0.05" max="1" step="0.05" value="0.5"></label></div>
+      <div class="row"><label>大きさ <input type="range" id="uS" min="0.1" max="4" step="0.01" value="1"></label></div>
+      <label class="chk"><input type="checkbox" id="cSee">部品を半透明にして、下敷きを透かす</label>
+      <p class="note">画像をコピーして ⌘V でも置けます。下敷きは、保存にも書き出しにも入りません。自分で撮った写真・実物の写真だけにして、ほかの人のイラストはなぞらないでください。</p>
+    </section>
+  </div>
+</div>
+
+<div id="goalDlg" class="dlg" hidden><div class="box"><button class="x" data-close>閉じる</button><div id="goalBody"></div></div></div>
+<div id="cmp" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="goal.js"></script>
+<script src="ai/data.js"></script>
+<script src="geom.js"></script>
+<script src="app.js"></script>
+<script src="compare.js"></script>
+</body>
+</html>
