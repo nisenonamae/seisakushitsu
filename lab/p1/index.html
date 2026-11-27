@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P1 描く部品の比べ（Canvas 2D と CanvasKit）</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;background:#f4f1ea;color:#1b2340;line-height:1.6}
+  main{max-width:1500px;margin:0 auto;padding:16px}
+  h1{font-size:20px;margin:6px 0} h2{font-size:17px;margin:26px 0 8px;border-left:6px solid #ef476f;padding-left:10px}
+  button{font-size:16px;padding:10px 16px;border-radius:10px;border:2px solid #1b2340;background:#fff;cursor:pointer;margin:4px 6px 4px 0}
+  button.main{background:#1b2340;color:#fff} button:disabled{opacity:.4;cursor:default}
+  #status{background:#fff;border-radius:10px;padding:10px 14px;margin:10px 0;min-height:1.6em;font-weight:600}
+  table{border-collapse:collapse;background:#fff;font-size:13px} th,td{border:1px solid #d8d2c4;padding:5px 7px;vertical-align:top;text-align:left}
+  th{background:#ebe6da} td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .thumb{width:230px;height:auto;display:block;cursor:zoom-in;background:#ccc}
+  .ok{color:#06806a;font-weight:700}.ng{color:#c22748;font-weight:700}.na{color:#888}
+  .scroll{overflow-x:auto}
+  #view{background:#222;padding:8px;border-radius:10px;overflow:auto;max-height:90vh}
+  #view canvas,#view img{display:block;max-width:100%;height:auto}
+  #view.full canvas,#view.full img{max-width:none}
+  select{font-size:16px;padding:8px;margin-right:6px}
+  small{color:#5a6078} pre{background:#fff;padding:10px;border-radius:10px;overflow:auto;font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>P1 描く部品の比べ（Canvas 2D と CanvasKit）</h1>
+<p>この端末で、9つの試しの場面を4通りの描き方で描いて、速さと絵を記録します。<b>下の「① 測りはじめる」を押して、終わるまで（1〜3分）このタブを開いたまま待ってください。</b>終わったら「② 結果のファイルを保存する」を押し、保存されたファイルをチャットに添付して送ってください。<br>
+<small>このページは外と通信しません（GitHub にも送りません）。保存するファイルには、描いた絵・速さ・この端末とブラウザの種類が入ります。</small></p>
+
+<button class="main" id="bRun" type="button">① 測りはじめる</button>
+<button id="bZip" type="button" disabled>② 結果のファイルを保存する</button>
+<button id="bJson" type="button" disabled>（②が送れないとき）数字だけのファイルを保存する</button>
+<div id="status">まだ測っていません。</div>
+
+<h2>場面ごとの絵と差</h2>
+<p><small>絵を押すと、下の「大きく見る」に本番の大きさ（1920×1080）で出ます。「書き出しと同じ」＝ 作業場で書き出した絵と1画素も違わない。「差」＝ 違う画素の割合 ／ はっきり違う（色の差が8より大きい）画素の割合 ／ いちばん大きい色の差（0〜255）。</small></p>
+<div class="scroll"><table id="tbl"><thead><tr><th>場面</th><th>R1 Canvas 2D（ふつう）</th><th>R1 Canvas 2D（CPU で描く設定）</th><th>R2 CanvasKit（GPU）</th><th>R2 CanvasKit（CPU）</th><th>この端末の中での差</th></tr></thead><tbody></tbody></table></div>
+
+<h2>速さ（重い場面：部品200・ぼかし・合成）</h2>
+<div class="scroll"><table id="spd"><thead><tr><th>描き方</th><th>画面に出しながら（fps）</th><th>1コマを描く時間</th><th>いちばん長い止まり</th><th>詰めて描く：描く</th><th>詰めて描く：画素を取り出す</th></tr></thead><tbody></tbody></table></div>
+<div id="fpsHost" style="width:480px;max-width:100%"></div>
+
+<h2>大きく見る</h2>
+<select id="selScene"></select><select id="selKind"></select>
+<button id="bShow" type="button">この場面を描く</button>
+<button id="bAnim" type="button">動かす／止める</button>
+<button id="bFull" type="button">本番の大きさで見る／画面に合わせる</button>
+<div id="view"></div>
+
+<h2>この端末</h2>
+<pre id="dev"></pre>
+</main>
+<script src="vendor/canvaskit.js"></script>
+<script src="dl.js"></script>
+<script src="r1_canvas.js"></script>
+<script src="r2_canvaskit.js"></script>
+<script src="scenes.js"></script>
+<script src="harness.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const say = s => { $('status').textContent = s; };
+const pause = () => new Promise(r => setTimeout(r, 30));
+const fmt = (x, n) => x === null || x === undefined ? '—' : x.toFixed(n === undefined ? 1 : n);
+const result = { format: 'p1-result-1', device: null, load: null, errors: null, scenes: {}, speed: {}, reference: null };
+const files = []; // zip に入れる物
+let reference = null, running = false;
+
+for (const s of SCENES) $('selScene').add(new Option(s.name, s.id));
+for (const k of P1.KINDS) $('selKind').add(new Option(k.name, k.id));
+$('selScene').value = 'kz';
+
+async function ready() {
+  await P1.init();
+  if (!reference) {
+    try { const r = await fetch('reference.json'); if (r.ok) reference = await r.json(); } catch (e) {}
+  }
+  $('dev').textContent = JSON.stringify({ device: P1.device(), load: P1.load, errors: P1.errors }, null, 1);
+}
+
+async function runAll() {
+  if (running) return;
+  running = true; $('bRun').disabled = true; $('bZip').disabled = true; $('bJson').disabled = true;
+  try {
+    say('用意しています（CanvasKit を読みこみ中）…');
+    await pause(); await ready();
+    result.device = P1.device(); result.load = P1.load; result.reference = reference ? reference.made : null;
+    files.length = 0;
+    const tb = $('tbl').tBodies[0]; tb.textContent = '';
+    for (const sc of SCENES) {
+      const tr = tb.insertRow(); tr.insertCell().textContent = sc.name;
+      const pix = {}, seen = {}, rec = result.scenes[sc.id] = { kinds: {}, pairs: {} };
+      for (const k of P1.KINDS) {
+        say(sc.name + ' を ' + k.name + ' で描いています…'); await pause();
+        const td = tr.insertCell();
+        let r = null;
+        try { r = P1.renderPixels(k.id, sc.id, 0); } catch (e) { P1.errors[k.id] = String(e && e.message || e); }
+        if (!r) { td.innerHTML = '<span class="ng">描けない</span><br><small></small>'; td.lastChild.textContent = P1.errors[k.id] || ''; rec.kinds[k.id] = { error: P1.errors[k.id] || '描けない' }; continue; }
+        // 2回めも描いて、毎回同じになるかを見る
+        const r2 = P1.renderPixels(k.id, sc.id, 0);
+        const same = P1.diff(r.px, r2.px).diffPct === 0;
+        const px = new Uint8Array(r.px); // 写しを持つ
+        pix[k.id] = px;
+        const hash = await P1.hash(px);
+        const blob = await P1.toPNG(px);
+        const ref = reference && reference.hashes[sc.id] ? reference.hashes[sc.id][k.id] : null;
+        // ファイルを小さくする：書き出しと同じ絵・ほかの描き方と同じ絵・速さ用の場面の絵は、入れない（ハッシュで分かる）
+        let file = null;
+        if (hash && ref === hash) file = null;
+        else if (hash && seen[hash]) file = seen[hash];
+        else if (sc.id === 'heavy' && hash && k.id !== 'r2cpu') file = null;
+        else { file = sc.id + '__' + k.id + '.png'; files.push({ name: file, data: new Uint8Array(await blob.arrayBuffer()) }); if (hash) seen[hash] = file; }
+        rec.kinds[k.id] = { file, hash, drawMs: r.drawMs, readMs: r.readMs, sameTwice: same, matchesReference: ref && hash ? ref === hash : null, pngBytes: blob.size };
+        const im = new Image(); im.className = 'thumb'; im.src = URL.createObjectURL(blob);
+        im.onclick = () => { stopAnim(); const v = $('view'); v.textContent = ''; const big = new Image(); big.src = im.src; v.appendChild(big); };
+        td.appendChild(im);
+        const d = document.createElement('div');
+        d.innerHTML = (ref && hash ? (ref === hash ? '<span class="ok">書き出しと同じ</span>' : '<span class="ng">書き出しと違う</span>') : '<span class="na">書き出しとの比べなし</span>') +
+          ' ／ ' + (same ? '2回とも同じ' : '<span class="ng">2回で違う</span>') + '<br><small>描く ' + fmt(r.drawMs) + ' ms・取り出す ' + fmt(r.readMs) + ' ms</small>';
+        td.appendChild(d);
+      }
+      const td = tr.insertCell(); let h = '';
+      for (const [a, b, nm] of [['r1', 'r1cpu', 'R1：ふつう↔CPU'], ['r2gpu', 'r2cpu', 'R2：GPU↔CPU'], ['r1cpu', 'r2cpu', 'R1(CPU)↔R2(CPU)'], ['r1', 'r2gpu', 'R1(ふつう)↔R2(GPU)']]) {
+        if (!pix[a] || !pix[b]) continue;
+        const d = P1.diff(pix[a], pix[b]); rec.pairs[a + '_' + b] = d;
+        h += nm + '：' + (d.diffPct === 0 ? '<span class="ok">同じ</span>' : fmt(d.diffPct, 2) + '% ／ ' + fmt(d.over8Pct, 3) + '% ／ ' + d.max) + '<br>';
+      }
+      td.innerHTML = h;
+    }
+    // 速さ
+    const sb = $('spd').tBodies[0]; sb.textContent = '';
+    for (const k of P1.KINDS) {
+      say('速さを測っています：' + k.name + '（4秒＋少し）…'); await pause();
+      const tr = sb.insertRow(); tr.insertCell().textContent = k.name;
+      let f, b;
+      try { f = await P1.fps(k.id, 'heavy', 4, $('fpsHost')); b = await P1.bench(k.id, 'heavy', 10); } catch (e) { f = { error: String(e) }; b = { error: String(e) }; }
+      result.speed[k.id] = { fps: f, bench: b };
+      if (f.error) { const c = tr.insertCell(); c.colSpan = 5; c.textContent = '描けない：' + f.error; continue; }
+      for (const v of [fmt(f.fps) + ' fps', fmt(f.drawMs) + ' ms', fmt(f.worstGapMs) + ' ms', fmt(b.drawMs) + ' ms', fmt(b.readMs) + ' ms']) { const c = tr.insertCell(); c.className = 'num'; c.textContent = v; }
+    }
+    $('fpsHost').textContent = '';
+    // 絵の質の場面も動かして測る
+    for (const k of P1.KINDS) {
+      say('速さを測っています（小さな場面）：' + k.name + '…'); await pause();
+      try { result.speed[k.id].kzFps = await P1.fps(k.id, 'kz', 2, $('fpsHost')); } catch (e) { result.speed[k.id].kzFps = { error: String(e) }; }
+    }
+    $('fpsHost').textContent = '';
+    result.errors = P1.errors; result.finished = new Date().toISOString();
+    $('dev').textContent = JSON.stringify({ device: result.device, load: P1.load, errors: P1.errors }, null, 1);
+    $('bZip').disabled = false; $('bJson').disabled = false;
+    say('終わりました。「② 結果のファイルを保存する」を押して、保存されたファイルをチャットに添付して送ってください。');
+  } catch (e) {
+    say('途中で止まりました：' + (e && e.message || e) + '　この文をそのままチャットで伝えてください。');
+  }
+  running = false; $('bRun').disabled = false;
+}
+function tag() {
+  const ua = navigator.userAgent;
+  const os = /CrOS/.test(ua) ? 'chromebook' : /Mac/.test(ua) ? 'mac' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Linux/.test(ua) ? 'linux' : 'other';
+  const br = /Edg\//.test(ua) ? 'edge' : /Chrome\//.test(ua) ? 'chrome' : /Firefox\//.test(ua) ? 'firefox' : /Safari\//.test(ua) ? 'safari' : 'other';
+  return os + '-' + br;
+}
+function save(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+$('bRun').onclick = runAll;
+$('bZip').onclick = () => {
+  const info = new TextEncoder().encode(JSON.stringify(result, null, 1));
+  save(P1.zip([{ name: 'info.json', data: info }].concat(files)), 'p1-result-' + tag() + '.zip');
+  say('保存しました（ダウンロードの所に p1-result-' + tag() + '.zip）。このファイルをチャットに添付して送ってください。');
+};
+$('bJson').onclick = () => {
+  save(new Blob([JSON.stringify(result, null, 1)], { type: 'application/json' }), 'p1-result-' + tag() + '.json');
+  say('保存しました（p1-result-' + tag() + '.json）。');
+};
+
+// 大きく見る
+let anim = 0;
+function stopAnim() { if (anim) { cancelAnimationFrame(anim); anim = 0; } }
+async function show(animate) {
+  stopAnim(); if (running) return;
+  await ready();
+  const kind = $('selKind').value, sid = $('selScene').value;
+  const r = P1.renderer(kind), v = $('view');
+  if (!r) { v.textContent = '描けない：' + (P1.errors[kind] || ''); v.style.color = '#fff'; return; }
+  v.textContent = ''; v.appendChild(r.canvas);
+  const make = P1.scene(sid).make, t0 = performance.now();
+  const step = () => { r.render(make(animate ? (performance.now() - t0) / 1000 : 0)); r.flush(); if (animate) anim = requestAnimationFrame(step); };
+  step();
+}
+$('bShow').onclick = () => show(false);
+$('bAnim').onclick = () => { if (anim) stopAnim(); else show(true); };
+$('bFull').onclick = () => $('view').classList.toggle('full');
+</script>
+</body>
+</html>
