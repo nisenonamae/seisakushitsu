@@ -285,6 +285,8 @@ function pass(dr, log, idxs, set, ch, opt) {
       // 「その後に起きたこと」。足す量・掛ける量は、番地の索引から「有るか無いか」だけを数える（聞く・残すになる時だけ、下の一覧を作る）
       let plan = null;
       if (!tuning.noFast && (E.k === 'delta' || E.k === 'mul')) plan = quickNum(E, nearFlags(log, addr, from, set), dr.doc, { rebuild: (e) => rebuild(e, key) });
+      // 置きかえ（種類の切りかえでない物）で、あとから同じ所・上の所が置きかえられている → 上書き済み（一覧を作らずに決まる。classify の set と同じ順）
+      else if (!tuning.noFast && E.k === 'set' && !E.kind) { const par = getAt(dr.doc, E.at.slice(0, -1)); if (par == null || typeof par !== 'object' || Array.isArray(par)) plan = { result: 'noop', why: 'gone' }; else if (nearFlags(log, addr, from, set)[K_SET]) plan = { result: 'noop', why: 'overwritten' }; }
       if (!plan) {
         const later = [];
         if (tuning.noFast) {

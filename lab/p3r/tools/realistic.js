@@ -12,7 +12,7 @@
 //   ・drag='commit'：1 回のドラッグ＝1 命令（指を離した時に送る）。drag='stream'：ドラッグの途中も送る（1 回のドラッグ＝6〜24 命令）。
 // 件数の見積もり（commit）：物 1 個・1 回めで 約 330 件（AI 50＋人 約 190＋取り消し 約 30＋AI の直し 約 20＋ほか）。部品 300・2 回で 約 6〜8 千件。stream では、人の手が 約 12 倍になる。
 // この割合（何割に手を入れるか・1部品に何手か・取り消しの頻度）は、**根拠のある数字ではなく、担当の見立て**。P4 の作り手の評価（本物の操作の記録）が出たら、置きかえる。
-import { mulberry32, makeUndo, makeRedo, rankBetween } from '../src/index.js';
+import { mulberry32, makeUndo, makeRedo } from '../src/index.js';
 export const INIT = { scenes: [{ id: 's1' }], stages: { art: 'ai', motion: 'ai', script: 'ai' } };
 const S = (v) => ({ k: 'static', v }); const H = { sender: { k: 'human', device: 'mac' } }; const A = { sender: { k: 'ai', agent: 'w1' } };
 /**
@@ -22,7 +22,7 @@ const S = (v) => ({ k: 'static', v }); const H = { sender: { k: 'human', device:
 export function runRealistic(o, io) {
   const parts = o.parts || 120; const rounds = o.rounds || 2; const stream = o.drag === 'stream'; const rng = mulberry32(o.seed || 1); const R = (n) => Math.floor(rng() * n); const r1 = (x) => Math.round(x * 10) / 10;
   const stats = { applied: 0, rejected: 0, byType: {}, undo: 0, redo: 0, selRecent: 0, selOld: 0, aiRecords: 0, humanRecords: 0, drags: 0 }; let c = 0;
-  const tasks = []; const objs = []; let taskNo = 0; let curTask = null; let lastOrder = null;
+  const tasks = []; const objs = []; let taskNo = 0; let curTask = null; let ord = 0; const nextOrder = () => 'i' + (++ord).toString(36).padStart(5, '0') + 'i';   // 重なり順の印は、番号から作る（rankBetween を何千回もつなぐと、印が長くなりすぎる）
   const send = (body, ctx, extra = {}) => {
     const actor = ctx === A ? { k: 'ai', agent: 'w1', task: `task${curTask}` } : { k: 'human', device: 'mac' }; const node = body.node && typeof body.node === 'string' ? body.node : null;
     const cmd = { id: `r${++c}`, v: body.type === 'prop.set' ? 2 : 1, actor, base: node && io.state.doc.revs[`node:${node}`] !== undefined ? { [`node:${node}`]: io.state.doc.revs[`node:${node}`] } : {}, body, ...extra };
@@ -47,8 +47,8 @@ export function runRealistic(o, io) {
     const y = rng();
     if (y < 0.06 && pts.length < 11) send({ type: 'pt.add', node: p, pt: { id: `a${c}`, p: S([r1(rng() * 50), r1(rng() * 50)]) } }, H);
     else if (y < 0.09 && pts.length > 3) send({ type: 'pt.remove', node: p, pt: pts[R(pts.length)] }, H);
-    else if (y < 0.14) send({ type: 'node.move', node: p, parent: n.parent ?? null, order: (lastOrder = rankBetween(lastOrder, null)) }, H);
-    else if (y < 0.17) { const id = `d${c}`; const copy = JSON.parse(JSON.stringify(n)); copy.id = id; copy.name = n.name + 'の写し'; copy.order = (lastOrder = rankBetween(lastOrder, null)); delete copy.parent; if (send({ type: 'node.add', node: copy }, H).status === 'applied') ob.parts.push(id); }
+    else if (y < 0.14) send({ type: 'node.move', node: p, parent: n.parent ?? null, order: nextOrder() }, H);
+    else if (y < 0.17) { const id = `d${c}`; const copy = JSON.parse(JSON.stringify(n)); copy.id = id; copy.name = n.name + 'の写し'; copy.order = nextOrder(); delete copy.parent; if (send({ type: 'node.add', node: copy }, H).status === 'applied') ob.parts.push(id); }
     else if (y < 0.2) send({ type: 'node.rename', node: p, name: `${n.name}'` }, H);
     else if (y < 0.3 && pts.length) send({ type: 'geo.set', node: p, geo: { t: 'path', closed: true, pts: n.geo.pts.map((q) => ({ id: q.id, p: S(q.p.v.map((v) => Math.round(v))), in: S([1, 0]), out: S([-1, 0]) })) } }, H);   // 清書：点をそろえて、取っ手を付け直す
     else if (y < 0.4) { if (send({ type: 'prop.kind', node: p, path: 'xf.rot', value: { k: 'keys', keys: [{ id: 'k1', t: { k: 'sec', s: 0 }, v: 0 }, { id: 'k2', t: { k: 'sec', s: 1 }, v: 10 }] } }, H).status === 'applied') { const m = 2 + R(3); for (let i = 0; i < m; i++) send({ type: 'key.value', node: p, path: 'xf.rot', key: 'k2', v: R(90) }, H); } }
@@ -56,8 +56,8 @@ export function runRealistic(o, io) {
   };
   const aiBuild = (oi) => {
     curTask = taskNo++; tasks.push({ ids: [], obj: oi }); const ob = { parts: [], builds: [curTask], revs: [] }; objs.push(ob); const n = Math.min(26, parts - oi * 26);
-    for (let i = 0; i < n; i++) { const id = `o${oi}p${i}`; const np = i === 0 ? 11 : 3 + R(6); lastOrder = rankBetween(lastOrder, null);
-      if (send({ type: 'node.add', node: { id, scene: 's1', kind: 'shape', name: `物${oi}の部品${i}`, order: lastOrder, geo: { t: 'path', closed: true, pts: Array.from({ length: np }, (_, j) => ({ id: `p${j}`, p: S([r1(rng() * 100), r1(rng() * 100)]), in: S([2, 0]), out: S([-2, 0]) })) }, fill: { color: hex() }, xf: { pos: S([oi * 120, 0]), scale: S([1, 1]), rot: S(0) } } }, A).status === 'applied') ob.parts.push(id); }
+    for (let i = 0; i < n; i++) { const id = `o${oi}p${i}`; const np = i === 0 ? 11 : 3 + R(6); 
+      if (send({ type: 'node.add', node: { id, scene: 's1', kind: 'shape', name: `物${oi}の部品${i}`, order: nextOrder(), geo: { t: 'path', closed: true, pts: Array.from({ length: np }, (_, j) => ({ id: `p${j}`, p: S([r1(rng() * 100), r1(rng() * 100)]), in: S([2, 0]), out: S([-2, 0]) })) }, fill: { color: hex() }, xf: { pos: S([oi * 120, 0]), scale: S([1, 1]), rot: S(0) } } }, A).status === 'applied') ob.parts.push(id); }
     for (const p of ob.parts) { if (rng() < 0.5) send({ type: 'prop.set', node: p, path: 'fill.color', value: hex() }, A); if (rng() < 0.25) send({ type: 'prop.nudge', node: p, path: 'xf.pos', d: [r1(rng() * 20 - 10), r1(rng() * 20 - 10)] }, A); if (rng() < 0.12) send({ type: 'prop.scale', node: p, path: 'xf.scale', f: [[0.8, 1.25, 1.1][R(3)]] }, A); }
     return ob;
   };

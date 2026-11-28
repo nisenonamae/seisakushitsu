@@ -33,15 +33,16 @@ out.buildS = +((now() - t) / 1000).toFixed(1); out.records = logLength(io.state.
 const m1 = gc(); out.heapMB = m1.heap - mem0.heap; out.typedMB = m1.ext - mem0.ext; out.rssMB = m1.rss; out.index = indexStats(io.state.log); emit('built');
 if (MODE.startsWith('real')) { const { aiRecordIds } = await import('../src/index.js'); if (!st) for (const x of aiRecordIds(s.log)) aiIds.push(x); else { /* 本体を読まずに済むよう、AI の記録の id は作り手の番号から */ } }
 // 取り消し：直前の操作（200 往復）・古い AI の記録（頭・まん中・終わりから 40 件を 1 件ずつ）
+let round = 0;
 const ops = () => {
   const o = {}; let t0 = now(); let k = 0;
   for (let i = 0; i < 200; i++) { const u = makeUndo(io.state.log, 'mac', id()); if (!u) break; let r = io.apply([u], HU); if (r.status !== 'applied') break; const d = makeRedo(io.state.log, 'mac', id()); r = io.apply([d], HU); k += 2; }
   o.undoMs = k ? +((now() - t0) / k).toFixed(4) : null;
-  const pick = [...new Set(Array.from({ length: 40 }, (_, i) => aiIds[Math.floor((aiIds.length - 1) * (i / 39))]))].filter(Boolean); const ts = []; const h = [];
+  const pick = [...new Set(Array.from({ length: 40 }, (_, i) => aiIds[Math.floor((aiIds.length - 1) * ((i + round * 0.5) / 40))]))].filter(Boolean); const ts = []; const h = [];
   const reads0 = st ? st.info.segReads : 0;
   for (const tid of pick) { t0 = now(); const r = io.apply([{ id: id(), v: 1, actor: { k: 'human', device: 'mac' }, body: { type: 'revert', mode: 'units', targets: [tid] } }], HU); ts.push(now() - t0); if (r.status !== 'applied') throw new Error('revert ' + r.message); h.push(canon(r.applied)); }
   ts.sort((a, b) => a - b); if (ts.length) { o.revertMs = +(ts.reduce((a, b) => a + b, 0) / ts.length).toFixed(3); o.revertMedMs = +ts[ts.length >> 1].toFixed(3); o.revertMaxMs = +ts[ts.length - 1].toFixed(2); } o.revertSegReads = st ? st.info.segReads - reads0 : 0;
-  o.revertsHash = sha256(h.join('|')).slice(0, 16); o.docHash = docHash(io.state.doc).slice(0, 16); return o;
+  round++; o.revertsHash = sha256(h.join('|')).slice(0, 16); o.docHash = docHash(io.state.doc).slice(0, 16); return o;
 };
 if (!MODE.startsWith('real') || !st) Object.assign(out, ops()); emit('ops');
 if (st) {
