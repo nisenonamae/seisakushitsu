@@ -1,0 +1,234 @@
+{
+ "single": [
+  {
+   "id": "s01",
+   "ver": "L1"
+  },
+  {
+   "id": "s02",
+   "ver": "L1"
+  },
+  {
+   "id": "s03",
+   "ver": "L1.5"
+  },
+  {
+   "id": "s04",
+   "ver": "L1.5"
+  },
+  {
+   "id": "s05",
+   "ver": "L2"
+  },
+  {
+   "id": "s06",
+   "ver": "L2"
+  },
+  {
+   "id": "s07",
+   "ver": "L2+小物"
+  },
+  {
+   "id": "s08",
+   "ver": "L2+小物"
+  },
+  {
+   "id": "s09",
+   "ver": "L2+胴"
+  },
+  {
+   "id": "s10",
+   "ver": "L2+胴"
+  },
+  {
+   "id": "s11",
+   "ver": "L2+脚"
+  },
+  {
+   "id": "s12",
+   "ver": "L2+脚"
+  },
+  {
+   "id": "s13",
+   "ver": "L2+頭"
+  },
+  {
+   "id": "s14",
+   "ver": "L2+頭"
+  },
+  {
+   "id": "s15",
+   "ver": "L2.5"
+  },
+  {
+   "id": "s16",
+   "ver": "L2.5"
+  },
+  {
+   "id": "s17",
+   "ver": "L3"
+  },
+  {
+   "id": "s18",
+   "ver": "L3"
+  },
+  {
+   "id": "s19",
+   "ver": "L4"
+  },
+  {
+   "id": "s20",
+   "ver": "L4"
+  },
+  {
+   "id": "s21",
+   "ver": "e2"
+  },
+  {
+   "id": "s22",
+   "ver": "e2"
+  },
+  {
+   "id": "s23",
+   "ver": "p4ai"
+  },
+  {
+   "id": "s24",
+   "ver": "p4ai"
+  }
+ ],
+ "pair": [
+  {
+   "id": "p01",
+   "left": "L1",
+   "right": "L2",
+   "ll": "V",
+   "lr": "C",
+   "first": "V"
+  },
+  {
+   "id": "p02",
+   "left": "L1",
+   "right": "L2",
+   "ll": "T",
+   "lr": "M",
+   "first": "M"
+  },
+  {
+   "id": "p03",
+   "left": "L2",
+   "right": "L1",
+   "ll": "F",
+   "lr": "J",
+   "first": "F"
+  },
+  {
+   "id": "p04",
+   "left": "L2",
+   "right": "L1",
+   "ll": "S",
+   "lr": "G",
+   "first": "G"
+  },
+  {
+   "id": "p05",
+   "left": "L2",
+   "right": "L3",
+   "ll": "H",
+   "lr": "Q",
+   "first": "H"
+  },
+  {
+   "id": "p06",
+   "left": "L2",
+   "right": "L3",
+   "ll": "M",
+   "lr": "T",
+   "first": "T"
+  },
+  {
+   "id": "p07",
+   "left": "L3",
+   "right": "L2",
+   "ll": "H",
+   "lr": "Q",
+   "first": "H"
+  },
+  {
+   "id": "p08",
+   "left": "L3",
+   "right": "L2",
+   "ll": "D",
+   "lr": "N",
+   "first": "N"
+  },
+  {
+   "id": "p09",
+   "left": "L1",
+   "right": "L3",
+   "ll": "U",
+   "lr": "E",
+   "first": "U"
+  },
+  {
+   "id": "p10",
+   "left": "L1",
+   "right": "L3",
+   "ll": "Z",
+   "lr": "L",
+   "first": "L"
+  },
+  {
+   "id": "p11",
+   "left": "L3",
+   "right": "L1",
+   "ll": "H",
+   "lr": "Q",
+   "first": "H"
+  },
+  {
+   "id": "p12",
+   "left": "L3",
+   "right": "L1",
+   "ll": "F",
+   "lr": "J",
+   "first": "J"
+  },
+  {
+   "id": "p13",
+   "left": "L2",
+   "right": "L2",
+   "ll": "E",
+   "lr": "U",
+   "first": "E",
+   "null": true
+  },
+  {
+   "id": "p14",
+   "left": "L2",
+   "right": "L2",
+   "ll": "W",
+   "lr": "P",
+   "first": "P",
+   "null": true
+  },
+  {
+   "id": "p15",
+   "left": "L3",
+   "right": "L3",
+   "ll": "S",
+   "lr": "G",
+   "first": "S",
+   "null": true
+  },
+  {
+   "id": "p16",
+   "left": "L1",
+   "right": "L1",
+   "ll": "H",
+   "lr": "Q",
+   "first": "Q",
+   "null": true
+  }
+ ]
+}
