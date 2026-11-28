@@ -67,3 +67,19 @@ test/            node:test の試し（gen.js＝でたらめな命令を作る�
 tools/           measure.js（聞く割合）・scenarios.js（操作の筋書き）・oracle.js（人の直しが残ったかを別のやり方で確かめる）・run-trace.js・bench.js
 traces/          操作の記録の入口（adapter.js＝読みこむ変換は、ここ1か所）と見本
 ```
+
+### 追加の測り その3（2026-11-28。結果は `RESULTS3.md`）
+
+```
+node --test                          # 全部（173 個・75秒ほど）
+node --test test/scale.test.js       # 掛ける量の戻し方（revert の scale：divide／keep／rebuild）
+node --test test/methods.test.js     # 部品ごとの取り消しの改善案（wide・split・node.adopt・rebaseWithout）
+node tools/numcheck3.js              # 掛ける量・回す量の取り消しを、3つの方式（＋変種）で比べる（数だけの模型。30秒ほど）。最後の行が「突き合わせ用の印」
+node tools/ordercheck.js             # 順番が違う時の結果を、核を通して表にする
+python3 tools/browser_check.py --3   # numcheck3 を、ブラウザ（Chromium）と Node で突き合わせる（ポート 8803 を一時的に使う）
+node tools/measure3.js 100           # 部品ごとの取り消しの4方式の比べ（種 100 通り・1分ほど。何回流しても同じ数字）
+```
+- 掛ける量の戻し方は、`revert` の命令に `scale:'divide'`（前のまま：割る。何も書かなければこれ）・`'keep'`（上に掛け算があれば残す）・`'rebuild'`（記録から組み立て直す）で選ぶ。**比べるための切り替えで、本番では1つに決める物**（すすめは `rebuild`。`RESULTS3.md` ③）。
+- 部品ごとの取り消し（`mode:'units'`）に `wide:true`（同じ作業が同じ形に加えた変更も、足した点と一緒に残す）・`split:true`（足した点を1つずつに割る）。`planRevert(state, 戻す記録, { scale, wide, split })` でも同じ。
+- `node.adopt`（引き取り。人だけ）：AI が足した部品を、人が自分の物として引き取る。文書の中身は変わらない。
+- `tools/methods.js` の `rebaseWithout(state, 戻す記録)`：元を変えずに、「その AI の作業が無かった文書」を横に作って、残りの命令を当て直す。

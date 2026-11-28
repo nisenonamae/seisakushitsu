@@ -42,6 +42,10 @@ export const SPECS = {
       if (n.stage === undefined) n.stage = doc.scenes[n.scene].stage;
       return [{ k: 'insert', at: ['node'], id: n.id, item: n }];
     } },
+  // 引き取り（BRIEF3 の B-4 の試し）：AI が足した部品を、人が「自分の物」として記録の上で引き取る。文書の中身は変わらない
+  // （同じ中身を、外して・足し直す。効果の型は足さない）。人だけの命令。引き取ったあとは、それより前の AI の効果は「戻す相手」でなくなる（revert.js）
+  'node.adopt': { v: 1, check: B.node, cat: () => ({ perm: 'cover', stage: null }),
+    run(doc, b) { const n = nodeOf(doc, b.node); return [{ k: 'remove', at: ['node'], id: n.id, item: clone(n) }, { k: 'insert', at: ['node'], id: n.id, item: clone(n) }]; } },
   'node.remove': { v: 1, check: B.node, cat: () => art('remove'),
     run(doc, b) {
       nodeOf(doc, b.node); const kids = new Map();
@@ -220,6 +224,9 @@ export const SPECS = {
     check(b) {
       need(Array.isArray(b.targets) && b.targets.length >= 1 && b.targets.length <= 5000 && b.targets.every((t) => typeof t === 'string'), '戻す記録の一覧');
       need(b.mode === undefined || ['select', 'units', 'undo', 'redo'].includes(b.mode), '取り消しの種類');
+      need(b.scale === undefined || ['divide', 'keep', 'rebuild'].includes(b.scale), '掛ける量の戻し方（scale）');   // BRIEF3 の A：割る（前のまま）・残す・記録から組み立て直す
+      need(b.split === undefined || typeof b.split === 'boolean', 'split'); need(b.wide === undefined || typeof b.wide === 'boolean', 'wide'); // BRIEF3 の B：足した点の単位を割る／同じ形への変更も単位に入れる
+      need(!(b.split || b.wide) || b.mode === 'units', 'split・wide は部品ごとの取り消しだけ');
       need(b.at === undefined || (Number.isInteger(b.at) && b.at >= 0), '計画を作った時点（at）');
       need(b.ack === undefined || (isObj(b.ack) && Object.values(b.ack).every((a) => Array.isArray(a) && a.length <= 100000 && a.every((x) => Number.isInteger(x) && x >= 0))), '見た直しの一覧（ack）');
       if (b.mode === 'units') { need(b.decisions === undefined || (isObj(b.decisions) && Object.values(b.decisions).every((d) => d === 'keep' || d === 'drop')), '答え（部品ごと：keep か drop）'); return; }

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><title>P3a：掛ける量の戻し方の比べ（ブラウザ）</title>
+<body style="font-family:sans-serif;margin:16px">
+<h1 style="font-size:18px">P3a：掛ける量の戻し方の比べ（ブラウザで、Node と同じ計算をする）</h1>
+<p id="msg">計算しています…（30 秒ほど）</p>
+<pre id="out" style="white-space:pre-wrap;font-size:12px"></pre>
+<script type="module">
+// 外からは何も読みこまない。保存もしない（localStorage に触らない）。
+import { runAll } from './numcheck3.js';
+const r = runAll();
+document.getElementById('msg').textContent = `終わりました。突き合わせ用の印：${r.sig.all}（Node の「node tools/numcheck3.js」の最後の行と同じなら、同じ結果）`;
+document.getElementById('out').textContent = r.text;
+window.__p3a = r;
+</script>
+</body></html>

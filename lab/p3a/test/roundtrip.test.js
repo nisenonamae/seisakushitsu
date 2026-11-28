@@ -75,6 +75,7 @@ for (const [name, body, pre] of CASES) {
 
 test('試した種類が、命令の一覧を全部おおっている（revert は取り消し・やり直しで通っている）', () => {
   const tried = new Set(CASES.map((c) => c[1].type)); tried.add('revert');
+  tried.add('node.adopt'); // 引き取り（BRIEF3 の試し）は文書の中身を変えないので、上の「当てたら変わる」の形に乗らない。往復は test/methods.test.js で確かめる
   assert.deepEqual(Object.keys(SPECS).filter((t) => !tried.has(t)), []);
 });
 
