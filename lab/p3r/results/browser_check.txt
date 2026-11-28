@@ -1,0 +1,10 @@
+ブラウザ： Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/158.0.8127.36 Safari/537.36
+Node    ： v22.23.5
+比べた項目： 68 ／違った項目： 0 []
+Node の中で「同じでない」と出た項目（空なら、読みこみ方・届く順・写しの有り無しで全部同じ）： []
+文書の印（種 1・2・3）：Node ['e1dd9c8830ddba29', 'a4f0d39f5895902e', 'a94fbf099de41d77'] ／ブラウザ ['e1dd9c8830ddba29', 'a4f0d39f5895902e', 'a94fbf099de41d77']
+記録の文字が同じ（種 1）： True ／ 510345 字
+Node の記録 → ブラウザで作り直した文書： e1dd9c8830ddba29 （Node： e1dd9c8830ddba29 ）同じ＝ True
+ブラウザの記録 → Node で作り直した文書： e1dd9c8830ddba29 同じ＝ True
+全体の印：Node 671c7c1289d83c73d827172fd717d587f817464a2e8a5d197f62f6fb3438a8d9 ／ブラウザ 671c7c1289d83c73d827172fd717d587f817464a2e8a5d197f62f6fb3438a8d9
+ページの誤り： [] ／外への読みこみ： []

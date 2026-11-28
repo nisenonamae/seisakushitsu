@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><title>P3r：端末をまたいだ一致の確かめ</title>
+<body style="font-family:sans-serif;max-width:60em;margin:2em auto;line-height:1.7">
+<h1>P3r：端末をまたいだ一致の確かめ</h1>
+<p>同じ記録から、このブラウザでも同じ文書（同じ印）になるかを計算します。外からは何も読みこみません。保存もしません。終わるまで 1〜2 分かかります。</p>
+<pre id="out">計算しています…</pre>
+<script type="module">
+import { runAll, replayText } from './xcheck.js';
+const t = performance.now(); const r = runAll();
+window.__p3r = { sig: r.sig, journal1: r.journal1, replayText };
+document.getElementById('out').textContent = Object.keys(r.sig).map((k) => k + '  ' + JSON.stringify(r.sig[k])).join('\n') + '\n（' + ((performance.now() - t) / 1000).toFixed(1) + ' 秒）';
+</script>
+</body></html>
