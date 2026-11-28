@@ -34,6 +34,13 @@ export function toJournal(log, opt = {}) {
   return { lines, last: prev, n };
 }
 
+/** 1行を読む。印が合わない・JSON でない・形が違う行は null */
+export function parseLine(line) {
+  if (line.endsWith('\n')) line = line.slice(0, -1);
+  if (line.length < 19 || line[16] !== '\t') return null; const h = line.slice(0, 16); const json = line.slice(17); if (hash64(json) !== h) return null;
+  let o; try { o = JSON.parse(json); } catch { return null; }
+  if (!o || !Number.isInteger(o.n) || typeof o.p !== 'string' || !Array.isArray(o.c)) return null; o.h = h; return o;
+}
 /**
  * 記録を読む。壊れた行・重なった行を見分けて、使える所までを返す。
  * @param {string|string[]} src 全文、または行の並び（行末の \n は有っても無くてもよい）
@@ -44,10 +51,8 @@ export function readJournal(src, opt = {}) {
   const lines = typeof src === 'string' ? src.split('\n') : src;
   const entries = []; const problems = []; let stopped = null; let prev = opt.prev || GENESIS; let expect = (opt.n || 0) + 1; let lastOk = null;
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i]; if (line.endsWith('\n')) line = line.slice(0, -1); if (line === '') continue;
-    let o = null; const h = line.slice(0, 16); const json = line.slice(17);
-    if (line.length > 18 && line[16] === '\t' && hash64(json) === h) { try { o = JSON.parse(json); } catch { o = null; } }
-    if (!o || !Number.isInteger(o.n) || typeof o.p !== 'string' || !Array.isArray(o.c)) { problems.push({ line: i + 1, why: 'broken' }); continue; }
+    if (lines[i] === '' || lines[i] === '\n') continue; const o = parseLine(lines[i]); const h = o && o.h;
+    if (!o) { problems.push({ line: i + 1, why: 'broken' }); continue; }
     if (o.n === expect && o.p === prev) { const e = { n: o.n, h, sender: o.s, cmds: o.c }; if (o.a) e.applied = o.a; entries.push(e); prev = h; expect++; lastOk = h; continue; }
     if (o.n === expect - 1 && h === lastOk) { problems.push({ line: i + 1, why: 'duplicate' }); continue; }      // 同じ行が2回書かれた
     stopped = { line: i + 1, why: o.n < expect ? 'fork' : 'gap' }; break;                                        // 抜けた・別の歴史が混ざった → ここから先は使わない
@@ -133,7 +138,7 @@ export function open(init, journal, snapshots = [], opt = {}) {
     if (opt.verify) { const full = loadReplay(init, j.entries.slice(0, snap.n)); if (docHash(full.state.doc) !== snap.docHash || logLength(full.state.log) !== snap.seq) { notes.push({ snapshot: k, why: 'differs-from-journal' }); continue; } }
     const r = opt.mode === 'indexed' ? loadIndexed(snap, j.entries) : loadTail(snap, j.entries.slice(snap.n));
     // 写しの先の記録に、写しより前の記録を相手にする物（ほかの端末が古い操作を戻した、など）があった → 写しでは足りない。記録の全部から作り直す
-    if (r.skipped.some((x) => x.reason === 'needs-history')) { notes.push({ snapshot: k, why: 'tail-needs-history' }); break; }
+    if (r.skipped.some((x) => x.reason === 'needs-history')) { notes.push({ snapshot: k, why: 'tail-needs-history' }); continue; }
     return { ...r, journal: j, used: { snapshot: k, n: snap.n }, notes };
   }
   const r = loadReplay(init, j.entries);
@@ -145,4 +150,25 @@ export function hydrate(init, state, entries) {
   const full = entries.every((e) => e.applied) ? loadTrusted(init, entries) : loadReplay(init, entries);
   if (canon(full.state.doc) !== canon(state.doc) || logLength(full.state.log) !== logLength(state.log)) throw new Error('読み足した記録から、同じ文書にならない');
   return full.state;
+}
+
+/**
+ * 受け口：行が、ばらばらの順で届いても、番号（台帳の順）のとおりに当てる。番号が飛んでいる間は、当てずに待つ。
+ * 同じ行が2回届いたら捨てる。印の鎖が合わない行は受け取らない。
+ */
+export function makeInbox(init, start) {
+  let state = start ? start.state : createState(init); let prev = start ? start.h : GENESIS; let next = start ? start.n + 1 : 1; const wait = new Map(); const skipped = []; const refused = [];
+  return {
+    receive(line) {
+      const o = parseLine(line); if (!o) { refused.push('broken'); return 0; }
+      if (o.n < next || wait.has(o.n)) return 0; wait.set(o.n, o); let done = 0;
+      while (wait.has(next)) {
+        const e = wait.get(next); wait.delete(next); if (e.p !== prev) { refused.push(`fork@${e.n}`); break; }
+        const r = applyBatch(state, e.c, { sender: e.s }); if (r.status === 'applied') state = r.state; else skipped.push({ n: e.n, reason: r.reason });
+        prev = e.h; next++; done++;
+      }
+      return done;
+    },
+    get state() { return state; }, get n() { return next - 1; }, get waiting() { return wait.size; }, skipped, refused,
+  };
 }
