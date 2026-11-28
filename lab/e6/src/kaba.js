@@ -16,8 +16,8 @@ const NAMES = { head: '頭の大きさ', muz: '鼻づらの大きさ（頭に対
    footF・footR：足の裏の前・後ろの角を外へ出す量（脚の太さの半分に対して。－は内へ）／cornF・cornR：足の裏の角の丸みの半径
    gapK：手前と奥の脚のあいだ（前 52・後ろ 70）の倍率／nailK：つめの大きさ／nailN：つめの数
    archPos：背中の山のいちばん高い所（0＝首・1＝おしり）／eyeDx：目を後ろへ（頭の長さ 356 に対して）／eyeWhite：目のまわりを白に／lid：まぶた（0＝なし。目の上から、黒目の高さの何割までおおうか）
-   earW：耳の幅／earBack：耳を後ろへ（E2 の画素）／mMid・mEnd：口の線の真ん中・奥のはしを下へ（E2 の画素。－は上）／nosDx・nosDy：鼻の穴の位置（E2 の画素） */
-const X0 = { legPts: null, footF: 0, footR: 0, cornF: 14, cornR: 14, gapK: 1, nailK: 1, nailN: 3, archPos: 0.5, eyeDx: 0, eyeWhite: 0, lid: 0, earW: 1, earBack: 0, mMid: 0, mEnd: 0, nosDx: 0, nosDy: 0 };
+   earW：耳の幅／earBack：耳を後ろへ（E2 の画素）／earSep：手前の耳だけを後ろへ（耳を大きくしたとき、2 つの耳が重ならないように）／mMid・mEnd：口の線の真ん中・奥のはしを下へ（E2 の画素。－は上）／nosDx・nosDy：鼻の穴の位置（E2 の画素） */
+const X0 = { legPts: null, footF: 0, footR: 0, cornF: 14, cornR: 14, gapK: 1, nailK: 1, nailN: 3, archPos: 0.5, eyeDx: 0, eyeWhite: 0, lid: 0, earW: 1, earBack: 0, earSep: 0, mMid: 0, mEnd: 0, nosDx: 0, nosDy: 0 };
 function at(t) { const o = {}; for (const k in REAL) o[k] = ADD.includes(k) ? REAL[k] + (L3[k] - REAL[k]) * t : Math.pow(L3[k], t); return o; }
 function mix(tBase, group, tGroup) { const a = at(tBase), b = at(tGroup); for (const k of GROUPS[group]) a[k] = b[k]; return a; }
 
@@ -61,8 +61,8 @@ function model(P) {
   const N1 = up(NECK);
   const muz = p => { const w = sm((450 - p[0]) / 110), k = 1 + (P.muz - 1) * w; return [MUZ_R[0] + (p[0] - MUZ_R[0]) * k, MUZ_R[1] + (p[1] - MUZ_R[1]) * k]; };
   const head = p => { const q = muz(p); return [N1[0] + (q[0] - NECK[0]) * P.head, N1[1] + (q[1] - NECK[1]) * P.head]; };
-  const earOf = b => p => head([b[0] + P.earBack + (p[0] - b[0]) * P.earW * P.ear / E2_EAR, b[1] - 0.2 * P.earBack + (p[1] - b[1]) * P.ear / E2_EAR]);
-  const earF = earOf(EARF), earN = earOf(EARN);
+  const earOf = (b, sep) => p => head([b[0] + P.earBack + sep + (p[0] - b[0]) * P.earW * P.ear / E2_EAR, b[1] - 0.2 * (P.earBack + sep) + (p[1] - b[1]) * P.ear / E2_EAR]);
+  const earF = earOf(EARF, 0), earN = earOf(EARN, P.earSep);
   const T24 = up([1310, 400]);
   const tail = p => [T24[0] + 12 + (p[0] - 1322) * P.tailW, T24[1] + (p[1] - 400) * P.tailL];
   const legw = i => (i <= 35 ? W[3] : i <= 40 ? W[2] : i <= 47 ? W[1] : W[0]);
@@ -173,7 +173,9 @@ function build(P) {
   const N = [];
   N.push(ell('gshadow', '地面の影', PAL.shadow, [(x0 + x1) / 2, 772], (x1 - x0) * 0.985, 40, 0));
   N.push(b.legHF, b.legFF, b.tail, b.torso, belly);
-  N.push(U.shape('neckSh', '首の影', PAL.dark, L(M.head, [[597, 336, 'c'], [680, 446], [608, 600, 'c'], [650, 446]]), { follow: 'torso' }));
+  const nk = L(M.head, [[597, 336, 'c'], [680, 446], [608, 600, 'c'], [650, 446]]), nkTop = G.r2(M.top([600, 326])[1] + 4);
+  if (nk[0][1] < nkTop) { nk[0][0] = G.r2(nk[0][0] + (nkTop - nk[0][1]) * 0.35); nk[0][1] = nkTop; }   /* E6：頭を大きくすると、首の影の上のはしが背中から突き出るので、背中の線の下で止める（基準 L2 では効かない） */
+  N.push(U.shape('neckSh', '首の影', PAL.dark, nk, { follow: 'torso' }));
   N.push(U.line('backHi', '背中の光', PAL.light, 9, L(p => { const q = M.top(p); return [q[0], q[1] + 0]; }, [[672, 325], [860, 309], [1020, 305], [1168, 320], [1252, 356]]), { follow: 'torso' }));
   N.push(U.group('gLegHN', '後ろ脚（手前）のまとまり', { pivot: pv.legHN, rigParent: 'torso' }), b.legHN);
   N.push(U.line('creaseH', 'ももの線', PAL.dark, 6, L(M.low, [[1158, 648], [1160, 572], [1222, 528]]), { parent: 'gLegHN' }));

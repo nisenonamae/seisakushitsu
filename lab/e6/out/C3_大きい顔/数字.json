@@ -1,0 +1,19 @@
+{
+ "name": "C3_大きい顔",
+ "parts": 29,
+ "groups": 4,
+ "points": 159,
+ "maxPts": 13,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 0.963,
+ "sil_area": 470214,
+ "sil_box": [
+  177,
+  259,
+  1419,
+  769
+ ]
+}

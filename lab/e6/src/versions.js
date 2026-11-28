@@ -3,7 +3,8 @@
 const K = require('./kaba.js');
 const BASE = Object.assign({}, K.at(0.5), K.X0, { legPts: [[0.4, 0.05, 0.05]] });
 const r3 = x => Math.round(x * 1000) / 1000;
-const eyeSet = e => ({ eye: e, eyeDown: r3(Math.max(0.01, (18 * e / 1.3 - 25) / 356)) });   /* 目を大きくすると頭の上のふちに当たるので、その分だけ下げる（E3 と同じ考え） */
+const eyeSet = e => ({ eye: e, eyeDown: r3(Math.max(0.01, (18 * e / 1.3 - 24) / 356)), eyeDx: r3(Math.max(0, (20 * e / 1.3 - 23) * 0.9 / 356)) });   /* 目を大きくすると頭の上のふち・額の坂に当たるので、その分だけ下・後ろへ（E3 と同じ考え） */
+const earSet = e => ({ ear: e, earSep: r3(Math.min(28, Math.max(0, 30 * (e / 1.4 - BASE.ear / 1.4)))) });   /* 耳を大きくすると 2 つの耳が重なって 1 つの塊になるので、手前の耳を後ろへずらす（背中の線に当たる 28 まで） */
 const body = k => ({ tL: r3(BASE.tL * k), tH: r3(BASE.tH * k) });
 const V = [
   ['L2', '基準', '基準（E3 の L2）', {}],
@@ -34,7 +35,7 @@ const V = [
   ['B4目_上', 'B4目', '目を上へ（頭の上のふちから出る＝実物の出っぱった目）', { eyeDown: -0.05 }],
   ['B4目_下前', 'B4目', '目を下・前へ', { eyeDown: 0.05, eyeDx: -0.04 }],
   ['B4目_白目', 'B4目', '目のまわりを白に（白目）', { eyeWhite: 1 }],
-  ...[1.6, 2.0, 2.5, 3.2].map((e, i) => ['B4耳大_' + (i + 1), 'B4耳', '耳の大きさ（実物比）×' + e, { ear: e }]),
+  ...[1.6, 2.0, 2.4, 2.9].map((e, i) => ['B4耳大_' + (i + 1), 'B4耳', '耳の大きさ（実物比）×' + e, earSet(e)]),
   ['B4耳_丸', 'B4耳', '耳の幅 ×1.5（丸い耳）', { earW: 1.5 }],
   ['B4耳_後ろ', 'B4耳', '耳を後ろへ', { earBack: 28 }],
   ['B5口_下2', 'B5表情', '口：はっきり下', { mMid: -24, mEnd: 12 }],
@@ -50,5 +51,5 @@ const V = [
   ['B6鼻穴_上', 'B6鼻づら', '鼻の穴を上・後ろへ', { nosDx: 22, nosDy: -8 }],
   ['B6鼻穴_前', 'B6鼻づら', '鼻の穴を前・下へ', { nosDx: -22, nosDy: 22 }],
 ];
-const COMBO = require('./combo.js')(BASE, { eyeSet, body, r3 });
+const COMBO = require('./combo.js')(BASE, { eyeSet, earSet, body, r3 });
 module.exports = { BASE, V: V.concat(COMBO) };

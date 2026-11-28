@@ -1,0 +1,19 @@
+{
+ "name": "C1_丸い胴と目",
+ "parts": 28,
+ "groups": 4,
+ "points": 155,
+ "maxPts": 12,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.013,
+ "sil_area": 469486,
+ "sil_box": [
+  236,
+  179,
+  1362,
+  769
+ ]
+}

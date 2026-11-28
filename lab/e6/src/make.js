@@ -2,7 +2,7 @@
 const fs = require('fs'), path = require('path'), K = require('./kaba.js'), U = require('./util.js'), G = U.G, VS = require('./versions.js');
 const OUT = path.join(__dirname, '..', 'out'), RAW = '/tmp/e6/raw', TARGET = 470000;
 fs.mkdirSync(RAW, { recursive: true });
-const NAMES = Object.assign({}, K.NAMES, { legPts: '脚のふちの途中の点［高さ, 前の寄せ, 後ろの寄せ］', footF: '足の裏の前の角を外へ', footR: '足の裏の後ろの角を外へ', cornF: '足の裏の前の角の丸み', cornR: '足の裏の後ろの角の丸み', gapK: '手前と奥の脚のあいだ', nailK: 'つめの大きさ', nailN: 'つめの数', archPos: '背中の山の場所（0 首…1 おしり）', eyeDx: '目を後ろへ（+ 頭の長さに対して）', eyeWhite: '白目', lid: 'まぶた（黒目をおおう割合）', earW: '耳の幅', earBack: '耳を後ろへ（+ 画素）', mMid: '口の線の真ん中を下へ（+ 画素）', mEnd: '口の線の奥のはしを下へ（+ 画素）', nosDx: '鼻の穴を後ろへ（+ 画素）', nosDy: '鼻の穴を下へ（+ 画素）' });
+const NAMES = Object.assign({}, K.NAMES, { legPts: '脚のふちの途中の点［高さ, 前の寄せ, 後ろの寄せ］', footF: '足の裏の前の角を外へ', footR: '足の裏の後ろの角を外へ', cornF: '足の裏の前の角の丸み', cornR: '足の裏の後ろの角の丸み', gapK: '手前と奥の脚のあいだ', nailK: 'つめの大きさ', nailN: 'つめの数', archPos: '背中の山の場所（0 首…1 おしり）', eyeDx: '目を後ろへ（+ 頭の長さに対して）', eyeWhite: '白目', lid: 'まぶた（黒目をおおう割合）', earW: '耳の幅', earBack: '耳を後ろへ（+ 画素）', earSep: '手前の耳だけを後ろへ（+ 画素）', mMid: '口の線の真ん中を下へ（+ 画素）', mEnd: '口の線の奥のはしを下へ（+ 画素）', nosDx: '鼻の穴を後ろへ（+ 画素）', nosDy: '鼻の穴を下へ（+ 画素）' });
 const list = [];
 for (const [name, group, note, ch] of VS.V) {
   const P = Object.assign({}, VS.BASE, ch), r = K.build(P), area = K.areaOf(r.SIL), s = Math.sqrt(TARGET / area);
