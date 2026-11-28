@@ -1,0 +1,101 @@
+[
+ {
+  "name": "頭",
+  "ids": [
+   "earF",
+   "jaw",
+   "head",
+   "mouth",
+   "eyeRim",
+   "eye",
+   "eyeHi",
+   "nostril",
+   "gEarN",
+   "earN",
+   "earIn"
+  ],
+  "pivot": [
+   592,
+   432
+  ]
+ },
+ {
+  "name": "前脚（手前）",
+  "ids": [
+   "legFN",
+   "creaseF",
+   "nailF0",
+   "nailF1",
+   "nailF2"
+  ],
+  "pivot": [
+   735,
+   605
+  ]
+ },
+ {
+  "name": "前脚（奥）",
+  "ids": [
+   "legFF"
+  ],
+  "pivot": [
+   615,
+   605
+  ]
+ },
+ {
+  "name": "後ろ脚（手前）",
+  "ids": [
+   "legHN",
+   "creaseH",
+   "nailH0",
+   "nailH1",
+   "nailH2"
+  ],
+  "pivot": [
+   1222,
+   585
+  ]
+ },
+ {
+  "name": "後ろ脚（奥）",
+  "ids": [
+   "legHF"
+  ],
+  "pivot": [
+   1068,
+   605
+  ]
+ },
+ {
+  "name": "耳（手前）",
+  "ids": [
+   "earN",
+   "earIn"
+  ],
+  "pivot": [
+   528,
+   338
+  ]
+ },
+ {
+  "name": "耳（奥）",
+  "ids": [
+   "earF"
+  ],
+  "pivot": [
+   486,
+   345
+  ]
+ },
+ {
+  "name": "しっぽ",
+  "ids": [
+   "tail"
+  ],
+  "pivot": [
+   1312,
+   428
+  ]
+ }
+]

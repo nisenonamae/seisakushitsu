@@ -60,12 +60,12 @@ REVS.push({ note: 'r4 脚のすき間を広げる・しっぽを少し長く', p
 /* r5（清書の段から戻って足した・理由は RESULTS.md）：足の裏の 8 つの角が直角のままだと、清書しても硬く見える。
    角を半径 14 の丸みに置きかえる（1つの角 → 2 つの点）。ほかの点は r4 のまま。IDX4[r4 の番号]＝r5 の番号 */
 const IDX4 = [];
-(function () {
-  const src = REVS[3].pts, n = src.length, R = 14, KA = 0.5523, out = [];
+function roundFeet(src, fill) {
+  const n = src.length, R = 14, KA = 0.5523, out = [];
   const unit = (a, b) => { const d = [b[0] - a[0], b[1] - a[1]], l = Math.hypot(d[0], d[1]); return [d[0] / l, d[1] / l]; };
   const r1 = x => Math.round(x * 10) / 10;
   src.forEach((p, i) => {
-    IDX4[i] = out.length;
+    if (fill) IDX4[i] = out.length;
     if (!(p[2] === 'c' && p[1] === 770)) { out.push(p); return; }
     const a = unit(p, src[(i - 1 + n) % n]), b = unit(p, src[(i + 1) % n]);
     const A = [r1(p[0] + a[0] * R), r1(p[1] + a[1] * R)], Bp = [r1(p[0] + b[0] * R), r1(p[1] + b[1] * R)];
@@ -74,8 +74,17 @@ const IDX4 = [];
     out.push([A[0], A[1], { in: [r1(a[0] * la), r1(a[1] * la)], out: [r1(kA[0]), r1(kA[1])] }]);
     out.push([Bp[0], Bp[1], { in: [r1(kB[0]), r1(kB[1])], out: [r1(b[0] * lb), r1(b[1] * lb)] }]);
   });
-  REVS.push({ note: 'r5 足の裏の角を丸める（清書の段から戻った）', pts: out });
-})();
+  return out;
+}
+REVS.push({ note: 'r5 足の裏の角を丸める（清書の段から戻った）', pts: roundFeet(REVS[3].pts, true) });
+/* ---- v2（評価者の指摘で1周直した・指摘 3）：背中の線の真ん中を約 30 上へふくらませて樽に（腹の下のふちは動かさない）。
+   お尻の上を丸くして、背中からお尻まで 1 本の曲線に。動かしたのは r4 の 19〜24 番の 6 点だけ。点の数・番号は同じ */
+const V2 = process.env.E2_VER === 'v2';
+const R4v2 = REVS[3].pts.map(p => p.slice());
+[[19, [690, 298]], [20, [860, 266]], [21, [1020, 260]], [22, [1172, 280]], [23, [1264, 326]], [24, [1313, 398, 'c']]].forEach(([i, p]) => { R4v2[i] = p; });
+const V2REV = { note: 'v2 背中をふくらませる・お尻の上を丸く（足の裏の丸みは r5 と同じ）', pts: roundFeet(R4v2, false) };
+function silPts() { return V2 ? V2REV.pts : REVS[REVS.length - 1].pts; }
 function docOf(i) { const r = REVS[i]; return U.doc([U.shape('sil', '影絵', U.PAL.eye, r.pts)], { stage: 'B', rev: i + 1, note: r.note }); }
-module.exports = { REVS, docOf, IDX4 };
-if (require.main === module) { REVS.forEach((r, i) => U.save('s2_B_r' + (i + 1) + '.json', docOf(i))); console.log('B revs', REVS.length); }
+module.exports = { REVS, docOf, IDX4, silPts, V2, V2REV };
+if (require.main === module && V2) { U.save('v2_s2_B.json', U.doc([U.shape('sil', '影絵', U.PAL.eye, V2REV.pts)], { stage: 'B', rev: 'v2', note: V2REV.note })); console.log('B v2'); }
+else if (require.main === module) { REVS.forEach((r, i) => U.save('s2_B_r' + (i + 1) + '.json', docOf(i))); console.log('B revs', REVS.length); }

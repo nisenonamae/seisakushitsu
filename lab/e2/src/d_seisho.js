@@ -22,7 +22,7 @@ function legFit(i0, c1, c2, i1, tol) {
   const f = s2[0]; f.in = at(B1 + 1).in; delete f.corner;
   return s1.concat([at(A1 + 1), at(B1)], s2);
 }
-const inner = C.inner, P = C.P;
+const inner = C.inner, P = C.P, v = C.v;
 function part(id, name, fill, segs, extra) {
   const ptsArr = [].concat(...segs).map((q, i) => Object.assign({}, q, { id: id + '.' + i }));
   return Object.assign({ id, name, kind: 'shape', parent: null, visible: true, locked: false, geo: { t: 'path', pts: ptsArr, closed: true }, fill, stroke: null }, extra || {});
@@ -33,21 +33,21 @@ function nodes(T) {
   const DEF = { legHF: 2, legFF: 2, legHN: 2, legFN: 2, earN: 1.0, earF: 1.0, tail: 1.2 };   /* r2：足の裏が波打ったので脚は幅を 1.2 に。耳・しっぽも細かく */
   const t = k => (T[k] != null ? T[k] : (DEF[k] != null ? DEF[k] : 2.2));
   const N = [];
-  N.push(part('legHF', '後ろ脚（奥）', W.far, [legFit(36, 38, 39, 41, t('legHF')), inner([[1040, 580], [1110, 585]])], { pivot: P.legHF, rigParent: 'torso' }));
-  N.push(part('legFF', '前脚（奥）', W.far, [legFit(48, 50, 51, 53, t('legFF')), inner([[590, 578], [650, 588]])], { pivot: P.legFF, rigParent: 'torso' }));
-  N.push(part('tail', 'しっぽ', W.a, [fit(rng(24, 29), t('tail')), inner([[1297, 430]])], { pivot: P.tail, rigParent: 'torso' }));
+  N.push(part('legHF', '後ろ脚（奥）', W.far, [legFit(36, 38, 39, 41, t('legHF')), inner(v([[1040, 580], [1110, 585]], [[1038, 540], [1112, 545]]))], { pivot: P.legHF, rigParent: 'torso' }));
+  N.push(part('legFF', '前脚（奥）', W.far, [legFit(48, 50, 51, 53, t('legFF')), inner(v([[590, 578], [650, 588]], [[588, 538], [652, 548]]))], { pivot: P.legFF, rigParent: 'torso' }));
+  N.push(part('tail', 'しっぽ', W.a, [fit(rng(24, 29), t('tail')), inner(v([[1297, 430]], [[1277, 432]]))], { pivot: P.tail, rigParent: 'torso' }));
   N.push(part('torso', '胴', W.body, [
     fit(bridge(rng(17, 24), rng(29, 31)), t('torso')), inner([[1240, 656]]), fit(rng(41, 43), t('belly')), fit(rng(53, 54), 1.5),
     inner([[462, 462]])], { pivot: null, rigParent: null }));
-  N.push(part('legHN', '後ろ脚（手前）', W.a, [legFit(31, 33, 34, 36, t('legHN')), inner([[1160, 545], [1262, 520]])], { pivot: P.legHN, rigParent: 'torso' }));
-  N.push(part('legFN', '前脚（手前）', W.a, [legFit(43, 45, 46, 48, t('legFN')), inner([[682, 560], [788, 560]])], { pivot: P.legFN, rigParent: 'torso' }));
+  N.push(part('legHN', '後ろ脚（手前）', W.a, [legFit(31, 33, 34, 36, t('legHN')), inner(v([[1160, 545], [1262, 520]], [[1160, 505], [1262, 480]]))], { pivot: P.legHN, rigParent: 'torso' }));
+  N.push(part('legFN', '前脚（手前）', W.a, [legFit(43, 45, 46, 48, t('legFN')), inner(v([[682, 560], [788, 560]], [[682, 520], [788, 520]]))], { pivot: P.legFN, rigParent: 'torso' }));
   N.push(U.group('gHead', '頭のまとまり', { pivot: P.head, rigParent: 'torso' }));
-  N.push(part('earF', '耳（奥）', W.far, [fit(rng(8, 12), t('earF')), inner([[486, 364]])], { parent: 'gHead', pivot: P.earF, rigParent: 'head' }));
+  N.push(part('earF', '耳（奥）', W.far, [fit(rng(8, 12), t('earF')), inner(v([[486, 364]], [[486, 374]]))], { parent: 'gHead', pivot: P.earF, rigParent: 'head' }));
   N.push(part('jaw', '下あご', W.a, [fit(rng(54, 58), t('jaw')), inner([[330, 546], [545, 540]])], { parent: 'gHead', pivot: P.jaw, rigParent: 'head' }));
-  N.push(part('head', '頭', W.b, [fit(bridge(rng(58, 7), rng(18, 18)), t('head')), inner([[662, 440], [600, 590], [478, 577], [340, 591]])   /* r4（仕上げの段から戻った）：口の線になる下のふちが後ろで上がり、笑った口に見えた → 口の端を下げて水平に近く。影絵は変わらない */], { parent: 'gHead', pivot: P.head, rigParent: 'torso' }));
-  N.push(part('earN', '耳（手前）', W.a, [fit(rng(13, 17), t('earN')), inner([[528, 364], [499, 351]])], { parent: 'gHead', pivot: P.earN, rigParent: 'head' }));
+  N.push(part('head', '頭', W.b, [fit(bridge(rng(58, 7), rng(18, 18)), t('head')), inner(v([[662, 440], [600, 590], [478, 577], [340, 591]], [[735, 448], [600, 590], [478, 577], [340, 591]]))   /* r4（仕上げの段から戻った）：口の線になる下のふちが後ろで上がり、笑った口に見えた → 口の端を下げて水平に近く。影絵は変わらない */], { parent: 'gHead', pivot: P.head, rigParent: 'torso' }));
+  N.push(part('earN', '耳（手前）', W.a, [fit(rng(13, 17), t('earN')), inner(v([[528, 364], [499, 351]], [[528, 374], [498, 358]]))], { parent: 'gHead', pivot: P.earN, rigParent: 'head' }));
   return N;
 }
 function build(T) { const N = nodes(T); return U.doc(N, { stage: 'D', motion: C.MOTION, parts: C.table(N), tol: T || {}, note: '色は仮。清書：見える輪郭は曲線あてはめ、もぐる側は書き直し' }); }
 module.exports = { build, nodes, fit, rng, bridge, part };
-if (require.main === module) { const T = process.argv[2] ? JSON.parse(process.argv[2]) : undefined; U.save(process.argv[3] || 's4_D_seisho.json', build(T)); console.log('D ok'); }
+if (require.main === module) { const T = process.argv[2] ? JSON.parse(process.argv[2]) : undefined; U.save(process.argv[3] || v('s4_D_seisho.json', 'v2_s4_D_seisho.json'), build(T)); console.log('D ok'); }

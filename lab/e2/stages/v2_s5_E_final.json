@@ -1,0 +1,2308 @@
+{
+ "kind": "lab-p4-doc",
+ "v": 1,
+ "w": 1600,
+ "h": 900,
+ "bg": "#DDE9C8",
+ "nodes": [
+  {
+   "id": "gshadow",
+   "name": "地面の影",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     770,
+     772
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     1120,
+     40
+    ]
+   },
+   "fill": "#BCD3A2",
+   "stroke": null
+  },
+  {
+   "id": "legHF",
+   "name": "後ろ脚（奥）",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       1136,
+       668
+      ],
+      "out": [
+       -29.19,
+       3.73
+      ],
+      "corner": true,
+      "id": "legHF.0"
+     },
+     {
+      "p": [
+       1103.1,
+       756
+      ],
+      "in": [
+       1.4,
+       -24.21
+      ],
+      "out": [
+       -0.6,
+       7.7
+      ],
+      "id": "legHF.1"
+     },
+     {
+      "id": "legHF.2",
+      "p": [
+       1088,
+       770
+      ],
+      "in": [
+       7.7,
+       0
+      ],
+      "out": [
+       -24,
+       0
+      ]
+     },
+     {
+      "id": "legHF.3",
+      "p": [
+       1022,
+       770
+      ],
+      "in": [
+       24,
+       0
+      ],
+      "out": [
+       -7.7,
+       0
+      ]
+     },
+     {
+      "p": [
+       1006.3,
+       756.1
+      ],
+      "out": [
+       -3.92,
+       -31.39
+      ],
+      "in": [
+       0.9,
+       7.7
+      ],
+      "id": "legHF.4"
+     },
+     {
+      "p": [
+       1000,
+       662
+      ],
+      "in": [
+       0.54,
+       31.68
+      ],
+      "corner": true,
+      "id": "legHF.5"
+     },
+     {
+      "p": [
+       1038,
+       540
+      ],
+      "id": "legHF.6"
+     },
+     {
+      "p": [
+       1112,
+       545
+      ],
+      "id": "legHF.7"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#6E6075",
+   "stroke": null,
+   "pivot": [
+    1068,
+    605
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "legFF",
+   "name": "前脚（奥）",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       658,
+       666
+      ],
+      "out": [
+       -26.26,
+       3.65
+      ],
+      "corner": true,
+      "id": "legFF.0"
+     },
+     {
+      "p": [
+       632.6,
+       756
+      ],
+      "in": [
+       0.37,
+       -22.73
+      ],
+      "out": [
+       -0.3,
+       7.7
+      ],
+      "id": "legFF.1"
+     },
+     {
+      "id": "legFF.2",
+      "p": [
+       618,
+       770
+      ],
+      "in": [
+       7.7,
+       0
+      ],
+      "out": [
+       -22.8,
+       0
+      ]
+     },
+     {
+      "id": "legFF.3",
+      "p": [
+       556,
+       770
+      ],
+      "in": [
+       22.8,
+       0
+      ],
+      "out": [
+       -7.7,
+       0
+      ]
+     },
+     {
+      "p": [
+       541.4,
+       756
+      ],
+      "out": [
+       -0.67,
+       -11.93
+      ],
+      "in": [
+       0.3,
+       7.7
+      ],
+      "id": "legFF.4"
+     },
+     {
+      "p": [
+       540,
+       720
+      ],
+      "in": [
+       -2.19,
+       11.93
+      ],
+      "out": [
+       4.69,
+       -25.57
+      ],
+      "id": "legFF.5"
+     },
+     {
+      "p": [
+       560,
+       646
+      ],
+      "in": [
+       -0.76,
+       26.45
+      ],
+      "corner": true,
+      "id": "legFF.6"
+     },
+     {
+      "p": [
+       588,
+       538
+      ],
+      "id": "legFF.7"
+     },
+     {
+      "p": [
+       652,
+       548
+      ],
+      "id": "legFF.8"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#6E6075",
+   "stroke": null,
+   "pivot": [
+    615,
+    605
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "tail",
+   "name": "しっぽ",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       1313,
+       398
+      ],
+      "out": [
+       26.16,
+       36.4
+      ],
+      "corner": true,
+      "id": "tail.0"
+     },
+     {
+      "p": [
+       1348.21,
+       509.22
+      ],
+      "in": [
+       1.4,
+       -44.8
+      ],
+      "out": [
+       -0.26,
+       8.33
+      ],
+      "id": "tail.1"
+     },
+     {
+      "p": [
+       1340.79,
+       547.59
+      ],
+      "in": [
+       9.91,
+       -3.13
+      ],
+      "out": [
+       -10.54,
+       3.33
+      ],
+      "id": "tail.2"
+     },
+     {
+      "p": [
+       1328.89,
+       530.8
+      ],
+      "in": [
+       0.24,
+       7.01
+      ],
+      "out": [
+       -0.79,
+       -23
+      ],
+      "id": "tail.3"
+     },
+     {
+      "p": [
+       1322,
+       462
+      ],
+      "in": [
+       1.72,
+       23
+      ],
+      "corner": true,
+      "id": "tail.4"
+     },
+     {
+      "p": [
+       1277,
+       432
+      ],
+      "id": "tail.5"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    1312,
+    428
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "torso",
+   "name": "胴",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       548,
+       334
+      ],
+      "out": [
+       52.37,
+       -5.34
+      ],
+      "corner": true,
+      "id": "torso.0"
+     },
+     {
+      "p": [
+       697.52,
+       296.27
+      ],
+      "in": [
+       -50.81,
+       11.75
+      ],
+      "out": [
+       140.21,
+       -32.44
+      ],
+      "id": "torso.1"
+     },
+     {
+      "p": [
+       1127.33,
+       270.01
+      ],
+      "in": [
+       -143.24,
+       -25.34
+      ],
+      "out": [
+       81.55,
+       14.43
+      ],
+      "id": "torso.2"
+     },
+     {
+      "p": [
+       1315.07,
+       403.31
+      ],
+      "in": [
+       -29.54,
+       -83.53
+      ],
+      "out": [
+       9.47,
+       26.77
+      ],
+      "id": "torso.3"
+     },
+     {
+      "p": [
+       1322.8,
+       490.5
+      ],
+      "in": [
+       -0.46,
+       -28.12
+      ],
+      "out": [
+       0.72,
+       44.01
+      ],
+      "id": "torso.4"
+     },
+     {
+      "p": [
+       1310,
+       620
+      ],
+      "in": [
+       9,
+       -43.04
+      ],
+      "corner": true,
+      "id": "torso.5"
+     },
+     {
+      "p": [
+       1240,
+       656
+      ],
+      "id": "torso.6"
+     },
+     {
+      "p": [
+       1000,
+       662
+      ],
+      "out": [
+       -74.27,
+       17.67
+      ],
+      "corner": true,
+      "id": "torso.7"
+     },
+     {
+      "p": [
+       802,
+       662
+      ],
+      "in": [
+       73.94,
+       19.5
+      ],
+      "corner": true,
+      "id": "torso.8"
+     },
+     {
+      "p": [
+       560,
+       646
+      ],
+      "out": [
+       -0.99,
+       -13.87
+      ],
+      "corner": true,
+      "id": "torso.9"
+     },
+     {
+      "p": [
+       538,
+       616
+      ],
+      "in": [
+       13.76,
+       4.1
+      ],
+      "corner": true,
+      "id": "torso.10"
+     },
+     {
+      "p": [
+       462,
+       462
+      ],
+      "id": "torso.11"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": null,
+   "rigParent": null
+  },
+  {
+   "id": "belly",
+   "name": "腹（ピンク）",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "fill": "#C99C9F",
+   "stroke": null,
+   "follow": "torso",
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "belly.0",
+      "p": [
+       1240,
+       656
+      ],
+      "out": [
+       -85.64,
+       11.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.1",
+      "p": [
+       1000,
+       662
+      ],
+      "in": [
+       0,
+       0
+      ],
+      "out": [
+       -74.27,
+       17.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.2",
+      "p": [
+       802,
+       662
+      ],
+      "in": [
+       73.94,
+       19.5
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.3",
+      "p": [
+       700.36,
+       655.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.4",
+      "p": [
+       800,
+       641
+      ]
+     },
+     {
+      "id": "belly.5",
+      "p": [
+       950,
+       616
+      ]
+     },
+     {
+      "id": "belly.6",
+      "p": [
+       1085,
+       641
+      ]
+     },
+     {
+      "id": "belly.7",
+      "p": [
+       1150,
+       663
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "backHi",
+   "name": "背中の光",
+   "kind": "line",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "backHi.0",
+      "p": [
+       672,
+       319
+      ]
+     },
+     {
+      "id": "backHi.1",
+      "p": [
+       860,
+       282
+      ]
+     },
+     {
+      "id": "backHi.2",
+      "p": [
+       1020,
+       276
+      ]
+     },
+     {
+      "id": "backHi.3",
+      "p": [
+       1170,
+       296
+      ]
+     },
+     {
+      "id": "backHi.4",
+      "p": [
+       1254,
+       340
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#A796AA",
+    "w": 9,
+    "cap": "round"
+   },
+   "follow": "torso"
+  },
+  {
+   "id": "gLegHN",
+   "name": "後ろ脚（手前）のまとまり",
+   "kind": "group",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    1222,
+    585
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "legHN",
+   "name": "後ろ脚（手前）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       1310,
+       620
+      ],
+      "out": [
+       -6.37,
+       27.77
+      ],
+      "corner": true,
+      "id": "legHN.0"
+     },
+     {
+      "p": [
+       1287.6,
+       702.48
+      ],
+      "in": [
+       4.36,
+       -28.24
+      ],
+      "out": [
+       -2.73,
+       17.72
+      ],
+      "id": "legHN.1"
+     },
+     {
+      "p": [
+       1286.4,
+       756
+      ],
+      "in": [
+       0.3,
+       -17.83
+      ],
+      "out": [
+       -0.2,
+       7.7
+      ],
+      "id": "legHN.2"
+     },
+     {
+      "id": "legHN.3",
+      "p": [
+       1272,
+       770
+      ],
+      "in": [
+       7.7,
+       0
+      ],
+      "out": [
+       -30,
+       0
+      ]
+     },
+     {
+      "id": "legHN.4",
+      "p": [
+       1186,
+       770
+      ],
+      "in": [
+       30,
+       0
+      ],
+      "out": [
+       -7.7,
+       0
+      ]
+     },
+     {
+      "p": [
+       1170.3,
+       756.1
+      ],
+      "out": [
+       -2.33,
+       -24
+      ],
+      "in": [
+       0.9,
+       7.7
+      ],
+      "id": "legHN.5"
+     },
+     {
+      "p": [
+       1136,
+       668
+      ],
+      "in": [
+       28.11,
+       3.6
+      ],
+      "corner": true,
+      "id": "legHN.6"
+     },
+     {
+      "p": [
+       1160,
+       505
+      ],
+      "id": "legHN.7"
+     },
+     {
+      "p": [
+       1262,
+       480
+      ],
+      "id": "legHN.8"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    1222,
+    585
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "creaseH",
+   "name": "ももの線",
+   "kind": "line",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "creaseH.0",
+      "p": [
+       1158,
+       648
+      ]
+     },
+     {
+      "id": "creaseH.1",
+      "p": [
+       1160,
+       572
+      ]
+     },
+     {
+      "id": "creaseH.2",
+      "p": [
+       1222,
+       528
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#7B6B80",
+    "w": 6,
+    "cap": "round"
+   }
+  },
+  {
+   "id": "nailH0",
+   "name": "つめ（後ろ1）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1190,
+     757
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     15
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailH1",
+   "name": "つめ（後ろ2）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1214,
+     758
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     15
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailH2",
+   "name": "つめ（後ろ3）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1238,
+     757
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     15
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "gLegFN",
+   "name": "前脚（手前）のまとまり",
+   "kind": "group",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    735,
+    605
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "legFN",
+   "name": "前脚（手前）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       802,
+       662
+      ],
+      "out": [
+       -3.39,
+       31.31
+      ],
+      "corner": true,
+      "id": "legFN.0"
+     },
+     {
+      "p": [
+       793.1,
+       756
+      ],
+      "in": [
+       2.56,
+       -31.38
+      ],
+      "out": [
+       -0.6,
+       7.7
+      ],
+      "id": "legFN.1"
+     },
+     {
+      "id": "legFN.2",
+      "p": [
+       778,
+       770
+      ],
+      "in": [
+       7.7,
+       0
+      ],
+      "out": [
+       -28.2,
+       0
+      ]
+     },
+     {
+      "id": "legFN.3",
+      "p": [
+       698,
+       770
+      ],
+      "in": [
+       28.2,
+       0
+      ],
+      "out": [
+       -7.7,
+       0
+      ]
+     },
+     {
+      "p": [
+       683.4,
+       756
+      ],
+      "out": [
+       -0.37,
+       -22.73
+      ],
+      "in": [
+       0.3,
+       7.7
+      ],
+      "id": "legFN.4"
+     },
+     {
+      "p": [
+       658,
+       666
+      ],
+      "in": [
+       26.26,
+       3.65
+      ],
+      "corner": true,
+      "id": "legFN.5"
+     },
+     {
+      "p": [
+       682,
+       520
+      ],
+      "id": "legFN.6"
+     },
+     {
+      "p": [
+       788,
+       520
+      ],
+      "id": "legFN.7"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    735,
+    605
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "creaseF",
+   "name": "肩の線",
+   "kind": "line",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "creaseF.0",
+      "p": [
+       678,
+       652
+      ]
+     },
+     {
+      "id": "creaseF.1",
+      "p": [
+       684,
+       582
+      ]
+     },
+     {
+      "id": "creaseF.2",
+      "p": [
+       738,
+       552
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#7B6B80",
+    "w": 6,
+    "cap": "round"
+   }
+  },
+  {
+   "id": "nailF0",
+   "name": "つめ（前1）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     702,
+     757
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     15
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailF1",
+   "name": "つめ（前2）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     726,
+     758
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     15
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailF2",
+   "name": "つめ（前3）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     750,
+     757
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     15
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "gHead",
+   "name": "頭のまとまり",
+   "kind": "group",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    592,
+    432
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "earF",
+   "name": "耳（奥）",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       476,
+       346
+      ],
+      "out": [
+       -7.35,
+       -12.41
+      ],
+      "corner": true,
+      "id": "earF.0"
+     },
+     {
+      "p": [
+       469.48,
+       303.89
+      ],
+      "in": [
+       -7.7,
+       13.87
+      ],
+      "out": [
+       1.59,
+       -2.87
+      ],
+      "id": "earF.1"
+     },
+     {
+      "p": [
+       476.98,
+       298.06
+      ],
+      "in": [
+       -3.42,
+       0.39
+      ],
+      "out": [
+       15.84,
+       -1.79
+      ],
+      "id": "earF.2"
+     },
+     {
+      "p": [
+       496,
+       340
+      ],
+      "in": [
+       0.75,
+       -10.72
+      ],
+      "corner": true,
+      "id": "earF.3"
+     },
+     {
+      "p": [
+       486,
+       374
+      ],
+      "id": "earF.4"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#6E6075",
+   "stroke": null,
+   "pivot": [
+    486,
+    345
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "jaw",
+   "name": "下あご",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       538,
+       616
+      ],
+      "out": [
+       -23.04,
+       -3.64
+      ],
+      "corner": true,
+      "id": "jaw.0"
+     },
+     {
+      "p": [
+       473.06,
+       625.89
+      ],
+      "in": [
+       22.52,
+       -1.32
+      ],
+      "out": [
+       -29.71,
+       1.74
+      ],
+      "id": "jaw.1"
+     },
+     {
+      "p": [
+       384,
+       618.47
+      ],
+      "in": [
+       29.38,
+       3.48
+      ],
+      "out": [
+       -51.16,
+       -6.05
+      ],
+      "id": "jaw.2"
+     },
+     {
+      "p": [
+       230,
+       572
+      ],
+      "in": [
+       37.89,
+       40.81
+      ],
+      "corner": true,
+      "id": "jaw.3"
+     },
+     {
+      "p": [
+       330,
+       546
+      ],
+      "id": "jaw.4"
+     },
+     {
+      "p": [
+       545,
+       540
+      ],
+      "id": "jaw.5"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#C99C9F",
+   "stroke": null,
+   "pivot": [
+    505,
+    545
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "head",
+   "name": "頭",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       230,
+       572
+      ],
+      "out": [
+       -35.66,
+       -46
+      ],
+      "corner": true,
+      "id": "head.0"
+     },
+     {
+      "p": [
+       273.6,
+       382.12
+      ],
+      "in": [
+       -75.81,
+       7.17
+      ],
+      "out": [
+       45.36,
+       -4.29
+      ],
+      "id": "head.1"
+     },
+     {
+      "p": [
+       370.62,
+       413.32
+      ],
+      "in": [
+       -25.41,
+       5.93
+      ],
+      "out": [
+       25.72,
+       -6
+      ],
+      "id": "head.2"
+     },
+     {
+      "p": [
+       440,
+       352
+      ],
+      "in": [
+       -26.08,
+       11.65
+      ],
+      "out": [
+       11,
+       -4.92
+      ],
+      "id": "head.3"
+     },
+     {
+      "p": [
+       481.57,
+       350.09
+      ],
+      "in": [
+       -12.14,
+       2.04
+      ],
+      "out": [
+       39.77,
+       -6.67
+      ],
+      "id": "head.4"
+     },
+     {
+      "p": [
+       600,
+       326
+      ],
+      "in": [
+       -39.25,
+       9.24
+      ],
+      "corner": true,
+      "id": "head.5"
+     },
+     {
+      "p": [
+       735,
+       448
+      ],
+      "id": "head.6"
+     },
+     {
+      "p": [
+       600,
+       590
+      ],
+      "id": "head.7"
+     },
+     {
+      "p": [
+       478,
+       577
+      ],
+      "id": "head.8"
+     },
+     {
+      "p": [
+       340,
+       591
+      ],
+      "id": "head.9"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    592,
+    432
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "mouth",
+   "name": "口の線",
+   "kind": "line",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "mouth.0",
+      "p": [
+       236,
+       575
+      ]
+     },
+     {
+      "id": "mouth.1",
+      "p": [
+       340,
+       591
+      ]
+     },
+     {
+      "id": "mouth.2",
+      "p": [
+       452,
+       580
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#54465C",
+    "w": 6,
+    "cap": "round"
+   }
+  },
+  {
+   "id": "eyeRim",
+   "name": "目のまわり",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     443,
+     379
+    ],
+    "rot": -15
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     40,
+     36
+    ]
+   },
+   "fill": "#7B6B80",
+   "stroke": null
+  },
+  {
+   "id": "eye",
+   "name": "目",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     442,
+     379
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     19,
+     21
+    ]
+   },
+   "fill": "#2F2734",
+   "stroke": null
+  },
+  {
+   "id": "eyeHi",
+   "name": "目の光",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     438.5,
+     374.5
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     6,
+     6
+    ]
+   },
+   "fill": "#FFFFFF",
+   "stroke": null
+  },
+  {
+   "id": "nostril",
+   "name": "鼻の穴",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     266,
+     412
+    ],
+    "rot": -24
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     22,
+     11
+    ]
+   },
+   "fill": "#54465C",
+   "stroke": null
+  },
+  {
+   "id": "gEarN",
+   "name": "耳（手前）のまとまり",
+   "kind": "group",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    528,
+    338
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "earN",
+   "name": "耳（手前）",
+   "kind": "shape",
+   "parent": "gEarN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       508,
+       338
+      ],
+      "out": [
+       -2.15,
+       -8.63
+      ],
+      "corner": true,
+      "id": "earN.0"
+     },
+     {
+      "p": [
+       504.43,
+       311.4
+      ],
+      "in": [
+       -0.07,
+       8.91
+      ],
+      "out": [
+       0.11,
+       -14.64
+      ],
+      "id": "earN.1"
+     },
+     {
+      "p": [
+       537.29,
+       284.35
+      ],
+      "in": [
+       -17.42,
+       -16.32
+      ],
+      "out": [
+       13.27,
+       12.43
+      ],
+      "id": "earN.2"
+     },
+     {
+      "p": [
+       548,
+       334
+      ],
+      "in": [
+       2.98,
+       -16.5
+      ],
+      "corner": true,
+      "id": "earN.3"
+     },
+     {
+      "p": [
+       528,
+       374
+      ],
+      "id": "earN.4"
+     },
+     {
+      "p": [
+       498,
+       358
+      ],
+      "id": "earN.5"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    528,
+    338
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "earIn",
+   "name": "耳の中",
+   "kind": "shape",
+   "parent": "gEarN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     528,
+     309
+    ],
+    "rot": 3
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17,
+     34
+    ]
+   },
+   "fill": "#B0727A",
+   "stroke": null
+  },
+  {
+   "id": "neckSh",
+   "name": "首の影",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "neckSh.0",
+      "p": [
+       597,
+       336
+      ],
+      "corner": true
+     },
+     {
+      "id": "neckSh.1",
+      "p": [
+       680,
+       446
+      ]
+     },
+     {
+      "id": "neckSh.2",
+      "p": [
+       608,
+       600
+      ],
+      "corner": true
+     },
+     {
+      "id": "neckSh.3",
+      "p": [
+       663,
+       442
+      ]
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#7B6B80",
+   "stroke": null,
+   "follow": "torso"
+  }
+ ],
+ "e2": {
+  "stage": "E",
+  "motion": [
+   {
+    "move": "歩く",
+    "parts": "4本の脚（肩・腰で振る）",
+    "pivot": "前脚＝肩、後ろ脚＝腰",
+    "range": "±15度",
+    "note": "ひざ・足首では曲げない（短い脚なので、付け根だけ。部品を増やさない）"
+   },
+   {
+    "move": "首を振る（うなずく）",
+    "parts": "頭のグループ（頭・下あご・耳2つ＋顔の細部）",
+    "pivot": "首（胴の中）",
+    "range": "±10〜15度",
+    "note": "頭の後ろと胴の前を、互いに深くもぐらせる"
+   },
+   {
+    "move": "口を開ける",
+    "parts": "下あご",
+    "pivot": "あごの関節（耳の下）",
+    "range": "下へ 0〜25度",
+    "note": "下あごは頭の下にもぐる。口の線は頭の下のふち"
+   },
+   {
+    "move": "耳を振る",
+    "parts": "耳（手前・奥）",
+    "pivot": "耳の付け根",
+    "range": "±20度",
+    "note": "付け根を頭の中へ丸くもぐらせる"
+   },
+   {
+    "move": "しっぽ",
+    "parts": "しっぽ",
+    "pivot": "しっぽの付け根",
+    "range": "±20度",
+    "note": ""
+   },
+   {
+    "move": "まばたき",
+    "parts": "目（工程 5 で足す）",
+    "pivot": "—",
+    "range": "差し替え／上下につぶす",
+    "note": "目は長丸の図形のままにして、高さを変えるだけで閉じられるように"
+   },
+   {
+    "move": "腹の上下（呼吸）",
+    "parts": "胴",
+    "pivot": "—",
+    "range": "腹の点を上下 ±6",
+    "note": "胴の下のふち（腹）の点を動かす。腹の色の面も同じ点を持つ（工程 5）"
+   }
+  ],
+  "parts": [
+   {
+    "z": 0,
+    "id": "gshadow",
+    "name": "地面の影",
+    "group": null,
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 1,
+    "id": "legHF",
+    "name": "後ろ脚（奥）",
+    "group": null,
+    "rigParent": "torso",
+    "pivot": [
+     1068,
+     605
+    ]
+   },
+   {
+    "z": 2,
+    "id": "legFF",
+    "name": "前脚（奥）",
+    "group": null,
+    "rigParent": "torso",
+    "pivot": [
+     615,
+     605
+    ]
+   },
+   {
+    "z": 3,
+    "id": "tail",
+    "name": "しっぽ",
+    "group": null,
+    "rigParent": "torso",
+    "pivot": [
+     1312,
+     428
+    ]
+   },
+   {
+    "z": 4,
+    "id": "torso",
+    "name": "胴",
+    "group": null,
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 5,
+    "id": "belly",
+    "name": "腹（ピンク）",
+    "group": null,
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 6,
+    "id": "backHi",
+    "name": "背中の光",
+    "group": null,
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 7,
+    "id": "gLegHN",
+    "name": "後ろ脚（手前）のまとまり",
+    "group": null,
+    "rigParent": "torso",
+    "pivot": [
+     1222,
+     585
+    ]
+   },
+   {
+    "z": 8,
+    "id": "legHN",
+    "name": "後ろ脚（手前）",
+    "group": "gLegHN",
+    "rigParent": "torso",
+    "pivot": [
+     1222,
+     585
+    ]
+   },
+   {
+    "z": 9,
+    "id": "creaseH",
+    "name": "ももの線",
+    "group": "gLegHN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 10,
+    "id": "nailH0",
+    "name": "つめ（後ろ1）",
+    "group": "gLegHN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 11,
+    "id": "nailH1",
+    "name": "つめ（後ろ2）",
+    "group": "gLegHN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 12,
+    "id": "nailH2",
+    "name": "つめ（後ろ3）",
+    "group": "gLegHN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 13,
+    "id": "gLegFN",
+    "name": "前脚（手前）のまとまり",
+    "group": null,
+    "rigParent": "torso",
+    "pivot": [
+     735,
+     605
+    ]
+   },
+   {
+    "z": 14,
+    "id": "legFN",
+    "name": "前脚（手前）",
+    "group": "gLegFN",
+    "rigParent": "torso",
+    "pivot": [
+     735,
+     605
+    ]
+   },
+   {
+    "z": 15,
+    "id": "creaseF",
+    "name": "肩の線",
+    "group": "gLegFN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 16,
+    "id": "nailF0",
+    "name": "つめ（前1）",
+    "group": "gLegFN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 17,
+    "id": "nailF1",
+    "name": "つめ（前2）",
+    "group": "gLegFN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 18,
+    "id": "nailF2",
+    "name": "つめ（前3）",
+    "group": "gLegFN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 19,
+    "id": "gHead",
+    "name": "頭のまとまり",
+    "group": null,
+    "rigParent": "torso",
+    "pivot": [
+     592,
+     432
+    ]
+   },
+   {
+    "z": 20,
+    "id": "earF",
+    "name": "耳（奥）",
+    "group": "gHead",
+    "rigParent": "head",
+    "pivot": [
+     486,
+     345
+    ]
+   },
+   {
+    "z": 21,
+    "id": "jaw",
+    "name": "下あご",
+    "group": "gHead",
+    "rigParent": "head",
+    "pivot": [
+     505,
+     545
+    ]
+   },
+   {
+    "z": 22,
+    "id": "head",
+    "name": "頭",
+    "group": "gHead",
+    "rigParent": "torso",
+    "pivot": [
+     592,
+     432
+    ]
+   },
+   {
+    "z": 23,
+    "id": "mouth",
+    "name": "口の線",
+    "group": "gHead",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 24,
+    "id": "eyeRim",
+    "name": "目のまわり",
+    "group": "gHead",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 25,
+    "id": "eye",
+    "name": "目",
+    "group": "gHead",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 26,
+    "id": "eyeHi",
+    "name": "目の光",
+    "group": "gHead",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 27,
+    "id": "nostril",
+    "name": "鼻の穴",
+    "group": "gHead",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 28,
+    "id": "gEarN",
+    "name": "耳（手前）のまとまり",
+    "group": "gHead",
+    "rigParent": "head",
+    "pivot": [
+     528,
+     338
+    ]
+   },
+   {
+    "z": 29,
+    "id": "earN",
+    "name": "耳（手前）",
+    "group": "gEarN",
+    "rigParent": "head",
+    "pivot": [
+     528,
+     338
+    ]
+   },
+   {
+    "z": 30,
+    "id": "earIn",
+    "name": "耳の中",
+    "group": "gEarN",
+    "rigParent": null,
+    "pivot": null
+   },
+   {
+    "z": 31,
+    "id": "neckSh",
+    "name": "首の影",
+    "group": null,
+    "rigParent": null,
+    "pivot": null
+   }
+  ],
+  "added": [
+   {
+    "id": "gshadow",
+    "name": "地面の影",
+    "kind": "図形（長丸）",
+    "color": "#BCD3A2",
+    "why": "地面に立たせる"
+   },
+   {
+    "id": "belly",
+    "name": "腹（ピンク）",
+    "kind": "面",
+    "color": "#C99C9F",
+    "why": "腹を背中と別の明るい面に［手本帳 絵9］。下のふちは胴と同じ点"
+   },
+   {
+    "id": "neckSh",
+    "name": "首の影",
+    "kind": "面",
+    "color": "#7B6B80",
+    "why": "頭と胴が同じ色なので、頭の後ろに暗い面を置いて分ける［絵3］"
+   },
+   {
+    "id": "backHi",
+    "name": "背中の光",
+    "kind": "線",
+    "color": "#A796AA",
+    "why": "背中のふちに細い明るい帯［絵10］"
+   },
+   {
+    "id": "creaseH",
+    "name": "ももの線",
+    "kind": "線",
+    "color": "#7B6B80",
+    "why": "胴と同じ色の脚の、前のふちを線で"
+   },
+   {
+    "id": "nailH0",
+    "name": "つめ（後ろ1）",
+    "kind": "図形（長丸）",
+    "color": "#EFE6D2",
+    "why": "つめ"
+   },
+   {
+    "id": "nailH1",
+    "name": "つめ（後ろ2）",
+    "kind": "図形（長丸）",
+    "color": "#EFE6D2",
+    "why": "つめ"
+   },
+   {
+    "id": "nailH2",
+    "name": "つめ（後ろ3）",
+    "kind": "図形（長丸）",
+    "color": "#EFE6D2",
+    "why": "つめ"
+   },
+   {
+    "id": "creaseF",
+    "name": "肩の線",
+    "kind": "線",
+    "color": "#7B6B80",
+    "why": "胴と同じ色の脚の、前のふちを線で"
+   },
+   {
+    "id": "nailF0",
+    "name": "つめ（前1）",
+    "kind": "図形（長丸）",
+    "color": "#EFE6D2",
+    "why": "つめ"
+   },
+   {
+    "id": "nailF1",
+    "name": "つめ（前2）",
+    "kind": "図形（長丸）",
+    "color": "#EFE6D2",
+    "why": "つめ"
+   },
+   {
+    "id": "nailF2",
+    "name": "つめ（前3）",
+    "kind": "図形（長丸）",
+    "color": "#EFE6D2",
+    "why": "つめ"
+   },
+   {
+    "id": "mouth",
+    "name": "口の線",
+    "kind": "線",
+    "color": "#54465C",
+    "why": "口は線。上くちびるのふち（頭の下のふち）に沿わせる"
+   },
+   {
+    "id": "eyeRim",
+    "name": "目のまわり",
+    "kind": "図形（長丸）",
+    "color": "#7B6B80",
+    "why": "目のまわりのピンク（実物の写真 P9・P0）"
+   },
+   {
+    "id": "eye",
+    "name": "目",
+    "kind": "図形（長丸）",
+    "color": "#2F2734",
+    "why": "目（長丸のまま＝まばたきは高さを変えるだけ）"
+   },
+   {
+    "id": "eyeHi",
+    "name": "目の光",
+    "kind": "図形（長丸）",
+    "color": "#FFFFFF",
+    "why": "目の光"
+   },
+   {
+    "id": "nostril",
+    "name": "鼻の穴",
+    "kind": "図形（長丸）",
+    "color": "#54465C",
+    "why": "鼻の穴（鼻づらの上の面）"
+   },
+   {
+    "id": "earIn",
+    "name": "耳の中",
+    "kind": "図形（長丸）",
+    "color": "#B0727A",
+    "why": "耳の中"
+   }
+  ],
+  "note": "形は工程 4 のまま。色は色の組から"
+ }
+}
