@@ -1,0 +1,12 @@
+{
+  "name": "p3r-rebuild-undo",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "description": "制作室の作り直し 試作P3r：記録から組み立て直す取り消し（依存なし）",
+  "scripts": {
+    "test": "node --test",
+    "measure": "node tools/measure.js",
+    "trace": "node tools/run-trace.js"
+  }
+}
