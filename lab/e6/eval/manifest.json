@@ -1,0 +1,610 @@
+[
+ {
+  "id": "legs1_1",
+  "set": "legs1",
+  "kind": "body",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "V",
+    "ver": "A01_柱",
+    "pos": 0
+   },
+   {
+    "letter": "D",
+    "ver": "A06_丸いもも",
+    "pos": 1
+   },
+   {
+    "letter": "S",
+    "ver": "L2",
+    "pos": 2
+   },
+   {
+    "letter": "J",
+    "ver": "A02_先細り",
+    "pos": 3
+   },
+   {
+    "letter": "T",
+    "ver": "A05_ゾウ足",
+    "pos": 4
+   },
+   {
+    "letter": "L",
+    "ver": "L2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "legs1_2",
+  "set": "legs1",
+  "kind": "body",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "V",
+    "ver": "L2",
+    "pos": 0
+   },
+   {
+    "letter": "H",
+    "ver": "A05_ゾウ足",
+    "pos": 1
+   },
+   {
+    "letter": "K",
+    "ver": "A02_先細り",
+    "pos": 2
+   },
+   {
+    "letter": "G",
+    "ver": "L2",
+    "pos": 3
+   },
+   {
+    "letter": "E",
+    "ver": "A06_丸いもも",
+    "pos": 4
+   },
+   {
+    "letter": "F",
+    "ver": "A01_柱",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "legs2_1",
+  "set": "legs2",
+  "kind": "body",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "T",
+    "ver": "A07_実物型",
+    "pos": 0
+   },
+   {
+    "letter": "P",
+    "ver": "A04_足の甲",
+    "pos": 1
+   },
+   {
+    "letter": "H",
+    "ver": "A08_すき間広",
+    "pos": 2
+   },
+   {
+    "letter": "C",
+    "ver": "L2",
+    "pos": 3
+   },
+   {
+    "letter": "K",
+    "ver": "A03_ひざと足首",
+    "pos": 4
+   },
+   {
+    "letter": "W",
+    "ver": "L2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "legs2_2",
+  "set": "legs2",
+  "kind": "body",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "J",
+    "ver": "L2",
+    "pos": 0
+   },
+   {
+    "letter": "C",
+    "ver": "A03_ひざと足首",
+    "pos": 1
+   },
+   {
+    "letter": "K",
+    "ver": "L2",
+    "pos": 2
+   },
+   {
+    "letter": "L",
+    "ver": "A08_すき間広",
+    "pos": 3
+   },
+   {
+    "letter": "E",
+    "ver": "A04_足の甲",
+    "pos": 4
+   },
+   {
+    "letter": "T",
+    "ver": "A07_実物型",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "legs3_1",
+  "set": "legs3",
+  "kind": "body",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "K",
+    "ver": "A13_脚長",
+    "pos": 0
+   },
+   {
+    "letter": "F",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "M",
+    "ver": "A12_脚短",
+    "pos": 2
+   },
+   {
+    "letter": "U",
+    "ver": "A10_つめ大",
+    "pos": 3
+   },
+   {
+    "letter": "R",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "G",
+    "ver": "A09_すき間狭",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "legs3_2",
+  "set": "legs3",
+  "kind": "body",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "V",
+    "ver": "A09_すき間狭",
+    "pos": 0
+   },
+   {
+    "letter": "J",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "W",
+    "ver": "A10_つめ大",
+    "pos": 2
+   },
+   {
+    "letter": "C",
+    "ver": "A12_脚短",
+    "pos": 3
+   },
+   {
+    "letter": "E",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "F",
+    "ver": "A13_脚長",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "body1_1",
+  "set": "body1",
+  "kind": "body",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "V",
+    "ver": "B1胴大_4",
+    "pos": 0
+   },
+   {
+    "letter": "J",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "Q",
+    "ver": "L2",
+    "pos": 2
+   },
+   {
+    "letter": "P",
+    "ver": "B1頭大_2",
+    "pos": 3
+   },
+   {
+    "letter": "F",
+    "ver": "B1頭大_4",
+    "pos": 4
+   },
+   {
+    "letter": "M",
+    "ver": "B1胴大_2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "body1_2",
+  "set": "body1",
+  "kind": "body",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "Q",
+    "ver": "B1胴大_2",
+    "pos": 0
+   },
+   {
+    "letter": "N",
+    "ver": "B1頭大_4",
+    "pos": 1
+   },
+   {
+    "letter": "T",
+    "ver": "B1頭大_2",
+    "pos": 2
+   },
+   {
+    "letter": "G",
+    "ver": "L2",
+    "pos": 3
+   },
+   {
+    "letter": "E",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "D",
+    "ver": "B1胴大_4",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "body2_1",
+  "set": "body2",
+  "kind": "body",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "K",
+    "ver": "L2",
+    "pos": 0
+   },
+   {
+    "letter": "P",
+    "ver": "B2丸み_4",
+    "pos": 1
+   },
+   {
+    "letter": "M",
+    "ver": "L2",
+    "pos": 2
+   },
+   {
+    "letter": "W",
+    "ver": "B3背_山2",
+    "pos": 3
+   },
+   {
+    "letter": "V",
+    "ver": "B3背_腰高2",
+    "pos": 4
+   },
+   {
+    "letter": "H",
+    "ver": "B2丸み_2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "body2_2",
+  "set": "body2",
+  "kind": "body",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "N",
+    "ver": "B2丸み_2",
+    "pos": 0
+   },
+   {
+    "letter": "C",
+    "ver": "B3背_腰高2",
+    "pos": 1
+   },
+   {
+    "letter": "F",
+    "ver": "B3背_山2",
+    "pos": 2
+   },
+   {
+    "letter": "T",
+    "ver": "L2",
+    "pos": 3
+   },
+   {
+    "letter": "G",
+    "ver": "B2丸み_4",
+    "pos": 4
+   },
+   {
+    "letter": "K",
+    "ver": "L2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "face1_1",
+  "set": "face1",
+  "kind": "face",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "Z",
+    "ver": "L2",
+    "pos": 0
+   },
+   {
+    "letter": "K",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "T",
+    "ver": "B4耳大_2",
+    "pos": 2
+   },
+   {
+    "letter": "G",
+    "ver": "B4目大_4",
+    "pos": 3
+   },
+   {
+    "letter": "C",
+    "ver": "B4目_白目",
+    "pos": 4
+   },
+   {
+    "letter": "F",
+    "ver": "B4目大_2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "face1_2",
+  "set": "face1",
+  "kind": "face",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "F",
+    "ver": "B4目大_2",
+    "pos": 0
+   },
+   {
+    "letter": "J",
+    "ver": "B4目_白目",
+    "pos": 1
+   },
+   {
+    "letter": "G",
+    "ver": "B4目大_4",
+    "pos": 2
+   },
+   {
+    "letter": "H",
+    "ver": "B4耳大_2",
+    "pos": 3
+   },
+   {
+    "letter": "L",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "M",
+    "ver": "L2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "face2_1",
+  "set": "face2",
+  "kind": "face",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "M",
+    "ver": "L2",
+    "pos": 0
+   },
+   {
+    "letter": "H",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "S",
+    "ver": "B5目_半分",
+    "pos": 2
+   },
+   {
+    "letter": "K",
+    "ver": "B6鼻大_2",
+    "pos": 3
+   },
+   {
+    "letter": "R",
+    "ver": "B5口_下2",
+    "pos": 4
+   },
+   {
+    "letter": "L",
+    "ver": "B5口_上2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "face2_2",
+  "set": "face2",
+  "kind": "face",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "S",
+    "ver": "B5口_上2",
+    "pos": 0
+   },
+   {
+    "letter": "J",
+    "ver": "B5口_下2",
+    "pos": 1
+   },
+   {
+    "letter": "C",
+    "ver": "B6鼻大_2",
+    "pos": 2
+   },
+   {
+    "letter": "U",
+    "ver": "B5目_半分",
+    "pos": 3
+   },
+   {
+    "letter": "H",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "E",
+    "ver": "L2",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "combo_1",
+  "set": "combo",
+  "kind": "body",
+  "model": "default",
+  "cells": [
+   {
+    "letter": "Z",
+    "ver": "C2_大きい胴",
+    "pos": 0
+   },
+   {
+    "letter": "P",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "V",
+    "ver": "C1_丸い胴と目",
+    "pos": 2
+   },
+   {
+    "letter": "J",
+    "ver": "e3:L4",
+    "pos": 3
+   },
+   {
+    "letter": "D",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "Q",
+    "ver": "C3_大きい顔",
+    "pos": 5
+   }
+  ]
+ },
+ {
+  "id": "combo_2",
+  "set": "combo",
+  "kind": "body",
+  "model": "sonnet",
+  "cells": [
+   {
+    "letter": "R",
+    "ver": "C3_大きい顔",
+    "pos": 0
+   },
+   {
+    "letter": "S",
+    "ver": "L2",
+    "pos": 1
+   },
+   {
+    "letter": "D",
+    "ver": "e3:L4",
+    "pos": 2
+   },
+   {
+    "letter": "M",
+    "ver": "C1_丸い胴と目",
+    "pos": 3
+   },
+   {
+    "letter": "N",
+    "ver": "L2",
+    "pos": 4
+   },
+   {
+    "letter": "W",
+    "ver": "C2_大きい胴",
+    "pos": 5
+   }
+  ]
+ }
+]
