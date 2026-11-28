@@ -16,3 +16,12 @@ console.log('| 記録 | 部品 | 操作 | K | 写しの大きさ | 写しを書�
 console.log('|---|---|---|---|---|---|---|---|---|---|');
 for (const r of rows) for (const K of [100, 1000, 10000]) { const o = r.snap && r.snap[K]; if (!o) continue;
   console.log(`| ${nn(r.n)} | ${r.parts} | ${mode(r.mode)} | ${K} | ${o.snapKB >= 1024 ? (o.snapKB / 1024).toFixed(1) + ' MB' : o.snapKB + ' KB'} | ${ms(o.writeMs)} ms（${o.writePerCmdMs} ms）| ${o.tailLoadMs >= 1000 ? (o.tailLoadMs / 1000).toFixed(1) + ' 秒' : ms(o.tailLoadMs) + ' ms'} | ${o.indexedLoadMs === undefined ? '測っていない' : o.indexedLoadMs >= 1000 ? (o.indexedLoadMs / 1000).toFixed(1) + ' 秒' : ms(o.indexedLoadMs) + ' ms'} | ${o.tailUndo === 'applied' ? ms(o.tailUndoMs) + ' ms' : o.tailUndo} | ${o.oldRevert === 'needs-history' ? '断られる' : o.oldRevert} → ${o.reachBackS === undefined ? '測っていない' : s(o.reachBackS) + ' 秒'} |`); }
+// 表3：効果つきの記録（自分の端末の控え）からの読みこみ（tools/bench_load.js。results/bench_load.jsonl があれば）
+if (fs.existsSync('results/bench_load.jsonl')) {
+  const ls = fs.readFileSync('results/bench_load.jsonl', 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).filter((r) => !r.failed).sort((a, b) => (a.mode < b.mode ? 1 : a.mode > b.mode ? -1 : a.n - b.n || a.parts - b.parts));
+  console.log('\n### 表3：効果つきの記録（自分の端末の控え）から読みこむ（検査なし。読みこみを速くしたあとの測り直し）\n');
+  console.log('| 記録 | 部品 | 操作 | 効果つきの記録 | 行を読む（印の確かめ＋JSON）| 効果を当てる | 写し＋索引（K=100／1000／1 万。行を読む時間は別）| 写し＋続きだけ（K=100／1000／1 万）| 写しより前の操作を戻す：断られてから、読み足して戻すまで |');
+  console.log('|---|---|---|---|---|---|---|---|---|');
+  for (const r of ls) { const k = (f) => [100, 1000, 10000].map((K) => (r.snap[K] ? f(r.snap[K]) : '—')).join('／');
+    console.log(`| ${nn(r.n)} | ${r.parts} | ${mode(r.mode)} | ${r.journalFullMB} MB | ${r.readFullS} 秒 | ${r.trustedS} 秒 | ${k((o) => ms(o.indexedLoadMs))} ms | ${k((o) => ms(o.tailLoadMs))} ms | ${k((o) => o.reachBackS)} 秒 |`); }
+}
