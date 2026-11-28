@@ -1,0 +1,4 @@
+{"n":10,"trials":300,"differA":214,"differB":214,"cConverged":0,"cSavedShare":0}
+{"n":100,"trials":300,"differA":278,"differB":279,"cConverged":6,"cSavedShare":0.0025}
+{"n":1000,"trials":300,"differA":224,"differB":170,"cConverged":154,"cSavedShare":0.2054}
+{"n":10000,"trials":300,"differA":137,"differB":45,"cConverged":263,"cSavedShare":0.3916}

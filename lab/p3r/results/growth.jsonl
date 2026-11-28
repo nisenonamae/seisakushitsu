@@ -1,0 +1,4 @@
+{"pairs":0,"records":2444,"undoRedoShare":0.163,"segMB":2.14,"idxMB":0.57,"bytesPerPairFull":null,"bytesPerPairIdx":null,"openMs":83,"open":{"scan":32.9,"snapshot":16.6,"index":23.4,"tail":9.9},"pairMs":0.388,"memMB":15,"sameContent":true}
+{"pairs":1000,"records":4444,"undoRedoShare":0.54,"segMB":3.58,"idxMB":1.15,"bytesPerPairFull":1515,"bytesPerPairIdx":610,"openMs":60,"open":{"scan":19,"snapshot":10.8,"index":28.5,"tail":1.9},"pairMs":0.25,"memMB":16,"sameContent":true}
+{"pairs":10000,"records":22444,"undoRedoShare":0.909,"segMB":16.78,"idxMB":6.45,"bytesPerPairFull":1535,"bytesPerPairIdx":616,"openMs":178,"open":{"scan":111.5,"snapshot":17.7,"index":47,"tail":1.2},"pairMs":0.071,"memMB":26,"sameContent":true}
+{"pairs":100000,"records":202444,"undoRedoShare":0.99,"segMB":150.53,"idxMB":60.05,"bytesPerPairFull":1556,"bytesPerPairIdx":624,"openMs":1846,"open":{"scan":1219.4,"snapshot":23.9,"index":591.2,"tail":4.6},"pairMs":0.148,"memMB":66,"sameContent":true}

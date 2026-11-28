@@ -1,0 +1,2 @@
+{"fsync":false,"batches":1183,"msPerBatch":0.486,"segKB":1035,"snapshots":1}
+{"fsync":true,"batches":1183,"msPerBatch":3.311,"segKB":1035,"snapshots":1}

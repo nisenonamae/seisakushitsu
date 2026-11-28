@@ -11,12 +11,19 @@
 // 古い記録の本体は、メモリに持たない：要る時に、束を読む（読んだ束は cacheSegs 個まで持つ）。
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { applyBatch, createState } from './engine.js';
 import { emptyLog, appendIndexOnly, evictLog, setArchive, logLength } from './log.js';
 import { Draft, applyEffect, revOf } from './model.js';
-import { journalLine, parseLine, GENESIS, makeSnapshot, readSnapshot, docHash, slimLine, parseSlimLine, applyStoredAll } from './journal.js';
+import { journalLine, parseLine, GENESIS, makeSnapshot, readSnapshot, docHash, applyStoredAll } from './journal.js';
+import { slimOf } from './log.js';
 
 const pad = (n) => String(n).padStart(8, '0');
+// 索引の控えの1行：<CRC32 8字>\t{"n":番号,"h":記録の行の印,"r":[細い記録…]}。印は Node の zlib.crc32（速い。開くたびに全部の行を確かめるので）。
+// 壊れを見つけるための物。記録（束）の行の印は、前のまま hash64（端末どうしで同じ答えが要るので、素の JavaScript）
+const crc = (json) => (zlib.crc32(json) >>> 0).toString(16).padStart(8, '0');
+const slimLine = (n, h, applied) => { const json = JSON.stringify({ n, h, r: applied.map(slimOf) }); return `${crc(json)}\t${json}\n`; };
+const parseSlimLine = (line) => { if (line.length < 11 || line[8] !== '\t') return null; const json = line.slice(9); if (crc(json) !== line.slice(0, 8)) return null; try { const o = JSON.parse(json); return o && Number.isInteger(o.n) && typeof o.h === 'string' && Array.isArray(o.r) ? o : null; } catch { return null; } };
 const now = () => Number(process.hrtime.bigint()) / 1e6;
 
 /**
