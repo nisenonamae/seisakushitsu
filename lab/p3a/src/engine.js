@@ -6,7 +6,7 @@ import { Draft, applyEffect, targetOf, addrOf, revOf, createDoc } from './model.
 import { SPECS, migrateBody } from './commands.js';
 import { checkInvariants } from './invariants.js';
 import { preScan, postScan, judge } from './policy.js';
-import { planRevert, tally } from './revert.js';
+import { runRevert, tally } from './revert.js';
 import { emptyLog, appendLog, logIndexOf, logAt, logTouching, logItems } from './log.js';
 
 /** @typedef {{k:'human', device:string} | {k:'ai', agent:string}} Sender 確かめられた身元（呼び出す側が渡す） */
@@ -71,7 +71,7 @@ export function applyBatch(state, cmds, ctx, opt = {}) {
     if (dup === cmds.length) return { status: 'duplicate', state, applied: cmds.map((c) => logAt(state.log, logIndexOf(state.log, c.id))) };
     if (dup > 0) throw new Reject('duplicate', 'まとまりの一部だけが当て済み', { why: 'partial' });
 
-    const dr = new Draft(state.doc); const per = []; const why = []; const n0 = state.log.n; let outcomesAll = null;
+    const dr = new Draft(state.doc); const per = []; const why = []; const n0 = state.log.n; let outcomesAll = null; let planAll = null;
     for (at = 0; at < cmds.length; at++) {
       const cmd = cmds[at];
       // ② 形の検査
@@ -79,11 +79,12 @@ export function applyBatch(state, cmds, ctx, opt = {}) {
       const body = migrateBody(type, cmd.v, cmd.body); spec.check(body);
       const cover = dr.owned.has('cover') ? clone(dr.doc.cover) : dr.doc.cover;   // この命令の前の表紙
       const env = { by: ctx.sender.k === 'human' ? `human:${ctx.sender.device}` : `ai:${ctx.sender.agent}`, seq: n0 + at + 1 };
-      let effects; let scans; let outcomes; let revertOf; let cat;
+      let effects; let scans; let outcomes; let revertOf; let cat; let kept;
       if (type === 'revert') {
         cat = spec.cat(body, dr.doc);
-        const plan = planRevert(dr, state.log, body);                              // ⑤ も中で行う
+        const plan = runRevert(dr, state.log, body, ctx.sender);                   // ⑤ も中で行う
         effects = plan.effects; scans = plan.scans; outcomes = plan.outcomes; revertOf = plan.records;
+        if (plan.units) kept = { units: plan.units, containers: plan.containers, dropped: plan.dropped, auto: plan.auto };
         if ((body.onAsk === 'abort' || body.mode === 'undo' || body.mode === 'redo') && outcomes.some((o) => o.result === 'ask')) {
           return { status: 'rejected', state, reason: 'conflict', message: '聞かないと戻せない所がある', detail: { why: 'needs-answer' }, outcomes, at };
         }
@@ -108,13 +109,14 @@ export function applyBatch(state, cmds, ctx, opt = {}) {
       const revs = touched.map((t) => { const from = revOf(dr.doc, t); dr.bump(t); return { target: t, from, to: from + 1 }; });
       const a = { cmd: clone(cmd), seq: n0 + at + 1, batch: n0 + 1, sender: clone(ctx.sender), effects, revs, policy: j.policy };
       if (outcomes) { a.outcomes = outcomes; a.tally = tally(outcomes); }
+      if (kept) { a.units = kept.units; a.containers = kept.containers; a.dropped = kept.dropped; a.auto = kept.auto; planAll = kept; }  // 残した物の一覧は、記録に残る
       per.push(a);
     }
     at = undefined;
     // ⑥ 全体の決まり
     const bad = checkInvariants(dr.doc);
     if (bad.length) throw new Reject('breaks-invariant', bad[0], { breaks: bad.slice(0, 20) });
-    const extra = outcomesAll ? { outcomes: outcomesAll, tally: tally(outcomesAll) } : {};
+    const extra = outcomesAll ? { outcomes: outcomesAll, tally: tally(outcomesAll), ...(planAll ? { plan: planAll } : {}) } : {};
     // 提案に回す：文書は変えない（検査は全部通っている）
     if (why.length) return { status: 'proposed', state, why: [...new Set(why)], effects: per.flatMap((a) => a.effects), ...extra };
     if (opt.dry) return { status: 'applied', state, applied: per, dry: true, ...extra };

@@ -2,7 +2,7 @@
 // run は「今の文書」を読んで効果（Effect）の並びを返すだけ。文書は変えない（変えるのは model.applyEffect）。
 // 取り消しに要る before・item は、ここ（核）が今の文書から取る。送る側の物は使わない。
 import { Reject, need, isId, isObj, isNum, clone, isRank } from './util.js';
-import { getNode, getAt, valAt, slotType, normValue, normNode, normGeo, normPt, normKey, normTime, isPath, neighbors, snap,
+import { getNode, getAt, valAt, slotType, normValue, normNode, normGeo, normPt, normKey, normTime, isPath, neighbors, snap, scaleV,
   MODES, PERM_KEYS, PERM_VALUES, MAX_KEYS, MAX_PTS, revOf } from './model.js';
 
 const missing = (what, target) => new Reject('invalid', `${what}がない`, { missing: target });
@@ -84,6 +84,17 @@ export const SPECS = {
       need(s.cur.k === 'static' && (s.type === 'num' || s.type === 'vec2'), '足せるのは固定の数だけ（鍵のある値は鍵ごとに key.value で）');
       need(b.d.length === (s.type === 'num' ? 1 : 2), '足す量の数が合わない');
       return [{ k: 'delta', at: s.at, d: b.d.map(snap) }];
+    } },
+  // 伸ばす・反転＝掛ける量（9.2節・改訂4）。0 を掛ける命令は断る（逆向きにできない）。比も格子に丸める
+  'prop.scale': { v: 1,
+    check(b) { B.node(b); B.path(b); need(Array.isArray(b.f) && b.f.length >= 1 && b.f.length <= 2 && b.f.every(isNum), '掛ける量'); need(b.f.every((x) => snap(x) !== 0), '0 は掛けられない'); },
+    cat: () => art('write.shape'),
+    run(doc, b) {
+      const s = slot(doc, b.node, b.path);
+      need(s.cur.k === 'static' && (s.type === 'num' || s.type === 'vec2'), '掛けられるのは固定の数だけ（鍵のある値は鍵ごとに key.value で）');
+      need(b.f.length === 1 || s.type === 'vec2', '掛ける量の数が合わない');
+      const f = b.f.map(snap); const after = scaleV(s.cur.v, f, false);
+      return [{ k: 'mul', at: s.at, f, before: clone(s.cur.v), after }];
     } },
   'prop.kind': { v: 1,
     check(b) { B.node(b); B.path(b); need(isObj(b.value), '値'); },
@@ -208,7 +219,11 @@ export const SPECS = {
   revert: { v: 1,
     check(b) {
       need(Array.isArray(b.targets) && b.targets.length >= 1 && b.targets.length <= 5000 && b.targets.every((t) => typeof t === 'string'), '戻す記録の一覧');
-      need(b.mode === undefined || ['select', 'undo', 'redo'].includes(b.mode), '取り消しの種類');
+      need(b.mode === undefined || ['select', 'units', 'undo', 'redo'].includes(b.mode), '取り消しの種類');
+      need(b.at === undefined || (Number.isInteger(b.at) && b.at >= 0), '計画を作った時点（at）');
+      need(b.ack === undefined || (isObj(b.ack) && Object.values(b.ack).every((a) => Array.isArray(a) && a.length <= 100000 && a.every((x) => Number.isInteger(x) && x >= 0))), '見た直しの一覧（ack）');
+      if (b.mode === 'units') { need(b.decisions === undefined || (isObj(b.decisions) && Object.values(b.decisions).every((d) => d === 'keep' || d === 'drop')), '答え（部品ごと：keep か drop）'); return; }
+      need(b.ack === undefined, 'ack は部品ごとの取り消し（mode:units）だけ');
       need(b.onAsk === undefined || b.onAsk === 'keep' || b.onAsk === 'abort', '聞く所の扱い');
       need(b.decisions === undefined || (isObj(b.decisions) && Object.values(b.decisions).every((d) => ['keep', 'force', 'root'].includes(d))), '答え');
     },

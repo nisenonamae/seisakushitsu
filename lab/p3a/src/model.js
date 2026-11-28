@@ -38,7 +38,21 @@ export const getNode = (doc, id) => (Object.hasOwn(doc.nodes, id) ? doc.nodes[id
 // 数は 1/10000 の格子に乗せる。← 小数のまま「足す → 引く」をすると元の数に戻らないことがある（0.1+0.5-0.5≠0.1）。
 // 格子に乗せておけば、足した量（delta）を引いたときに必ず元に戻る。
 export const GRID = 1e4;
-export const snap = (x) => { const r = Math.round(x * GRID) / GRID; return r === 0 ? 0 : r; };
+// 丸め方（DATA_MODEL 3節・改訂4）：いちばん近い格子へ。ちょうど半分は 0 から遠い方へ。
+// Math.round は半分を正の方へ丸める（-0.5 → -0）ので、絶対値で丸めてから符号を戻す。
+/** 格子の番号（整数）。x は画素・度・比・秒 */
+export const toGrid = (x) => { const r = Math.round(Math.abs(x) * GRID); return x < 0 ? -r : r; };
+export const snap = (x) => { const r = toGrid(x) / GRID; return r === 0 ? 0 : r; };
+/** 掛ける・割る（結果を格子に丸める）。数でも [x,y] でも。f は長さ 1 か、値と同じ長さ */
+export function scaleV(v, f, div) {
+  // 格子の番号（整数）どうしで計算する。小数のまま掛けると、ちょうど半分の値が、端数のせいで下に丸まることがある（0.0003×0.5 → 0.0001）
+  const one = (x, k) => {
+    const a = BigInt(toGrid(x)); const b = BigInt(toGrid(k)); let num = div ? a * 10000n : a * b; let den = div ? b : 10000n;
+    if (den < 0n) { num = -num; den = -den; } const neg = num < 0n; if (neg) num = -num;
+    const q = Number((2n * num + den) / (2n * den)); const r = (neg ? -q : q) / GRID; return r === 0 ? 0 : r;
+  };
+  return Array.isArray(v) ? v.map((x, i) => one(x, f.length === 1 ? f[0] : f[i])) : one(v, f[0]);
+}
 export const snapT = (v, type) => (type === 'num' ? snap(v) : type === 'vec2' ? v.map(snap) : clone(v));
 const HEX = /^#[0-9a-fA-F]{6}$/;
 export function okT(v, type) {
@@ -234,10 +248,18 @@ export function applyEffect(dr, e) {
     case 'delta': {
       dr.own(e.at); const slot = getAt(doc, e.at);
       if (!slot || slot.k !== 'static') throw new Reject('invalid', '足せる値（固定の数）でない', { at: e.at });
-      if (typeof slot.v === 'number' && e.d.length === 1) slot.v = snap(slot.v + e.d[0]);
-      else if (Array.isArray(slot.v) && slot.v.length === e.d.length) slot.v = slot.v.map((x, i) => snap(x + e.d[i]));
+      // 足す・引くは、格子の番号（整数）どうしで行う（3節）。だから、足した量を引けば必ず元に戻る
+      const add = (x, d) => { const r = (toGrid(x) + toGrid(d)) / GRID; return r === 0 ? 0 : r; };
+      if (typeof slot.v === 'number' && e.d.length === 1) slot.v = add(slot.v, e.d[0]);
+      else if (Array.isArray(slot.v) && slot.v.length === e.d.length) slot.v = slot.v.map((x, i) => add(x, e.d[i]));
       else throw new Reject('invalid', '足す量の形が合わない', { at: e.at });
       return;
+    }
+    case 'mul': { // 掛けた量。after は核が作った物（before × f を格子に丸めた数）。当てる時は、今の値が before と同じであること
+      dr.own(e.at); const slot = getAt(doc, e.at);
+      if (!slot || slot.k !== 'static') throw new Reject('invalid', '掛けられる値（固定の数）でない', { at: e.at });
+      if (JSON.stringify(slot.v) !== JSON.stringify(e.before)) throw new Reject('invalid', '掛ける前の値が合わない', { at: e.at });
+      slot.v = clone(e.after); return;
     }
     case 'insert': {
       dr.own(e.at); const list = getAt(doc, e.at);
@@ -275,6 +297,7 @@ export function inverse(e) {
   switch (e.k) {
     case 'set': { const o = { k: 'set', at: e.at, before: e.after, after: e.before }; if (e.kind) o.kind = true; return o; }
     case 'delta': return { k: 'delta', at: e.at, d: e.d.map((x) => -x) };
+    case 'mul': { const o = { k: 'mul', at: e.at, f: e.f, before: e.after, after: e.before }; if (!e.div) o.div = true; return o; } // before を持つので、ぴったり戻る
     case 'insert': return { ...e, k: 'remove' };
     case 'remove': return { ...e, k: 'insert' };
     case 'move': return { k: 'move', node: e.node, from: e.to, to: e.from };

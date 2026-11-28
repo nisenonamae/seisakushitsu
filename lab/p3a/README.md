@@ -9,7 +9,7 @@
 
 ```
 cd lab/p3a
-node --test                      # 全部（111 個・45秒ほど。表示は 113。乱数の試しは 4つの種 × 12000 手）
+node --test                      # 全部（前回は 111 個。今は 151 個・50秒ほど。乱数の試しは 4つの種 × 12000 手）
 node --test test/selective.test.js   # 選んで取り消す（9.5節の表）だけ
 P3A_FUZZ_STEPS=40000 P3A_FUZZ_SEEDS=9 node --test test/fuzz.test.js   # 乱数の試しを長く・別の種で
 node tools/measure.js 200        # 「止まって聞く」の割合を測る（種 200 通り。何回流しても同じ数字）
@@ -17,6 +17,19 @@ node tools/run-trace.js          # traces/ の操作の記録を流して数え�
 node tools/bench.js              # 速さの目安
 ```
 インストールする物は無い（`npm install` は要らない）。
+
+### 追加の測り（2026-11-28。結果は `RESULTS2.md`）
+
+```
+node --test                          # 全部（151 個・50秒ほど）
+node --test test/units.test.js       # 部品ごとにまとめる取り消し（9.5節②③）・場合 1〜7・掛ける量
+node tools/measure2.js 200           # 部品ごとの取り消しの測り（種 200 通り・30秒ほど。何回流しても同じ数字）
+node tools/numcheck.js               # 数の検証（1/10000 の格子。20秒ほど）。最後の行が「突き合わせ用の印」
+python3 tools/browser_check.py       # ブラウザ（Chromium）と Node で同じ結果かを突き合わせる（playwright が要る。ポート 8803 を一時的に使う）
+```
+- ブラウザで手で見るなら：`lab/p3a` を手元のサーバーで出して `tools/numcheck.html` を開く（外からは何も読みこまない・保存しない）。
+- 部品ごとの取り消しの使い方：`planRevert(state, 戻す記録の id)` で計画（文書は変わらない）→ `revert` の命令を `{ type:'revert', mode:'units', targets, at, decisions?:{単位の id:'drop'}, ack?:{単位の id:[見た記録の番号…]} }` で送る。何も選ばなければ全部「残す」。
+- 前の方式（`mode:'select'`。効果ごとに聞く）は、比べるために残してある。
 
 ## 入口（`src/index.js`）
 

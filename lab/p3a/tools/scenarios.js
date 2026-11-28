@@ -5,7 +5,7 @@ import { createState, applyBatch, check, SPECS, mulberry32, rankBetween, aiRecor
 import { humanWorkIntact } from './oracle.js';
 
 const S = (v) => ({ k: 'static', v }); const hex = (v) => S({ k: 'hex', v });
-const HUMAN = { sender: { k: 'human', device: 'mac' } }; const AI = { sender: { k: 'ai', agent: 'worker' } };
+export const HUMAN = { sender: { k: 'human', device: 'mac' } }; export const AI = { sender: { k: 'ai', agent: 'worker' } };
 
 /** 操作を当てていく小さな台 */
 export class Session {
@@ -32,7 +32,7 @@ export class Session {
 }
 
 // ---- AI の作業（1回＝1つのまとまり）
-const JOBS = {
+export const JOBS = {
   /** 下組み：まとまり1つ＋形 4〜7個 */
   scaffold(z, tag) {
     const g = `${tag}_g`; const bodies = [{ type: 'node.add', node: { id: g, scene: 's1', kind: 'group', name: '下組み', order: rankBetween(null, null) } }]; let prev = null;
@@ -76,7 +76,7 @@ const JOBS = {
 };
 
 // ---- 人の操作（1手ずつ。1回のドラッグ＝1つの命令）
-function humanStep(z, tag) {
+export function humanStep(z, tag) {
   const ps = z.paths(); const all = z.nodes((n) => n.kind !== 'group'); const groups = z.nodes((n) => n.kind === 'group'); const r = z.rng();
   const keyed = []; for (const n of all) for (const p of ['rot', 'pos']) if (n.xf[p].k === 'keys' && n.xf[p].keys.length) keyed.push([n, `xf.${p}`, n.xf[p]]);
   if (r < 0.04 && z.n > 0) { const c = makeUndo(z.s.log, 'mac', `c${++z.n}`); if (c) { const res = applyBatch(z.s, [c], HUMAN); if (res.status === 'applied') z.s = res.state; return; } }

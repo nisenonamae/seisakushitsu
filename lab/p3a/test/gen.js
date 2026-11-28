@@ -1,6 +1,6 @@
 // でたらめな命令を作る（種つきの乱数で、毎回同じ並び）。正しい命令・わざと壊した命令・古い前提・
 // 重複・まとまり・取り消し・選んで取り消す・表紙の変更を混ぜる。
-import { SPECS, makeUndo, makeRedo, logItems, logLength, rankBetween } from '../src/index.js';
+import { SPECS, makeUndo, makeRedo, logItems, logLength, rankBetween, planRevert } from '../src/index.js';
 
 const S = (v) => ({ k: 'static', v });
 export function makeGen(rng) {
@@ -40,6 +40,8 @@ export function makeGen(rng) {
       if (cur.k === 'keys') return { type: 'prop.set', node: x.id, path: p, value: { k: 'keys', keys: [{ id: `k${++n}`, t: time(), v: raw(typeOf(p)) }] } };
       return { type: 'prop.set', node: x.id, path: p, value: val(typeOf(p)) }; });
     add(6, () => { const x = doc.nodes[any()]; const p = x ? pick(slots(x).filter((q) => typeOf(q) !== 'color')) : 'xf.pos'; return { type: 'prop.nudge', node: x ? x.id : 'ghost', path: p, d: typeOf(p) === 'vec2' ? vec() : [num()] }; });
+    add(3, () => { const x = doc.nodes[any()]; const p = x ? pick(slots(x).filter((q) => typeOf(q) !== 'color')) : 'xf.scale'; const f = () => pick([2, 0.5, -1, 1.5, 0.3333, 3, 1.1, 0, Math.round((rng() * 4 - 2) * 10000) / 10000]);
+      return { type: 'prop.scale', node: x ? x.id : 'ghost', path: p, f: typeOf(p) === 'vec2' && chance(0.7) ? [f(), f()] : [f()] }; });
     add(4, () => { const x = doc.nodes[any()]; if (!x) return { type: 'prop.kind', node: 'ghost', path: 'xf.rot', value: S(1) }; const p = pick(slots(x)); const t = typeOf(p); const cur = get(x, p); const other = any();
       const opts = [() => val(t), () => ({ k: 'keys', keys: [{ id: `k${++n}`, t: time(), v: t === 'color' ? color().v : raw(t) }, { id: `k${++n}`, t: time(), v: t === 'color' ? color().v : raw(t) }] }),
         () => (t === 'color' ? { k: 'ref', to: { k: 'prop', node: other, path: pick(['fill.color', 'stroke.color']) } } : { k: 'expr', src: pick([`ref("${other}.${p}")`, 'sin(time) * 3', `wiggle(${R(9)}, 2, 5) + value`, `follow(ref("${other}.xf.rot"), 0.2)`]), ...(chance(0.5) ? { base: val(t) } : {}) }),
@@ -94,6 +96,14 @@ export function makeGen(rng) {
     if (r < 0.13 && logLength(state.log)) {
       const items = logItems(state.log); const from = Math.max(0, items.length - 60); const targets = new Set();
       for (let i = 0, k = 1 + R(6); i < k; i++) targets.add(items[from + R(items.length - from)].cmd.id);
+      if (chance(0.5)) { // 部品ごとにまとめる取り消し（9.5節②③）。答えは、計画を見て作る／わざと古い ack・でたらめな単位も混ぜる
+        const body = { type: 'revert', mode: 'units', targets: [...targets] };
+        if (chance(0.5)) { let plan = null; try { plan = planRevert(state, body.targets); } catch { plan = null; }
+          if (plan) { body.at = plan.at; body.decisions = {}; body.ack = {};
+            for (const u of plan.units) if (u.choices.includes('drop') && chance(0.6)) { body.decisions[u.id] = 'drop'; body.ack[u.id] = chance(0.85) ? u.later.map((l) => l.seq) : u.later.slice(1).map((l) => l.seq); }
+            if (chance(0.1)) body.decisions['part:node:ghost'] = 'drop'; } }
+        return { cmds: [wrap(body)], ctx, kind: 'revert-units' };
+      }
       const decisions = {}; if (chance(0.5)) for (const t of targets) decisions[`${t}#0`] = pick(['keep', 'force', 'root']);
       return { cmds: [wrap({ type: 'revert', mode: 'select', targets: [...targets], decisions, ...(chance(0.1) ? { onAsk: 'abort' } : {}) })], ctx, kind: 'revert' };
     }

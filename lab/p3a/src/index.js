@@ -2,9 +2,9 @@
 export { createState, apply, applyBatch, check, replay, toEntries, REASONS } from './engine.js';
 export { makeUndo, makeRedo, undoStacks } from './undo.js';
 export { checkInvariants } from './invariants.js';
-export { createDoc, revOf, lineText, getNode, getAt, inverse, applyEffect, Draft } from './model.js';
+export { createDoc, revOf, lineText, getNode, getAt, inverse, applyEffect, Draft, snap, toGrid, scaleV, GRID, slotsOf } from './model.js';
 export { logItems, logLength, logAt, logIndexOf } from './log.js';
-export { tally } from './revert.js';
+export { tally, planRevert } from './revert.js';
 export { retoken, danglingCues, cuesOf } from './script.js';
 export { proposalStatus } from './proposal.js';
 export { analyze as analyzeExpr, LIMITS as EXPR_LIMITS } from './expr.js';
