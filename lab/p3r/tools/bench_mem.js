@@ -19,7 +19,8 @@ const out = { method: METHOD, n: N, parts: P, mode: MODE }; const emit = (stage)
 const dir = `/tmp/p3r/mem-${METHOD}-${N}-${P}-${MODE}`; fs.rmSync(dir, { recursive: true, force: true });
 const SOPT = { segSize: 1000, snapEvery: 1000, hot: 2000, cacheSegs: 4, fsync: false };
 const mem0 = gc(); let st = METHOD === 'paged' ? openStore(dir, MODE.startsWith('real') ? RINIT : INIT, SOPT) : null; let s = createState(MODE.startsWith('real') ? RINIT : INIT);
-const io = { get state() { return st ? st.state : s; }, apply(cmds, ctx) { if (st) return st.apply(cmds, ctx); const r = applyBatch(s, cmds, ctx); if (r.status === 'applied') s = r.state; return r; } };
+const REAL = MODE.startsWith('real'); const realAi = [];
+const io = { get state() { return st ? st.state : s; }, apply(cmds, ctx) { const r = st ? st.apply(cmds, ctx) : applyBatch(s, cmds, ctx); if (r.status === 'applied') { if (!st) s = r.state; if (REAL && ctx.sender.k === 'ai' && cmds[0].body.type !== 'revert') realAi.push(cmds[0].id); } return r; } };
 const aiIds = []; let t = now(); let c = 0; const id = () => `z${++c}`;
 if (MODE.startsWith('real')) { const stats = runRealistic({ parts: P, drag: MODE.slice(5), rounds: Number(process.env.P3R_ROUNDS || 2), seed: 1 }, io); out.stats = { applied: stats.applied, undo: stats.undo, redo: stats.redo, selOld: stats.selOld, selRecent: stats.selRecent }; }
 else {
@@ -31,7 +32,7 @@ else {
 }
 out.buildS = +((now() - t) / 1000).toFixed(1); out.records = logLength(io.state.log); out.applyMs = +((now() - t) * 1 / out.records).toFixed(4); delete out.progress; delete out.memAt;
 const m1 = gc(); out.heapMB = m1.heap - mem0.heap; out.typedMB = m1.ext - mem0.ext; out.rssMB = m1.rss; out.index = indexStats(io.state.log); emit('built');
-if (MODE.startsWith('real')) { const { aiRecordIds } = await import('../src/index.js'); if (!st) for (const x of aiRecordIds(s.log)) aiIds.push(x); else { /* 本体を読まずに済むよう、AI の記録の id は作り手の番号から */ } }
+if (REAL) for (const x of realAi) aiIds.push(x);   // AI の記録の id は、作り手が送った順から（本体を読まずに済むように）
 // 取り消し：直前の操作（200 往復）・古い AI の記録（頭・まん中・終わりから 40 件を 1 件ずつ）
 let round = 0;
 const ops = () => {
@@ -44,13 +45,13 @@ const ops = () => {
   ts.sort((a, b) => a - b); if (ts.length) { o.revertMs = +(ts.reduce((a, b) => a + b, 0) / ts.length).toFixed(3); o.revertMedMs = +ts[ts.length >> 1].toFixed(3); o.revertMaxMs = +ts[ts.length - 1].toFixed(2); } o.revertSegReads = st ? st.info.segReads - reads0 : 0;
   round++; o.revertsHash = sha256(h.join('|')).slice(0, 16); o.docHash = docHash(io.state.doc).slice(0, 16); return o;
 };
-if (!MODE.startsWith('real') || !st) Object.assign(out, ops()); emit('ops');
+Object.assign(out, ops()); emit('ops');
 if (st) {
   out.files = st.files(); out.filesMB = { seg: +(out.files.seg / 1048576).toFixed(1), idx: +(out.files.idx / 1048576).toFixed(1), snap: +(out.files.snap / 1048576).toFixed(2) }; delete out.files; st.close(); st = null; const before = gc();
   // 開き直す（写し＋索引の控え＋続き）
   t = now(); st = openStore(dir, MODE.startsWith('real') ? RINIT : INIT, SOPT); out.openS = +((now() - t) / 1000).toFixed(2); out.openMs = st.info.ms; out.openUsed = st.info.used; out.openTail = st.info.tail;
   const m2 = gc(); out.afterOpen = { heapMB: m2.heap - mem0.heap, typedMB: m2.ext - mem0.ext, rssMB: m2.rss }; out.docHashAfterOpen = docHash(st.state.doc).slice(0, 16);
-  if (!MODE.startsWith('real')) { const o2 = ops(); out.afterOpenOps = o2; }
+  { const o2 = ops(); out.afterOpenOps = o2; }
   st.close();
   if (process.env.P3R_KEEP !== '1') fs.rmSync(dir, { recursive: true, force: true });
 }

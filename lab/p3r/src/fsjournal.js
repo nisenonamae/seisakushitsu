@@ -92,53 +92,58 @@ export function openStore(dir, init, opt = {}) {
   } };
 
   // 最後の束：切れた終わりを切りつめる・壊れていれば書き直す。手前の束は、索引の控えを信じて、本体は読まない（読む時に印を確かめる）
-  const slimOfSeg = new Map();   // 束の頭 → 細い記録の行（{n,h,r}）
   const readIdx = (first) => { let text; try { text = fs.readFileSync(idxPath(first), 'utf8'); } catch { return []; } const out = []; let n = first; for (const l of text.split('\n')) { if (!l) continue; const o = parseSlimLine(l); if (!o || o.n !== n) break; out.push(o); n++; } return out; };
   const writeIdx = (first, ents) => { const tmp = idxPath(first) + '.tmp'; fs.writeFileSync(tmp, ents.map((e) => slimLine(e.n, e.h, e.applied)).join('')); fs.renameSync(tmp, idxPath(first)); info.idxRebuilt++; };
   let lastEnts = null;
   /** 束の最初の行が指している「前の行の印」（最初の1行だけ読む）*/
   const firstLinePrev = (first) => { const fd2 = fs.openSync(segPath(first), 'r'); try { const chunks = []; const buf = Buffer.alloc(65536); let pos = 0; for (;;) { const k = fs.readSync(fd2, buf, 0, buf.length, pos); if (k <= 0) break; const nl = buf.subarray(0, k).indexOf(10); if (nl >= 0) { chunks.push(Buffer.from(buf.subarray(0, nl))); break; } chunks.push(Buffer.from(buf.subarray(0, k))); pos += k; } const o = parseLine(Buffer.concat(chunks).toString('utf8')); return o ? o.p : null; } finally { fs.closeSync(fd2); } };
-  for (let k = 0; k < segFirst.length; k++) {
-    const first = segFirst[k]; const isLast = k === segFirst.length - 1; const expectCount = isLast ? null : segFirst[k + 1] - first;
-    if (first !== lineH.length) throw new Error(`束が抜けている：${first}（次は ${lineH.length} のはず）`);
-    let idx = readIdx(first);
-    // 手前の束の索引の控えは、「次の束の最初の行が指している印」と、控えの最後の印が合う時だけ信じる（別の記録の控え・古い控えを見分ける。鎖なので、最後が合えば手前も合う）
-    const trust = !isLast && idx.length === expectCount && idx.length > 0 && idx[idx.length - 1].h === firstLinePrev(segFirst[k + 1]);
-    if (isLast || !trust) {   // 最後の束は本体を読む。手前の束は、索引の控えが合わない時だけ
-      const r = readSeg(first, lineH[first - 1]);
-      if (isLast && r.problems) {
-        if (r.prefixOk) { fs.truncateSync(segPath(first), r.bytes); if (doSync) { const tfd = fs.openSync(segPath(first), 'r+'); fs.fsyncSync(tfd); fs.closeSync(tfd); } info.truncated++; }   // 切れた終わりを切りつめる
-        else { const tmp = segPath(first) + '.tmp'; const wfd = fs.openSync(tmp, 'w'); let p = lineH[first - 1]; for (const e of r.ents) { const l = journalLine(e.n, p, e.sender, e.cmds, e.applied); fs.writeSync(wfd, l.text); p = l.h; } if (doSync) fs.fsyncSync(wfd); fs.closeSync(wfd); fs.renameSync(tmp, segPath(first)); syncDir(); info.rewrote++; }   // 途中に壊れた行・重なった行：きれいな束に書き直して入れかえる
-      }
-      if (!isLast && r.ents.length !== expectCount) throw new Error(`手前の束 ${first} が壊れている（${r.ents.length}／${expectCount} まとまり）。台帳から受け取り直す`);
-      const ok = idx.length <= r.ents.length && idx.every((o, j) => o.h === r.ents[j].h);
-      if (!ok || idx.length !== r.ents.length) { writeIdx(first, r.ents); idx = readIdx(first); }
-      if (isLast) lastEnts = r.ents;
-    }
-    slimOfSeg.set(first, idx);
-    for (const o of idx) { lineH.push(o.h); firstSeq.push(firstSeq[firstSeq.length - 1] + o.r.length); }
-  }
-  const total = lineH.length - 1; info.ms.scan = +(now() - t0).toFixed(1);
-
-  // 写し：新しい順に、読めて・この記録の上にあり・中身の印が合う物
-  t0 = now(); let snap = null;
+  // 写しの候補：新しい順に、読めて・中身の印が合う物（この記録の上にあるかは、束を見ながら確かめる）
+  const cands = [];
   if (!opt.noSnapshot) for (const n of snapNs) {
     let text; try { text = fs.readFileSync(snapPath(n), 'utf8'); } catch { continue; }
     const s = readSnapshot(text); if (!s) { info.notes.push({ snapshot: n, why: 'broken' }); continue; }
-    if (s.n !== n || s.n > total || lineH[s.n] !== s.h || firstSeq[s.n + 1] !== s.seq) { info.notes.push({ snapshot: n, why: 'not-on-this-journal' }); continue; }
+    if (s.n !== n) { info.notes.push({ snapshot: n, why: 'not-on-this-journal' }); continue; }
     if (docHash(s.doc) !== s.docHash) { info.notes.push({ snapshot: n, why: 'doc-hash' }); continue; }
-    snap = s; info.used = { snapshot: n }; break;
+    cands.push(s);
   }
   info.ms.snapshot = +(now() - t0).toFixed(1); t0 = now();
-  // 索引：写しまでの細い記録を足す（本体は持たない）
-  let state; const from = snap ? snap.n : 0;
-  {
-    let log = emptyLog(); const head = [];
-    for (const first of segFirst) { if (first > from) break; for (const o of slimOfSeg.get(first)) { if (o.n > from) break; for (const r of o.r) head.push(r); } }
-    if (head.length) log = appendIndexOnly(log, head, arch); else setArchive(log, arch);
-    state = { doc: snap ? snap.doc : createState(init).doc, log };
+  /**
+   * 束を古い順に見て、目次（行の印・記録の位置）を作り、upto 番めのまとまりまでの索引を足す（細い記録を、束ごとに読んでは足す＝全部を一度にメモリに持たない）。
+   * 最後の束：切れた終わりを切りつめる・壊れていれば書き直す。手前の束は、索引の控えを信じて、本体は読まない（読む時に印を確かめる）
+   */
+  const scan = (upto) => {
+    lineH.length = 1; firstSeq.length = 2; let log = emptyLog(); setArchive(log, arch);
+    for (let k = 0; k < segFirst.length; k++) {
+      const first = segFirst[k]; const isLast = k === segFirst.length - 1; const expectCount = isLast ? null : segFirst[k + 1] - first;
+      if (first !== lineH.length) throw new Error(`束が抜けている：${first}（次は ${lineH.length} のはず）`);
+      let idx = readIdx(first);
+      // 手前の束の索引の控えは、「次の束の最初の行が指している印」と、控えの最後の印が合う時だけ信じる（別の記録の控え・古い控えを見分ける。鎖なので、最後が合えば手前も合う）
+      const trust = !isLast && idx.length === expectCount && idx.length > 0 && idx[idx.length - 1].h === firstLinePrev(segFirst[k + 1]);
+      if (isLast || !trust) {   // 最後の束は本体を読む。手前の束は、索引の控えが合わない時だけ
+        const r = isLast && lastEnts ? { ents: lastEnts, problems: 0 } : readSeg(first, lineH[first - 1]);
+        if (isLast && r.problems) {
+          if (r.prefixOk) { fs.truncateSync(segPath(first), r.bytes); if (doSync) { const tfd = fs.openSync(segPath(first), 'r+'); fs.fsyncSync(tfd); fs.closeSync(tfd); } info.truncated++; }   // 切れた終わりを切りつめる
+          else { const tmp = segPath(first) + '.tmp'; const wfd = fs.openSync(tmp, 'w'); let p = lineH[first - 1]; for (const e of r.ents) { const l = journalLine(e.n, p, e.sender, e.cmds, e.applied); fs.writeSync(wfd, l.text); p = l.h; } if (doSync) fs.fsyncSync(wfd); fs.closeSync(wfd); fs.renameSync(tmp, segPath(first)); syncDir(); info.rewrote++; }   // 途中に壊れた行・重なった行：きれいな束に書き直して入れかえる
+        }
+        if (!isLast && r.ents.length !== expectCount) throw new Error(`手前の束 ${first} が壊れている（${r.ents.length}／${expectCount} まとまり）。台帳から受け取り直す`);
+        const ok = idx.length <= r.ents.length && idx.every((o, j) => o.h === r.ents[j].h);
+        if (!ok || idx.length !== r.ents.length) { writeIdx(first, r.ents); idx = readIdx(first); }
+        if (isLast) lastEnts = r.ents;
+      }
+      const head = [];
+      for (const o of idx) { lineH.push(o.h); firstSeq.push(firstSeq[firstSeq.length - 1] + o.r.length); if (o.n <= upto) for (const r of o.r) head.push(r); }
+      if (head.length) log = appendIndexOnly(log, head, arch);
+    }
+    return log;
+  };
+  // いちばん新しい候補の所まで索引を足しながら見る。その候補が、この記録の上に無ければ、次の候補で見直す（まれ）
+  let snap = null; let state = null; let total = 0;
+  for (let c = 0; c <= cands.length; c++) {
+    const s = c < cands.length ? cands[c] : null; const log = scan(s ? s.n : 0); total = lineH.length - 1;
+    if (s && (s.n > total || lineH[s.n] !== s.h || firstSeq[s.n + 1] !== s.seq)) { info.notes.push({ snapshot: s.n, why: 'not-on-this-journal' }); continue; }
+    snap = s; if (s) info.used = { snapshot: s.n }; state = { doc: s ? s.doc : createState(init).doc, log }; break;
   }
-  info.ms.index = +(now() - t0).toFixed(1); t0 = now();
+  const from = snap ? snap.n : 0; info.ms.index = +(now() - t0).toFixed(1); t0 = now();
   // 続き：効果つきの記録を当てる（自分の端末の控えなので、検査なし）
   {
     const tail = [];
@@ -151,7 +156,7 @@ export function openStore(dir, init, opt = {}) {
     if (tail.length) state = applyStoredAll(state.doc, state.log, tail, 0);
     setArchive(state.log, arch);
   }
-  slimOfSeg.clear(); lastEnts = null;
+  lastEnts = null;
   info.ms.tail = +(now() - t0).toFixed(1);
   if (!opt.keepAll) evictLog(state.log, logLength(state.log) - hot);
 

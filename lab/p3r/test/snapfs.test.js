@@ -66,4 +66,4 @@ test('古い束の中身が1字化けた：開く時には気づかない（本�
   const st = openStore(d, INIT, OPT); assert.equal(docHash(st.state.doc), W.want); assert.throws(() => logItems(st.state.log), /壊れている/); st.close();
   rows.push('古い束が1字化けた | 開く時は気づかない・読む時に止まる（台帳から受け取り直す） | | |');
 });
-test('時間を書き出す', () => { if (process.env.P3R_WRITE) fs.writeFileSync(new URL('../results/snapfs.txt', import.meta.url), [`写しの壊れと立ち直り：実際の制作に近い記録（作り物）・部品 ${PARTS}・${DRAG}・まとまり ${W.n}・束 ${OPT.segSize}・写し ${OPT.snapEvery} まとまりごと`, '', '場合 | 何から開いたか | 続き | 時間 | 気づいたこと', '---|---|---|---|---', ...rows].join('\n') + '\n'); });
+test('時間を書き出す', () => { if (process.env.P3R_WRITE) fs.writeFileSync(new URL(`../results/${process.env.P3R_WRITE === '1' ? 'snapfs' : process.env.P3R_WRITE}.txt`, import.meta.url), [`写しの壊れと立ち直り：実際の制作に近い記録（作り物）・部品 ${PARTS}・${DRAG}・まとまり ${W.n}・束 ${OPT.segSize}・写し ${OPT.snapEvery} まとまりごと`, '', '場合 | 何から開いたか | 続き | 時間 | 気づいたこと', '---|---|---|---|---', ...rows].join('\n') + '\n'); });

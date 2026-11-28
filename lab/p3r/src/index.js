@@ -21,3 +21,4 @@ export function aiRecordIds(log, filter) {
 }
 /** 文書の中身（版の数字を除く）。「元と同じか」を比べるときに使う */
 export function content(doc) { const { revs, ...rest } = doc; return rest; }
+export { makeOutbox } from './outbox.js';
