@@ -1,0 +1,298 @@
+[
+ {
+  "name": "A",
+  "title": "A 通常の影絵（E3 の L2 のまま）",
+  "iou_A": 1.0,
+  "changed_px": 0,
+  "area": 469826,
+  "corners": 21,
+  "corners_40": 20,
+  "notch": 0.253,
+  "spur": 0.035,
+  "gaps": [
+   {
+    "x": [
+     706,
+     759
+    ],
+    "width": 54,
+    "height": 109
+   },
+   {
+    "x": [
+     870,
+     1045
+    ],
+    "width": 176,
+    "height": 99
+   },
+   {
+    "x": [
+     1144,
+     1212
+    ],
+    "width": 69,
+    "height": 109
+   }
+  ],
+  "ear_gap": 16,
+  "parts": 28,
+  "lines": 4,
+  "points": 107
+ },
+ {
+  "name": "B",
+  "title": "B 関節の所だけ輪郭を単純に",
+  "iou_A": 0.9959,
+  "changed_px": 1914,
+  "area": 469346,
+  "corners": 21,
+  "corners_40": 19,
+  "notch": 0.273,
+  "spur": 0.042,
+  "gaps": [
+   {
+    "x": [
+     705,
+     761
+    ],
+    "width": 57,
+    "height": 109
+   },
+   {
+    "x": [
+     870,
+     1045
+    ],
+    "width": 176,
+    "height": 99
+   },
+   {
+    "x": [
+     1140,
+     1218
+    ],
+    "width": 79,
+    "height": 109
+   }
+  ],
+  "ear_gap": 16,
+  "parts": 28,
+  "lines": 4,
+  "points": 111
+ },
+ {
+  "name": "C",
+  "title": "C 関節の場所と回す範囲を先に決めて作る",
+  "iou_A": 0.9911,
+  "changed_px": 4205,
+  "area": 469701,
+  "corners": 21,
+  "corners_40": 19,
+  "notch": 0.257,
+  "spur": 0.041,
+  "gaps": [
+   {
+    "x": [
+     705,
+     761
+    ],
+    "width": 57,
+    "height": 109
+   },
+   {
+    "x": [
+     870,
+     1045
+    ],
+    "width": 176,
+    "height": 99
+   },
+   {
+    "x": [
+     1140,
+     1218
+    ],
+    "width": 79,
+    "height": 109
+   }
+  ],
+  "ear_gap": 17,
+  "parts": 28,
+  "lines": 4,
+  "points": 114
+ },
+ {
+  "name": "D",
+  "title": "D 関節の丸みを考える（円が入る所に付け根・もぐる端を円に）",
+  "iou_A": 0.9998,
+  "changed_px": 79,
+  "area": 469777,
+  "corners": 21,
+  "corners_40": 20,
+  "notch": 0.264,
+  "spur": 0.034,
+  "gaps": [
+   {
+    "x": [
+     706,
+     759
+    ],
+    "width": 54,
+    "height": 109
+   },
+   {
+    "x": [
+     870,
+     1045
+    ],
+    "width": 176,
+    "height": 99
+   },
+   {
+    "x": [
+     1144,
+     1212
+    ],
+    "width": 69,
+    "height": 109
+   }
+  ],
+  "ear_gap": 16,
+  "parts": 28,
+  "lines": 4,
+  "points": 116
+ },
+ {
+  "name": "E",
+  "title": "E 組み合わせ（B＋C＋D）",
+  "iou_A": 0.991,
+  "changed_px": 4256,
+  "area": 469650,
+  "corners": 21,
+  "corners_40": 19,
+  "notch": 0.267,
+  "spur": 0.04,
+  "gaps": [
+   {
+    "x": [
+     705,
+     761
+    ],
+    "width": 57,
+    "height": 109
+   },
+   {
+    "x": [
+     870,
+     1045
+    ],
+    "width": 176,
+    "height": 99
+   },
+   {
+    "x": [
+     1140,
+     1218
+    ],
+    "width": 79,
+    "height": 109
+   }
+  ],
+  "ear_gap": 17,
+  "parts": 28,
+  "lines": 4,
+  "points": 123
+ },
+ {
+  "name": "F",
+  "title": "F （参考）E＋脚のあいだのすき間をなくす",
+  "iou_A": 0.9364,
+  "changed_px": 30724,
+  "area": 466222,
+  "corners": 16,
+  "corners_40": 14,
+  "notch": 0.269,
+  "spur": 0.039,
+  "gaps": [
+   {
+    "x": [
+     870,
+     1123
+    ],
+    "width": 254,
+    "height": 99
+   }
+  ],
+  "ear_gap": 17,
+  "parts": 28,
+  "lines": 4,
+  "points": 123
+ },
+ {
+  "name": "V6",
+  "title": "V6 割ったあとで直す（E4 の版6 のやり方を A に）",
+  "iou_A": 0.9996,
+  "changed_px": 195,
+  "area": 469793,
+  "corners": 21,
+  "corners_40": 20,
+  "notch": 0.251,
+  "spur": 0.036,
+  "gaps": [
+   {
+    "x": [
+     706,
+     760
+    ],
+    "width": 55,
+    "height": 109
+   },
+   {
+    "x": [
+     870,
+     1045
+    ],
+    "width": 176,
+    "height": 99
+   },
+   {
+    "x": [
+     1144,
+     1212
+    ],
+    "width": 69,
+    "height": 109
+   }
+  ],
+  "ear_gap": 19,
+  "parts": 37,
+  "lines": 4,
+  "points": 1000
+ },
+ {
+  "name": "P4",
+  "title": "P4 P4 の AI のみ（付け根＝囲みの決まり。E4 と同じ）",
+  "iou_A": null,
+  "changed_px": null,
+  "area": 475713,
+  "corners": 16,
+  "corners_40": 10,
+  "notch": 0.17,
+  "spur": 0.411,
+  "gaps": [
+   {
+    "x": [
+     790,
+     1076
+    ],
+    "width": 287,
+    "height": 102
+   }
+  ],
+  "ear_gap": 0,
+  "parts": 26,
+  "lines": 8,
+  "points": 59
+ }
+]

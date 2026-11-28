@@ -87,4 +87,8 @@ V.D = { title: '関節の丸みを考える（円が入る所に付け根・も�
 const E_SRC = C_SRC;
 V.E = { title: '組み合わせ（B＋C＋D）', opt: (K, P) => { V.E.log = ['影絵：C の直し（B を含む）', '胴のもぐる側：C と同じ', '付け根・もぐる端：D の決まり（C の影絵の上で置き直す）']; return dOpt(K, P, { src: table(E_SRC), inn: C_INN }, V.E.log); }, log: [] };
 V.A = { title: '通常の影絵（E3 の L2 のまま）', opt: () => ({}), log: ['E3 の L2 のまま。付け根は絵のデータの pivot（E4 の版1 と同じ決まり）'] };
-module.exports = { V: { A: V.A, B: V.B, C: V.C, D: V.D, E: V.E } };
+/* ---- F（参考）：E の上で、奥の脚を手前の脚の後ろへ寄せて、脚のあいだのすき間をなくす（P4 と同じ考え）。
+   腹の下の空きの幅と、胸の角の場所が変わる＝止まった絵をはっきり変える版。「両立しない所」を数字で見るための物 ---- */
+const F_POST = (i, q) => { if (i >= 49 && i <= 52) return [q[0] + 58, q[1]]; if (i === 53) return [q[0] + 40, q[1] + 6]; if (i >= 37 && i <= 41) return [q[0] + 76, q[1]]; return null; };
+V.F = { title: '（参考）E＋脚のあいだのすき間をなくす', opt: (K, P) => { V.F.log = ['影絵：E と同じ直し＋奥の前脚（49〜52）を 58 後ろへ・胸の角（53）を 40 後ろへ 6 下へ／奥の後ろ脚（37〜41）を 76 後ろへ（当てはめたあとの座標で）', '胴のもぐる側・付け根・もぐる端：E と同じ決まり']; return dOpt(K, P, { src: table(E_SRC), inn: C_INN, post: F_POST }, V.F.log); }, log: [] };
+module.exports = { V: { A: V.A, B: V.B, C: V.C, D: V.D, E: V.E, F: V.F } };

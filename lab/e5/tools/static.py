@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e4lib import *
 from measure import kern, peaks
 V = os.path.join(E4, 'variants'); OUT = os.path.join(E4, 'out')
-NAMES = ['A', 'B', 'C', 'D', 'E', 'V6', 'P4']
+NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'V6', 'P4']
 
 
 def runs(row):
