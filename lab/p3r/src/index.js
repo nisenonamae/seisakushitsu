@@ -5,7 +5,7 @@ export * from './journal.js';
 export { makeUndo, makeRedo, undoStacks } from './undo.js';
 export { checkInvariants } from './invariants.js';
 export { createDoc, revOf, lineText, getNode, getAt, inverse, applyEffect, Draft, snap, toGrid, scaleV, GRID, slotsOf } from './model.js';
-export { logItems, logLength, logAt, logIndexOf, logBase, emptyLog, appendLog, chainsOf, pathOps, adoptedAt, createdAt } from './log.js';
+export { logItems, logLength, logAt, logIndexOf, logBase, emptyLog, appendLog, chainsOf, pathOps, adoptedAt, createdAt, slimOf, appendIndexOnly, setArchive, evictLog, indexStats, logMeta } from './log.js';
 export { makerOf, isAIRecord, creatorOf, ownerOf, whoOf, buildProvenance, originOf, bundleKey, bundles, ledger } from './owner.js';
 export { tally, planRevert, tuning as revertTuning } from './revert.js';
 export { retoken, danglingCues, cuesOf } from './script.js';

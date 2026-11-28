@@ -7,7 +7,7 @@ import { SPECS, migrateBody } from './commands.js';
 import { checkInvariants } from './invariants.js';
 import { preScan, postScan, judge } from './policy.js';
 import { runRevert, tally } from './revert.js';
-import { emptyLog, appendLog, logIndexOf, logAt, logTouching, logItems, logBase, logBaseRevs } from './log.js';
+import { emptyLog, appendLog, logIndexOf, logAt, logTouchingFromCount, logItems, logBase, logBaseRevs } from './log.js';
 import { ownerOf } from './owner.js';
 
 /** @typedef {{k:'human', device:string} | {k:'ai', agent:string}} Sender 確かめられた身元（呼び出す側が渡す） */
@@ -42,7 +42,8 @@ function checkBase(state, cmd, effects, draftDoc) {
     if (b > revOf(draftDoc, t)) throw new Reject('stale', `${t}：まだ届いていない版を前提にしている`, { target: t, base: b, now: cur });
     if (b >= cur) continue;
     const br = logBaseRevs(state.log); if (br && b < (Object.hasOwn(br, t) ? br[t] : 0)) throw new Reject('needs-history', `${t}：前提が写しより前。古い記録が要る`, { why: 'base', target: t });
-    for (const i of logTouching(state.log, t)) {
+    // 版は、触れた記録1件ごとに 1 進む → 「版 b より後の記録」だけを見る（前は、その物に触れた記録を頭から全部見ていた。答えは同じ）
+    for (const i of logTouchingFromCount(state.log, t, b - (br && Object.hasOwn(br, t) ? br[t] : 0))) {
       const rec = logAt(state.log, i); const rv = rec.revs.find((r) => r.target === t); if (!rv || rv.from < b) continue;
       for (const e2 of rec.effects) {
         if (targetOf(e2) !== t) continue;

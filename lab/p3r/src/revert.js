@@ -3,12 +3,27 @@
 // 人の直しを黙って壊す道は作らない：迷う場合は ask にし、答え（decisions）が無ければ何もしない。
 import { Reject, need, clone, same, relate, akey } from './util.js';
 import { getAt, valAt, getNode, addrOf, targetOf, applyEffect, inverse, neighbors, slotsOf, refsOf, scaleV, toGrid, GRID, Draft } from './model.js';
-import { logIndexOf, logAt, logTouching, logLength, logBase, chainsOf, pathOps, adoptedAt } from './log.js';
+import { logIndexOf, logAt, logTouching, logLength, logBase, chainsOf, pathOps, adoptedAt, nearFlags, relatedAfter, K_SET, K_KIND, K_DELTA, K_MUL } from './log.js';
 import { preScan, postScan, lockHits } from './policy.js';
 import { checkInvariants } from './invariants.js';
 
 /** 突き合わせ用：noPrefix=true で、途中の値の控えを使わずに、いつも起点から当て直す（答えは同じはず）*/
-export const tuning = { noPrefix: false };
+export const tuning = { noPrefix: false, noFast: false };
+// noFast=true：番地の索引・数の並びを使わず、記録の本体を1つずつ読む（前回と同じ道。突き合わせ用）
+
+/** 操作を1つ当てる（数1つ）。m=1 掛ける・0 足す。g＝量の格子の番号。model.js の scaleV・足し算と、1字も違わない答え（test/same.test.js で突き合わせる）*/
+function step1(x, g, m) {
+  const a = toGrid(x);
+  if (!m) { const r = (a + g) / GRID; return r === 0 ? 0 : r; }
+  const A = a < 0 ? -a : a; const B = g < 0 ? -g : g; const p = A * B;
+  if (!(p <= 9007199254740991)) { // 53 ビットに収まらない掛け算は、桁の長い整数で（scaleV と同じ式）
+    let num = BigInt(a) * BigInt(g); const neg = num < 0n; if (neg) num = -num; const q = Number((2n * num + 10000n) / 20000n); const r = (neg ? -q : q) / GRID; return r === 0 ? 0 : r;
+  }
+  let q = Math.floor(p / 10000); let r = p - q * 10000; if (r < 0) { q--; r += 10000; } else if (r >= 10000) { q++; r -= 10000; }
+  if (2 * r >= 10000) q++;
+  const res = ((a < 0) !== (g < 0) ? -q : q) / GRID; return res === 0 ? 0 : res;
+}
+export const _step1 = step1;
 
 /** prefix の下にある値を、外から参照している置き場 */
 function refsInto(doc, prefix, skip) {
@@ -110,6 +125,17 @@ function classify(E, later, doc, ctx) {
   }
   throw new Error('unknown effect');
 }
+/** 足す量・掛ける量の判定を、「有るか無いか」だけで行う（classify の delta・mul と同じ答え）。聞く・残すになる時は null（一覧を作って classify に回す）*/
+function quickNum(E, f, doc, ctx) {
+  const slot = getAt(doc, E.at); if (slot === undefined) return { result: 'noop', why: 'gone' };
+  if (f[K_SET]) return { result: 'noop', why: 'overwritten' };
+  if (slot.k !== 'static' || f[K_KIND]) return null;
+  if (E.k === 'delta') { if (f[K_MUL]) return null; return { result: 'revert', effects: [{ k: 'delta', at: E.at, d: E.d.map((x) => -x) }], sub: f[K_DELTA] }; }
+  if (f[K_DELTA]) return null;
+  const t = ctx.rebuild(E); if (!t) return null;
+  const o = { k: 'mul', at: E.at, f: E.f, before: clone(slot.v), after: t.value }; if (!E.div) o.div = true;
+  return { result: 'revert', effects: [o], sub: f[K_MUL], rebuilt: true };
+}
 const chains = chainsOf; // 取り消しの鎖は、記録が足されるたびに log.js が足していく
 // 全体の決まりを壊しうる効果か（固定の数を置きかえる・足すだけなら壊れない）
 const risky = (e) => e.k !== 'delta' && e.k !== 'mul' && !(e.k === 'set' && (e.after === null || typeof e.after !== 'object' || e.after.k === 'static'));
@@ -158,31 +184,54 @@ function pass(dr, log, idxs, set, ch, opt) {
     const addr = addrOf(E); const root = ch.root(key); const adding = !!E.div;
     const dig = (v, segs) => { let cur = v; for (const s of segs) { if (cur == null || typeof cur !== 'object') return undefined; cur = Array.isArray(cur) ? cur.find((x) => x && x.id === s) : Object.hasOwn(cur, s) ? cur[s] : undefined; } return cur; };
     const po = pathOps(log, addr);
-    let anchor; const a0 = po.anchor ? po.anchor[0] : -1; const a1 = po.anchor ? po.anchor[1] : -1;
-    if (po.anchor) { const ae = logAt(log, a0).effects[a1]; const a2 = addrOf(ae); anchor = ae.k === 'set' ? dig(ae.after, addr.slice(a2.length)) : ae.k === 'insert' ? dig(ae.item, addr.slice(a2.length)) : undefined; }
+    let anchor;
+    if (po.anchor) { const ae = logAt(log, po.anchor[0]).effects[po.anchor[1]]; const a2 = addrOf(ae); anchor = ae.k === 'set' ? dig(ae.after, addr.slice(a2.length)) : ae.k === 'insert' ? dig(ae.item, addr.slice(a2.length)) : undefined; }
     // 写しから始めた記録で、起点が写しより前：写しの時の値を起点にする（写しより前の操作は、もう値に入っている。それらを戻す時は、下の「相手が並びに無い」で古い記録を求める）
     else if (logBase(log) > 0) { anchor = getAt(po.store.baseDoc, addr); if (anchor === undefined) throw new Reject('needs-history', '写しより前の記録が要る（値の起点が分からない）', { why: 'anchor', at: akey(addr) }); }
     else return null;
     if (!anchor || anchor.k !== 'static') return null;
-    const st = po.store; const l = po.l; const lo = po.lo; const n = po.n;
-    const opAt = (j) => { const r = st.items[l[2 * (lo + j)]]; const q = l[2 * (lo + j) + 1]; return { e: r.effects[q], key: `${r.cmd.id}#${q}` }; };
-    const pm = st.opPos(root); const mine = pm && pm.key === po.key ? pm.j - lo : -1;
+    const st = po.store; const P = po.P; const lo = po.lo; const n = po.n;
+    const pm = st.opPos(root); const mine = pm && pm.P === P ? pm.j - lo : -1;
     const alive = (k) => (flipped.has(k) ? flipped.get(k) : ch.visible(k));
     if ((mine < 0 || mine >= n) && logBase(log) > 0) throw new Reject('needs-history', '写しより前の記録が要る（戻す操作が、写しより前）', { why: 'op', at: akey(addr) });
     if (mine < 0 || mine >= n || alive(root) === adding) return null;
-    const one = (v, e) => { if (e.k === 'delta') { const add = (x, d) => { const r = (toGrid(x) + toGrid(d)) / GRID; return r === 0 ? 0 : r; }; return Array.isArray(v) ? v.map((x, i) => add(x, e.d[i])) : add(v, e.d[0]); } return scaleV(v, e.f, false); };
-    // どこから当て直すか：相手の操作と、この通しの中でもう生き死にを変えた操作の、いちばん古い位置。それより前は「途中の値の控え」を使う
-    let start = mine; for (const k of flipped.keys()) { const p = st.opPos(k); if (p && p.key === po.key && p.j - lo < start) start = Math.max(0, p.j - lo); }
-    let base = anchor.v;
-    if (tuning.noPrefix) start = 0;
-    else if (start > 0) {
-      let c = st.pref.get(po.key); if (!c || c.a0 !== a0 || c.a1 !== a1 || c.lo !== lo) st.pref.set(po.key, (c = { a0, a1, lo, vals: [], valid: 0 }));
-      for (let j = c.valid; j < start; j++) { const o = opAt(j); const before = j ? c.vals[j - 1] : anchor.v; c.vals[j] = ch.visible(o.key) ? one(before, o.e) : before; }
-      if (c.valid < start) c.valid = start; c.vals.length = c.valid; base = c.vals[start - 1];
+    // この通しの中で、もう生き死にを変えた操作の位置（古い順）。相手の操作は、あとで want に置きかえる
+    const ov = new Map(); let start = mine;
+    for (const [k, val] of flipped) { const p = st.opPos(k); if (p && p.P === P) { const j = p.j - lo; if (j < start) start = Math.max(0, j); if (j >= 0 && j < n) ov.set(j, val); } }
+    const slot = getAt(dr.doc, E.at);
+    const av = anchor.v; const arr = Array.isArray(av); const okNum = (x) => typeof x === 'number' && Number.isFinite(x);
+    const fast = !tuning.noFast && (arr ? av.length >= 1 && av.length <= 2 && av.every(okNum) : okNum(av));
+    if (!fast) { // 形が数でない・数が大きすぎる時：記録の本体を1つずつ読んで当てる（前回と同じ計算）
+      const opAt = (j) => { const eid = P.opE[lo + j]; const ri = st.eRec.a[eid]; const r = st.rec(ri); const q = eid - st.recOff.a[ri - st.base]; return { e: r.effects[q], key: `${r.cmd.id}#${q}` }; };
+      const one = (v, e) => { if (e.k === 'delta') { const add = (x, d) => { const r = (toGrid(x) + toGrid(d)) / GRID; return r === 0 ? 0 : r; }; return Array.isArray(v) ? v.map((x, i) => add(x, e.d[i])) : add(v, e.d[0]); } return scaleV(v, e.f, false); };
+      const run = (want) => { let v = clone(av); for (let j = 0; j < n; j++) { const o = opAt(j); if (o.key === root ? want : alive(o.key)) v = one(v, o.e); } return { value: v }; };
+      if (!same(run(!adding).value, slot.v)) return null;
+      return { ...run(adding), root, adding };
     }
-    const run = (want) => { let v = clone(base); for (let j = start; j < n; j++) { const o = opAt(j); if (o.key === root ? want : alive(o.key)) v = one(v, o.e); } return { value: v }; };
-    const slot = getAt(dr.doc, E.at); if (!same(run(!adding).value, slot.v)) return null;   // 今の値が、記録から組み立てた値と違う → 推し量らずに残す
-    return { ...run(adding), root, adding };
+    const two = arr && av.length === 2; const opE = P.opE; const opA = P.opA; const opM = P.opM; const vis = st.vis.a;
+    // 途中の値の控え：並びの j 番めまで（記録に入っている生き死にで）当てた値。生き死にが変わった所より後ろは、次に要る時に作り直す
+    let c = null;
+    if (!tuning.noPrefix) {
+      c = P.cache; if (!c || c.aE !== po.aE || c.lo !== lo) P.cache = c = { aE: po.aE, lo, v0: [], v1: [], valid: 0 };
+      const upto = ov.size ? start : n;
+      let x0 = c.valid ? c.v0[c.valid - 1] : arr ? av[0] : av; let x1 = two ? (c.valid ? c.v1[c.valid - 1] : av[1]) : 0;
+      for (let j = c.valid; j < upto; j++) { if (vis[opE[lo + j]]) { const m = opM[lo + j]; const a = opA[2 * (lo + j)]; x0 = step1(x0, a, m); if (two) { const b = opA[2 * (lo + j) + 1]; x1 = step1(x1, m && b !== b ? a : b, m); } } c.v0[j] = x0; if (two) c.v1[j] = x1; }
+      if (c.valid < upto) c.valid = upto;
+    }
+    const shape = (x0, x1) => (arr ? (two ? [x0, x1] : [x0]) : x0);
+    const run = (from, want) => {
+      let x0; let x1 = 0;
+      if (from > 0 && c) { x0 = c.v0[from - 1]; if (two) x1 = c.v1[from - 1]; } else { from = 0; x0 = arr ? av[0] : av; if (two) x1 = av[1]; }
+      for (let j = from; j < n; j++) {
+        let a = vis[opE[lo + j]] === 1; if (j === mine) a = want; else if (ov.size) { const o = ov.get(j); if (o !== undefined) a = o; }
+        if (!a) continue; const m = opM[lo + j]; const f0 = opA[2 * (lo + j)]; x0 = step1(x0, f0, m); if (two) { const f1 = opA[2 * (lo + j) + 1]; x1 = step1(x1, m && f1 !== f1 ? f0 : f1, m); }
+      }
+      return shape(x0, x1);
+    };
+    // 今の値の確かめ：記録から組み立てた値と違えば、推し量らずに残す。この通しで何も変えていなければ、控えの終わりの値がそれ
+    const now = c && !ov.size ? (n ? shape(c.v0[n - 1], two ? c.v1[n - 1] : 0) : shape(arr ? av[0] : av, two ? av[1] : 0)) : run(start, !adding);
+    if (!same(now, slot.v)) return null;
+    return { value: run(start, adding), root, adding };
   };
   const wide = opt.wide !== false;   // P3r の既定：同じ形への変更も一緒に残す（1w）
   const adoptIdx = new Map(); const adoptedAfter = (node, from) => { let a = adoptIdx.get(node); if (a === undefined) adoptIdx.set(node, (a = adoptedAt(log, node))); return a > from; };
@@ -231,12 +280,20 @@ function pass(dr, log, idxs, set, ch, opt) {
         // 「外す」と決まった AI の部品への、ほかの効果：部品ごと外れるので、1つずつは戻さない
         if (!isNodeInsert(E) && target.startsWith('node:') && drops.has(`part:${target}`) && setInserted.has(`node/${target.slice(5)}`) && getNode(dr.doc, target.slice(5))) { outcomes.push({ ...out, result: 'noop', why: 'unit-dropped', unit: `part:${target}` }); continue; }
       }
-      const later = [];
-      for (const j of logTouching(log, target, from)) {
-        if (set.has(j)) continue; const r2 = logAt(log, j);
-        r2.effects.forEach((e2, q) => { if (targetOf(e2) !== target || !ch.visible(`${r2.cmd.id}#${q}`)) return; const rel = relate(addr, addrOf(e2)); if (rel) later.push({ rec: r2, e: e2, rel }); });
+      // 「その後に起きたこと」。足す量・掛ける量は、番地の索引から「有るか無いか」だけを数える（聞く・残すになる時だけ、下の一覧を作る）
+      let plan = null;
+      if (!tuning.noFast && (E.k === 'delta' || E.k === 'mul')) plan = quickNum(E, nearFlags(log, addr, from, set), dr.doc, { rebuild: (e) => rebuild(e, key) });
+      if (!plan) {
+        const later = [];
+        if (tuning.noFast) {
+          for (const j of logTouching(log, target, from)) {
+            if (set.has(j)) continue; const r2 = logAt(log, j);
+            r2.effects.forEach((e2, q) => { if (targetOf(e2) !== target || !ch.visible(`${r2.cmd.id}#${q}`)) return; const rel = relate(addr, addrOf(e2)); if (rel) later.push({ rec: r2, e: e2, rel }); });
+          }
+        } else for (const x of relatedAfter(log, addr, from, set)) { const r2 = logAt(log, x.i); const e2 = r2.effects[x.q]; if (targetOf(e2) !== target) continue; const rel = relate(addr, addrOf(e2)); if (rel) later.push({ rec: r2, e: e2, rel }); }
+        plan = classify(E, later, dr.doc, { rebuild: (e) => rebuild(e, key) });
       }
-      let plan = classify(E, later, dr.doc, { rebuild: (e) => rebuild(e, key) }); let unit = null;
+      let unit = null;
       if (viaList) { // 方式2：足した点（鍵）を1つだけ外してよい条件＝それ自身がそのまま（行10）で、今の両隣を、あとから誰も触っていない。合わなければ、単位に残す
         const list = getAt(dr.doc, E.at); let ok = plan.result === 'revert' && Array.isArray(list);
         if (ok) { const nb = neighbors(list, E.id); for (const id of [nb.after, nb.next]) { if (id == null) continue; const na = [...E.at, id];

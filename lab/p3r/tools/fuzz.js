@@ -7,7 +7,7 @@ export const INIT = { scenes: [{ id: 's1', stage: 0 }, { id: 's2', stage: 2 }], 
 export function runFuzz(seed, steps, opt = {}) {
   const rng = mulberry32(seed); const gen = makeGen(rng); const rng2 = mulberry32(seed ^ 0x5bd1e995); let state = opt.from || createState(INIT); let last = null; let k = 0;
   const batches = []; const stats = { applied: 0, rejected: 0, adopt: 0, scale: 0, reverts: 0 }; const H = { sender: { k: 'human', device: 'd1' } }; const A = { sender: { k: 'ai', agent: 'w1' } };
-  const push = (cmds, ctx) => { const r = applyBatch(state, cmds, ctx); if (r.status === 'applied') { state = r.state; batches.push({ sender: ctx.sender, cmds }); stats.applied++; if (opt.onApplied) opt.onApplied(r, cmds, ctx); return r; } stats.rejected++; return r; };
+  const push = (cmds, ctx) => { const r = applyBatch(state, cmds, ctx); if (r.status === 'applied') { state = r.state; batches.push({ sender: ctx.sender, cmds }); stats.applied++; if (opt.onApplied) opt.onApplied(r, cmds, ctx); return r; } stats.rejected++; if (opt.onRejected) opt.onRejected(r, cmds, ctx); return r; };
   for (let i = 0; i < steps; i++) {
     const step = gen.next(state, last); last = step; const r = push(step.cmds, step.ctx); if (r.status === 'applied' && step.cmds.some((c) => c.body.type === 'revert')) stats.reverts++;
     const ids = Object.keys(state.doc.nodes); if (!ids.length) continue; const x = rng2();
