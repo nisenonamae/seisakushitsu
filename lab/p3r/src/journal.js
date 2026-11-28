@@ -13,7 +13,7 @@
 //     loadIndexed  写し＋効果つきの記録の全部（頭は索引に足すだけで、当てない）
 import { applyBatch, createState } from './engine.js';
 import { Draft, applyEffect, revOf } from './model.js';
-import { emptyLog, appendLog, logItems, logLength, logBase } from './log.js';
+import { emptyLog, appendLog, appendIndexOnly, slimOf, logItems, logLength, logBase } from './log.js';
 import { canon } from './util.js';
 import { ledger } from './owner.js';
 import { sha256, hash64 } from './hash.js';
@@ -119,6 +119,31 @@ export function loadIndexed(snap, entries) {
   if (head.length !== snap.seq) throw new Error('写しと記録の件数が合わない');
   return { state: applyStoredAll(snap.doc, appendLog(emptyLog(), head), entries, i), skipped: [] };
 }
+/**
+ * 写し＋索引（細い記録）＋続き。頭の記録の本体は持たず、要る時に「置き場」（arch.get(i)）から取りに行く。
+ * 続きの中に、写しより前の記録を相手にする取り消しがあっても開ける（追加の検証 BRIEF2 の 3）。全部の取り消しができる。
+ * @param {any} snap 写し @param {any[]} slimHead 写しまでの記録の、細い記録（slimOf）。件数は snap.seq
+ * @param {any[]} tail 続き（効果つきなら検査なしで当て、命令だけなら検査つきで当て直す）@param {{get:(i:number)=>any}} arch 古い記録の置き場
+ */
+export function loadLazy(snap, slimHead, tail, arch) {
+  if (slimHead.length !== snap.seq) throw new Error('写しと索引の件数が合わない');
+  const log = appendIndexOnly(emptyLog(), slimHead, arch); const start = { doc: snap.doc, log };
+  if (tail.length && tail.every((e) => e.applied)) return { state: applyStoredAll(start.doc, start.log, tail, 0), skipped: [] };
+  return loadReplay(null, tail, start);
+}
+/** 記録の並び（効果つき）から、置き場（メモリの上。試し用）と、細い記録を作る */
+export function memArchive(entries) {
+  const all = []; for (const e of entries) for (const a of e.applied) all.push(a); let reads = 0;
+  return { get(i) { reads++; return all[i]; }, get reads() { return reads; }, slims: (upTo) => all.slice(0, upTo).map(slimOf) };
+}
+/** 索引の控えの1行（まとまり1つ分の細い記録。記録の行の印 h と番号 n つき）。記録から作り直せる物 */
+export function slimLine(n, h, applied) { const json = JSON.stringify({ n, h, r: applied.map(slimOf) }); return `${hash64(json)}\t${json}\n`; }
+export function parseSlimLine(line) {
+  if (line.endsWith('\n')) line = line.slice(0, -1); if (line.length < 19 || line[16] !== '\t') return null; const json = line.slice(17); if (hash64(json) !== line.slice(0, 16)) return null;
+  try { const o = JSON.parse(json); return o && Number.isInteger(o.n) && typeof o.h === 'string' && Array.isArray(o.r) ? o : null; } catch { return null; }
+}
+export { applyStoredAll };
+
 /**
  * 開く時の決まり（立ち直り）：記録を読む → 写しが使えれば使う → だめなら記録だけから作り直す。
  * @param {any} init @param {string|string[]} journal @param {(string|null)[]} snapshots 新しい順（書く途中で切れた物・壊れた物が混ざっていてよい）

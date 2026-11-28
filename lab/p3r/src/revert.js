@@ -212,10 +212,12 @@ function pass(dr, log, idxs, set, ch, opt) {
     // 途中の値の控え：並びの j 番めまで（記録に入っている生き死にで）当てた値。生き死にが変わった所より後ろは、次に要る時に作り直す
     let c = null;
     if (!tuning.noPrefix) {
-      c = P.cache; if (!c || c.aE !== po.aE || c.lo !== lo) P.cache = c = { aE: po.aE, lo, v0: [], v1: [], valid: 0 };
+      c = P.cache; if (!c || c.aE !== po.aE || c.lo !== lo) P.cache = c = { aE: po.aE, lo, v0: new Float64Array(0), v1: new Float64Array(0), valid: 0 };
+      if (c.v0.length < n) { const cap = Math.max(n, Math.ceil(c.v0.length * 1.5), 16); const g = (o) => { const b = new Float64Array(cap); b.set(o.subarray(0, c.valid)); return b; }; c.v0 = g(c.v0); if (two) c.v1 = g(c.v1); }
       const upto = ov.size ? start : n;
       let x0 = c.valid ? c.v0[c.valid - 1] : arr ? av[0] : av; let x1 = two ? (c.valid ? c.v1[c.valid - 1] : av[1]) : 0;
-      for (let j = c.valid; j < upto; j++) { if (vis[opE[lo + j]]) { const m = opM[lo + j]; const a = opA[2 * (lo + j)]; x0 = step1(x0, a, m); if (two) { const b = opA[2 * (lo + j) + 1]; x1 = step1(x1, m && b !== b ? a : b, m); } } c.v0[j] = x0; if (two) c.v1[j] = x1; }
+      const v0 = c.v0; const v1 = c.v1;
+      for (let j = c.valid; j < upto; j++) { if (vis[opE[lo + j]]) { const m = opM[lo + j]; const a = opA[2 * (lo + j)]; x0 = step1(x0, a, m); if (two) { const b = opA[2 * (lo + j) + 1]; x1 = step1(x1, m && b !== b ? a : b, m); } } v0[j] = x0; if (two) v1[j] = x1; }
       if (c.valid < upto) c.valid = upto;
     }
     const shape = (x0, x1) => (arr ? (two ? [x0, x1] : [x0]) : x0);
