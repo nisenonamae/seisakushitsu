@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+// results/mem.jsonl・mem_real.jsonl を表にする（組ごとに、いちばん進んだ段の行を使う）→ results/mem_table.md
+import fs from 'node:fs';
+const rows = new Map(); const order = { building: 0, built: 1, ops: 2, done: 3 };
+for (const f of ['mem.jsonl', 'mem_real.jsonl']) { let t; try { t = fs.readFileSync(new URL(`../results/${f}`, import.meta.url), 'utf8'); } catch { continue; } for (const l of t.split('\n')) { if (!l) continue; const o = JSON.parse(l); const k = `${o.mode}|${o.parts}|${o.n}|${o.method}`; const p = rows.get(k); if (!p || order[o.stage] >= order[p.stage]) rows.set(k, o); } }
+const v = (x, u = '') => (x === undefined || x === null ? '未測定' : `${x}${u}`);
+const out = ['| 記録 | 部品 | 操作 | 持ち方 | どこまで測れたか | 命令1つ（保存こみ）| メモリ：JS の山＋型つきの並び | 直前の取り消し | 古い AI の記録を戻す 平均／中央／最大（読んだ束）| 保存：束／索引の控え／写し | 開く（写し＋索引＋続き）| 開いたあとのメモリ | 取り消しの答えの印・文書の印 |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|'];
+const keys = [...rows.keys()].sort((a, b) => { const A = a.split('|'); const B = b.split('|'); return A[0].localeCompare(B[0]) || A[1] - B[1] || A[2] - B[2] || A[3].localeCompare(B[3]); });
+for (const k of keys) { const o = rows.get(k); const rec = o.records || o.progress || o.n;
+  out.push(`| ${rec.toLocaleString('en-US')}${o.records ? '' : '（途中）'} | ${o.parts} | ${o.mode} | ${o.method === 'mem' ? '全部メモリ' : '束＋索引'} | ${{ building: '作る途中で止まった', built: '作る所まで', ops: '取り消しまで（開き直しは未測定）', done: '全部' }[o.stage]} | ${v(o.applyMs, ' ms')} | ${o.heapMB !== undefined ? `${o.heapMB}＋${o.typedMB} MB` : o.memAt ? `（途中 ${o.memAt.heap}＋${o.memAt.ext} MB）` : '未測定'} | ${v(o.undoMs, ' ms')} | ${o.revertMs !== undefined ? `${o.revertMs}／${o.revertMedMs}／${o.revertMaxMs} ms（${o.revertSegReads}）` : '未測定'} | ${o.filesMB ? `${o.filesMB.seg}／${o.filesMB.idx}／${o.filesMB.snap} MB` : o.method === 'mem' ? '—' : '未測定'} | ${o.openS !== undefined ? `${o.openS} 秒（写し ${o.openMs.snapshot}・索引 ${Math.round((o.openMs.scan || 0) + o.openMs.index)}・続き ${o.openMs.tail} ms）` : o.method === 'mem' ? '—' : '未測定'} | ${o.afterOpen ? `${o.afterOpen.heapMB}＋${o.afterOpen.typedMB} MB` : o.method === 'mem' ? '—' : '未測定'} | ${o.revertsHash ? `${o.revertsHash.slice(0, 8)}・${o.docHash.slice(0, 8)}` : '未測定'} |`); }
+fs.writeFileSync(new URL('../results/mem_table.md', import.meta.url), out.join('\n') + '\n'); console.log(out.join('\n'));

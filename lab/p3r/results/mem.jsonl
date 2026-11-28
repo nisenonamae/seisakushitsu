@@ -29,3 +29,9 @@
 {"method":"mem","n":3000000,"parts":300,"mode":"spread","progress":500000,"memAt":{"heap":647,"ext":16,"rss":1524},"stage":"building"}
 {"method":"mem","n":3000000,"parts":300,"mode":"spread","progress":1000000,"memAt":{"heap":1281,"ext":30,"rss":2753},"stage":"building"}
 {"method":"mem","n":3000000,"parts":300,"mode":"spread","progress":1500000,"memAt":{"heap":1930,"ext":58,"rss":3720},"stage":"building"}
+{"method":"mem","n":3000000,"parts":300,"mode":"spread","progress":2000000,"memAt":{"heap":2554,"ext":58,"rss":4228},"stage":"building"}
+{"method":"mem","n":3000000,"parts":300,"mode":"spread","progress":2500000,"memAt":{"heap":3226,"ext":114,"rss":4466},"stage":"building"}
+{"method":"mem","n":3000000,"parts":300,"mode":"spread","progress":3000000,"memAt":{"heap":3851,"ext":114,"rss":4994},"stage":"building"}
+{"method":"mem","n":3000000,"parts":300,"mode":"spread","applyLastMs":5.8769,"buildS":901,"records":3000300,"applyMs":0.3003,"heapMB":3846,"typedMB":112,"rssMB":4994,"index":{"records":3000300,"effects":3000300,"paths":7201,"inMemory":3000300},"stage":"built"}
+{"method":"mem","n":3000000,"parts":300,"mode":"spread","applyLastMs":5.8769,"buildS":901,"records":3000300,"applyMs":0.3003,"heapMB":3846,"typedMB":112,"rssMB":4994,"index":{"records":3000300,"effects":3000300,"paths":7201,"inMemory":3000300},"undoMs":1.4518,"revertMs":3.194,"revertMedMs":0.229,"revertMaxMs":58.02,"revertSegReads":0,"revertsHash":"2fed5afb65e9b25c","docHash":"6342a6dd39208b45","stage":"ops"}
+{"method":"mem","n":3000000,"parts":300,"mode":"spread","applyLastMs":5.8769,"buildS":901,"records":3000300,"applyMs":0.3003,"heapMB":3846,"typedMB":112,"rssMB":4994,"index":{"records":3000300,"effects":3000300,"paths":7201,"inMemory":3000300},"undoMs":1.4518,"revertMs":3.194,"revertMedMs":0.229,"revertMaxMs":58.02,"revertSegReads":0,"revertsHash":"2fed5afb65e9b25c","docHash":"6342a6dd39208b45","stage":"done"}

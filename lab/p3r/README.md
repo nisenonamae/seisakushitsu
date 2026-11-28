@@ -7,7 +7,7 @@
 
 ```
 cd lab/p3r
-node --test                          # 全部（182 個・1〜1.5 分。取り消し ⇄ やり直し 2 万回を含む）
+node --test                          # 全部（前回は 182 個。今は 213 個・2〜3 分。取り消し ⇄ やり直し 2 万回を含む）
 node --test test/journal.test.js     # 保存して読みこむ・写し・途中で失敗した場合の立ち直り
 node --test test/loop.test.js        # 取り消し・やり直しのくり返し（P3R_LOOPS=50000 で回数を変えられる）
 node --test test/owner.test.js       # だれの物か・引き取り
@@ -20,6 +20,30 @@ node tools/bench_table.js            # results/bench.jsonl を表にする
 ```
 - ブラウザで手で見るなら：`lab/p3r` を手元のサーバーで出して `tools/xcheck.html` を開く（外からは何も読みこまない・保存しない）。
 - 一時ファイルは `/tmp/p3r/`。
+
+## 追加の検証（2026-11-29。指示は `BRIEF2.md`・結果は `RESULTS2.md`）
+
+```
+node --test                                   # 全部（213 個・2〜3 分）。下の4つが、追加の検証で足した試し
+node --test test/same.test.js                 # 速くした核（src）と、前回の核（src0）が、1字も違わない答えを出すこと
+node --test test/fsjournal.test.js            # ファイルへの保存（束・索引の控え・写し）。開き直しても同じ・写しより前後またがる取り消し
+node --test test/snapfs.test.js               # 写しの壊れと立ち直り（P3R_WRITE=1 で results/snapfs.txt に時間を書く。P3R_PARTS=300 P3R_DRAG=stream P3R_SEG=1000 P3R_SNAP=1000 P3R_WRITE=snapfs_large で大きい記録）
+node --test test/outbox.test.js               # 送る前に、取り消し・やり直しの連打を畳む
+node tools/crash.js 600 11                    # 保存の途中でプロセスを止める（子プロセスを SIGKILL。5 分）→ results/crash.jsonl・crash.txt
+P3R_ENGINE=src0 node tools/prof_hot.js 100000 hot   # 1つの値の道に集中した時の、古い AI の操作を戻す時間（src0＝直す前・src＝直したあと）→ results/hot.jsonl は手で足した
+node --cpu-prof --cpu-prof-dir=/tmp/p3r/prof tools/prof_hot.js 100000 && node tools/prof_top.js /tmp/p3r/prof/*.cpuprofile   # どこで時間を使っているか
+node --expose-gc tools/bench_mem.js paged 1000000 300 spread   # メモリを抑える方法の比べ（mem＝全部メモリ・paged＝束＋索引）→ results/mem.jsonl に足す。node tools/mem_table.js で表
+sh tools/bench_mem_all.sh                     # 全部の組（数時間）
+node --expose-gc tools/measure_real.js        # 実際の制作に近い記録（作り物）での測り → results/real.jsonl
+node tools/realistic.js 300 stream 2          # 実際の制作に近い記録の作り手（部品の数・commit か stream・直しの回数）
+node --expose-gc tools/growth.js 100000       # 取り消し ⇄ やり直しのくり返しで、記録がどう太るか → results/growth.jsonl
+node tools/try_aggregate.js                   # うまくいかなかった方法：掛ける量をまとめて持つ → results/try_aggregate.jsonl
+node tools/bench_fsync.js                     # 1 まとまりを保存する時間（fsync あり・なし）
+node --expose-gc tools/mem_parts.js           # メモリの内訳（本体・命令だけ・索引）
+```
+
+足したファイル：`src/fsjournal.js`（**ここだけ Node の fs・zlib を使う**。`src/index.js` からは出していない）・`src/outbox.js`・`src0/`（前回の核＝コミット c6d8832 の `src/` の写し。突き合わせ用。直さない）。
+足した入口：`loadLazy`・`memArchive`（写し＋索引＋続き。古い記録は置き場から）／`slimOf`・`appendIndexOnly`・`setArchive`・`evictLog`・`indexStats`・`logMeta`／`makeOutbox`／`openStore`・`verifySnapshots`（`src/fsjournal.js`）。
 
 ## 入口（`src/index.js`。`lab/p3a` の入口に足した物だけ）
 
