@@ -1,0 +1,14 @@
+{
+ "note": "P4 の AI のみ（lab/p4/ai/ai_only.json）。絵のデータに付け根が無いので、囲みの決まりで付け根を置く。名前から見て付いて動くはずの物（つめ・ももの線・耳の中・奥の耳）は、いっしょに回す",
+ "torso": ["a-dou"],
+ "joints": {
+  "頭": ["a-ago", "a-atama", "a-kuchi", "a-hana", "a-mimi", "a-mimi-naka", "a-me", "a-me-hikari", "a-mabuta", "a-mimi-oku"],
+  "前脚（手前）": ["a-ashi-mae", "a-tsume-1", "a-tsume-2"],
+  "前脚（奥）": ["a-ashi-oku-mae"],
+  "後ろ脚（手前）": ["a-ashi-ushiro", "a-tsume-3", "a-tsume-4", "a-momo"],
+  "後ろ脚（奥）": ["a-ashi-oku-ushiro"],
+  "耳（手前）": ["a-mimi", "a-mimi-naka"],
+  "耳（奥）": ["a-mimi-oku"],
+  "しっぽ": ["a-shippo"]
+ }
+}

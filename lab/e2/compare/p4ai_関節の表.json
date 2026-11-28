@@ -1,0 +1,97 @@
+[
+ {
+  "name": "頭",
+  "ids": [
+   "a-ago",
+   "a-atama",
+   "a-kuchi",
+   "a-hana",
+   "a-mimi",
+   "a-mimi-naka",
+   "a-me",
+   "a-me-hikari",
+   "a-mabuta",
+   "a-mimi-oku"
+  ],
+  "pivot": [
+   714.9470752999697,
+   411.3175094831424
+  ]
+ },
+ {
+  "name": "前脚（手前）",
+  "ids": [
+   "a-ashi-mae",
+   "a-tsume-1",
+   "a-tsume-2"
+  ],
+  "pivot": [
+   730.0,
+   524.9999999999999
+  ]
+ },
+ {
+  "name": "前脚（奥）",
+  "ids": [
+   "a-ashi-oku-mae"
+  ],
+  "pivot": [
+   648.0,
+   547.9999999999999
+  ]
+ },
+ {
+  "name": "後ろ脚（手前）",
+  "ids": [
+   "a-ashi-ushiro",
+   "a-tsume-3",
+   "a-tsume-4",
+   "a-momo"
+  ],
+  "pivot": [
+   1127.0559209558767,
+   595.5
+  ]
+ },
+ {
+  "name": "後ろ脚（奥）",
+  "ids": [
+   "a-ashi-oku-ushiro"
+  ],
+  "pivot": [
+   1135.0,
+   538.9999999999999
+  ]
+ },
+ {
+  "name": "耳（手前）",
+  "ids": [
+   "a-mimi",
+   "a-mimi-naka"
+  ],
+  "pivot": [
+   618.0100338184284,
+   263.0
+  ]
+ },
+ {
+  "name": "耳（奥）",
+  "ids": [
+   "a-mimi-oku"
+  ],
+  "pivot": [
+   573.0616616475265,
+   262.0
+  ]
+ },
+ {
+  "name": "しっぽ",
+  "ids": [
+   "a-shippo"
+  ],
+  "pivot": [
+   1338,
+   453.5
+  ]
+ }
+]
