@@ -1,0 +1,192 @@
+{
+ "title": "2 重なり代だけ深く（E2 v2 のやり方）",
+ "doc": "v2_deep.json",
+ "joints": [
+  {
+   "name": "頭",
+   "main": "head",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "earF",
+      "jaw",
+      "head",
+      "mouth",
+      "eyeRim",
+      "eye",
+      "eyeHi",
+      "nostril",
+      "gEarN",
+      "earN",
+      "earIn",
+      "head.root",
+      "earN.root"
+     ],
+     "pivot": [
+      592,
+      432
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 258.0,
+   "area": 106434
+  },
+  {
+   "name": "前脚（手前）",
+   "main": "legFN",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legFN",
+      "creaseF",
+      "nailF0",
+      "nailF1",
+      "nailF2",
+      "legFN.root"
+     ],
+     "pivot": [
+      735,
+      605
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 148.0,
+   "area": 28182
+  },
+  {
+   "name": "前脚（奥）",
+   "main": "legFF",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legFF"
+     ],
+     "pivot": [
+      615,
+      605
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 98.0,
+   "area": 17482
+  },
+  {
+   "name": "後ろ脚（手前）",
+   "main": "legHN",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legHN",
+      "creaseH",
+      "nailH0",
+      "nailH1",
+      "nailH2",
+      "legHN.root"
+     ],
+     "pivot": [
+      1222,
+      585
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 170.0,
+   "area": 35149
+  },
+  {
+   "name": "後ろ脚（奥）",
+   "main": "legHF",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legHF"
+     ],
+     "pivot": [
+      1068,
+      605
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 121.9,
+   "area": 21013
+  },
+  {
+   "name": "耳（手前）",
+   "main": "earN",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "earN",
+      "earIn",
+      "earN.root"
+     ],
+     "pivot": [
+      528,
+      338
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 44.0,
+   "area": 3133
+  },
+  {
+   "name": "耳（奥）",
+   "main": "earF",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "earF"
+     ],
+     "pivot": [
+      486,
+      345
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 28.0,
+   "area": 1378
+  },
+  {
+   "name": "しっぽ",
+   "main": "tail",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "tail"
+     ],
+     "pivot": [
+      1312,
+      428
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 30.8,
+   "area": 3378
+  }
+ ],
+ "log": [
+  "頭：重なり代を付け根の向きへ 70 深く",
+  "前脚（手前）：重なり代を付け根の向きへ 40 深く",
+  "前脚（奥）：重なり代を付け根の向きへ 40 深く",
+  "後ろ脚（手前）：重なり代を付け根の向きへ 40 深く",
+  "後ろ脚（奥）：重なり代を付け根の向きへ 40 深く",
+  "耳（手前）：重なり代を付け根の向きへ 10 深く",
+  "耳（奥）：重なり代を付け根の向きへ 10 深く",
+  "しっぽ：重なり代を付け根の向きへ 20 深く"
+ ]
+}

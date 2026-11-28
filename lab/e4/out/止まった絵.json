@@ -1,0 +1,58 @@
+[
+ {
+  "name": "v1_e2",
+  "iou": 1.0,
+  "sil_diff": 0,
+  "color_diff": 0,
+  "parts": 28,
+  "points": 152
+ },
+ {
+  "name": "v2_deep",
+  "iou": 0.99981,
+  "sil_diff": 76,
+  "color_diff": 46,
+  "parts": 32,
+  "points": 709
+ },
+ {
+  "name": "v3_split",
+  "iou": 0.99983,
+  "sil_diff": 69,
+  "color_diff": 36,
+  "parts": 31,
+  "points": 499
+ },
+ {
+  "name": "v4_round",
+  "iou": 0.99963,
+  "sil_diff": 150,
+  "color_diff": 80,
+  "parts": 38,
+  "points": 915
+ },
+ {
+  "name": "v5_pivot_in",
+  "iou": 1.0,
+  "sil_diff": 0,
+  "color_diff": 0,
+  "parts": 28,
+  "points": 152
+ },
+ {
+  "name": "v5x_pivot_edge",
+  "iou": 1.0,
+  "sil_diff": 0,
+  "color_diff": 0,
+  "parts": 28,
+  "points": 152
+ },
+ {
+  "name": "v6_round_in",
+  "iou": 0.99962,
+  "sil_diff": 154,
+  "color_diff": 77,
+  "parts": 38,
+  "points": 981
+ }
+]

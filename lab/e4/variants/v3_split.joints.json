@@ -1,0 +1,241 @@
+{
+ "title": "3 割る場所を変える（首の部品をはさむ・手前の脚をひざで割る）",
+ "doc": "v3_split.json",
+ "joints": [
+  {
+   "name": "頭（首をはさむ）",
+   "main": "head",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "neck"
+     ],
+     "pivot": [
+      632,
+      440
+     ],
+     "frac": 0.5
+    },
+    {
+     "ids": [
+      "earF",
+      "jaw",
+      "head",
+      "mouth",
+      "eyeRim",
+      "eye",
+      "eyeHi",
+      "nostril",
+      "gEarN",
+      "earN",
+      "earIn"
+     ],
+     "pivot": [
+      552,
+      432
+     ],
+     "frac": 0.5
+    }
+   ],
+   "w": 258.0,
+   "area": 106434,
+   "alias": [
+    "頭"
+   ]
+  },
+  {
+   "name": "前脚（手前）",
+   "main": "legFN",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legFN",
+      "creaseF",
+      "nailF0",
+      "nailF1",
+      "nailF2",
+      "legFN.lo"
+     ],
+     "pivot": [
+      735,
+      605
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 148.0,
+   "area": 28182
+  },
+  {
+   "name": "前脚（奥）",
+   "main": "legFF",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legFF"
+     ],
+     "pivot": [
+      615,
+      605
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 98.0,
+   "area": 17482
+  },
+  {
+   "name": "後ろ脚（手前）",
+   "main": "legHN",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legHN",
+      "creaseH",
+      "nailH0",
+      "nailH1",
+      "nailH2",
+      "legHN.lo"
+     ],
+     "pivot": [
+      1222,
+      585
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 170.0,
+   "area": 35149
+  },
+  {
+   "name": "後ろ脚（奥）",
+   "main": "legHF",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legHF"
+     ],
+     "pivot": [
+      1068,
+      605
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 121.9,
+   "area": 21013
+  },
+  {
+   "name": "耳（手前）",
+   "main": "earN",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "earN",
+      "earIn"
+     ],
+     "pivot": [
+      528,
+      338
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 44.0,
+   "area": 3133
+  },
+  {
+   "name": "耳（奥）",
+   "main": "earF",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "earF"
+     ],
+     "pivot": [
+      486,
+      345
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 28.0,
+   "area": 1378
+  },
+  {
+   "name": "しっぽ",
+   "main": "tail",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "tail"
+     ],
+     "pivot": [
+      1312,
+      428
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 30.8,
+   "area": 3378
+  },
+  {
+   "name": "ひざ・前脚（手前）",
+   "main": "legFN.lo",
+   "par": "legFN",
+   "links": [
+    {
+     "ids": [
+      "legFN.lo",
+      "nailF0",
+      "nailF1",
+      "nailF2"
+     ],
+     "pivot": [
+      739.1,
+      706
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 116.0,
+   "area": 12303
+  },
+  {
+   "name": "ひざ・後ろ脚（手前）",
+   "main": "legHN.lo",
+   "par": "legHN",
+   "links": [
+    {
+     "ids": [
+      "legHN.lo",
+      "nailH0",
+      "nailH1",
+      "nailH2"
+     ],
+     "pivot": [
+      1225.2,
+      706
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 122.6,
+   "area": 13351
+  }
+ ],
+ "log": [
+  "頭：頭と胴のあいだに首の部品（頭と胴の重なりを 40 ふくらませた形）。付け根は 首→胴 (632,440)、頭→首 (552,432)。角度は半分ずつ",
+  "前脚（手前）：ひざ (739,706) で上下に割り、両方の端を半径 58 の円に",
+  "後ろ脚（手前）：ひざ (1225,706) で上下に割り、両方の端を半径 61 の円に"
+ ]
+}
