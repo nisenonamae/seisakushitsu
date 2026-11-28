@@ -1,0 +1,8913 @@
+{
+ "kind": "lab-p4-doc",
+ "v": 1,
+ "w": 1600,
+ "h": 900,
+ "bg": "#DDE9C8",
+ "nodes": [
+  {
+   "id": "gshadow",
+   "name": "地面の影",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     800.01,
+     772.05
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     1179.57,
+     41.07
+    ]
+   },
+   "fill": "#BCD3A2",
+   "stroke": null
+  },
+  {
+   "id": "legHF",
+   "name": "後ろ脚（奥）",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legHF.0",
+      "p": [
+       1170.52,
+       613.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.1",
+      "p": [
+       1167.67,
+       604.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.2",
+      "p": [
+       1164.82,
+       598.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.3",
+      "p": [
+       1162.6,
+       594.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.4",
+      "p": [
+       1157.43,
+       587.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.5",
+      "p": [
+       1151.37,
+       581.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.6",
+      "p": [
+       1146.29,
+       576.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.7",
+      "p": [
+       1142.68,
+       574.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.8",
+      "p": [
+       1135.0,
+       569.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.9",
+      "p": [
+       1126.8,
+       566.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.10",
+      "p": [
+       1118.23,
+       564.07
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.11",
+      "p": [
+       1109.44,
+       562.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.12",
+      "p": [
+       1105.0,
+       562.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.13",
+      "p": [
+       1098.35,
+       563.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.14",
+      "p": [
+       1089.6,
+       564.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.15",
+      "p": [
+       1081.11,
+       567.12
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.16",
+      "p": [
+       1075.0,
+       569.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.17",
+      "p": [
+       1071.09,
+       571.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.18",
+      "p": [
+       1063.71,
+       576.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.19",
+      "p": [
+       1057.04,
+       582.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.20",
+      "p": [
+       1051.19,
+       589.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.21",
+      "p": [
+       1048.6,
+       592.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.22",
+      "p": [
+       1045.18,
+       598.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.23",
+      "p": [
+       1042.33,
+       604.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.24",
+      "p": [
+       1040.77,
+       608.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.25",
+      "p": [
+       1039.48,
+       613.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.26",
+      "p": [
+       1038.08,
+       619.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.27",
+      "p": [
+       1037.5,
+       623.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.28",
+      "p": [
+       1037.17,
+       630.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.29",
+      "p": [
+       1037.5,
+       637.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.30",
+      "p": [
+       1038.08,
+       641.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.31",
+      "p": [
+       1040.65,
+       654.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.32",
+      "p": [
+       1041.21,
+       654.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.33",
+      "p": [
+       1040.95,
+       655.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.34",
+      "p": [
+       1046.8,
+       756.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.35",
+      "p": [
+       1047.38,
+       759.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.36",
+      "p": [
+       1048.5,
+       761.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.37",
+      "p": [
+       1050.07,
+       764.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.38",
+      "p": [
+       1052.6,
+       766.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.39",
+      "p": [
+       1054.98,
+       768.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.40",
+      "p": [
+       1056.95,
+       769.13
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.41",
+      "p": [
+       1059.02,
+       769.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.42",
+      "p": [
+       1061.19,
+       769.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.43",
+      "p": [
+       1129.41,
+       769.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.44",
+      "p": [
+       1132.27,
+       769.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.45",
+      "p": [
+       1135.56,
+       768.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.46",
+      "p": [
+       1137.91,
+       766.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.47",
+      "p": [
+       1140.37,
+       764.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.48",
+      "p": [
+       1142.49,
+       760.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.49",
+      "p": [
+       1143.42,
+       757.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.50",
+      "p": [
+       1144.35,
+       733.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.51",
+      "p": [
+       1145.35,
+       722.62
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.52",
+      "p": [
+       1146.91,
+       711.13
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.53",
+      "p": [
+       1148.33,
+       703.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.54",
+      "p": [
+       1150.09,
+       696.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.55",
+      "p": [
+       1153.46,
+       685.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.56",
+      "p": [
+       1156.24,
+       679.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.57",
+      "p": [
+       1157.8,
+       676.41
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.58",
+      "p": [
+       1161.3,
+       671.19
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.59",
+      "p": [
+       1163.24,
+       668.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.60",
+      "p": [
+       1167.53,
+       665.08
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.61",
+      "p": [
+       1169.89,
+       663.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.62",
+      "p": [
+       1172.4,
+       662.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.63",
+      "p": [
+       1175.07,
+       661.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.64",
+      "p": [
+       1177.89,
+       660.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.65",
+      "p": [
+       1177.42,
+       653.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.66",
+      "p": [
+       1177.18,
+       653.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHF.67",
+      "p": [
+       1171.92,
+       619.55
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#6E6075",
+   "stroke": null,
+   "pivot": [
+    1108.46,
+    593.04
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "legFF",
+   "name": "前脚（奥）",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legFF.0",
+      "p": [
+       679.39,
+       582.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.1",
+      "p": [
+       676.14,
+       582.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.2",
+      "p": [
+       671.34,
+       583.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.3",
+      "p": [
+       665.13,
+       586.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.4",
+      "p": [
+       662.15,
+       587.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.5",
+      "p": [
+       657.85,
+       589.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.6",
+      "p": [
+       652.52,
+       593.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.7",
+      "p": [
+       648.88,
+       596.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.8",
+      "p": [
+       646.64,
+       599.27
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.9",
+      "p": [
+       642.65,
+       604.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.10",
+      "p": [
+       639.38,
+       610.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.11",
+      "p": [
+       638.02,
+       613.13
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.12",
+      "p": [
+       636.37,
+       617.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.13",
+      "p": [
+       635.17,
+       622.53
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.14",
+      "p": [
+       634.45,
+       627.39
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.15",
+      "p": [
+       633.83,
+       634.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.16",
+      "p": [
+       633.96,
+       634.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.17",
+      "p": [
+       633.49,
+       638.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.18",
+      "p": [
+       633.74,
+       643.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.19",
+      "p": [
+       633.48,
+       651.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.20",
+      "p": [
+       632.93,
+       656.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.21",
+      "p": [
+       631.62,
+       664.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.22",
+      "p": [
+       628.5,
+       677.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.23",
+      "p": [
+       620.74,
+       702.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.24",
+      "p": [
+       617.89,
+       712.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.25",
+      "p": [
+       615.91,
+       721.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.26",
+      "p": [
+       615.0,
+       729.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.27",
+      "p": [
+       614.85,
+       740.19
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.28",
+      "p": [
+       615.36,
+       756.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.29",
+      "p": [
+       615.79,
+       759.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.30",
+      "p": [
+       617.06,
+       762.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.31",
+      "p": [
+       619.04,
+       765.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.32",
+      "p": [
+       622.2,
+       767.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.33",
+      "p": [
+       625.36,
+       769.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.34",
+      "p": [
+       627.43,
+       769.83
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.35",
+      "p": [
+       629.61,
+       770.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.36",
+      "p": [
+       693.7,
+       769.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.37",
+      "p": [
+       695.82,
+       769.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.38",
+      "p": [
+       697.81,
+       768.87
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.39",
+      "p": [
+       699.65,
+       767.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.40",
+      "p": [
+       701.33,
+       766.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.41",
+      "p": [
+       704.08,
+       763.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.42",
+      "p": [
+       705.11,
+       761.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.43",
+      "p": [
+       705.87,
+       759.89
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.44",
+      "p": [
+       706.35,
+       757.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.45",
+      "p": [
+       706.51,
+       755.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.46",
+      "p": [
+       706.29,
+       734.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.47",
+      "p": [
+       706.81,
+       719.51
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.48",
+      "p": [
+       708.25,
+       704.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.49",
+      "p": [
+       710.17,
+       693.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.50",
+      "p": [
+       711.93,
+       686.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.51",
+      "p": [
+       714.13,
+       679.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.52",
+      "p": [
+       716.81,
+       673.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.53",
+      "p": [
+       720.02,
+       669.03
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.54",
+      "p": [
+       723.81,
+       665.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.55",
+      "p": [
+       725.94,
+       663.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.56",
+      "p": [
+       728.22,
+       662.39
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.57",
+      "p": [
+       730.67,
+       661.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.58",
+      "p": [
+       733.3,
+       660.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.59",
+      "p": [
+       734.57,
+       650.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.60",
+      "p": [
+       735.32,
+       642.51
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.61",
+      "p": [
+       734.94,
+       642.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.62",
+      "p": [
+       734.28,
+       629.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.63",
+      "p": [
+       733.72,
+       624.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.64",
+      "p": [
+       732.68,
+       619.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.65",
+      "p": [
+       731.18,
+       614.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.66",
+      "p": [
+       729.22,
+       610.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.67",
+      "p": [
+       726.84,
+       605.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.68",
+      "p": [
+       725.01,
+       603.12
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.69",
+      "p": [
+       721.96,
+       599.27
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.70",
+      "p": [
+       718.54,
+       595.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.71",
+      "p": [
+       714.79,
+       592.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.72",
+      "p": [
+       710.75,
+       589.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.73",
+      "p": [
+       706.45,
+       587.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.74",
+      "p": [
+       703.47,
+       586.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.75",
+      "p": [
+       698.84,
+       584.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.76",
+      "p": [
+       694.07,
+       583.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.77",
+      "p": [
+       689.21,
+       582.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFF.78",
+      "p": [
+       684.3,
+       582.21
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#6E6075",
+   "stroke": null,
+   "pivot": [
+    689.34,
+    593.04
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "tail",
+   "name": "しっぽ",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "tail.0",
+      "p": [
+       1334.65,
+       375.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.1",
+      "p": [
+       1329.57,
+       378.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.2",
+      "p": [
+       1325.17,
+       382.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.3",
+      "p": [
+       1321.6,
+       387.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.4",
+      "p": [
+       1319.0,
+       392.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.5",
+      "p": [
+       1317.66,
+       397.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.6",
+      "p": [
+       1317.08,
+       403.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.7",
+      "p": [
+       1317.66,
+       408.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.8",
+      "p": [
+       1319.36,
+       414.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.9",
+      "p": [
+       1320.62,
+       417.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.10",
+      "p": [
+       1322.68,
+       420.53
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.11",
+      "p": [
+       1324.51,
+       422.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.12",
+      "p": [
+       1327.28,
+       425.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.13",
+      "p": [
+       1330.38,
+       427.97
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.14",
+      "p": [
+       1332.9,
+       429.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.15",
+      "p": [
+       1336.46,
+       431.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.16",
+      "p": [
+       1340.21,
+       432.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.17",
+      "p": [
+       1344.07,
+       432.87
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.18",
+      "p": [
+       1347.0,
+       433.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.19",
+      "p": [
+       1349.93,
+       432.87
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.20",
+      "p": [
+       1353.79,
+       432.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.21",
+      "p": [
+       1366.98,
+       427.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.22",
+      "p": [
+       1366.86,
+       425.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.23",
+      "p": [
+       1368.33,
+       426.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.24",
+      "p": [
+       1370.24,
+       441.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.25",
+      "p": [
+       1375.31,
+       475.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.26",
+      "p": [
+       1377.47,
+       494.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.27",
+      "p": [
+       1378.44,
+       499.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.28",
+      "p": [
+       1379.21,
+       501.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.29",
+      "p": [
+       1380.22,
+       503.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.30",
+      "p": [
+       1381.52,
+       505.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.31",
+      "p": [
+       1383.16,
+       506.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.32",
+      "p": [
+       1385.17,
+       507.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.33",
+      "p": [
+       1386.73,
+       507.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.34",
+      "p": [
+       1388.5,
+       507.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.35",
+      "p": [
+       1390.57,
+       506.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.36",
+      "p": [
+       1393.13,
+       504.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.37",
+      "p": [
+       1395.11,
+       502.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.38",
+      "p": [
+       1396.57,
+       498.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.39",
+      "p": [
+       1397.6,
+       494.53
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.40",
+      "p": [
+       1398.27,
+       490.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.41",
+      "p": [
+       1398.75,
+       484.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.42",
+      "p": [
+       1399.19,
+       462.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.43",
+      "p": [
+       1399.01,
+       454.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.44",
+      "p": [
+       1398.47,
+       447.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.45",
+      "p": [
+       1396.98,
+       436.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.46",
+      "p": [
+       1394.66,
+       426.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.47",
+      "p": [
+       1392.63,
+       420.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.48",
+      "p": [
+       1390.21,
+       414.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.49",
+      "p": [
+       1387.39,
+       408.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.50",
+      "p": [
+       1384.17,
+       402.13
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.51",
+      "p": [
+       1380.55,
+       396.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.52",
+      "p": [
+       1376.5,
+       390.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.53",
+      "p": [
+       1372.03,
+       384.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.54",
+      "p": [
+       1367.13,
+       379.08
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.55",
+      "p": [
+       1356.01,
+       367.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.56",
+      "p": [
+       1354.88,
+       368.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "tail.57",
+      "p": [
+       1354.71,
+       367.98
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    1357.94,
+    398.17
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "torso",
+   "name": "胴",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       610.75,
+       289.21
+      ],
+      "out": [
+       24.37,
+       0.5
+      ],
+      "corner": true,
+      "id": "torso.0"
+     },
+     {
+      "p": [
+       683.8,
+       283.17
+      ],
+      "in": [
+       -23.68,
+       6.28
+      ],
+      "out": [
+       27.9,
+       -7.4
+      ],
+      "id": "torso.1"
+     },
+     {
+      "p": [
+       766.14,
+       258.62
+      ],
+      "in": [
+       -28.65,
+       4.93
+      ],
+      "out": [
+       37.82,
+       -6.51
+      ],
+      "id": "torso.2"
+     },
+     {
+      "p": [
+       880.3,
+       244.58
+      ],
+      "in": [
+       -38.23,
+       3.2
+      ],
+      "out": [
+       134.72,
+       -11.29
+      ],
+      "id": "torso.3"
+     },
+     {
+      "p": [
+       1301.77,
+       301.61
+      ],
+      "in": [
+       -114.02,
+       -87.99
+      ],
+      "out": [
+       24.23,
+       18.71
+      ],
+      "id": "torso.4"
+     },
+     {
+      "p": [
+       1360.05,
+       376.95
+      ],
+      "in": [
+       -10.67,
+       -29.28
+      ],
+      "out": [
+       9.64,
+       26.47
+      ],
+      "id": "torso.5"
+     },
+     {
+      "p": [
+       1368.81,
+       460.9
+      ],
+      "in": [
+       -0.13,
+       -27.73
+      ],
+      "out": [
+       0.24,
+       50.29
+      ],
+      "id": "torso.6"
+     },
+     {
+      "p": [
+       1356.01,
+       609.56
+      ],
+      "in": [
+       9.08,
+       -49.44
+      ],
+      "corner": true,
+      "id": "torso.7"
+     },
+     {
+      "p": [
+       1283.9,
+       649.18
+      ],
+      "id": "torso.8"
+     },
+     {
+      "p": [
+       1040.95,
+       655.8
+      ],
+      "out": [
+       -60.8,
+       18.75
+      ],
+      "corner": true,
+      "id": "torso.9"
+     },
+     {
+      "p": [
+       877.9,
+       655.8
+      ],
+      "in": [
+       60.4,
+       20.66
+      ],
+      "corner": true,
+      "id": "torso.10"
+     },
+     {
+      "p": [
+       633.49,
+       638.18
+      ],
+      "out": [
+       -3.43,
+       -14.7
+      ],
+      "corner": true,
+      "id": "torso.11"
+     },
+     {
+      "p": [
+       601.31,
+       617.95
+      ],
+      "in": [
+       13.34,
+       1.38
+      ],
+      "corner": true,
+      "id": "torso.12"
+     },
+     {
+      "p": [
+       512.35,
+       437.68
+      ],
+      "id": "torso.13"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": null,
+   "rigParent": null
+  },
+  {
+   "id": "legHN.sock",
+   "name": "胴の受け",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legHN.sock.0",
+      "p": [
+       1184.23,
+       656.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.1",
+      "p": [
+       1191.24,
+       665.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.2",
+      "p": [
+       1195.39,
+       670.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.3",
+      "p": [
+       1199.83,
+       674.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.4",
+      "p": [
+       1206.98,
+       679.83
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.5",
+      "p": [
+       1212.03,
+       683.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.6",
+      "p": [
+       1220.0,
+       687.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.7",
+      "p": [
+       1225.54,
+       690.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.8",
+      "p": [
+       1231.23,
+       692.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.9",
+      "p": [
+       1237.05,
+       694.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.10",
+      "p": [
+       1245.96,
+       695.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.11",
+      "p": [
+       1251.99,
+       696.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.12",
+      "p": [
+       1258.06,
+       697.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.13",
+      "p": [
+       1264.14,
+       697.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.14",
+      "p": [
+       1270.21,
+       696.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.15",
+      "p": [
+       1276.24,
+       695.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.16",
+      "p": [
+       1285.15,
+       694.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.17",
+      "p": [
+       1293.83,
+       691.27
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.18",
+      "p": [
+       1299.45,
+       688.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.19",
+      "p": [
+       1304.9,
+       686.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.20",
+      "p": [
+       1312.72,
+       681.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.21",
+      "p": [
+       1317.67,
+       678.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.22",
+      "p": [
+       1322.37,
+       674.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.23",
+      "p": [
+       1326.81,
+       670.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.24",
+      "p": [
+       1332.93,
+       663.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.25",
+      "p": [
+       1336.63,
+       658.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.26",
+      "p": [
+       1341.57,
+       650.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.27",
+      "p": [
+       1344.44,
+       645.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.28",
+      "p": [
+       1346.95,
+       639.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.29",
+      "p": [
+       1349.09,
+       634.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.30",
+      "p": [
+       1351.59,
+       625.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.31",
+      "p": [
+       1352.78,
+       619.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.32",
+      "p": [
+       1353.74,
+       611.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.33",
+      "p": [
+       1345.19,
+       617.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.34",
+      "p": [
+       1336.15,
+       624.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.35",
+      "p": [
+       1328.21,
+       629.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.36",
+      "p": [
+       1319.59,
+       634.75
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.37",
+      "p": [
+       1310.58,
+       639.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.38",
+      "p": [
+       1304.48,
+       642.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.39",
+      "p": [
+       1295.41,
+       646.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.40",
+      "p": [
+       1289.54,
+       648.03
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.41",
+      "p": [
+       1283.9,
+       649.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.42",
+      "p": [
+       1275.59,
+       650.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.43",
+      "p": [
+       1248.61,
+       653.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.sock.44",
+      "p": [
+       1219.44,
+       655.08
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "legHN.root",
+   "name": "後ろ脚（手前）の丸い付け根",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legHN.root.0",
+      "p": [
+       1351.59,
+       583.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.1",
+      "p": [
+       1349.09,
+       574.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.2",
+      "p": [
+       1346.95,
+       568.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.3",
+      "p": [
+       1344.44,
+       563.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.4",
+      "p": [
+       1341.57,
+       557.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.5",
+      "p": [
+       1338.36,
+       552.68
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.6",
+      "p": [
+       1332.93,
+       545.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.7",
+      "p": [
+       1326.81,
+       538.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.8",
+      "p": [
+       1322.37,
+       534.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.9",
+      "p": [
+       1317.67,
+       530.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.10",
+      "p": [
+       1310.17,
+       525.39
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.11",
+      "p": [
+       1302.2,
+       520.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.12",
+      "p": [
+       1293.83,
+       517.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.13",
+      "p": [
+       1285.15,
+       514.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.14",
+      "p": [
+       1276.24,
+       512.62
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.15",
+      "p": [
+       1270.21,
+       511.83
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.16",
+      "p": [
+       1264.14,
+       511.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.17",
+      "p": [
+       1255.02,
+       511.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.18",
+      "p": [
+       1245.96,
+       512.62
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.19",
+      "p": [
+       1237.05,
+       514.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.20",
+      "p": [
+       1231.23,
+       516.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.21",
+      "p": [
+       1225.54,
+       518.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.22",
+      "p": [
+       1217.3,
+       522.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.23",
+      "p": [
+       1209.48,
+       527.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.24",
+      "p": [
+       1202.15,
+       532.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.25",
+      "p": [
+       1197.58,
+       536.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.26",
+      "p": [
+       1193.28,
+       540.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.27",
+      "p": [
+       1189.27,
+       545.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.28",
+      "p": [
+       1185.57,
+       550.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.29",
+      "p": [
+       1180.63,
+       557.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.30",
+      "p": [
+       1176.46,
+       565.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.31",
+      "p": [
+       1173.11,
+       574.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.32",
+      "p": [
+       1170.61,
+       583.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.33",
+      "p": [
+       1168.97,
+       592.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.34",
+      "p": [
+       1168.23,
+       601.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.35",
+      "p": [
+       1168.38,
+       610.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.36",
+      "p": [
+       1168.97,
+       616.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.37",
+      "p": [
+       1169.96,
+       622.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.38",
+      "p": [
+       1177.36,
+       655.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.39",
+      "p": [
+       1199.27,
+       654.5
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.40",
+      "p": [
+       1219.36,
+       653.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.41",
+      "p": [
+       1238.96,
+       652.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.42",
+      "p": [
+       1257.75,
+       650.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.43",
+      "p": [
+       1275.4,
+       648.83
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.44",
+      "p": [
+       1286.39,
+       647.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.45",
+      "p": [
+       1292.02,
+       645.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.46",
+      "p": [
+       1300.86,
+       642.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.47",
+      "p": [
+       1306.88,
+       639.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.48",
+      "p": [
+       1312.9,
+       636.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.49",
+      "p": [
+       1318.84,
+       633.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.50",
+      "p": [
+       1327.41,
+       628.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.51",
+      "p": [
+       1342.25,
+       618.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.52",
+      "p": [
+       1354.63,
+       608.75
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.53",
+      "p": [
+       1355.3,
+       605.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.root.54",
+      "p": [
+       1352.78,
+       589.16
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "legFN.sock",
+   "name": "胴の受け",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legFN.sock.0",
+      "p": [
+       739.45,
+       645.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.1",
+      "p": [
+       741.82,
+       653.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.2",
+      "p": [
+       743.64,
+       657.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.3",
+      "p": [
+       745.74,
+       662.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.4",
+      "p": [
+       749.41,
+       668.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.5",
+      "p": [
+       753.66,
+       673.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.6",
+      "p": [
+       756.79,
+       677.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.7",
+      "p": [
+       760.15,
+       680.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.8",
+      "p": [
+       763.72,
+       683.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.9",
+      "p": [
+       767.49,
+       686.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.10",
+      "p": [
+       773.48,
+       690.7
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.11",
+      "p": [
+       777.68,
+       692.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.12",
+      "p": [
+       784.22,
+       695.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.13",
+      "p": [
+       788.72,
+       697.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.14",
+      "p": [
+       795.63,
+       699.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.15",
+      "p": [
+       800.32,
+       699.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.16",
+      "p": [
+       805.05,
+       700.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.17",
+      "p": [
+       809.8,
+       700.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.18",
+      "p": [
+       814.55,
+       700.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.19",
+      "p": [
+       821.63,
+       699.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.20",
+      "p": [
+       826.29,
+       698.53
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.21",
+      "p": [
+       830.88,
+       697.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.22",
+      "p": [
+       837.59,
+       694.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.23",
+      "p": [
+       841.92,
+       692.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.24",
+      "p": [
+       848.15,
+       689.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.25",
+      "p": [
+       852.11,
+       686.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.26",
+      "p": [
+       855.88,
+       683.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.27",
+      "p": [
+       859.45,
+       680.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.28",
+      "p": [
+       864.41,
+       675.69
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.29",
+      "p": [
+       868.84,
+       670.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.30",
+      "p": [
+       871.48,
+       666.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.31",
+      "p": [
+       873.86,
+       662.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.sock.32",
+      "p": [
+       876.85,
+       655.72
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "legFN.root",
+   "name": "前脚（手前）の丸い付け根",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legFN.root.0",
+      "p": [
+       805.05,
+       555.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.1",
+      "p": [
+       797.97,
+       556.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.2",
+      "p": [
+       791.0,
+       557.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.3",
+      "p": [
+       784.22,
+       559.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.4",
+      "p": [
+       777.68,
+       562.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.5",
+      "p": [
+       771.45,
+       566.12
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.6",
+      "p": [
+       767.49,
+       568.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.7",
+      "p": [
+       763.72,
+       571.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.8",
+      "p": [
+       758.44,
+       576.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.9",
+      "p": [
+       753.66,
+       581.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.10",
+      "p": [
+       750.76,
+       585.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.11",
+      "p": [
+       746.9,
+       591.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.12",
+      "p": [
+       743.64,
+       597.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.13",
+      "p": [
+       741.02,
+       604.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.14",
+      "p": [
+       739.64,
+       609.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.15",
+      "p": [
+       738.56,
+       613.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.16",
+      "p": [
+       732.86,
+       643.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.17",
+      "p": [
+       878.23,
+       654.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.18",
+      "p": [
+       881.04,
+       641.97
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.19",
+      "p": [
+       882.08,
+       634.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.20",
+      "p": [
+       882.43,
+       627.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.21",
+      "p": [
+       882.28,
+       623.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.22",
+      "p": [
+       881.81,
+       618.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.23",
+      "p": [
+       880.53,
+       611.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.24",
+      "p": [
+       879.3,
+       606.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.25",
+      "p": [
+       877.78,
+       602.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.26",
+      "p": [
+       875.96,
+       597.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.27",
+      "p": [
+       873.86,
+       593.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.28",
+      "p": [
+       871.48,
+       589.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.29",
+      "p": [
+       868.84,
+       585.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.30",
+      "p": [
+       865.94,
+       581.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.31",
+      "p": [
+       862.81,
+       578.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.32",
+      "p": [
+       859.45,
+       574.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.33",
+      "p": [
+       855.88,
+       571.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.34",
+      "p": [
+       852.11,
+       568.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.35",
+      "p": [
+       848.15,
+       566.12
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.36",
+      "p": [
+       844.04,
+       563.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.37",
+      "p": [
+       839.78,
+       561.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.38",
+      "p": [
+       835.38,
+       559.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.39",
+      "p": [
+       830.88,
+       558.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.40",
+      "p": [
+       823.97,
+       556.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.41",
+      "p": [
+       819.28,
+       555.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.42",
+      "p": [
+       814.55,
+       555.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.root.43",
+      "p": [
+       809.8,
+       555.17
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "head.sock",
+   "name": "胴の受け",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "head.sock.0",
+      "p": [
+       596.18,
+       302.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.1",
+      "p": [
+       586.7,
+       302.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.2",
+      "p": [
+       581.96,
+       302.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.3",
+      "p": [
+       572.49,
+       303.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.4",
+      "p": [
+       563.08,
+       304.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.5",
+      "p": [
+       553.78,
+       306.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.6",
+      "p": [
+       549.18,
+       307.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.7",
+      "p": [
+       544.61,
+       308.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.8",
+      "p": [
+       535.63,
+       311.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.9",
+      "p": [
+       526.86,
+       315.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.10",
+      "p": [
+       518.36,
+       319.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.11",
+      "p": [
+       514.21,
+       321.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.12",
+      "p": [
+       510.14,
+       324.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.13",
+      "p": [
+       502.25,
+       329.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.14",
+      "p": [
+       494.72,
+       335.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.15",
+      "p": [
+       491.11,
+       338.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.16",
+      "p": [
+       484.18,
+       344.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.17",
+      "p": [
+       477.7,
+       351.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.18",
+      "p": [
+       474.63,
+       355.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.19",
+      "p": [
+       468.85,
+       362.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.20",
+      "p": [
+       463.58,
+       370.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.21",
+      "p": [
+       461.14,
+       374.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.22",
+      "p": [
+       456.67,
+       383.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.23",
+      "p": [
+       454.64,
+       387.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.24",
+      "p": [
+       451.01,
+       396.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.25",
+      "p": [
+       447.96,
+       405.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.26",
+      "p": [
+       445.5,
+       414.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.27",
+      "p": [
+       443.65,
+       423.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.28",
+      "p": [
+       442.96,
+       428.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.29",
+      "p": [
+       442.03,
+       437.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.30",
+      "p": [
+       441.79,
+       442.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.31",
+      "p": [
+       441.79,
+       452.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.32",
+      "p": [
+       442.41,
+       461.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.33",
+      "p": [
+       443.65,
+       471.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.34",
+      "p": [
+       444.5,
+       475.68
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.35",
+      "p": [
+       446.66,
+       484.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.36",
+      "p": [
+       447.96,
+       489.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.37",
+      "p": [
+       451.01,
+       498.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.38",
+      "p": [
+       452.75,
+       502.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.39",
+      "p": [
+       454.64,
+       507.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.40",
+      "p": [
+       458.84,
+       515.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.41",
+      "p": [
+       463.58,
+       523.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.42",
+      "p": [
+       468.85,
+       531.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.43",
+      "p": [
+       474.63,
+       539.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.44",
+      "p": [
+       477.7,
+       542.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.45",
+      "p": [
+       480.88,
+       546.51
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.46",
+      "p": [
+       487.59,
+       553.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.47",
+      "p": [
+       494.72,
+       559.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.48",
+      "p": [
+       498.44,
+       562.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.49",
+      "p": [
+       506.15,
+       567.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.50",
+      "p": [
+       514.7,
+       573.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.51",
+      "p": [
+       531.07,
+       572.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.52",
+      "p": [
+       540.74,
+       572.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.53",
+      "p": [
+       545.55,
+       573.08
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.54",
+      "p": [
+       555.12,
+       574.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.55",
+      "p": [
+       564.63,
+       577.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.56",
+      "p": [
+       572.11,
+       579.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.57",
+      "p": [
+       564.46,
+       567.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.58",
+      "p": [
+       556.05,
+       554.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.59",
+      "p": [
+       543.57,
+       533.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.60",
+      "p": [
+       535.74,
+       519.07
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.61",
+      "p": [
+       532.06,
+       511.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.62",
+      "p": [
+       525.37,
+       496.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.63",
+      "p": [
+       519.79,
+       481.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.64",
+      "p": [
+       517.49,
+       473.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.65",
+      "p": [
+       515.58,
+       466.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.66",
+      "p": [
+       514.07,
+       458.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.67",
+      "p": [
+       513.01,
+       451.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.68",
+      "p": [
+       512.42,
+       444.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.69",
+      "p": [
+       512.35,
+       437.68
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.70",
+      "p": [
+       512.79,
+       431.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.71",
+      "p": [
+       513.76,
+       425.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.72",
+      "p": [
+       515.21,
+       419.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.73",
+      "p": [
+       517.11,
+       412.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.74",
+      "p": [
+       519.42,
+       406.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.75",
+      "p": [
+       522.11,
+       400.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.76",
+      "p": [
+       525.15,
+       393.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.77",
+      "p": [
+       528.5,
+       387.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.78",
+      "p": [
+       535.99,
+       374.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.79",
+      "p": [
+       540.06,
+       368.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.80",
+      "p": [
+       548.67,
+       356.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.81",
+      "p": [
+       562.24,
+       339.41
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.82",
+      "p": [
+       575.77,
+       323.97
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.sock.83",
+      "p": [
+       584.29,
+       314.87
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "head.root",
+   "name": "頭の丸い付け根",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "head.root.0",
+      "p": [
+       583.31,
+       592.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.1",
+      "p": [
+       591.44,
+       592.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.2",
+      "p": [
+       600.91,
+       591.69
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.3",
+      "p": [
+       605.62,
+       591.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.4",
+      "p": [
+       614.98,
+       589.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.5",
+      "p": [
+       624.22,
+       587.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.6",
+      "p": [
+       628.79,
+       586.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.7",
+      "p": [
+       633.3,
+       584.69
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.8",
+      "p": [
+       642.18,
+       581.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.9",
+      "p": [
+       650.82,
+       577.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.10",
+      "p": [
+       655.04,
+       575.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.11",
+      "p": [
+       663.26,
+       570.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.12",
+      "p": [
+       667.25,
+       567.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.13",
+      "p": [
+       671.15,
+       565.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.14",
+      "p": [
+       678.68,
+       559.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.15",
+      "p": [
+       685.81,
+       553.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.16",
+      "p": [
+       689.22,
+       549.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.17",
+      "p": [
+       695.7,
+       542.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.18",
+      "p": [
+       698.77,
+       539.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.19",
+      "p": [
+       704.55,
+       531.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.20",
+      "p": [
+       709.82,
+       523.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.21",
+      "p": [
+       712.26,
+       519.89
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.22",
+      "p": [
+       716.73,
+       511.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.23",
+      "p": [
+       720.65,
+       502.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.24",
+      "p": [
+       722.39,
+       498.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.25",
+      "p": [
+       725.44,
+       489.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.26",
+      "p": [
+       726.74,
+       484.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.27",
+      "p": [
+       727.9,
+       480.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.28",
+      "p": [
+       729.75,
+       471.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.29",
+      "p": [
+       730.44,
+       466.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.30",
+      "p": [
+       731.37,
+       456.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.31",
+      "p": [
+       731.68,
+       447.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.32",
+      "p": [
+       731.61,
+       442.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.33",
+      "p": [
+       730.99,
+       433.19
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.34",
+      "p": [
+       730.44,
+       428.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.35",
+      "p": [
+       729.75,
+       423.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.36",
+      "p": [
+       727.9,
+       414.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.37",
+      "p": [
+       725.44,
+       405.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.38",
+      "p": [
+       723.99,
+       400.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.39",
+      "p": [
+       720.65,
+       391.92
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.40",
+      "p": [
+       718.76,
+       387.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.41",
+      "p": [
+       714.56,
+       379.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.42",
+      "p": [
+       712.26,
+       374.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.43",
+      "p": [
+       707.25,
+       366.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.44",
+      "p": [
+       704.55,
+       362.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.45",
+      "p": [
+       698.77,
+       355.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.46",
+      "p": [
+       692.52,
+       348.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.47",
+      "p": [
+       689.22,
+       344.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.48",
+      "p": [
+       685.81,
+       341.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.49",
+      "p": [
+       678.68,
+       335.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.50",
+      "p": [
+       671.15,
+       329.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.51",
+      "p": [
+       667.25,
+       326.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.52",
+      "p": [
+       659.19,
+       321.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.53",
+      "p": [
+       650.82,
+       317.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.54",
+      "p": [
+       642.18,
+       313.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.55",
+      "p": [
+       602.91,
+       298.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.56",
+      "p": [
+       593.15,
+       307.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.57",
+      "p": [
+       581.2,
+       320.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.58",
+      "p": [
+       572.44,
+       329.89
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.59",
+      "p": [
+       563.39,
+       340.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.60",
+      "p": [
+       549.87,
+       357.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.61",
+      "p": [
+       541.3,
+       369.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.62",
+      "p": [
+       537.25,
+       375.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.63",
+      "p": [
+       529.82,
+       388.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.64",
+      "p": [
+       526.49,
+       394.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.65",
+      "p": [
+       523.48,
+       400.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.66",
+      "p": [
+       520.82,
+       407.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.67",
+      "p": [
+       518.53,
+       413.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.68",
+      "p": [
+       516.66,
+       419.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.69",
+      "p": [
+       515.23,
+       425.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.70",
+      "p": [
+       514.29,
+       431.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.71",
+      "p": [
+       513.85,
+       437.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.72",
+      "p": [
+       513.92,
+       444.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.73",
+      "p": [
+       514.5,
+       451.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.74",
+      "p": [
+       515.55,
+       458.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.75",
+      "p": [
+       517.04,
+       465.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.76",
+      "p": [
+       518.94,
+       473.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.77",
+      "p": [
+       521.21,
+       480.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.78",
+      "p": [
+       523.83,
+       488.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.79",
+      "p": [
+       526.76,
+       495.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.80",
+      "p": [
+       533.42,
+       510.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.81",
+      "p": [
+       540.91,
+       525.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.82",
+      "p": [
+       548.97,
+       540.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.83",
+      "p": [
+       557.32,
+       554.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.84",
+      "p": [
+       565.71,
+       567.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.root.85",
+      "p": [
+       573.85,
+       579.13
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "belly",
+   "name": "腹（ピンク）",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "fill": "#C99C9F",
+   "stroke": null,
+   "follow": "torso",
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "belly.0",
+      "p": [
+       1283.9,
+       649.18
+      ],
+      "out": [
+       -86.57,
+       12.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.1",
+      "p": [
+       1040.95,
+       655.8
+      ],
+      "in": [
+       0,
+       0
+      ],
+      "out": [
+       -60.8,
+       18.75
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.2",
+      "p": [
+       877.9,
+       655.8
+      ],
+      "in": [
+       60.4,
+       20.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.3",
+      "p": [
+       775.24,
+       648.39
+      ],
+      "corner": true
+     },
+     {
+      "id": "belly.4",
+      "p": [
+       876.24,
+       632.68
+      ]
+     },
+     {
+      "id": "belly.5",
+      "p": [
+       999.77,
+       605.15
+      ]
+     },
+     {
+      "id": "belly.6",
+      "p": [
+       1151.2,
+       629.37
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "neckSh",
+   "name": "首の影",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "neckSh.0",
+      "p": [
+       670.37,
+       290.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "neckSh.1",
+      "p": [
+       767.52,
+       418.96
+      ]
+     },
+     {
+      "id": "neckSh.2",
+      "p": [
+       683.24,
+       599.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "neckSh.3",
+      "p": [
+       732.41,
+       418.96
+      ]
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#7B6B80",
+   "stroke": null,
+   "follow": "torso"
+  },
+  {
+   "id": "backHi",
+   "name": "背中の光",
+   "kind": "line",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "backHi.0",
+      "p": [
+       741.57,
+       281.56
+      ]
+     },
+     {
+      "id": "backHi.1",
+      "p": [
+       922.63,
+       257.8
+      ]
+     },
+     {
+      "id": "backHi.2",
+      "p": [
+       1076.72,
+       252.93
+      ]
+     },
+     {
+      "id": "backHi.3",
+      "p": [
+       1219.26,
+       273.25
+      ]
+     },
+     {
+      "id": "backHi.4",
+      "p": [
+       1300.15,
+       316.3
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#A796AA",
+    "w": 9.24,
+    "cap": "round"
+   },
+   "follow": "torso"
+  },
+  {
+   "id": "gLegHN",
+   "name": "後ろ脚（手前）のまとまり",
+   "kind": "group",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    1265.62,
+    571.01
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "legHN",
+   "name": "後ろ脚（手前）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legHN.0",
+      "p": [
+       1278.36,
+       646.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.1",
+      "p": [
+       1177.56,
+       631.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.2",
+      "p": [
+       1177.45,
+       645.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.3",
+      "p": [
+       1177.89,
+       660.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.4",
+      "p": [
+       1180.68,
+       661.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.5",
+      "p": [
+       1183.31,
+       662.37
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.6",
+      "p": [
+       1185.8,
+       663.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.7",
+      "p": [
+       1188.15,
+       665.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.8",
+      "p": [
+       1192.44,
+       668.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.9",
+      "p": [
+       1194.39,
+       671.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.10",
+      "p": [
+       1197.91,
+       676.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.11",
+      "p": [
+       1199.5,
+       679.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.12",
+      "p": [
+       1202.35,
+       685.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.13",
+      "p": [
+       1204.78,
+       692.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.14",
+      "p": [
+       1206.84,
+       699.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.15",
+      "p": [
+       1208.55,
+       707.27
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.16",
+      "p": [
+       1209.96,
+       714.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.17",
+      "p": [
+       1211.09,
+       722.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.18",
+      "p": [
+       1212.36,
+       733.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.19",
+      "p": [
+       1213.88,
+       755.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.20",
+      "p": [
+       1214.21,
+       757.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.21",
+      "p": [
+       1215.44,
+       761.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.22",
+      "p": [
+       1217.38,
+       764.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.23",
+      "p": [
+       1219.93,
+       766.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.24",
+      "p": [
+       1222.97,
+       768.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.25",
+      "p": [
+       1226.37,
+       769.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.26",
+      "p": [
+       1229.28,
+       770.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.27",
+      "p": [
+       1316.98,
+       769.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.28",
+      "p": [
+       1320.48,
+       769.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.29",
+      "p": [
+       1322.42,
+       768.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.30",
+      "p": [
+       1324.19,
+       767.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.31",
+      "p": [
+       1327.18,
+       764.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.32",
+      "p": [
+       1328.98,
+       761.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.33",
+      "p": [
+       1329.9,
+       759.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.34",
+      "p": [
+       1330.25,
+       757.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.35",
+      "p": [
+       1330.16,
+       746.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.36",
+      "p": [
+       1330.75,
+       732.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.37",
+      "p": [
+       1331.6,
+       723.08
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.38",
+      "p": [
+       1333.46,
+       709.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.39",
+      "p": [
+       1335.92,
+       695.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.40",
+      "p": [
+       1338.81,
+       682.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.41",
+      "p": [
+       1350.98,
+       632.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.42",
+      "p": [
+       1356.01,
+       609.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.43",
+      "p": [
+       1354.58,
+       600.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.44",
+      "p": [
+       1353.26,
+       607.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.45",
+      "p": [
+       1339.19,
+       618.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.46",
+      "p": [
+       1323.82,
+       628.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.47",
+      "p": [
+       1315.16,
+       633.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.48",
+      "p": [
+       1309.22,
+       636.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.49",
+      "p": [
+       1303.25,
+       639.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.50",
+      "p": [
+       1297.33,
+       642.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.51",
+      "p": [
+       1288.79,
+       645.12
+      ],
+      "corner": true
+     },
+     {
+      "id": "legHN.52",
+      "p": [
+       1283.44,
+       646.22
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": null,
+   "rigParent": null
+  },
+  {
+   "id": "creaseH",
+   "name": "ももの線",
+   "kind": "line",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "creaseH.0",
+      "p": [
+       1200.48,
+       640.38
+      ]
+     },
+     {
+      "id": "creaseH.1",
+      "p": [
+       1202.53,
+       556.7
+      ]
+     },
+     {
+      "id": "creaseH.2",
+      "p": [
+       1265.62,
+       508.27
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#7B6B80",
+    "w": 6.16,
+    "cap": "round"
+   }
+  },
+  {
+   "id": "nailH0",
+   "name": "つめ（後ろ1）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1233.13,
+     756.65
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.45,
+     15.4
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailH1",
+   "name": "つめ（後ろ2）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1257.5,
+     757.68
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.45,
+     15.4
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailH2",
+   "name": "つめ（後ろ3）",
+   "kind": "shape",
+   "parent": "gLegHN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     1281.86,
+     756.65
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.45,
+     15.4
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "gLegFN",
+   "name": "前脚（手前）のまとまり",
+   "kind": "group",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    811.78,
+    593.04
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "legFN",
+   "name": "前脚（手前）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "legFN.0",
+      "p": [
+       881.6,
+       630.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.1",
+      "p": [
+       857.3,
+       634.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.2",
+      "p": [
+       836.57,
+       637.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.3",
+      "p": [
+       782.33,
+       645.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.4",
+      "p": [
+       732.53,
+       642.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.5",
+      "p": [
+       733.3,
+       660.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.6",
+      "p": [
+       735.97,
+       661.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.7",
+      "p": [
+       738.47,
+       662.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.8",
+      "p": [
+       740.79,
+       663.62
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.9",
+      "p": [
+       742.95,
+       665.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.10",
+      "p": [
+       746.8,
+       669.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.11",
+      "p": [
+       748.5,
+       671.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.12",
+      "p": [
+       751.49,
+       676.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.13",
+      "p": [
+       753.95,
+       682.75
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.14",
+      "p": [
+       755.94,
+       689.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.15",
+      "p": [
+       757.51,
+       696.62
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.16",
+      "p": [
+       758.7,
+       704.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.17",
+      "p": [
+       760.12,
+       719.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.18",
+      "p": [
+       760.58,
+       734.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.19",
+      "p": [
+       760.2,
+       755.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.20",
+      "p": [
+       760.34,
+       757.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.21",
+      "p": [
+       760.79,
+       759.89
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.22",
+      "p": [
+       761.85,
+       762.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.23",
+      "p": [
+       763.37,
+       764.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.24",
+      "p": [
+       765.29,
+       766.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.25",
+      "p": [
+       767.56,
+       768.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.26",
+      "p": [
+       769.45,
+       769.13
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.27",
+      "p": [
+       771.49,
+       769.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.28",
+      "p": [
+       773.63,
+       769.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.29",
+      "p": [
+       855.27,
+       770.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.30",
+      "p": [
+       858.16,
+       769.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.31",
+      "p": [
+       861.51,
+       768.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.32",
+      "p": [
+       863.9,
+       767.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.33",
+      "p": [
+       866.43,
+       764.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.34",
+      "p": [
+       868.64,
+       761.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.35",
+      "p": [
+       869.35,
+       759.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.36",
+      "p": [
+       869.76,
+       757.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.37",
+      "p": [
+       870.57,
+       730.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.38",
+      "p": [
+       872.6,
+       702.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.39",
+      "p": [
+       874.5,
+       683.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.40",
+      "p": [
+       876.71,
+       665.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.41",
+      "p": [
+       877.9,
+       655.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "legFN.42",
+      "p": [
+       880.15,
+       642.16
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": null,
+   "rigParent": null
+  },
+  {
+   "id": "creaseF",
+   "name": "肩の線",
+   "kind": "line",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "creaseF.0",
+      "p": [
+       753.84,
+       644.78
+      ]
+     },
+     {
+      "id": "creaseF.1",
+      "p": [
+       760,
+       567.72
+      ]
+     },
+     {
+      "id": "creaseF.2",
+      "p": [
+       814.83,
+       534.69
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#7B6B80",
+    "w": 6.16,
+    "cap": "round"
+   }
+  },
+  {
+   "id": "nailF0",
+   "name": "つめ（前1）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     778.27,
+     756.65
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.45,
+     15.4
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailF1",
+   "name": "つめ（前2）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     802.64,
+     757.68
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.45,
+     15.4
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "nailF2",
+   "name": "つめ（前3）",
+   "kind": "shape",
+   "parent": "gLegFN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     827.01,
+     756.65
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.45,
+     15.4
+    ]
+   },
+   "fill": "#EFE6D2",
+   "stroke": null
+  },
+  {
+   "id": "gHead",
+   "name": "頭のまとまり",
+   "kind": "group",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    664.52,
+    402.57
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "earF",
+   "name": "耳（奥）",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "earF.0",
+      "p": [
+       529.9,
+       302.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.1",
+      "p": [
+       531.42,
+       309.91
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.2",
+      "p": [
+       531.72,
+       309.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.3",
+      "p": [
+       532.77,
+       312.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.4",
+      "p": [
+       534.15,
+       314.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.5",
+      "p": [
+       536.2,
+       315.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.6",
+      "p": [
+       538.33,
+       316.56
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.7",
+      "p": [
+       540.87,
+       316.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.8",
+      "p": [
+       543.36,
+       316.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.9",
+      "p": [
+       545.13,
+       315.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.10",
+      "p": [
+       546.45,
+       314.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.11",
+      "p": [
+       547.68,
+       312.69
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.12",
+      "p": [
+       548.43,
+       311.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.13",
+      "p": [
+       550.17,
+       303.51
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.14",
+      "p": [
+       551.07,
+       295.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.15",
+      "p": [
+       550.88,
+       287.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.16",
+      "p": [
+       549.76,
+       278.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.17",
+      "p": [
+       548.07,
+       270.97
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.18",
+      "p": [
+       545.58,
+       263.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.19",
+      "p": [
+       543.14,
+       259.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.20",
+      "p": [
+       540.16,
+       255.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.21",
+      "p": [
+       537.85,
+       253.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.22",
+      "p": [
+       536.6,
+       252.78
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.23",
+      "p": [
+       533.89,
+       251.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.24",
+      "p": [
+       532.43,
+       251.81
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.25",
+      "p": [
+       529.91,
+       252.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.26",
+      "p": [
+       527.8,
+       252.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.27",
+      "p": [
+       525.72,
+       254.41
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.28",
+      "p": [
+       523.82,
+       256.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.29",
+      "p": [
+       522.24,
+       259.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.30",
+      "p": [
+       520.6,
+       263.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.31",
+      "p": [
+       519.91,
+       266.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.32",
+      "p": [
+       519.42,
+       270.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.33",
+      "p": [
+       519.42,
+       273.68
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.34",
+      "p": [
+       519.88,
+       278.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.35",
+      "p": [
+       521.64,
+       285.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "earF.36",
+      "p": [
+       524.99,
+       293.51
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#6E6075",
+   "stroke": null,
+   "pivot": [
+    540.44,
+    301.52
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "jaw",
+   "name": "下あご",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "p": [
+       601.31,
+       617.95
+      ],
+      "out": [
+       -27.4,
+       -1
+      ],
+      "corner": true,
+      "id": "jaw.0"
+     },
+     {
+      "p": [
+       521.71,
+       629.66
+      ],
+      "in": [
+       27.1,
+       -1.53
+      ],
+      "out": [
+       -57.43,
+       3.24
+      ],
+      "id": "jaw.1"
+     },
+     {
+      "p": [
+       346.46,
+       624.77
+      ],
+      "in": [
+       57.34,
+       4.12
+      ],
+      "out": [
+       -41.88,
+       -3.01
+      ],
+      "id": "jaw.2"
+     },
+     {
+      "p": [
+       222.3,
+       580.16
+      ],
+      "in": [
+       29.27,
+       32.65
+      ],
+      "corner": true,
+      "id": "jaw.3"
+     },
+     {
+      "p": [
+       352.38,
+       540.52
+      ],
+      "id": "jaw.4"
+     },
+     {
+      "p": [
+       609.5,
+       528.99
+      ],
+      "id": "jaw.5"
+     }
+    ],
+    "closed": true
+   },
+   "fill": "#C99C9F",
+   "stroke": null,
+   "pivot": [
+    562.67,
+    534.85
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "head",
+   "name": "頭",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "head.0",
+      "p": [
+       574.35,
+       301.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1",
+      "p": [
+       540.6,
+       306.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.2",
+      "p": [
+       535.16,
+       306.83
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.3",
+      "p": [
+       506.52,
+       307.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.4",
+      "p": [
+       494.99,
+       307.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.5",
+      "p": [
+       488.26,
+       308.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.6",
+      "p": [
+       486.64,
+       308.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.7",
+      "p": [
+       483.88,
+       309.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.8",
+      "p": [
+       481.14,
+       311.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.9",
+      "p": [
+       475.71,
+       314.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.10",
+      "p": [
+       470.36,
+       319.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.11",
+      "p": [
+       465.06,
+       323.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.12",
+      "p": [
+       457.21,
+       331.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.13",
+      "p": [
+       434.04,
+       356.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.14",
+      "p": [
+       428.91,
+       361.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.15",
+      "p": [
+       423.77,
+       365.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.16",
+      "p": [
+       416.02,
+       371.51
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.17",
+      "p": [
+       410.81,
+       374.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.18",
+      "p": [
+       405.56,
+       376.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.19",
+      "p": [
+       400.5,
+       377.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.20",
+      "p": [
+       395.81,
+       377.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.21",
+      "p": [
+       391.27,
+       377.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.22",
+      "p": [
+       386.88,
+       376.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.23",
+      "p": [
+       380.54,
+       374.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.24",
+      "p": [
+       374.45,
+       371.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.25",
+      "p": [
+       368.55,
+       368.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.26",
+      "p": [
+       345.84,
+       352.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.27",
+      "p": [
+       340.12,
+       348.58
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.28",
+      "p": [
+       336.49,
+       346.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.29",
+      "p": [
+       329.24,
+       343.41
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.30",
+      "p": [
+       319.4,
+       339.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.31",
+      "p": [
+       309.0,
+       337.2
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.32",
+      "p": [
+       300.49,
+       335.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.33",
+      "p": [
+       289.9,
+       334.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.34",
+      "p": [
+       279.67,
+       334.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.35",
+      "p": [
+       273.84,
+       334.41
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.36",
+      "p": [
+       266.85,
+       335.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.37",
+      "p": [
+       260.29,
+       336.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.38",
+      "p": [
+       254.17,
+       338.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.39",
+      "p": [
+       248.45,
+       340.97
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.40",
+      "p": [
+       243.14,
+       343.75
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.41",
+      "p": [
+       238.22,
+       346.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.42",
+      "p": [
+       233.66,
+       350.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.43",
+      "p": [
+       229.47,
+       354.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.44",
+      "p": [
+       225.62,
+       358.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.45",
+      "p": [
+       222.11,
+       363.24
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.46",
+      "p": [
+       218.91,
+       368.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.47",
+      "p": [
+       216.02,
+       373.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.48",
+      "p": [
+       213.42,
+       378.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.49",
+      "p": [
+       211.11,
+       384.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.50",
+      "p": [
+       207.25,
+       395.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.51",
+      "p": [
+       204.34,
+       408.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.52",
+      "p": [
+       202.28,
+       420.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.53",
+      "p": [
+       201.53,
+       427.13
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.54",
+      "p": [
+       200.53,
+       439.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.55",
+      "p": [
+       200.07,
+       459.03
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.56",
+      "p": [
+       200.54,
+       477.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.57",
+      "p": [
+       203.14,
+       516.7
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.58",
+      "p": [
+       204.18,
+       527.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.59",
+      "p": [
+       205.29,
+       536.08
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.60",
+      "p": [
+       206.79,
+       544.19
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.61",
+      "p": [
+       208.07,
+       549.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.62",
+      "p": [
+       211.44,
+       560.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.63",
+      "p": [
+       213.59,
+       565.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.64",
+      "p": [
+       216.09,
+       570.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.65",
+      "p": [
+       218.99,
+       575.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.66",
+      "p": [
+       222.3,
+       580.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.67",
+      "p": [
+       240.97,
+       583.49
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.68",
+      "p": [
+       263.58,
+       587.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.69",
+      "p": [
+       285.39,
+       590.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.70",
+      "p": [
+       302.92,
+       592.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.71",
+      "p": [
+       320.73,
+       594.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.72",
+      "p": [
+       338.19,
+       595.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.73",
+      "p": [
+       354.66,
+       596.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.74",
+      "p": [
+       364.76,
+       596.27
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.75",
+      "p": [
+       375.93,
+       595.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.76",
+      "p": [
+       386.79,
+       594.87
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.77",
+      "p": [
+       397.38,
+       593.63
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.78",
+      "p": [
+       407.75,
+       592.12
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.79",
+      "p": [
+       428.01,
+       588.46
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.80",
+      "p": [
+       472.84,
+       579.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.81",
+      "p": [
+       488.08,
+       576.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.82",
+      "p": [
+       498.45,
+       575.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.83",
+      "p": [
+       509.04,
+       573.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.84",
+      "p": [
+       519.9,
+       572.83
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.85",
+      "p": [
+       531.07,
+       572.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.86",
+      "p": [
+       535.91,
+       572.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.87",
+      "p": [
+       540.74,
+       572.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.88",
+      "p": [
+       550.34,
+       573.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.89",
+      "p": [
+       555.12,
+       574.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.90",
+      "p": [
+       564.63,
+       577.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.91",
+      "p": [
+       578.74,
+       581.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.92",
+      "p": [
+       601.78,
+       589.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.93",
+      "p": [
+       613.31,
+       593.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.94",
+      "p": [
+       617.21,
+       581.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.95",
+      "p": [
+       619.44,
+       573.45
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.96",
+      "p": [
+       621.88,
+       561.59
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.97",
+      "p": [
+       622.7,
+       553.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.98",
+      "p": [
+       622.67,
+       546.74
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.99",
+      "p": [
+       622.29,
+       543.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.100",
+      "p": [
+       621.61,
+       540.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.101",
+      "p": [
+       620.63,
+       537.53
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.102",
+      "p": [
+       619.3,
+       534.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.103",
+      "p": [
+       617.6,
+       532.51
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.104",
+      "p": [
+       615.28,
+       530.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.105",
+      "p": [
+       612.87,
+       528.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.106",
+      "p": [
+       610.07,
+       527.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.107",
+      "p": [
+       601.61,
+       525.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.108",
+      "p": [
+       585.23,
+       521.16
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.109",
+      "p": [
+       577.05,
+       519.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.110",
+      "p": [
+       560.98,
+       517.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.111",
+      "p": [
+       552.94,
+       516.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.112",
+      "p": [
+       537.41,
+       515.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.113",
+      "p": [
+       531.34,
+       502.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.114",
+      "p": [
+       525.24,
+       487.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.115",
+      "p": [
+       522.64,
+       480.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.116",
+      "p": [
+       520.38,
+       472.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.117",
+      "p": [
+       518.5,
+       465.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.118",
+      "p": [
+       517.02,
+       458.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.119",
+      "p": [
+       515.99,
+       451.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.120",
+      "p": [
+       515.42,
+       444.42
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.121",
+      "p": [
+       515.35,
+       437.77
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.122",
+      "p": [
+       515.78,
+       431.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.123",
+      "p": [
+       516.71,
+       426.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.124",
+      "p": [
+       518.11,
+       419.98
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.125",
+      "p": [
+       519.95,
+       413.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.126",
+      "p": [
+       522.21,
+       407.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.127",
+      "p": [
+       524.85,
+       401.41
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.128",
+      "p": [
+       527.84,
+       395.15
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.129",
+      "p": [
+       534.7,
+       382.65
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.130",
+      "p": [
+       542.54,
+       370.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.131",
+      "p": [
+       551.07,
+       358.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.132",
+      "p": [
+       560.01,
+       346.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.133",
+      "p": [
+       569.07,
+       336.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.134",
+      "p": [
+       582.29,
+       321.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.135",
+      "p": [
+       594.21,
+       309.03
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.136",
+      "p": [
+       606.61,
+       297.04
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    664.52,
+    402.57
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "earN.sock",
+   "name": "頭の受け",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "earN.sock.0",
+      "p": [
+       610.37,
+       290.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.1",
+      "p": [
+       607.69,
+       287.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.2",
+      "p": [
+       604.56,
+       284.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.3",
+      "p": [
+       601.07,
+       282.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.4",
+      "p": [
+       598.09,
+       281.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.5",
+      "p": [
+       594.98,
+       281.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.6",
+      "p": [
+       591.0,
+       280.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.7",
+      "p": [
+       587.02,
+       281.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.8",
+      "p": [
+       583.91,
+       281.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.9",
+      "p": [
+       580.93,
+       282.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.10",
+      "p": [
+       577.44,
+       284.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.11",
+      "p": [
+       574.9,
+       286.85
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.12",
+      "p": [
+       572.13,
+       289.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.13",
+      "p": [
+       570.27,
+       292.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.14",
+      "p": [
+       568.45,
+       295.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.15",
+      "p": [
+       567.23,
+       299.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.16",
+      "p": [
+       566.69,
+       303.03
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.sock.17",
+      "p": [
+       607.99,
+       296.82
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "earN.root",
+   "name": "耳（手前）の丸い付け根",
+   "kind": "shape",
+   "parent": null,
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "earN.root.0",
+      "p": [
+       572.13,
+       320.69
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.1",
+      "p": [
+       574.9,
+       323.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.2",
+      "p": [
+       578.79,
+       326.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.3",
+      "p": [
+       582.4,
+       328.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.4",
+      "p": [
+       586.24,
+       329.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.5",
+      "p": [
+       591.0,
+       329.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.6",
+      "p": [
+       594.98,
+       329.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.7",
+      "p": [
+       598.85,
+       328.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.8",
+      "p": [
+       602.51,
+       326.73
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.9",
+      "p": [
+       606.49,
+       324.07
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.10",
+      "p": [
+       609.35,
+       321.3
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.11",
+      "p": [
+       611.73,
+       318.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.12",
+      "p": [
+       613.55,
+       314.54
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.13",
+      "p": [
+       614.94,
+       309.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.14",
+      "p": [
+       615.4,
+       306.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.15",
+      "p": [
+       615.2,
+       302.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.16",
+      "p": [
+       614.12,
+       297.36
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.17",
+      "p": [
+       586.84,
+       301.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.root.18",
+      "p": [
+       559.57,
+       305.54
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null
+  },
+  {
+   "id": "head.1",
+   "name": "頭",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "head.1.0",
+      "p": [
+       674.65,
+       288.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.1",
+      "p": [
+       672.22,
+       285.87
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.2",
+      "p": [
+       635.88,
+       292.25
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.3",
+      "p": [
+       652.39,
+       291.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.4",
+      "p": [
+       661.63,
+       290.43
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.5",
+      "p": [
+       669.14,
+       289.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.6",
+      "p": [
+       668.87,
+       290.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.7",
+      "p": [
+       669.1,
+       290.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.8",
+      "p": [
+       676.52,
+       301.09
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.9",
+      "p": [
+       683.09,
+       310.55
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.10",
+      "p": [
+       696.45,
+       331.33
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.11",
+      "p": [
+       704.98,
+       345.97
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.12",
+      "p": [
+       713.16,
+       361.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.13",
+      "p": [
+       720.42,
+       377.72
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.14",
+      "p": [
+       724.47,
+       388.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.15",
+      "p": [
+       727.68,
+       399.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.16",
+      "p": [
+       728.91,
+       404.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.17",
+      "p": [
+       730.55,
+       414.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.18",
+      "p": [
+       730.91,
+       419.03
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.19",
+      "p": [
+       731.01,
+       425.38
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.20",
+      "p": [
+       730.82,
+       431.99
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.21",
+      "p": [
+       729.61,
+       445.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.22",
+      "p": [
+       727.43,
+       460.29
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.23",
+      "p": [
+       726.03,
+       467.69
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.24",
+      "p": [
+       722.69,
+       482.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.25",
+      "p": [
+       716.64,
+       505.11
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.26",
+      "p": [
+       709.81,
+       526.86
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.27",
+      "p": [
+       702.73,
+       547.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.28",
+      "p": [
+       694.13,
+       569.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.29",
+      "p": [
+       700.98,
+       562.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.30",
+      "p": [
+       708.42,
+       552.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.31",
+      "p": [
+       711.85,
+       547.53
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.32",
+      "p": [
+       718.17,
+       537.31
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.33",
+      "p": [
+       721.05,
+       532.05
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.34",
+      "p": [
+       726.31,
+       521.23
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.35",
+      "p": [
+       730.88,
+       510.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.36",
+      "p": [
+       734.82,
+       498.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.37",
+      "p": [
+       736.55,
+       492.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.38",
+      "p": [
+       739.56,
+       480.79
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.39",
+      "p": [
+       741.99,
+       468.64
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.40",
+      "p": [
+       743.86,
+       456.28
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.41",
+      "p": [
+       745.21,
+       443.76
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.42",
+      "p": [
+       746.06,
+       431.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.43",
+      "p": [
+       746.44,
+       418.35
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.44",
+      "p": [
+       746.22,
+       406.94
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.45",
+      "p": [
+       745.58,
+       401.84
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.46",
+      "p": [
+       744.56,
+       396.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.47",
+      "p": [
+       743.19,
+       391.4
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.48",
+      "p": [
+       739.5,
+       380.75
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.49",
+      "p": [
+       734.74,
+       370.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.50",
+      "p": [
+       732.02,
+       364.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.51",
+      "p": [
+       726.04,
+       354.1
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.52",
+      "p": [
+       719.53,
+       343.8
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.53",
+      "p": [
+       712.7,
+       333.9
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.54",
+      "p": [
+       702.32,
+       320.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.55",
+      "p": [
+       692.44,
+       308.07
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.56",
+      "p": [
+       686.77,
+       301.52
+      ],
+      "corner": true
+     },
+     {
+      "id": "head.1.57",
+      "p": [
+       671.25,
+       288.99
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": [
+    664.52,
+    402.57
+   ],
+   "rigParent": "torso"
+  },
+  {
+   "id": "mouth",
+   "name": "口の線",
+   "kind": "line",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "pts": [
+     {
+      "id": "mouth.0",
+      "p": [
+       229.73,
+       583.88
+      ]
+     },
+     {
+      "id": "mouth.1",
+      "p": [
+       364.76,
+       596.27
+      ]
+     },
+     {
+      "id": "mouth.2",
+      "p": [
+       500.63,
+       575.82
+      ]
+     }
+    ],
+    "closed": false
+   },
+   "fill": null,
+   "stroke": {
+    "c": "#54465C",
+    "w": 6.16,
+    "cap": "round"
+   }
+  },
+  {
+   "id": "eyeRim",
+   "name": "目のまわり",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     490.13,
+     344.62
+    ],
+    "rot": -15
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     46.96,
+     42.27
+    ]
+   },
+   "fill": "#C99C9F",
+   "stroke": null
+  },
+  {
+   "id": "eye",
+   "name": "目",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     488.97,
+     344.6
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     22.31,
+     24.65
+    ]
+   },
+   "fill": "#2F2734",
+   "stroke": null
+  },
+  {
+   "id": "eyeHi",
+   "name": "目の光",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     484.85,
+     339.32
+    ],
+    "rot": 0
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     7.04,
+     7.04
+    ]
+   },
+   "fill": "#FFFFFF",
+   "stroke": null
+  },
+  {
+   "id": "nostril",
+   "name": "鼻の穴",
+   "kind": "shape",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     268.13,
+     369.57
+    ],
+    "rot": -24
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     27.26,
+     13.62
+    ]
+   },
+   "fill": "#54465C",
+   "stroke": null
+  },
+  {
+   "id": "gEarN",
+   "name": "耳（手前）のまとまり",
+   "kind": "group",
+   "parent": "gHead",
+   "visible": true,
+   "locked": false,
+   "pivot": [
+    589.6,
+    293.44
+   ],
+   "rigParent": "head"
+  },
+  {
+   "id": "earN",
+   "name": "耳（手前）",
+   "kind": "shape",
+   "parent": "gEarN",
+   "visible": true,
+   "locked": false,
+   "geo": {
+    "t": "path",
+    "closed": true,
+    "pts": [
+     {
+      "id": "earN.0",
+      "p": [
+       568.4,
+       293.47
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.1",
+      "p": [
+       563.39,
+       297.5
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.2",
+      "p": [
+       559.9,
+       301.32
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.3",
+      "p": [
+       558.87,
+       303.04
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.4",
+      "p": [
+       558.33,
+       304.7
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.5",
+      "p": [
+       558.43,
+       306.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.6",
+      "p": [
+       558.89,
+       307.14
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.7",
+      "p": [
+       606.6,
+       300.08
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.8",
+      "p": [
+       608.46,
+       295.66
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.9",
+      "p": [
+       610.75,
+       289.21
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.10",
+      "p": [
+       611.74,
+       282.48
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.11",
+      "p": [
+       612.2,
+       277.26
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.12",
+      "p": [
+       612.35,
+       271.95
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.13",
+      "p": [
+       612.14,
+       266.62
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.14",
+      "p": [
+       611.53,
+       261.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.15",
+      "p": [
+       610.47,
+       256.18
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.16",
+      "p": [
+       608.91,
+       251.19
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.17",
+      "p": [
+       607.56,
+       248.0
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.18",
+      "p": [
+       605.95,
+       244.93
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.19",
+      "p": [
+       604.07,
+       242.02
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.20",
+      "p": [
+       600.71,
+       237.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.21",
+      "p": [
+       597.71,
+       235.22
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.22",
+      "p": [
+       596.01,
+       234.01
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.23",
+      "p": [
+       592.65,
+       232.34
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.24",
+      "p": [
+       589.39,
+       231.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.25",
+      "p": [
+       586.24,
+       231.71
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.26",
+      "p": [
+       583.23,
+       232.57
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.27",
+      "p": [
+       579.0,
+       235.06
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.28",
+      "p": [
+       576.41,
+       237.39
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.29",
+      "p": [
+       572.91,
+       241.67
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.30",
+      "p": [
+       569.94,
+       246.6
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.31",
+      "p": [
+       567.56,
+       251.88
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.32",
+      "p": [
+       566.34,
+       255.44
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.33",
+      "p": [
+       565.12,
+       260.61
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.34",
+      "p": [
+       564.73,
+       263.82
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.35",
+      "p": [
+       564.69,
+       267.96
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.36",
+      "p": [
+       565.05,
+       274.17
+      ],
+      "corner": true
+     },
+     {
+      "id": "earN.37",
+      "p": [
+       565.8,
+       280.37
+      ],
+      "corner": true
+     }
+    ]
+   },
+   "fill": "#8C7B90",
+   "stroke": null,
+   "pivot": null,
+   "rigParent": null
+  },
+  {
+   "id": "earIn",
+   "name": "耳の中",
+   "kind": "shape",
+   "parent": "gEarN",
+   "visible": true,
+   "locked": false,
+   "xf": {
+    "pos": [
+     589.6,
+     262.77
+    ],
+    "rot": 3
+   },
+   "geo": {
+    "t": "ellipse",
+    "size": [
+     17.98,
+     35.96
+    ]
+   },
+   "fill": "#B0727A",
+   "stroke": null
+  }
+ ],
+ "e3": {
+  "stage": "E",
+  "vars": {
+   "head": 1.140175425099138,
+   "muz": 1.0583005244258363,
+   "sq": 0.5,
+   "tL": 0.938083151964686,
+   "tH": 1.0723805294763609,
+   "arch": 0.025,
+   "sag": 1.1832159566199232,
+   "legLen": 0.7416198487095663,
+   "legW": 1.0583005244258363,
+   "ank": 0.05,
+   "ear": 1.2649110640673518,
+   "eye": 1.3038404810405297,
+   "eyeDown": 0.01,
+   "tailW": 1.140175425099138,
+   "tailL": 0.9219544457292888
+  },
+  "version": "A"
+ }
+}
