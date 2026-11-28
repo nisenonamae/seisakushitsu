@@ -8,3 +8,5 @@
 {"n":100000,"mode":"spread","parts":300,"engine":"src0","docHash":"97cf6683e5fe02a8","medMs":0.494,"buildS":16,"reverts":60,"meanMs":0.67,"maxMs":5.05}
 {"n":100000,"mode":"spread","parts":30,"engine":"src","docHash":"f724d85d0f2397e7","medMs":0.186,"buildS":3,"reverts":60,"meanMs":1.533,"maxMs":67.56}
 {"n":100000,"mode":"spread","parts":300,"engine":"src","docHash":"97cf6683e5fe02a8","medMs":0.354,"buildS":16.9,"reverts":60,"meanMs":0.517,"maxMs":3.72}
+{"n":10000,"mode":"spread","parts":300,"engine":"src0","docHash":"92c9fe652aa6f10d","medMs":0.215,"buildS":1.5,"reverts":60,"meanMs":0.343,"maxMs":2.95}
+{"n":10000,"mode":"spread","parts":300,"engine":"src","docHash":"92c9fe652aa6f10d","medMs":0.348,"buildS":1.8,"reverts":60,"meanMs":0.57,"maxMs":5.15}
