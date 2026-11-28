@@ -179,5 +179,5 @@ test('記録からの作り直し：同じ記録からは同じ文書・同じ�
   const entries = toEntries(b.s.log); const r1 = replay(b.init, entries); const r2 = replay(b.init, JSON.parse(JSON.stringify(entries)));
   assert.ok(same(r1.state.doc, b.doc)); assert.ok(same(r2.state.doc, b.doc));
   assert.ok(same(logItems(r1.state.log), logItems(b.s.log)), '効果・版・方針も同じに作り直される');
-  assert.deepEqual(REASONS, ['duplicate', 'invalid', 'forbidden', 'locked', 'stale', 'conflict', 'breaks-invariant']);
+  assert.deepEqual(REASONS, ['duplicate', 'invalid', 'forbidden', 'locked', 'stale', 'conflict', 'breaks-invariant', 'needs-history']);
 });

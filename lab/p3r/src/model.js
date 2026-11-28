@@ -210,10 +210,11 @@ export function targetOfAt(at, id) {
   if (at[0] === 'cover') return 'cover';
   const x = at.length > 1 ? at[1] : id; return `${at[0]}:${x}`;
 }
-export const targetOf = (e) => (e.k === 'move' ? `node:${e.node}` : targetOfAt(e.at, e.id));
+export const targetOf = (e) => (e.k === 'move' || e.k === 'own' ? `node:${e.node}` : targetOfAt(e.at, e.id));
 /** 効果の番地（比べるための並び）。insert/remove は「並び＋その物の id」、move は「部品の置き場所」 */
 export function addrOf(e) {
   if (e.k === 'move') return ['node', e.node, '@place'];
+  if (e.k === 'own') return ['node', e.node, '@owner'];   // P3r：持ち主の帳簿（文書の中身ではない）
   if (e.k === 'insert' || e.k === 'remove') return [...e.at, e.id];
   return e.at;
 }
@@ -289,6 +290,9 @@ export function applyEffect(dr, e) {
       dr.own(['node', e.node]); const n = getNode(doc, e.node); if (!n) throw new Reject('invalid', '動かす部品がない');
       n.parent = e.to.parent ?? null; n.order = e.to.order; return;
     }
+    case 'own': { // P3r：引き取り。文書の中身は1つも変えない（持ち主は、記録から計算する）。部品があることだけ確かめる
+      if (!getNode(doc, e.node)) throw new Reject('invalid', '引き取る部品がない'); return;
+    }
     default: throw new Reject('invalid', '知らない効果');
   }
 }
@@ -301,6 +305,7 @@ export function inverse(e) {
     case 'insert': return { ...e, k: 'remove' };
     case 'remove': return { ...e, k: 'insert' };
     case 'move': return { k: 'move', node: e.node, from: e.to, to: e.from };
+    case 'own': return { k: 'own', node: e.node, from: e.to, to: e.from };
   }
   throw new Error('unknown effect');
 }

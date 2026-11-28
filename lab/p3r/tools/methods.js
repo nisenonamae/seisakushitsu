@@ -12,7 +12,7 @@ import { humanWorkIntact } from './oracle.js';
 import { buildProvenance, leavesOf } from './provenance.js';
 
 export const INIT = { scenes: [{ id: 's1' }], stages: { art: 'ai', motion: 'ai' } }; // Session と同じ始まり
-export const ROPT = { M1: {}, M1w: { wide: true }, M2: { split: true }, 'M2w': { split: true, wide: true } };
+export const ROPT = { M1: { wide: false }, M1w: {}, M2: { split: true, wide: false }, 'M2w': { split: true, wide: true } };
 const leafVal = (doc, a) => { if (a[2] === '@place') { const n = doc.nodes[a[1]]; return n ? [n.parent, n.order] : undefined; } return getAt(doc, a); };
 const classOf = (pv, addr, T) => { const x = pv.lookup(addr); if (!x) return null; const ws = [x.w, ...x.on]; const k = ws.filter((w) => T.has(w)).length; return k === ws.length ? 'pure' : k === 0 ? 'other' : 'mixed'; };
 /** 文書の値の置き場を、戻したかった作業 T から見て数える：pure＝T だけ／mixed＝T と人が混ざる／other＝T は関わっていない */

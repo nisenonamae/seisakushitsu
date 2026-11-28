@@ -3,39 +3,8 @@
 //  ・置きかえ・足した物：その番地（と下の全部）の持ち主が、その命令になる
 //  ・足した量・掛けた量：持ち主は変えず、「上に乗せた命令」として足す
 //  ・取り消し：きれいに戻した効果（1対1）は、元の効果の前の出どころに戻す（足した量・掛けた量は、乗せた命令を外す）
-import { logItems } from '../src/index.js';
 
-const addrOf = (e) => (e.k === 'move' ? ['node', e.node, '@place'] : e.k === 'insert' || e.k === 'remove' ? [...e.at, e.id] : e.at);
-const tOf = (a) => (a[0] === 'cover' ? 'cover' : `${a[0]}:${a[1]}`);
-const K = (a) => a.join('/');
-
-/** @returns {Map<string, Map<string, {w:string, on:string[]}>>} 物ごと → 番地 → { w:置いた命令, on:上に足した・掛けた命令 } */
-export function buildProvenance(log) {
-  const prov = new Map(); const prev = new Map();
-  const mapOf = (t) => { let m = prov.get(t); if (!m) prov.set(t, (m = new Map())); return m; };
-  const under = (m, key) => [...m.keys()].filter((k) => k === key || k.startsWith(key + '/'));
-  const lookup = (m, addr) => { for (let n = addr.length; n >= 2; n--) { const x = m.get(K(addr.slice(0, n))); if (x) return x; } return null; };
-  for (const a of logItems(log)) {
-    const back = new Map(); // revert の効果の番号 → 元の効果
-    if (a.cmd.body.type === 'revert') for (const o of a.outcomes || []) if (o.result === 'reverted' && !o.forced && o.fx && o.fx[1] === 1) back.set(o.fx[0], o.key);
-    a.effects.forEach((e, i) => {
-      const addr = addrOf(e); const m = mapOf(tOf(addr)); const key = K(addr); const mine = `${a.cmd.id}#${i}`; const orig = back.get(i);
-      const snap = under(m, key).map((k) => [k, { w: m.get(k).w, on: m.get(k).on.slice() }]);
-      prev.set(mine, { snap, cover: snap.some(([k]) => k === key) ? null : lookup(m, addr) });
-      if (orig !== undefined && prev.has(orig)) {
-        const cmd = orig.slice(0, orig.lastIndexOf('#'));
-        if (e.k === 'delta' || e.k === 'mul') { const x = m.get(key) || lookup(m, addr); if (x) { const j = x.on.indexOf(cmd); if (j >= 0) x.on.splice(j, 1); } return; }
-        for (const k of under(m, key)) m.delete(k);
-        for (const [k, v] of prev.get(orig).snap) m.set(k, { w: v.w, on: v.on.slice() });
-        return;
-      }
-      if (e.k === 'delta' || e.k === 'mul') { let x = m.get(key); if (!x) { const c = lookup(m, addr); x = { w: c ? c.w : '?', on: c ? c.on.slice() : [] }; m.set(key, x); } x.on.push(a.cmd.id); return; }
-      for (const k of under(m, key)) m.delete(k);
-      if (e.k !== 'remove') m.set(key, { w: a.cmd.id, on: [] });
-    });
-  }
-  return { prov, lookup: (addr) => { const m = prov.get(tOf(addr)); return m ? lookup(m, addr) : null; } };
-}
+export { buildProvenance } from '../src/owner.js';   // P3r：由来の計算は核の横（src/owner.js）へ移した
 /** 部品の「値の置き場」を全部ならべる（名前・置き場所・変形・色・形・点ごとの位置と取っ手と角・鍵ごとの時刻と値）*/
 export function leavesOf(n) {
   const out = [['node', n.id, 'name'], ['node', n.id, '@place']]; const val = (base, v) => { if (v && v.k === 'keys') for (const k of v.keys) out.push([...base, 'keys', k.id, 't'], [...base, 'keys', k.id, 'v']); else out.push(base); };

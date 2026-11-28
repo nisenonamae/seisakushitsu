@@ -13,7 +13,7 @@ function chainOf(doc, id) { const out = []; const seen = new Set(); let cur = id
 
 /** 効果を当てる前に見ておく物（当てたあとでは分からなくなる：親の鎖・段） */
 export function preScan(doc, e) {
-  const addr = e.k === 'move' ? ['node', e.node] : e.k === 'insert' || e.k === 'remove' ? [...e.at, e.id] : e.at;
+  const addr = e.k === 'move' || e.k === 'own' ? ['node', e.node] : e.k === 'insert' || e.k === 'remove' ? [...e.at, e.id] : e.at;
   if (addr[0] === 'cover') return { kind: 'cover' };
   if (addr[0] === 'line') return { kind: 'line', id: addr[1] };
   const id = addr[1]; const n = getNode(doc, id) || (e.k === 'insert' && e.at.length === 1 ? e.item : null);

@@ -18,7 +18,7 @@ function added() {
   return { b, ids };
 }
 test('方式1（今のまま）：足した点は全部残るが、同じ作業が今ある点に付けた取っ手だけ戻る（形が割れる）', () => {
-  const { b, ids } = added(); units(b, ids);
+  const { b, ids } = added(); units(b, ids, { wide: false });
   assert.deepEqual(pts(b), ['p1', 'x1', 'x2', 'p2', 'p3', 'x3']); assert.equal(b.doc.nodes.A.geo.pts.find((p) => p.id === 'p3').in, undefined);
 });
 test('wide：同じ作業が同じ形に加えた変更は、足した点と一緒に全部残る（形は AI が作った形のまま＋人の直し）', () => {

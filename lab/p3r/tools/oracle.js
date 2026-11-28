@@ -3,7 +3,7 @@
 // 取り消したあとも、そのままの形で文書にあるかを見る。
 import { logItems, getAt, same } from '../src/index.js';
 
-const addr = (e) => (e.k === 'move' ? ['node', e.node, '@place'] : e.k === 'insert' || e.k === 'remove' ? [...e.at, e.id] : e.at);
+const addr = (e) => (e.k === 'own' ? ['node', e.node, '@owner'] : e.k === 'move' ? ['node', e.node, '@place'] : e.k === 'insert' || e.k === 'remove' ? [...e.at, e.id] : e.at);
 const related = (a, b) => { const n = Math.min(a.length, b.length); for (let i = 0; i < n; i++) if (a[i] !== b[i]) return false; return true; };
 const val = (doc, at) => { const v = getAt(doc, at); return v === undefined ? null : v; };
 
@@ -17,7 +17,7 @@ export function humanWorkIntact(before, after, targets) {
   let checked = 0; let skipped = 0; const broken = [];
   for (let x = 0; x < flat.length; x++) {
     const f = flat[x]; if (f.a.sender.k !== 'human' || f.a.cmd.proposal !== undefined || set.has(f.a.cmd.id)) continue;
-    if (f.a.cmd.body.type === 'revert') continue; // 取り消しで戻った値は「人が決めた値」ではない（元へ戻しただけ）
+    if (f.a.cmd.body.type === 'revert' || f.e.k === 'own') continue; // 取り消しで戻った値は「人が決めた値」ではない（元へ戻しただけ）
     let live = true; for (let y = x + 1; y < flat.length && live; y++) if (related(f.at, flat[y].at)) live = false;
     if (!live) continue;
     const e = f.e; const doc = after.doc; let ok = true;

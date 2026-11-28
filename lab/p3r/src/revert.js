@@ -3,7 +3,7 @@
 // 人の直しを黙って壊す道は作らない：迷う場合は ask にし、答え（decisions）が無ければ何もしない。
 import { Reject, need, clone, same, relate, akey } from './util.js';
 import { getAt, valAt, getNode, addrOf, targetOf, applyEffect, inverse, neighbors, slotsOf, refsOf, scaleV, toGrid, GRID, Draft } from './model.js';
-import { logIndexOf, logAt, logTouching, logReverts, logLength } from './log.js';
+import { logIndexOf, logAt, logTouching, logLength, logBase, chainsOf, pathOps, adoptedAt } from './log.js';
 import { preScan, postScan, lockHits } from './policy.js';
 import { checkInvariants } from './invariants.js';
 
@@ -60,16 +60,10 @@ function classify(E, later, doc, ctx) {
       // 表に無い組：掛けた量の上に「足した」→ 残す（(b×f+d) から f を外した答えが b+d か b+d/f か、決まらない）
       if (near.some((l) => l.e.k === 'delta')) return { result: 'ask', why: 'added-on-top', choices: ['keep'], collateral: { records: recIds(near) } };
       const cur = slot.v; const back = (after) => { const o = { k: 'mul', at: E.at, f: E.f, before: clone(cur), after }; if (!E.div) o.div = true; return [o]; };
-      // 掛ける量の戻し方（BRIEF3 の A。命令の scale で選ぶ。無ければ、前のまま＝割る）
-      if (ctx && ctx.scale === 'rebuild') { // 方式3：記録から組み立て直す（最後の置きかえの値に、残っている操作を、記録の順に当て直す）
-        const t = ctx.rebuild(E); if (!t) return { result: 'ask', why: 'edited-on-top', choices: ['keep'], collateral: { records: recIds(near) } };
-        return { result: 'revert', effects: back(t.value), sub: near.some((l) => l.e.k === 'mul'), rebuilt: t.n };
-      }
-      if (ctx && ctx.scale === 'keep' && near.some((l) => l.e.k === 'mul')) return { result: 'ask', why: 'scaled-on-top', choices: ['keep'], collateral: { records: recIds(near) } }; // 方式2：上に掛け算が乗っていたら、残す
-      if (near.some((l) => l.e.k === 'mul')) return { result: 'revert', effects: back(scaleV(cur, E.f, !E.div)), sub: true };              // 行7：AI の分だけ割る（格子に丸める）
-      if (same(cur, E.after)) return { result: 'revert', effects: back(clone(E.before)) };                                                 // 行6：ぴったり戻す
-      if (same(cur, E.before)) return { result: 'noop', why: 'already' };
-      return { result: 'ask', why: 'edited-on-top', choices: ['keep'], collateral: { records: recIds(near) } };
+      // P3r：掛ける量の取り消しは「記録から組み立て直す」だけ（割って戻す道は置かない）。
+      // その値の道の起点（最後の置きかえ・足した時の値）に、残っている操作を、記録の順に当て直す。今の値と合わなければ、推し量らずに残す
+      const t = ctx.rebuild(E); if (!t) return { result: 'ask', why: 'edited-on-top', choices: ['keep'], collateral: { records: recIds(near) } };
+      return { result: 'revert', effects: back(t.value), sub: near.some((l) => l.e.k === 'mul'), rebuilt: t.n };
     }
     case 'insert': {
       const at = [...E.at, E.id]; const item = getAt(doc, at); if (item === undefined) return { result: 'noop', why: 'gone' };
@@ -95,6 +89,11 @@ function classify(E, later, doc, ctx) {
       }
       return { result: 'revert', effects: ins(clone(E.item)) };
     }
+    case 'own': { // 引き取り（帳簿だけ）。取り消すと、持ち主は前に戻る
+      if (!getNode(doc, E.node)) return { result: 'noop', why: 'gone' };
+      if (later.some((l) => l.e.k === 'own')) return { result: 'noop', why: 'overwritten' };
+      return { result: 'revert', effects: [inverse(E)] };
+    }
     case 'move': {
       const n = getNode(doc, E.node); if (!n) return { result: 'noop', why: 'gone' };
       if (later.some((l) => l.e.k === 'move')) return { result: 'noop', why: 'overwritten' };
@@ -108,27 +107,7 @@ function classify(E, later, doc, ctx) {
   }
   throw new Error('unknown effect');
 }
-/**
- * 取り消しの鎖を数える。「効果 x を、あとの取り消し y がきれいに戻した（y をさらに z が戻した…）」とき、
- *  ・x と y は打ち消し合っている（鎖の長さが偶数）＝その所には、だれの直しも残っていない → 「その後に起きたこと」に数えない
- *  ・やり直し（z）で鎖が奇数になったら、x が生きている。いま文書に効いているのは鎖の最後の効果
- * こうしないと、人が自分の直しを取り消しただけでも「人が直した」と数えてしまい、聞く回数が増える・人が戻した値を人の値と取り違える。
- */
-function chains(log) {
-  const rootOf = new Map(); const count = new Map(); const lastOf = new Map(); const spent = new Set();
-  for (const ri of logReverts(log)) {
-    const R = logAt(log, ri);
-    for (const o of R.outcomes || []) {
-      if (o.result !== 'reverted') continue; spent.add(o.key);
-      if (o.forced || !o.fx || o.fx[1] !== 1) continue;                    // 人の直しごと外した物などは、打ち消しに数えない
-      const root = rootOf.get(o.key) || o.key; const mine = `${R.cmd.id}#${o.fx[0]}`;
-      rootOf.set(mine, root); count.set(root, (count.get(root) || 1) + 1); lastOf.set(root, { idx: ri, i: o.fx[0] });
-    }
-  }
-  return { spent, lastOf, root: (key) => rootOf.get(key) || key, parity: (key) => (count.get(key) || 1) % 2,
-    /** 「その後に起きたこと」として数える効果か */
-    visible: (key) => !rootOf.has(key) && (count.get(key) || 1) % 2 === 1 };
-}
+const chains = chainsOf; // 取り消しの鎖は、記録が足されるたびに log.js が足していく
 // 全体の決まりを壊しうる効果か（固定の数を置きかえる・足すだけなら壊れない）
 const risky = (e) => e.k !== 'delta' && e.k !== 'mul' && !(e.k === 'set' && (e.after === null || typeof e.after !== 'object' || e.after.k === 'static'));
 
@@ -173,26 +152,24 @@ function pass(dr, log, idxs, set, ch, opt) {
   const flipped = new Map(); // この通しの中で、もう取り消した（false）・やり直した（true）掛け算の、元の効果の鍵
   /** 方式3：その値の道の「最後の置きかえ（か、足した時の値）」から、残っている足す量・掛ける量を、記録の順に当て直す。今の値と合わなければ null（残す） */
   const rebuild = (E, key) => {
-    const addr = addrOf(E); const target = targetOf(E); const root = ch.root(key); const adding = !!E.div; let anchor; const ops = [];
+    const addr = addrOf(E); const root = ch.root(key); const adding = !!E.div;
     const dig = (v, segs) => { let cur = v; for (const s of segs) { if (cur == null || typeof cur !== 'object') return undefined; cur = Array.isArray(cur) ? cur.find((x) => x && x.id === s) : Object.hasOwn(cur, s) ? cur[s] : undefined; } return cur; };
-    for (const j of logTouching(log, target)) { const r = logAt(log, j); r.effects.forEach((e, q) => {
-      if (targetOf(e) !== target || e.k === 'move') return; const a2 = addrOf(e); const rel = relate(addr, a2); if (rel !== 'eq' && rel !== 'anc') return;
-      if (e.k === 'set') { anchor = dig(e.after, addr.slice(a2.length)); ops.length = 0; return; }
-      if (e.k === 'insert') { anchor = dig(e.item, addr.slice(a2.length)); ops.length = 0; return; }
-      if (e.k === 'remove') { anchor = undefined; ops.length = 0; return; }
-      if (r.cmd.body.type === 'revert') return;                      // 取り消しの効果は数えない（生きているかどうかは、取り消しの鎖で数える）
-      ops.push({ e, key: `${r.cmd.id}#${q}` });
-    }); }
+    const po = pathOps(log, addr);
+    if (!po.anchor) { if (logBase(log) > 0) throw new Reject('needs-history', '写しより前の記録が要る（値の起点が、写しより前）', { why: 'anchor', at: akey(addr) }); return null; }
+    const ae = logAt(log, po.anchor[0]).effects[po.anchor[1]]; const a2 = addrOf(ae);
+    const anchor = ae.k === 'set' ? dig(ae.after, addr.slice(a2.length)) : ae.k === 'insert' ? dig(ae.item, addr.slice(a2.length)) : undefined;
+    const ops = po.ops.map(([j, q]) => { const r = logAt(log, j); return { e: r.effects[q], key: `${r.cmd.id}#${q}` }; });
     if (!anchor || anchor.k !== 'static') return null;
     const alive = (k) => (flipped.has(k) ? flipped.get(k) : ch.visible(k)); const mine = ops.find((o) => o.key === root);
     if (!mine || alive(root) === adding) return null;
     const run = (want) => { let v = clone(anchor.v); let n = 0; for (const o of ops) { if (!(o.key === root ? want : alive(o.key))) continue; n++;
         if (o.e.k === 'delta') { const add = (x, d) => { const r = (toGrid(x) + toGrid(d)) / GRID; return r === 0 ? 0 : r; }; v = Array.isArray(v) ? v.map((x, i) => add(x, o.e.d[i])) : add(v, o.e.d[0]); } else v = scaleV(v, o.e.f, false); }
       return { value: v, n }; };
-    const slot = getAt(dr.doc, E.at); if (!same(run(!adding).value, slot.v)) return null;   // 今の値が、記録から組み立てた値と違う（前に「割る」で戻した所など）→ 推し量らずに残す
+    const slot = getAt(dr.doc, E.at); if (!same(run(!adding).value, slot.v)) return null;   // 今の値が、記録から組み立てた値と違う → 推し量らずに残す
     return { ...run(adding), root, adding };
   };
-  const adopted = opt.adopted || new Map();
+  const wide = opt.wide !== false;   // P3r の既定：同じ形への変更も一緒に残す（1w）
+  const adoptIdx = new Map(); const adoptedAfter = (node, from) => { let a = adoptIdx.get(node); if (a === undefined) adoptIdx.set(node, (a = adoptedAt(log, node))); return a > from; };
   // 戻す相手が足した物（部品・点・鍵）の番地。並びの単位の「同じ作業が足した分」を見分ける
   const setInserted = new Set();
   if (opt.unit) for (const idx of order) for (const e of logAt(log, idx).effects) if (e.k === 'insert') setInserted.add(akey([...e.at, e.id]));
@@ -201,7 +178,7 @@ function pass(dr, log, idxs, set, ch, opt) {
     for (const [uid, h] of holds) {
       if (h.keys.has(key)) return { uid, via: 'key' };
       // wide：同じ作業が、同じ並びの「今ある物」に加えた変更（取っ手・位置・角）も、足した物と一緒に残す（形を割らない。RESULTS2 ⑦の4）
-      for (const l of h.lists) { const la = l.split('/'); if (addr.length > la.length && relate(la, addr) === 'desc' && (opt.wide || setInserted.has(akey(addr.slice(0, la.length + 1))))) return { uid, via: 'list' }; }
+      for (const l of h.lists) { const la = l.split('/'); if (addr.length > la.length && relate(la, addr) === 'desc' && (wide || setInserted.has(akey(addr.slice(0, la.length + 1))))) return { uid, via: 'list' }; }
       for (const p of h.prefixes) { const rel = relate(p, addr); if (rel === 'eq' || rel === 'desc') return { uid, via: 'prefix' }; }
     }
     return null;
@@ -228,7 +205,7 @@ function pass(dr, log, idxs, set, ch, opt) {
       }
       const addr = addrOf(E); const target = targetOf(E);
       // 引き取り（node.adopt。BRIEF3 の B-4）：人が「自分の物」として引き取った部品への、それより前の効果は、もう戻す相手でない
-      if (target.startsWith('node:') && adopted.has(target.slice(5)) && adopted.get(target.slice(5)) > from) { outcomes.push({ ...out, result: 'noop', why: 'adopted' }); continue; }
+      if (E.k !== 'own' && target.startsWith('node:') && adoptedAfter(target.slice(5), from)) { outcomes.push({ ...out, result: 'noop', why: 'adopted' }); continue; }
       let viaList = null;
       if (opt.unit) { // 単位の中は割らない：残すと決まった単位に入る効果は、判定せずにそのまま残す
         const hb = heldBy(E, key, target, addr); const uid = hb && hb.uid;
@@ -243,7 +220,7 @@ function pass(dr, log, idxs, set, ch, opt) {
         if (set.has(j)) continue; const r2 = logAt(log, j);
         r2.effects.forEach((e2, q) => { if (targetOf(e2) !== target || !ch.visible(`${r2.cmd.id}#${q}`)) return; const rel = relate(addr, addrOf(e2)); if (rel) later.push({ rec: r2, e: e2, rel }); });
       }
-      let plan = classify(E, later, dr.doc, opt.scale ? { scale: opt.scale, rebuild: (e) => rebuild(e, key) } : null); let unit = null;
+      let plan = classify(E, later, dr.doc, { rebuild: (e) => rebuild(e, key) }); let unit = null;
       if (viaList) { // 方式2：足した点（鍵）を1つだけ外してよい条件＝それ自身がそのまま（行10）で、今の両隣を、あとから誰も触っていない。合わなければ、単位に残す
         const list = getAt(dr.doc, E.at); let ok = plan.result === 'revert' && Array.isArray(list);
         if (ok) { const nb = neighbors(list, E.id); for (const id of [nb.after, nb.next]) { if (id == null) continue; const na = [...E.at, id];
@@ -343,14 +320,8 @@ function planUnits(doc, log, idxs, set, ch, drops, ropt = {}) {
   return { ...res, units, containers, dropped, laterAI, auto };
 }
 
-/** 引き取り（node.adopt）の記録：部品の id → いちばん新しい、生きている引き取りの記録の位置 */
-function adoptions(log, ch) {
-  const m = new Map();
-  for (let i = 0; i < logLength(log); i++) { const r = logAt(log, i); if (r.cmd.body.type === 'node.adopt' && ch.visible(`${r.cmd.id}#0`)) m.set(r.cmd.body.node, i); }
-  return m;
-}
 function resolveTargets(log, targets) {
-  const idxs = targets.map((id) => { const i = logIndexOf(log, id); if (i < 0) throw new Reject('invalid', '戻す記録がない', { missing: id }); return i; });
+  const idxs = targets.map((id) => { const i = logIndexOf(log, id); if (i < 0) { if (logBase(log) > 0) throw new Reject('needs-history', '写しより前の記録が要る（戻す記録を持っていない）', { why: 'target', missing: id }); throw new Reject('invalid', '戻す記録がない', { missing: id }); } return i; });
   const set = new Set(idxs); need(set.size === idxs.length, '同じ記録が2回ある'); return { idxs, set };
 }
 /**
@@ -359,7 +330,7 @@ function resolveTargets(log, targets) {
  * @returns {{of:number[], at:number, auto:{reverted:number, superseded:number, subtracted:number, gone:number}, units:any[], containers:any[], laterAI:any[], outcomes:any[]}}
  */
 export function planRevert(state, targets, ropt = {}) {
-  const { idxs, set } = resolveTargets(state.log, targets); const ch = chains(state.log); const p = planUnits(state.doc, state.log, idxs, set, ch, new Set(), { scale: ropt.scale, split: ropt.split, wide: ropt.wide, adopted: adoptions(state.log, ch) });
+  const { idxs, set } = resolveTargets(state.log, targets); const ch = chains(state.log); const p = planUnits(state.doc, state.log, idxs, set, ch, new Set(), { split: ropt.split, wide: ropt.wide });
   return { of: idxs.map((i) => logAt(state.log, i).seq), at: logLength(state.log), auto: p.auto, units: p.units, containers: p.containers, laterAI: p.laterAI, outcomes: p.outcomes };
 }
 
@@ -374,7 +345,7 @@ export function runRevert(dr, log, body, sender) {
   const decisions = body.decisions || {}; const isHuman = !!sender && sender.k === 'human';
   // 「人の直しごと外す」などの、既定（残す）でない答えを選べるのは、確かめられた送り主が人のときだけ（9.5節③の3）
   if (!isHuman && Object.values(decisions).some((d) => d !== 'keep')) throw new Reject('forbidden', 'AI は「外す」を選べない（既定の「残す」だけ）', { why: 'revert-drop-ai' });
-  const ropt = { scale: body.scale, split: body.split, wide: body.wide, adopted: adoptions(log, ch) };
+  const ropt = { split: body.split, wide: body.wide };
   if (body.mode !== 'units') { const p = pass(dr, log, idxs, set, ch, { ...ropt, decisions }); return { effects: p.effects, outcomes: p.outcomes, scans: p.scans, records }; }
 
   if (body.at !== undefined && body.at > logLength(log)) throw new Reject('invalid', '計画を作った時点（at）が、今の記録より先');

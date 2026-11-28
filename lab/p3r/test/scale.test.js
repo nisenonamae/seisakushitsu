@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { replay, toEntries, same, mulberry32, snap, checkInvariants } from '../src/index.js';
 import { fixture, H, AI, S } from './helpers.js';
-import { Slot, replayOps, runAll } from '../tools/numcheck3.js';
+import { Slot, replayOps } from '../tools/numcheck3.js';
 
 const sc = (b, id = 'A') => b.doc.nodes[id].xf.scale.v;
 const mul = (b, f, ctx) => b.do({ type: 'prop.scale', node: 'A', path: 'xf.scale', f }, ctx).cmd.id;
@@ -22,16 +22,9 @@ test('rebuild：AI ×f → 人 ×g → AI の分だけ戻す ＝ AI の操作が
   }
   assert.equal(n, 180);
 });
-test('divide（前のまま）は、同じ場面でずれる。keep は、戻さずに残す（文書は変わらない）', () => {
-  const b = start([1.2345, 1.2345]); const a = mul(b, [0.0003], AI()); mul(b, [2]);
-  const c = start([1.2345, 1.2345]); mul(c, [2]);
-  const d = fixture(); d.s = b.s; d.n = b.n; const k = fixture(); k.s = b.s; k.n = b.n;
-  rev(d, [a]); assert.notDeepEqual(sc(d), sc(c), '割ると、桁が落ちた分は戻らない');
-  const before = k.snap(); const r = rev(k, [a], 'keep'); assert.equal(r.tally.reverted, 0); assert.equal(r.outcomes[0].why, 'scaled-on-top'); assert.equal(k.snap(), before);
-  rev(b, [a], 'rebuild'); assert.deepEqual(sc(b), sc(c));
-});
-test('keep・rebuild：上に何も無ければ、before にぴったり戻る', () => {
-  for (const mode of ['keep', 'rebuild']) { const b = start([123.4567, 0.0003]); const before = b.snap(); const a = mul(b, [0.3333, 7], AI()); rev(b, [a], mode); assert.equal(b.snap(), before, mode); }
+test('上に何も無ければ、before にぴったり戻る。何も書かなくても「組み立て直す」。割る・残すの切り替えは無い', () => {
+  { const b = start([1, 1]); const a = mul(b, [2], AI()); for (const sc2 of ['divide', 'keep', 'guess']) assert.equal(b.try({ type: 'revert', targets: [a], scale: sc2 }).reason, 'invalid'); }
+  for (const mode of [undefined, 'rebuild']) { const b = start([123.4567, 0.0003]); const before = b.snap(); const a = mul(b, [0.3333, 7], AI()); rev(b, [a], mode); assert.equal(b.snap(), before, mode); }
 });
 test('rebuild：AI と人が交互に 8 組 → AI の分を、まとめて／1つずつ でたらめな順で戻す → 人の操作だけの値と同じ。数だけの模型（3a）とも同じ', () => {
   const rng = mulberry32(5);
@@ -71,21 +64,9 @@ test('rebuild でも、足す量と掛ける量が混ざる所は残す（答え
   // 置きかえのあとの掛け算は、置きかえの値から組み立てる
   const a2 = mul(b, [0.0001], AI()); mul(b, [4]); rev(b, [a2], 'rebuild'); assert.deepEqual(sc(b), [20, 20]);
 });
-test('rebuild：前に「割る」で戻した所（今の値が、記録から組み立てた値と違う）は、推し量らずに残す', () => {
-  const b = start([1.2345, 1.2345]); const a1 = mul(b, [0.0003], AI()); const a2 = mul(b, [0.5], AI()); mul(b, [2]);
-  rev(b, [a1]);                                  // 割る：ずれた値になる
-  const before = b.snap(); const r = rev(b, [a2], 'rebuild');
-  assert.equal(r.outcomes[0].result, 'ask'); assert.equal(b.snap(), before);
-});
 test('rebuild：部品ごとの取り消し（mode:units）でも同じ値。ふつうの取り消し（あいだに別の端末の掛け算）でも同じ', () => {
   const b = start([7, 7]); const a = mul(b, [0.0009], AI()); mul(b, [2]);
   const r = rev(b, [a], 'rebuild', 'units'); assert.equal(r.tally.reverted, 1); assert.deepEqual(sc(b), [14, 14]);
   const c = start([7, 7]); const mine = mul(c, [0.0009], H('d1')); mul(c, [2], H('d2'));
   c.do({ type: 'revert', mode: 'undo', targets: [mine], scale: 'rebuild' }); assert.deepEqual(sc(c), [14, 14]);
-});
-test('scale の値は決まった3つだけ', () => { const b = start([1, 1]); const a = mul(b, [2], AI()); assert.equal(b.try({ type: 'revert', targets: [a], scale: 'guess' }).reason, 'invalid'); });
-test('数だけの比べ（tools/numcheck3.js）の短い版：3a は物差し A と、いつも同じ。1（割る）はずれる', () => {
-  const r = runAll({ quick: true }).sig;
-  for (const lo of [0.5, 0.01, 0.0001]) for (const n of [1, 10]) { assert.equal(r[`a2_3a_${lo}_${n}`][0], 0); assert.equal(r[`a2_3b_${lo}_${n}`][2], 0); }
-  assert.ok(r['a2_1_0.0001_1'][0] > 0); assert.deepEqual(r.a4_3a.slice(0, 3), [0, 0, 0]); assert.ok(r.a4_2b[0] > 0, '2b は、取り消した操作が生き返る');
 });

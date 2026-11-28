@@ -197,10 +197,10 @@ test('今ある部品に AI が足した点：1つでも人が直していたら
   const ids = o.applied.map((a) => a.cmd.id);
   const h = b.do({ type: 'pt.nudge', node: 'A', pt: 'z2', d: [0, 9] });
   const p = plan(b, ids); const u = unit(p, 'items:node:A:geo.pts');
-  assert.deepEqual([u.why, u.effects.length, u.later.map((l) => l.cmd), u.choices], ['ai-added-items', 4, [h.cmd.id], ['keep', 'drop']], '点 3 つ＋AI が自分の点を動かした分＝4つの効果が1つの単位');
+  assert.deepEqual([u.why, u.effects.length, u.later.map((l) => l.cmd), u.choices], ['ai-added-items', 5, [h.cmd.id], ['keep', 'drop']], '点 3 つ＋AI が自分の点を動かした分＋今ある点 p1 を動かした分（P3r の既定＝同じ形への変更も一緒に残す）＝5つの効果が1つの単位');
   const save = b.s; revertUnits(b, ids);
   assert.deepEqual(b.doc.nodes.A.geo.pts.map((q) => q.id), ['p1', 'z1', 'p2', 'z2', 'p3', 'z3'], '点は全部残る'); assert.deepEqual(pt(b, 'A', 'z3').p.v, [3.5, 3]);
-  assert.equal(b.doc.nodes.A.fill.color.v.v, '#336699', '色は単位に入らない：道ごとに戻る'); assert.deepEqual(pt(b, 'A', 'p1').p.v, [0, 0], '今ある点を AI が動かした分も、道ごとに戻る');
+  assert.equal(b.doc.nodes.A.fill.color.v.v, '#336699', '色は単位に入らない：道ごとに戻る'); assert.deepEqual(pt(b, 'A', 'p1').p.v, [-1, 0], 'P3r の既定：今ある点を AI が動かした分は、足した点と一緒に残る（形を割らない）');
   b.s = save; revertUnits(b, ids, dropAll(p)); assert.deepEqual(b.doc.nodes.A.geo.pts.map((q) => q.id), ['p1', 'p2', 'p3'], '外すなら全部');
 });
 test('だれも直していなければ、AI が足した点は全部外れる（単位は出ない）', () => {

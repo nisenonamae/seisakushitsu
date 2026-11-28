@@ -7,11 +7,12 @@ import { SPECS, migrateBody } from './commands.js';
 import { checkInvariants } from './invariants.js';
 import { preScan, postScan, judge } from './policy.js';
 import { runRevert, tally } from './revert.js';
-import { emptyLog, appendLog, logIndexOf, logAt, logTouching, logItems } from './log.js';
+import { emptyLog, appendLog, logIndexOf, logAt, logTouching, logItems, logBase, logBaseRevs } from './log.js';
+import { ownerOf } from './owner.js';
 
 /** @typedef {{k:'human', device:string} | {k:'ai', agent:string}} Sender 確かめられた身元（呼び出す側が渡す） */
 /** @typedef {{doc:any, log:any}} State */
-export const REASONS = ['duplicate', 'invalid', 'forbidden', 'locked', 'stale', 'conflict', 'breaks-invariant'];
+export const REASONS = ['duplicate', 'invalid', 'forbidden', 'locked', 'stale', 'conflict', 'breaks-invariant', 'needs-history'];
 
 export function createState(init) { return { doc: createDoc(init), log: emptyLog() }; }
 
@@ -36,6 +37,7 @@ function checkBase(state, cmd, effects, draftDoc) {
     const b = base[t];
     if (b > revOf(draftDoc, t)) throw new Reject('stale', `${t}：まだ届いていない版を前提にしている`, { target: t, base: b, now: cur });
     if (b >= cur) continue;
+    const br = logBaseRevs(state.log); if (br && b < (Object.hasOwn(br, t) ? br[t] : 0)) throw new Reject('needs-history', `${t}：前提が写しより前。古い記録が要る`, { why: 'base', target: t });
     for (const i of logTouching(state.log, t)) {
       const rec = logAt(state.log, i); const rv = rec.revs.find((r) => r.target === t); if (!rv || rv.from < b) continue;
       for (const e2 of rec.effects) {
@@ -78,7 +80,7 @@ export function applyBatch(state, cmds, ctx, opt = {}) {
       checkEnvelope(cmd); const type = cmd.body.type; const spec = SPECS[type];
       const body = migrateBody(type, cmd.v, cmd.body); spec.check(body);
       const cover = dr.owned.has('cover') ? clone(dr.doc.cover) : dr.doc.cover;   // この命令の前の表紙
-      const env = { by: ctx.sender.k === 'human' ? `human:${ctx.sender.device}` : `ai:${ctx.sender.agent}`, seq: n0 + at + 1 };
+      const env = { by: ctx.sender.k === 'human' ? `human:${ctx.sender.device}` : `ai:${ctx.sender.agent}`, seq: n0 + at + 1, ownerOf: (id) => ownerOf(state.log, id, per) };
       let effects; let scans; let outcomes; let revertOf; let cat; let kept;
       if (type === 'revert') {
         cat = spec.cat(body, dr.doc);
