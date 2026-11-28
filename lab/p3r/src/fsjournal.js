@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyBatch, createState } from './engine.js';
 import { emptyLog, appendIndexOnly, evictLog, setArchive, logLength } from './log.js';
+import { Draft, applyEffect, revOf } from './model.js';
 import { journalLine, parseLine, GENESIS, makeSnapshot, readSnapshot, docHash, slimLine, parseSlimLine, applyStoredAll } from './journal.js';
 
 const pad = (n) => String(n).padStart(8, '0');
@@ -64,16 +65,23 @@ export function openStore(dir, init, opt = {}) {
     }
     return { ents, last: p, next: n, bytes, prefixOk: cleanEnts === ents.length, problems };   // prefixOk＝使える行が、ファイルの頭からきれいに並んでいる（＝終わりを切りつめるだけでよい）
   };
+  /** 束を読んで持つ（行のまま。要る行だけを開く：行の印が、目次の印と合うことを確かめる） */
   const loadSeg = (first) => {
     let s = cache.get(first); if (s) { cache.delete(first); cache.set(first, s); return s; }
-    const r = readSeg(first, lineH[first - 1]); info.segReads++; s = r.ents.map((e) => e.applied);
+    const lines = fs.readFileSync(segPath(first), 'utf8').split('\n'); info.segReads++; if (lines[lines.length - 1] === '') lines.pop(); s = { lines, parsed: new Map(), extra: [], base0: lines.length };
     cache.set(first, s); if (cache.size > cacheSegs) cache.delete(cache.keys().next().value); return s;
   };
   /** 古い記録の置き場：記録の位置 → 束を読んで返す */
   const arch = { get(i) {
     let lo = 1; let hi = lineH.length - 1; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (firstSeq[m] <= i) lo = m; else hi = m - 1; }
-    let k = segFirst.length - 1; while (k > 0 && segFirst[k] > lo) k--; const seg = loadSeg(segFirst[k]); const list = seg[lo - segFirst[k]];
-    if (!list) throw new Error(`古い記録が読めない（束 ${segFirst[k]}・まとまり ${lo}）`); return list[i - firstSeq[lo]];
+    let k = segFirst.length - 1; while (k > 0 && segFirst[k] > lo) k--; const seg = loadSeg(segFirst[k]); const j = lo - segFirst[k];
+    let list = seg.parsed.get(j);
+    if (!list) {
+      if (j < seg.lines.length && seg.lines[j]) { const o = parseLine(seg.lines[j]); if (!o || o.n !== lo || o.h !== lineH[lo] || !Array.isArray(o.a)) throw new Error(`古い記録が壊れている（束 ${segFirst[k]}・まとまり ${lo}）。台帳から受け取り直す`); list = o.a; }
+      else list = seg.extra[j - seg.base0];                                   // 束を読んだあとに足された分
+      if (!list) throw new Error(`古い記録が読めない（束 ${segFirst[k]}・まとまり ${lo}）`); seg.parsed.set(j, list);
+    }
+    return list[i - firstSeq[lo]];
   } };
 
   // 最後の束：切れた終わりを切りつめる・壊れていれば書き直す。手前の束は、索引の控えを信じて、本体は読まない（読む時に印を確かめる）
@@ -81,11 +89,15 @@ export function openStore(dir, init, opt = {}) {
   const readIdx = (first) => { let text; try { text = fs.readFileSync(idxPath(first), 'utf8'); } catch { return []; } const out = []; let n = first; for (const l of text.split('\n')) { if (!l) continue; const o = parseSlimLine(l); if (!o || o.n !== n) break; out.push(o); n++; } return out; };
   const writeIdx = (first, ents) => { const tmp = idxPath(first) + '.tmp'; fs.writeFileSync(tmp, ents.map((e) => slimLine(e.n, e.h, e.applied)).join('')); fs.renameSync(tmp, idxPath(first)); info.idxRebuilt++; };
   let lastEnts = null;
+  /** 束の最初の行が指している「前の行の印」（最初の1行だけ読む）*/
+  const firstLinePrev = (first) => { const fd2 = fs.openSync(segPath(first), 'r'); try { const chunks = []; const buf = Buffer.alloc(65536); let pos = 0; for (;;) { const k = fs.readSync(fd2, buf, 0, buf.length, pos); if (k <= 0) break; const nl = buf.subarray(0, k).indexOf(10); if (nl >= 0) { chunks.push(Buffer.from(buf.subarray(0, nl))); break; } chunks.push(Buffer.from(buf.subarray(0, k))); pos += k; } const o = parseLine(Buffer.concat(chunks).toString('utf8')); return o ? o.p : null; } finally { fs.closeSync(fd2); } };
   for (let k = 0; k < segFirst.length; k++) {
     const first = segFirst[k]; const isLast = k === segFirst.length - 1; const expectCount = isLast ? null : segFirst[k + 1] - first;
     if (first !== lineH.length) throw new Error(`束が抜けている：${first}（次は ${lineH.length} のはず）`);
     let idx = readIdx(first);
-    if (isLast || idx.length !== expectCount) {   // 最後の束は本体を読む。手前の束は、索引の控えが合わない時だけ
+    // 手前の束の索引の控えは、「次の束の最初の行が指している印」と、控えの最後の印が合う時だけ信じる（別の記録の控え・古い控えを見分ける。鎖なので、最後が合えば手前も合う）
+    const trust = !isLast && idx.length === expectCount && idx.length > 0 && idx[idx.length - 1].h === firstLinePrev(segFirst[k + 1]);
+    if (isLast || !trust) {   // 最後の束は本体を読む。手前の束は、索引の控えが合わない時だけ
       const r = readSeg(first, lineH[first - 1]);
       if (isLast && r.problems) {
         if (r.prefixOk) { fs.truncateSync(segPath(first), r.bytes); if (doSync) { const tfd = fs.openSync(segPath(first), 'r+'); fs.fsyncSync(tfd); fs.closeSync(tfd); } info.truncated++; }   // 切れた終わりを切りつめる
@@ -160,7 +172,7 @@ export function openStore(dir, init, opt = {}) {
       openSeg(); const l = journalLine(n + 1, lineH[n], ctx.sender, cmds, r.applied);
       write(fd, l.text, 'seg'); sync(fd, 'seg');
       fs.writeSync(ifd, slimLine(n + 1, l.h, r.applied)); if (cp('idx-written')) die();
-      { const cs = cache.get(curFirst); if (cs) cs.push(r.applied); }   // 読んで持っている束が、いま書いている束なら、足しておく（古いままだと、新しい記録が読めない）
+      { const cs = cache.get(curFirst); if (cs) cs.extra.push(r.applied); }   // 読んで持っている束が、いま書いている束なら、足しておく（古いままだと、新しい記録が読めない）
       n++; inSeg++; sinceSnap++; lineH.push(l.h); firstSeq.push(firstSeq[firstSeq.length - 1] + r.applied.length); state = r.state;
       if (!opt.keepAll) evictLog(state.log, logLength(state.log) - hot);
       if (snapEvery && sinceSnap >= snapEvery) writeSnapshot();
@@ -171,4 +183,33 @@ export function openStore(dir, init, opt = {}) {
     /** 測り用 */
     files() { let seg = 0; let idx = 0; let snapB = 0; for (const f of fs.readdirSync(dir)) { const s = fs.statSync(path.join(dir, f)).size; if (f.startsWith('seg-')) seg += s; else if (f.startsWith('idx-')) idx += s; else if (f.startsWith('snap-')) snapB += s; } return { seg, idx, snap: snapB }; },
   };
+}
+
+/**
+ * 写しを、記録と突き合わせる（開く時には行わない。裏で・時々）。食い違った写しは、名前を .bad に変えて使えなくする（次に開く時は、1つ前の写しか、記録から）。
+ * @param {{strict?:boolean, from?:number, rename?:boolean}} opt
+ *   strict＝命令だけを、検査つきで頭から当て直す（保存してある効果を信じない。いちばん重い）
+ *   strict でない時＝保存してある効果を当てる。from＝確かめ済みの写しの番号：その写しから先だけを当てる（増えた分だけの突き合わせ）
+ * @returns {{ok:boolean, checked:{n:number, ok:boolean}[], bad:number[], entries:number, ms:number}}
+ */
+export function verifySnapshots(dir, init, opt = {}) {
+  const t0 = now(); const names = fs.readdirSync(dir); const segs = names.filter((f) => /^seg-\d{8}\.jl$/.test(f)).sort(); const snaps = names.filter((f) => /^snap-\d{8}\.json$/.test(f)).sort();
+  const want = new Map(); for (const f of snaps) { const s = readSnapshot(fs.readFileSync(path.join(dir, f), 'utf8')); want.set(Number(f.slice(5, 13)), s); }
+  let doc; let start = 0;
+  if (!opt.strict && opt.from && want.get(opt.from)) { doc = want.get(opt.from).doc; start = opt.from; } else doc = createState(init).doc;
+  let state = opt.strict ? createState(init) : null; const checked = []; const bad = []; let prev = GENESIS; let n = 0; let entries = 0; let lastH = null;
+  const check = () => { const s = want.get(n); if (s === undefined || n <= start && !opt.strict && n !== 0) return; if (n === start && !opt.strict) return; const d = opt.strict ? state.doc : doc; const ok = !!s && s.n === n && s.h === lastH && s.docHash === docHash(d) && docHash(s.doc) === s.docHash; checked.push({ n, ok }); if (!ok) bad.push(n); };
+  outer: for (const f of segs) {
+    const first = Number(f.slice(4, 12)); const last = segs[segs.indexOf(f) + 1]; const until = last ? Number(last.slice(4, 12)) - 1 : Infinity;
+    if (!opt.strict && until <= start) { n = until; prev = null; continue; }                      // 確かめ済みの写しより前の束は、読まない
+    for (const l of fs.readFileSync(path.join(dir, f), 'utf8').split('\n')) {
+      if (!l) continue; const o = parseLine(l); if (!o || (prev !== null && (o.n !== n + 1 || o.p !== prev))) { if (o && prev === null && o.n === n + 1) { /* 途中から読みはじめた束の頭 */ } else break outer; }
+      n = o.n; prev = o.h; lastH = o.h; if (!opt.strict && n <= start) continue; entries++;
+      if (opt.strict) { const r = applyBatch(state, o.c, { sender: o.s }); if (r.status === 'applied') state = r.state; }
+      else { const dr = new Draft(doc); for (const a of o.a) { for (const e of a.effects) applyEffect(dr, e); for (const r of a.revs) { if (revOf(dr.doc, r.target) !== r.from) throw new Error('記録の版が合わない'); dr.bump(r.target); } } doc = dr.doc; }
+      check();
+    }
+  }
+  if (opt.rename !== false) for (const b of bad) fs.renameSync(path.join(dir, `snap-${pad(b)}.json`), path.join(dir, `snap-${pad(b)}.json.bad`));
+  return { ok: !bad.length, checked, bad, entries, ms: +(now() - t0).toFixed(1) };
 }
