@@ -160,6 +160,7 @@ export function openStore(dir, init, opt = {}) {
       openSeg(); const l = journalLine(n + 1, lineH[n], ctx.sender, cmds, r.applied);
       write(fd, l.text, 'seg'); sync(fd, 'seg');
       fs.writeSync(ifd, slimLine(n + 1, l.h, r.applied)); if (cp('idx-written')) die();
+      { const cs = cache.get(curFirst); if (cs) cs.push(r.applied); }   // 読んで持っている束が、いま書いている束なら、足しておく（古いままだと、新しい記録が読めない）
       n++; inSeg++; sinceSnap++; lineH.push(l.h); firstSeq.push(firstSeq[firstSeq.length - 1] + r.applied.length); state = r.state;
       if (!opt.keepAll) evictLog(state.log, logLength(state.log) - hot);
       if (snapEvery && sinceSnap >= snapEvery) writeSnapshot();

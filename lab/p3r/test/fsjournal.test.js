@@ -19,12 +19,12 @@ function after(apply, state0) {
 }
 
 test('束・写し・索引の控え：途中で何度閉じて開き直しても、メモリに全部持つ場合と、まとまりごとの結果・文書・記録が同じ。古い記録の本体はメモリに無い', () => {
-  const dir = dirOf('twin'); const rng = mulberry32(3); let st = openStore(dir, INIT, { segSize: 64, snapEvery: 150, hot: 100, fsync: false }); let plain = createState(INIT); let reopen = 0; let usedSnap = 0;
+  const dir = dirOf('twin'); const rng = mulberry32(3); let st = openStore(dir, INIT, { segSize: 64, snapEvery: 150, hot: 20, fsync: false }); let plain = createState(INIT); let reopen = 0; let usedSnap = 0;
   for (let i = 0; i < W.batches.length; i++) {
     const b = W.batches[i]; const ctx = { sender: b.sender };
     const r1 = applyBatch(plain, b.cmds, ctx); plain = r1.state; const r2 = st.apply(b.cmds, ctx);
     assert.equal(r2.status, r1.status); assert.equal(canon(r2.applied), canon(r1.applied), `まとまり ${i + 1}`);
-    if (rng() < 0.02) { st.close(); st = openStore(dir, INIT, { segSize: 64, snapEvery: 150, hot: 100, fsync: false }); reopen++; if (st.info.used) usedSnap++; assert.equal(docHash(st.state.doc), docHash(plain.doc)); assert.equal(st.n, i + 1); }
+    if (rng() < 0.02) { st.close(); st = openStore(dir, INIT, { segSize: 64, snapEvery: 150, hot: 20, fsync: false }); reopen++; if (st.info.used) usedSnap++; assert.equal(docHash(st.state.doc), docHash(plain.doc)); assert.equal(st.n, i + 1); }
   }
   assert.ok(reopen > 20 && usedSnap > 15, `開き直し ${reopen}・写しを使った ${usedSnap}`);
   assert.equal(canon(st.state.doc), canon(plain.doc)); assert.equal(canon(logItems(st.state.log)), canon(logItems(plain.log)));
