@@ -1,0 +1,21 @@
+{
+"parts": 1,
+"points": 67,
+"maxPts": 67,
+"maxName": "影絵",
+"lines": 0,
+"prims": 0,
+"colors": 1,
+"over12": 1,
+"over8": 1,
+"iou_prev": 0.9986,
+"only_prev_px": 387,
+"only_now_px": 172,
+"per": [
+[
+"影絵",
+67,
+"自由な形"
+]
+]
+}
