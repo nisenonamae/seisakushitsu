@@ -96,19 +96,16 @@ export function loadReplay(init, entries, from) {
   }
   return { state, skipped };
 }
-function applyStored(state, list, doApply) {
-  if (doApply) {
-    const dr = new Draft(state.doc);
-    for (const a of list) { for (const e of a.effects) applyEffect(dr, e); for (const r of a.revs) { if (revOf(dr.doc, r.target) !== r.from) throw new Error(`記録の版が合わない：${r.target}`); dr.bump(r.target); } }
-    return { doc: dr.doc, log: appendLog(state.log, list) };
-  }
-  return { doc: state.doc, log: appendLog(state.log, list) };
+/** 効果つきの記録を、1つの控えの上に続けて当てる（読みこみの間は、途中の状態を外に見せないので、まとまりごとに文書を写さない）*/
+function applyStoredAll(doc, log, entries, from) {
+  const dr = new Draft(doc); const all = [];
+  for (let i = from; i < entries.length; i++) { const list = entries[i].applied; if (!list) throw new Error('効果つきの記録でない');
+    for (const a of list) { for (const e of a.effects) applyEffect(dr, e); for (const r of a.revs) { if (revOf(dr.doc, r.target) !== r.from) throw new Error(`記録の版が合わない：${r.target}`); dr.bump(r.target); } all.push(a); } }
+  return { doc: dr.doc, log: appendLog(log, all) };
 }
 /** 記録（効果つき）の効果を、検査なしで当てる（自分の端末の控えを読む時だけ。人から受け取った記録には使わない）*/
 export function loadTrusted(init, entries) {
-  let state = createState(init);
-  for (const e of entries) { if (!e.applied) throw new Error('効果つきの記録でない'); state = applyStored(state, e.applied, true); }
-  return { state, skipped: [] };
+  const s0 = createState(init); return { state: applyStoredAll(s0.doc, s0.log, entries, 0), skipped: [] };
 }
 /** 写し＋その先の記録だけ。頭の記録は持たない（写しより前の操作を戻す・古い前提の命令は needs-history）*/
 export function loadTail(snap, tail) {
@@ -117,12 +114,10 @@ export function loadTail(snap, tail) {
 }
 /** 写し＋効果つきの記録の全部：写しより前は索引に足すだけ（当てない）、先は効果を当てる。全部の取り消しができる */
 export function loadIndexed(snap, entries) {
-  let state = { doc: null, log: emptyLog() }; let i = 0;
-  for (; i < entries.length && entries[i].n <= snap.n; i++) { if (!entries[i].applied) throw new Error('効果つきの記録でない'); state = applyStored(state, entries[i].applied, false); }
-  if (logLength(state.log) !== snap.seq) throw new Error('写しと記録の件数が合わない');
-  state = { doc: snap.doc, log: state.log };
-  for (; i < entries.length; i++) state = applyStored(state, entries[i].applied, true);
-  return { state, skipped: [] };
+  const head = []; let i = 0;
+  for (; i < entries.length && entries[i].n <= snap.n; i++) { if (!entries[i].applied) throw new Error('効果つきの記録でない'); for (const a of entries[i].applied) head.push(a); }
+  if (head.length !== snap.seq) throw new Error('写しと記録の件数が合わない');
+  return { state: applyStoredAll(snap.doc, appendLog(emptyLog(), head), entries, i), skipped: [] };
 }
 /**
  * 開く時の決まり（立ち直り）：記録を読む → 写しが使えれば使う → だめなら記録だけから作り直す。
