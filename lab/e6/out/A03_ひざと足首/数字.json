@@ -1,0 +1,19 @@
+{
+ "name": "A03_ひざと足首",
+ "parts": 28,
+ "groups": 4,
+ "points": 167,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.027,
+ "sil_area": 470026,
+ "sil_box": [
+  200,
+  231,
+  1398,
+  769
+ ]
+}

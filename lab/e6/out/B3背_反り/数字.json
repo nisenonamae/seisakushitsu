@@ -1,0 +1,19 @@
+{
+ "name": "B3背_反り",
+ "parts": 28,
+ "groups": 4,
+ "points": 154,
+ "maxPts": 13,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.037,
+ "sil_area": 469671,
+ "sil_box": [
+  194,
+  226,
+  1404,
+  769
+ ]
+}

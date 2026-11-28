@@ -1,0 +1,19 @@
+{
+ "name": "B5目_上平ら",
+ "parts": 29,
+ "groups": 4,
+ "points": 160,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.027,
+ "sil_area": 469825,
+ "sil_box": [
+  200,
+  232,
+  1398,
+  769
+ ]
+}

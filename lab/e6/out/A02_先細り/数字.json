@@ -1,0 +1,19 @@
+{
+ "name": "A02_先細り",
+ "parts": 28,
+ "groups": 4,
+ "points": 155,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.031,
+ "sil_area": 469642,
+ "sil_box": [
+  198,
+  229,
+  1400,
+  769
+ ]
+}

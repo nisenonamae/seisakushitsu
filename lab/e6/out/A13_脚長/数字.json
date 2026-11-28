@@ -1,0 +1,19 @@
+{
+ "name": "A13_脚長",
+ "parts": 28,
+ "groups": 4,
+ "points": 157,
+ "maxPts": 12,
+ "maxName": "頭",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.009,
+ "sil_area": 469818,
+ "sil_box": [
+  210,
+  202,
+  1388,
+  769
+ ]
+}

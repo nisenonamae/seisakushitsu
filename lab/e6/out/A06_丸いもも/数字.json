@@ -1,0 +1,19 @@
+{
+ "name": "A06_丸いもも",
+ "parts": 28,
+ "groups": 4,
+ "points": 160,
+ "maxPts": 12,
+ "maxName": "頭",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.032,
+ "sil_area": 470143,
+ "sil_box": [
+  197,
+  229,
+  1401,
+  769
+ ]
+}

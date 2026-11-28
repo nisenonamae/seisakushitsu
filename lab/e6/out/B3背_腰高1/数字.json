@@ -1,0 +1,19 @@
+{
+ "name": "B3背_腰高1",
+ "parts": 28,
+ "groups": 4,
+ "points": 155,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.021,
+ "sil_area": 469568,
+ "sil_box": [
+  203,
+  224,
+  1395,
+  769
+ ]
+}

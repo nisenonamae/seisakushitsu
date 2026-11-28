@@ -1,0 +1,19 @@
+{
+ "name": "B1頭大_3",
+ "parts": 28,
+ "groups": 4,
+ "points": 155,
+ "maxPts": 13,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 0.9262,
+ "sil_area": 469912,
+ "sil_box": [
+  185,
+  230,
+  1414,
+  769
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "name": "A04_足の甲",
+ "parts": 28,
+ "groups": 4,
+ "points": 160,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.026,
+ "sil_area": 469554,
+ "sil_box": [
+  201,
+  232,
+  1397,
+  769
+ ]
+}

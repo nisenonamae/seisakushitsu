@@ -1,0 +1,19 @@
+{
+ "name": "B1胴大_4",
+ "parts": 28,
+ "groups": 4,
+ "points": 154,
+ "maxPts": 13,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 0.828,
+ "sil_area": 469732,
+ "sil_box": [
+  213,
+  213,
+  1385,
+  769
+ ]
+}

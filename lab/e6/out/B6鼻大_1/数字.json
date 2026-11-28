@@ -1,0 +1,19 @@
+{
+ "name": "B6鼻大_1",
+ "parts": 28,
+ "groups": 4,
+ "points": 154,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.015,
+ "sil_area": 469745,
+ "sil_box": [
+  196,
+  238,
+  1402,
+  769
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "name": "B4目大_2",
+ "parts": 28,
+ "groups": 4,
+ "points": 155,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.027,
+ "sil_area": 469839,
+ "sil_box": [
+  200,
+  232,
+  1398,
+  769
+ ]
+}

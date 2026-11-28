@@ -1,0 +1,19 @@
+{
+ "name": "B2丸み_1",
+ "parts": 28,
+ "groups": 4,
+ "points": 155,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.02,
+ "sil_area": 469658,
+ "sil_box": [
+  218,
+  209,
+  1380,
+  769
+ ]
+}

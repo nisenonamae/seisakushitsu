@@ -1,0 +1,19 @@
+{
+ "name": "A08_すき間広",
+ "parts": 28,
+ "groups": 4,
+ "points": 163,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.025,
+ "sil_area": 469952,
+ "sil_box": [
+  201,
+  233,
+  1397,
+  769
+ ]
+}

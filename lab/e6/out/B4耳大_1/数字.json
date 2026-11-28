@@ -1,0 +1,19 @@
+{
+ "name": "B4耳大_1",
+ "parts": 28,
+ "groups": 4,
+ "points": 154,
+ "maxPts": 13,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.024,
+ "sil_area": 469948,
+ "sil_box": [
+  202,
+  214,
+  1396,
+  769
+ ]
+}

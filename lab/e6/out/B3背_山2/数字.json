@@ -1,0 +1,19 @@
+{
+ "name": "B3背_山2",
+ "parts": 28,
+ "groups": 4,
+ "points": 153,
+ "maxPts": 12,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.016,
+ "sil_area": 469948,
+ "sil_box": [
+  206,
+  219,
+  1392,
+  769
+ ]
+}

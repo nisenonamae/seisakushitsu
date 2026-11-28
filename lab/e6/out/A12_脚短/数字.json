@@ -1,0 +1,19 @@
+{
+ "name": "A12_脚短",
+ "parts": 28,
+ "groups": 4,
+ "points": 154,
+ "maxPts": 14,
+ "maxName": "胴",
+ "lines": 4,
+ "prims": 12,
+ "colors": 11,
+ "scale": 1.041,
+ "sil_area": 469686,
+ "sil_box": [
+  192,
+  254,
+  1406,
+  769
+ ]
+}
