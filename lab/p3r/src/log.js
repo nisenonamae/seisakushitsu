@@ -12,14 +12,16 @@ import { akey } from './util.js';
 
 class Store {
   /** @param {number} base 持っていない頭の件数（写しから始めた時）@param {any} baseRevs 写しの時点の版 */
-  constructor(base = 0, baseRevs = null) {
-    this.base = base; this.baseRevs = baseRevs;
+  constructor(base = 0, baseRevs = null, baseDoc = null) {
+    this.base = base; this.baseRevs = baseRevs; this.baseDoc = baseDoc;
     this.items = []; if (base) this.items.length = base;
     this.byId = new Map(); this.byTarget = new Map(); this.reverts = [];
     // 取り消しの鎖
     this.spent = new Set(); this.rootOf = new Map(); this.count = new Map(); this.lastOf = new Map();
     // 組み立て直しの材料：番地 → 起点 [記録の位置, 効果の番号]／番地 → 足した量・掛けた量の並び（位置と番号を交互に）
     this.anchors = new Map(); this.ops = new Map();
+    // 組み立て直しの途中の値の控え：番地 → { a0,a1:起点, vals:[並びの j 番めまで当てた値], valid:どこまで確かか }。記録から作り直せる（保存しない）
+    this.pref = new Map();
     // だれの物か：部品 → 最初に足した記録の位置／部品 → 引き取りの記録の位置（古い順）
     this.created = new Map(); this.adopts = new Map();
     // 端末ごとの、取り消し・やり直しの積み重ね
@@ -44,6 +46,7 @@ class Store {
       if (o.forced || !o.fx || o.fx[1] !== 1) continue;                    // 人の直しごと外した物などは、打ち消しに数えない
       const root = this.rootOf.get(o.key) || o.key; const mine = `${a.cmd.id}#${o.fx[0]}`;
       this.rootOf.set(mine, root); this.count.set(root, (this.count.get(root) || 1) + 1); this.lastOf.set(root, { idx: i, i: o.fx[0] });
+      const p = this.opPos(root); if (p) { const c = this.pref.get(p.key); if (c && p.j - c.lo < c.valid) c.valid = Math.max(0, p.j - c.lo); }   // 生き死にが変わった操作より後ろの控えは、使えない
     }
     if (a.sender && a.sender.k === 'human') {
       let s = this.stacks.get(a.sender.device); if (!s) this.stacks.set(a.sender.device, (s = { undo: [], redo: [], batch: -1, cur: null }));
@@ -56,9 +59,17 @@ class Store {
       }
     }
   }
+  /** 効果の鍵（命令の id#番号）→ その値の道の並びの中の位置。足した量・掛けた量でなければ null */
+  opPos(key) {
+    const h = key.lastIndexOf('#'); const ri = this.byId.get(key.slice(0, h)); if (ri === undefined) return null; const q = Number(key.slice(h + 1));
+    const e = this.items[ri].effects[q]; if (!e || (e.k !== 'delta' && e.k !== 'mul')) return null;
+    const k = akey(e.at); const l = this.ops.get(k); if (!l) return null;
+    let lo = 0; let hi = l.length >> 1; while (lo < hi) { const m = (lo + hi) >> 1; if (l[2 * m] < ri || (l[2 * m] === ri && l[2 * m + 1] < q)) lo = m + 1; else hi = m; }
+    return lo < l.length >> 1 && l[2 * lo] === ri && l[2 * lo + 1] === q ? { key: k, j: lo } : null;
+  }
 }
-export const emptyLog = (base = 0, baseRevs = null) => ({ store: new Store(base, baseRevs), n: base });
-function fork(log) { const f = new Store(log.store.base, log.store.baseRevs); for (let i = log.store.base; i < log.n; i++) f.push(log.store.items[i]); return f; }
+export const emptyLog = (base = 0, baseRevs = null, baseDoc = null) => ({ store: new Store(base, baseRevs, baseDoc), n: base });
+function fork(log) { const f = new Store(log.store.base, log.store.baseRevs, log.store.baseDoc); for (let i = log.store.base; i < log.n; i++) f.push(log.store.items[i]); return f; }
 export function appendLog(log, applieds) {
   let st = log.store;
   if (st.items.length !== log.n) st = fork(log);
@@ -103,16 +114,16 @@ export function chainsOf(log) {
 }
 /**
  * 組み立て直しの材料：番地の「起点」（いちばん新しい置きかえ・足した・外した効果）と、そのあとの足した量・掛けた量。
- * @returns {{anchor:[number,number]|null, ops:[number,number][]}} 位置と効果の番号
+ * @returns {{key:string, anchor:[number,number]|null, l:number[], lo:number, n:number, store:any}} l＝位置と効果の番号が交互に並ぶ。lo 番めから n 個が、起点のあとの操作
  */
 export function pathOps(log, addr) {
   const s = view(log); let best = null;
   for (let n = 1; n <= addr.length; n++) { const a = s.anchors.get(akey(addr.slice(0, n))); if (a && (!best || a[0] > best[0] || (a[0] === best[0] && a[1] > best[1]))) best = a; }
-  const l = s.ops.get(akey(addr)) || []; const ops = [];
+  const key = akey(addr); const l = s.ops.get(key) || [];
   let lo = 0; let hi = l.length >> 1; const after = (j) => !best || l[2 * j] > best[0] || (l[2 * j] === best[0] && l[2 * j + 1] > best[1]);
   while (lo < hi) { const m = (lo + hi) >> 1; if (after(m)) hi = m; else lo = m + 1; }
-  for (let j = lo; j < l.length >> 1; j++) ops.push([l[2 * j], l[2 * j + 1]]);
-  return { anchor: best, ops };
+  let end = l.length >> 1; while (end > lo && l[2 * (end - 1)] >= log.n) end--;
+  return { key, anchor: best, l, lo, n: end - lo, store: s };
 }
 /** 部品を最初に足した記録の位置（無ければ -1） */
 export function createdAt(log, node) { const i = view(log).created.get(node); return i === undefined ? -1 : i; }

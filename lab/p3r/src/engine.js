@@ -14,6 +14,10 @@ import { ownerOf } from './owner.js';
 /** @typedef {{doc:any, log:any}} State */
 export const REASONS = ['duplicate', 'invalid', 'forbidden', 'locked', 'stale', 'conflict', 'breaks-invariant', 'needs-history'];
 
+export const tuning = { fullInvariants: false };
+const isStatic = (v) => v !== null && typeof v === 'object' && v.k === 'static';
+const light = (e) => e.k === 'delta' || e.k === 'mul' || e.k === 'own' || (e.k === 'set' && !e.kind && e.at[0] === 'node' && isStatic(e.before) && isStatic(e.after));
+
 export function createState(init) { return { doc: createDoc(init), log: emptyLog() }; }
 
 function checkEnvelope(c) {
@@ -116,7 +120,9 @@ export function applyBatch(state, cmds, ctx, opt = {}) {
     }
     at = undefined;
     // ⑥ 全体の決まり
-    const bad = checkInvariants(dr.doc);
+    // P3r：全体の決まりを壊しえない効果だけのまとまり（固定の数に足す・掛ける／固定の値を固定の値に置きかえる／引き取り）は、文書の全部を調べ直さない。
+    // ← 毎回全部を調べると、部品の数に比例して1命令が遅くなる（部品 3000 で 1命令 数 ms）。tuning.fullInvariants=true で、前のとおり毎回全部を調べる（突き合わせ用）
+    const bad = !tuning.fullInvariants && per.every((a) => a.effects.every(light)) ? [] : checkInvariants(dr.doc);
     if (bad.length) throw new Reject('breaks-invariant', bad[0], { breaks: bad.slice(0, 20) });
     const extra = outcomesAll ? { outcomes: outcomesAll, tally: tally(outcomesAll), ...(planAll ? { plan: planAll } : {}) } : {};
     // 提案に回す：文書は変えない（検査は全部通っている）

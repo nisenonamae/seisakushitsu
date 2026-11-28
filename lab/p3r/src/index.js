@@ -1,11 +1,13 @@
 // 命令の核の入口。
-export { createState, apply, applyBatch, check, replay, toEntries, REASONS } from './engine.js';
+export { createState, apply, applyBatch, check, replay, toEntries, REASONS, tuning } from './engine.js';
+export { sha256, hash64 } from './hash.js';
+export * from './journal.js';
 export { makeUndo, makeRedo, undoStacks } from './undo.js';
 export { checkInvariants } from './invariants.js';
 export { createDoc, revOf, lineText, getNode, getAt, inverse, applyEffect, Draft, snap, toGrid, scaleV, GRID, slotsOf } from './model.js';
 export { logItems, logLength, logAt, logIndexOf, logBase, emptyLog, appendLog, chainsOf, pathOps, adoptedAt, createdAt } from './log.js';
 export { makerOf, isAIRecord, creatorOf, ownerOf, whoOf, buildProvenance, originOf, bundleKey, bundles, ledger } from './owner.js';
-export { tally, planRevert } from './revert.js';
+export { tally, planRevert, tuning as revertTuning } from './revert.js';
 export { retoken, danglingCues, cuesOf } from './script.js';
 export { proposalStatus } from './proposal.js';
 export { analyze as analyzeExpr, LIMITS as EXPR_LIMITS } from './expr.js';

@@ -7,6 +7,9 @@ import { logIndexOf, logAt, logTouching, logLength, logBase, chainsOf, pathOps, 
 import { preScan, postScan, lockHits } from './policy.js';
 import { checkInvariants } from './invariants.js';
 
+/** 突き合わせ用：noPrefix=true で、途中の値の控えを使わずに、いつも起点から当て直す（答えは同じはず）*/
+export const tuning = { noPrefix: false };
+
 /** prefix の下にある値を、外から参照している置き場 */
 function refsInto(doc, prefix, skip) {
   const out = [];
@@ -63,7 +66,7 @@ function classify(E, later, doc, ctx) {
       // P3r：掛ける量の取り消しは「記録から組み立て直す」だけ（割って戻す道は置かない）。
       // その値の道の起点（最後の置きかえ・足した時の値）に、残っている操作を、記録の順に当て直す。今の値と合わなければ、推し量らずに残す
       const t = ctx.rebuild(E); if (!t) return { result: 'ask', why: 'edited-on-top', choices: ['keep'], collateral: { records: recIds(near) } };
-      return { result: 'revert', effects: back(t.value), sub: near.some((l) => l.e.k === 'mul'), rebuilt: t.n };
+      return { result: 'revert', effects: back(t.value), sub: near.some((l) => l.e.k === 'mul'), rebuilt: true };
     }
     case 'insert': {
       const at = [...E.at, E.id]; const item = getAt(doc, at); if (item === undefined) return { result: 'noop', why: 'gone' };
@@ -155,16 +158,29 @@ function pass(dr, log, idxs, set, ch, opt) {
     const addr = addrOf(E); const root = ch.root(key); const adding = !!E.div;
     const dig = (v, segs) => { let cur = v; for (const s of segs) { if (cur == null || typeof cur !== 'object') return undefined; cur = Array.isArray(cur) ? cur.find((x) => x && x.id === s) : Object.hasOwn(cur, s) ? cur[s] : undefined; } return cur; };
     const po = pathOps(log, addr);
-    if (!po.anchor) { if (logBase(log) > 0) throw new Reject('needs-history', '写しより前の記録が要る（値の起点が、写しより前）', { why: 'anchor', at: akey(addr) }); return null; }
-    const ae = logAt(log, po.anchor[0]).effects[po.anchor[1]]; const a2 = addrOf(ae);
-    const anchor = ae.k === 'set' ? dig(ae.after, addr.slice(a2.length)) : ae.k === 'insert' ? dig(ae.item, addr.slice(a2.length)) : undefined;
-    const ops = po.ops.map(([j, q]) => { const r = logAt(log, j); return { e: r.effects[q], key: `${r.cmd.id}#${q}` }; });
+    let anchor; const a0 = po.anchor ? po.anchor[0] : -1; const a1 = po.anchor ? po.anchor[1] : -1;
+    if (po.anchor) { const ae = logAt(log, a0).effects[a1]; const a2 = addrOf(ae); anchor = ae.k === 'set' ? dig(ae.after, addr.slice(a2.length)) : ae.k === 'insert' ? dig(ae.item, addr.slice(a2.length)) : undefined; }
+    // 写しから始めた記録で、起点が写しより前：写しの時の値を起点にする（写しより前の操作は、もう値に入っている。それらを戻す時は、下の「相手が並びに無い」で古い記録を求める）
+    else if (logBase(log) > 0) { anchor = getAt(po.store.baseDoc, addr); if (anchor === undefined) throw new Reject('needs-history', '写しより前の記録が要る（値の起点が分からない）', { why: 'anchor', at: akey(addr) }); }
+    else return null;
     if (!anchor || anchor.k !== 'static') return null;
-    const alive = (k) => (flipped.has(k) ? flipped.get(k) : ch.visible(k)); const mine = ops.find((o) => o.key === root);
-    if (!mine || alive(root) === adding) return null;
-    const run = (want) => { let v = clone(anchor.v); let n = 0; for (const o of ops) { if (!(o.key === root ? want : alive(o.key))) continue; n++;
-        if (o.e.k === 'delta') { const add = (x, d) => { const r = (toGrid(x) + toGrid(d)) / GRID; return r === 0 ? 0 : r; }; v = Array.isArray(v) ? v.map((x, i) => add(x, o.e.d[i])) : add(v, o.e.d[0]); } else v = scaleV(v, o.e.f, false); }
-      return { value: v, n }; };
+    const st = po.store; const l = po.l; const lo = po.lo; const n = po.n;
+    const opAt = (j) => { const r = st.items[l[2 * (lo + j)]]; const q = l[2 * (lo + j) + 1]; return { e: r.effects[q], key: `${r.cmd.id}#${q}` }; };
+    const pm = st.opPos(root); const mine = pm && pm.key === po.key ? pm.j - lo : -1;
+    const alive = (k) => (flipped.has(k) ? flipped.get(k) : ch.visible(k));
+    if ((mine < 0 || mine >= n) && logBase(log) > 0) throw new Reject('needs-history', '写しより前の記録が要る（戻す操作が、写しより前）', { why: 'op', at: akey(addr) });
+    if (mine < 0 || mine >= n || alive(root) === adding) return null;
+    const one = (v, e) => { if (e.k === 'delta') { const add = (x, d) => { const r = (toGrid(x) + toGrid(d)) / GRID; return r === 0 ? 0 : r; }; return Array.isArray(v) ? v.map((x, i) => add(x, e.d[i])) : add(v, e.d[0]); } return scaleV(v, e.f, false); };
+    // どこから当て直すか：相手の操作と、この通しの中でもう生き死にを変えた操作の、いちばん古い位置。それより前は「途中の値の控え」を使う
+    let start = mine; for (const k of flipped.keys()) { const p = st.opPos(k); if (p && p.key === po.key && p.j - lo < start) start = Math.max(0, p.j - lo); }
+    let base = anchor.v;
+    if (tuning.noPrefix) start = 0;
+    else if (start > 0) {
+      let c = st.pref.get(po.key); if (!c || c.a0 !== a0 || c.a1 !== a1 || c.lo !== lo) st.pref.set(po.key, (c = { a0, a1, lo, vals: [], valid: 0 }));
+      for (let j = c.valid; j < start; j++) { const o = opAt(j); const before = j ? c.vals[j - 1] : anchor.v; c.vals[j] = ch.visible(o.key) ? one(before, o.e) : before; }
+      if (c.valid < start) c.valid = start; c.vals.length = c.valid; base = c.vals[start - 1];
+    }
+    const run = (want) => { let v = clone(base); for (let j = start; j < n; j++) { const o = opAt(j); if (o.key === root ? want : alive(o.key)) v = one(v, o.e); } return { value: v }; };
     const slot = getAt(dr.doc, E.at); if (!same(run(!adding).value, slot.v)) return null;   // 今の値が、記録から組み立てた値と違う → 推し量らずに残す
     return { ...run(adding), root, adding };
   };
