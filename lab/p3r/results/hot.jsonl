@@ -10,3 +10,4 @@
 {"n":100000,"mode":"spread","parts":300,"engine":"src","docHash":"97cf6683e5fe02a8","medMs":0.354,"buildS":16.9,"reverts":60,"meanMs":0.517,"maxMs":3.72}
 {"n":10000,"mode":"spread","parts":300,"engine":"src0","docHash":"92c9fe652aa6f10d","medMs":0.215,"buildS":1.5,"reverts":60,"meanMs":0.343,"maxMs":2.95}
 {"n":10000,"mode":"spread","parts":300,"engine":"src","docHash":"92c9fe652aa6f10d","medMs":0.348,"buildS":1.8,"reverts":60,"meanMs":0.57,"maxMs":5.15}
+{"n":1000000,"mode":"spread","parts":300,"engine":"src0","docHash":"b7c3fb010e5936e7","medMs":5.311,"buildS":250.8,"reverts":60,"meanMs":5.868,"maxMs":19.39}
