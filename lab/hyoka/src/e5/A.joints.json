@@ -1,0 +1,199 @@
+{
+ "title": "A 通常の影絵（E3 の L2 のまま）",
+ "doc": "A.json",
+ "joints": [
+  {
+   "name": "頭",
+   "main": "head",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "earF",
+      "jaw",
+      "head",
+      "mouth",
+      "eyeRim",
+      "eye",
+      "eyeHi",
+      "nostril",
+      "gEarN",
+      "earN",
+      "earIn"
+     ],
+     "pivot": [
+      664.52,
+      402.57
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 300.4,
+   "area": 153447
+  },
+  {
+   "name": "前脚（手前）",
+   "main": "legFN",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legFN",
+      "creaseF",
+      "nailF0",
+      "nailF1",
+      "nailF2"
+     ],
+     "pivot": [
+      811.78,
+      593.04
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 150.0,
+   "area": 30578
+  },
+  {
+   "name": "前脚（奥）",
+   "main": "legFF",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legFF"
+     ],
+     "pivot": [
+      689.34,
+      593.04
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 101.1,
+   "area": 18780
+  },
+  {
+   "name": "後ろ脚（手前）",
+   "main": "legHN",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legHN",
+      "creaseH",
+      "nailH0",
+      "nailH1",
+      "nailH2"
+     ],
+     "pivot": [
+      1265.62,
+      571.01
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 176.0,
+   "area": 38981
+  },
+  {
+   "name": "後ろ脚（奥）",
+   "main": "legHF",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "legHF"
+     ],
+     "pivot": [
+      1108.46,
+      593.04
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 125.0,
+   "area": 22655
+  },
+  {
+   "name": "耳（手前）",
+   "main": "earN",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "earN",
+      "earIn"
+     ],
+     "pivot": [
+      589.6,
+      293.44
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 48.0,
+   "area": 3515
+  },
+  {
+   "name": "耳（奥）",
+   "main": "earF",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "earF"
+     ],
+     "pivot": [
+      540.44,
+      301.52
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 29.6,
+   "area": 1537
+  },
+  {
+   "name": "しっぽ",
+   "main": "tail",
+   "par": "torso",
+   "links": [
+    {
+     "ids": [
+      "tail"
+     ],
+     "pivot": [
+      1357.94,
+      398.17
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 34.8,
+   "area": 3729
+  },
+  {
+   "name": "下あご",
+   "main": "jaw",
+   "par": "head",
+   "links": [
+    {
+     "ids": [
+      "jaw"
+     ],
+     "pivot": [
+      562.67,
+      534.85
+     ],
+     "frac": 1
+    }
+   ],
+   "w": 114.0,
+   "area": 33663
+  }
+ ],
+ "log": [
+  "E3 の L2 のまま。付け根は絵のデータの pivot（E4 の版1 と同じ決まり）"
+ ]
+}
