@@ -48,6 +48,8 @@ const ops = () => {
 Object.assign(out, ops()); emit('ops');
 if (st) {
   out.files = st.files(); out.filesMB = { seg: +(out.files.seg / 1048576).toFixed(1), idx: +(out.files.idx / 1048576).toFixed(1), snap: +(out.files.snap / 1048576).toFixed(2) }; delete out.files; st.close(); st = null; const before = gc();
+  // 新しいプロセスで開くだけ（開く時間・開いたあとのメモリ。このプロセスの中で開き直すと、前の入れ物が残っていて、メモリが倍に見えた）
+  { const { spawnSync } = await import('node:child_process'); const r = spawnSync(process.execPath, ['--expose-gc', `--max-old-space-size=${process.env.P3R_OPEN_HEAP || 5000}`, path.join(here, 'open_only.js'), dir, ...(REAL ? ['real'] : [])], { encoding: 'utf8' }); try { out.freshOpen = JSON.parse(r.stdout); } catch { out.freshOpen = { error: (r.stderr || String(r.signal)).slice(0, 200) }; } emit('fresh-open'); }
   // 開き直す（写し＋索引の控え＋続き）
   t = now(); st = openStore(dir, MODE.startsWith('real') ? RINIT : INIT, SOPT); out.openS = +((now() - t) / 1000).toFixed(2); out.openMs = st.info.ms; out.openUsed = st.info.used; out.openTail = st.info.tail;
   const m2 = gc(); out.afterOpen = { heapMB: m2.heap - mem0.heap, typedMB: m2.ext - mem0.ext, rssMB: m2.rss }; out.docHashAfterOpen = docHash(st.state.doc).slice(0, 16);
