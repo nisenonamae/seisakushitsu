@@ -15,7 +15,7 @@ const out = { n: N, parts: P, mode: MODE };
 export function workload(N, P, MODE, seed = 7) {
   const rng = mulberry32(seed); let c = 0; const flip = new Array(P).fill(false); const cmds = [];
   let prev = null; const parts = [];
-  for (let i = 0; i < P; i++) { prev = rankBetween(prev, null);
+  for (let i = 0; i < P; i++) { prev = P > 1000 ? (i + 1).toString(36).padStart(4, '0') + 'i' : rankBetween(prev, null);   // 部品が多い時は、順番の印を番号から作る（rankBetween を 3000 回つなぐと、印が長くなりすぎる）
     parts.push({ ctx: HU, body: { type: 'node.add', node: { id: `n${i}`, scene: 's1', kind: 'shape', name: `n${i}`, order: prev, geo: { t: 'path', closed: true, pts: Array.from({ length: 8 }, (_, j) => ({ id: `p${j}`, p: S([j, i]), in: S([1, 0]), out: S([-1, 0]) })) }, fill: { color: S({ k: 'hex', v: '#888888' }) } } } }); }
   const gen = (i) => {
     if (MODE === 'hot') { const f = i % 2 ? 0.8 : 1.25; return { ctx: i % 10 === 3 ? AI : HU, node: 'n0', body: { type: 'prop.scale', node: 'n0', path: 'xf.scale', f: [f] } }; }

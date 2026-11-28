@@ -15,7 +15,7 @@ export function runFuzz(seed, steps, opt = {}) {
       const id = ids[Math.floor(rng2() * ids.length)]; const n = state.doc.nodes[id]; if (!n.xf || !n.xf.scale || n.xf.scale.k !== 'static') continue; const ctx = rng2() < 0.5 ? A : H;
       const f = [0.5, 0.8, 1.25, 2, -1, 0.3333, 3][Math.floor(rng2() * 7)];
       if (push([{ id: `${opt.tag || 'x'}${seed}-${++k}`, v: 1, actor: ctx.sender.k === 'human' ? { k: 'human', device: 'd1' } : { k: 'ai', agent: 'w1', task: 'tx' }, base: { [`node:${id}`]: state.doc.revs[`node:${id}`] }, body: { type: 'prop.scale', node: id, path: 'xf.scale', f: [f] } }], ctx).status === 'applied') stats.scale++;
-    } else if (x < 0.09) { // 引き取り（AI の部品を人が）
+    } else if (x < 0.068) { // 引き取り（AI の部品を人が）
       const ai = ids.filter((id) => { const o = ownerOf(state.log, id); return o && o.startsWith('ai:'); }); if (!ai.length) continue; const id = ai[Math.floor(rng2() * ai.length)];
       if (push([{ id: `${opt.tag || 'x'}${seed}-${++k}`, v: 1, actor: { k: 'human', device: 'd1' }, base: { [`node:${id}`]: state.doc.revs[`node:${id}`] }, body: { type: 'node.adopt', node: id } }], H).status === 'applied') stats.adopt++;
     }

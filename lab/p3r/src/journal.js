@@ -15,6 +15,7 @@ import { applyBatch, createState } from './engine.js';
 import { Draft, applyEffect, revOf } from './model.js';
 import { emptyLog, appendLog, logItems, logLength, logBase } from './log.js';
 import { canon } from './util.js';
+import { ledger } from './owner.js';
 import { sha256, hash64 } from './hash.js';
 
 export const GENESIS = '0000000000000000';
@@ -69,7 +70,7 @@ export function repairJournal(src) {
 // ---- 写し
 /** 写しを作る。n＝何まとまりめまでか・h＝その行の印・seq＝記録の件数 */
 export function makeSnapshot(state, n, h) {
-  const body = JSON.stringify({ v: 1, n, h, seq: logLength(state.log), docHash: docHash(state.doc), doc: state.doc });
+  const body = JSON.stringify({ v: 1, n, h, seq: logLength(state.log), docHash: docHash(state.doc), doc: state.doc, led: ledger(state) });   // led＝だれの物かの控え（記録から作り直せる。写しから始めた端末のための物）
   return `P3R-SNAP ${sha256(body)}\n${body}\n`;
 }
 /** 写しを読む。書く途中で切れた・壊れた写しは null（＝使わない。記録から作り直す）*/
@@ -111,7 +112,7 @@ export function loadTrusted(init, entries) {
 }
 /** 写し＋その先の記録だけ。頭の記録は持たない（写しより前の操作を戻す・古い前提の命令は needs-history）*/
 export function loadTail(snap, tail) {
-  const start = { doc: snap.doc, log: emptyLog(snap.seq, snap.doc.revs, snap.doc) };
+  const start = { doc: snap.doc, log: emptyLog(snap.seq, snap.doc.revs, snap.doc, snap.led || null) };
   return loadReplay(null, tail, start);
 }
 /** 写し＋効果つきの記録の全部：写しより前は索引に足すだけ（当てない）、先は効果を当てる。全部の取り消しができる */

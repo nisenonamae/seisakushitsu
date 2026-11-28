@@ -333,7 +333,12 @@ function planUnits(doc, log, idxs, set, ch, drops, ropt = {}) {
   const laterAI = [...tasks.values()].map((t) => ({ task: t.task, agent: t.agent, units: [...t.units], records: [...t.records] }));
   const auto = { reverted: 0, superseded: 0, subtracted: 0, gone: 0 };
   for (const o of res.outcomes) { if (o.result === 'reverted' && !o.forced) { if (o.sub) auto.subtracted++; else auto.reverted++; } else if (o.result === 'noop') { if (o.why === 'overwritten') auto.superseded++; else auto.gone++; } }
-  return { ...res, units, containers, dropped, laterAI, auto };
+  // P3r：AI が足した部品の単位には、同じ画面で選べる物として「引き取る」を出す（残す／引き取る／人の直しごと外す）
+  for (const u of units) if (u.why === 'ai-added-part') u.offer = u.choices.includes('drop') ? ['keep', 'adopt', 'drop'] : ['keep', 'adopt'];
+  // 引き取った部品への効果は、相手にしない（知らせるだけ）：部品ごとの数
+  const am = new Map(); for (const o of res.outcomes) if (o.result === 'noop' && o.why === 'adopted') { const id = o.at.split('/')[1]; am.set(id, (am.get(id) || 0) + 1); }
+  const adopted = [...am].map(([node, effects]) => ({ node, effects }));
+  return { ...res, units, containers, dropped, laterAI, auto, adopted };
 }
 
 function resolveTargets(log, targets) {
@@ -347,7 +352,7 @@ function resolveTargets(log, targets) {
  */
 export function planRevert(state, targets, ropt = {}) {
   const { idxs, set } = resolveTargets(state.log, targets); const ch = chains(state.log); const p = planUnits(state.doc, state.log, idxs, set, ch, new Set(), { split: ropt.split, wide: ropt.wide });
-  return { of: idxs.map((i) => logAt(state.log, i).seq), at: logLength(state.log), auto: p.auto, units: p.units, containers: p.containers, laterAI: p.laterAI, outcomes: p.outcomes };
+  return { of: idxs.map((i) => logAt(state.log, i).seq), at: logLength(state.log), auto: p.auto, units: p.units, containers: p.containers, laterAI: p.laterAI, adopted: p.adopted, outcomes: p.outcomes };
 }
 
 /**

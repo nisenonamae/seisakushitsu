@@ -6,7 +6,7 @@
 //  5 操作のまとまり   … 記録に保存する（cmd.group・cmd.proposal・actor.task・核が付ける batch）。まとまりの一覧は計算する
 // 保存するのは、あとから計算できない物（だれが送ったか・どれが1まとまりか）だけ。
 // 計算する物を保存しない理由：保存すると、取り消し・やり直し・引き取りのたびに書きかえることになり、記録と食い違う道ができる。
-import { logAt, logItems, logLength, logBase, createdAt, adoptedAt, chainsOf } from './log.js';
+import { logAt, logItems, logLength, logBase, logBaseLed, createdAt, adoptedAt, chainsOf } from './log.js';
 import { Reject } from './util.js';
 
 const str = (s) => (s.k === 'human' ? `human:${s.device}` : `ai:${s.agent}`);
@@ -24,6 +24,7 @@ export function creatorOf(log, node, pending = []) {
   const i = createdAt(log, node);
   if (i >= 0) { const a = logAt(log, i); return { ...makerOf(a), seq: a.seq, cmd: a.cmd.id }; }
   for (const a of pending) if (a.effects.some((e) => e.k === 'insert' && e.at.length === 1 && e.at[0] === 'node' && e.id === node)) return { ...makerOf(a), seq: a.seq, cmd: a.cmd.id };
+  const led = logBaseLed(log); if (led && Object.hasOwn(led, node) && led[node]) return led[node].creator;   // 写しから始めた時：写しに入っている控えを使う
   if (logBase(log) > 0) throw new Reject('needs-history', '写しより前の記録が要る（部品を足した記録を持っていない）', { why: 'creator', node });
   return null;
 }
@@ -31,12 +32,14 @@ export function creatorOf(log, node, pending = []) {
 export function ownerOf(log, node, pending = []) {
   for (let j = pending.length - 1; j >= 0; j--) for (const e of pending[j].effects) if (e.k === 'own' && e.node === node) return e.to;
   const ad = adoptedAt(log, node); if (ad >= 0) return str(logAt(log, ad).sender);
+  const led = logBaseLed(log); if (led && Object.hasOwn(led, node) && led[node] && createdAt(log, node) < 0) return led[node].owner;   // 写しより前の引き取り（それを取り消す命令は、古い記録が要るので断られる）
   const c = creatorOf(log, node, pending); return c ? c.by : null;
 }
 /** 部品1つの帳簿（2・3 と、引き取りの記録） */
 export function whoOf(log, node) {
   const creator = creatorOf(log, node); if (!creator) return null;
   const ad = adoptedAt(log, node); const a = ad >= 0 ? logAt(log, ad) : null;
+  const led = logBaseLed(log); if (!a && led && Object.hasOwn(led, node) && led[node] && createdAt(log, node) < 0) return led[node];
   return { creator, owner: a ? str(a.sender) : creator.by, adopted: a ? { by: str(a.sender), seq: a.seq, cmd: a.cmd.id } : null };
 }
 

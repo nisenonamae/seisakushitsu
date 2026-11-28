@@ -12,8 +12,8 @@ import { akey } from './util.js';
 
 class Store {
   /** @param {number} base 持っていない頭の件数（写しから始めた時）@param {any} baseRevs 写しの時点の版 */
-  constructor(base = 0, baseRevs = null, baseDoc = null) {
-    this.base = base; this.baseRevs = baseRevs; this.baseDoc = baseDoc;
+  constructor(base = 0, baseRevs = null, baseDoc = null, baseLed = null) {
+    this.base = base; this.baseRevs = baseRevs; this.baseDoc = baseDoc; this.baseLed = baseLed;   // baseLed＝写しの時点の「だれの物か」の控え
     this.items = []; if (base) this.items.length = base;
     this.byId = new Map(); this.byTarget = new Map(); this.reverts = [];
     // 取り消しの鎖
@@ -68,8 +68,8 @@ class Store {
     return lo < l.length >> 1 && l[2 * lo] === ri && l[2 * lo + 1] === q ? { key: k, j: lo } : null;
   }
 }
-export const emptyLog = (base = 0, baseRevs = null, baseDoc = null) => ({ store: new Store(base, baseRevs, baseDoc), n: base });
-function fork(log) { const f = new Store(log.store.base, log.store.baseRevs, log.store.baseDoc); for (let i = log.store.base; i < log.n; i++) f.push(log.store.items[i]); return f; }
+export const emptyLog = (base = 0, baseRevs = null, baseDoc = null, baseLed = null) => ({ store: new Store(base, baseRevs, baseDoc, baseLed), n: base });
+function fork(log) { const f = new Store(log.store.base, log.store.baseRevs, log.store.baseDoc, log.store.baseLed); for (let i = log.store.base; i < log.n; i++) f.push(log.store.items[i]); return f; }
 export function appendLog(log, applieds) {
   let st = log.store;
   if (st.items.length !== log.n) st = fork(log);
@@ -86,6 +86,7 @@ export const logLength = (log) => log.n;
 /** 持っていない頭の件数（写しから始めた時だけ 0 より大きい） */
 export const logBase = (log) => log.store.base;
 export const logBaseRevs = (log) => log.store.baseRevs;
+export const logBaseLed = (log) => log.store.baseLed;
 export const logAt = (log, i) => (i >= log.store.base && i < log.n ? log.store.items[i] : undefined);
 /** 記録の写し（配列）。持っている分だけ */
 export const logItems = (log) => log.store.items.slice(log.store.base, log.n);
